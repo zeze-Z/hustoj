@@ -204,7 +204,7 @@
             
           <?php
             if(isset($OJ_AI_HTML)&&$OJ_AI_HTML && !isset($OJ_ON_SITE_CONTEST_ID) ) echo $OJ_AI_HTML;
-            else echo '<a class="desktop-only item" href="/"><i class="home icon"></i><span class="desktop-only">'.$MSG_HOME.'</span></a>';
+            else echo '<a class="desktop-only item" href="index.php"><i class="home icon"></i><span class="desktop-only">'.$MSG_HOME.'</span></a>';
             if(file_exists("moodle")){  // 如果存在moodle目录，自动添加链接
               echo '<a class="item" href="moodle"><i class="group icon"></i><span class="desktop-only">Moodle</span></a>';
             }

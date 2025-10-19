@@ -42,7 +42,8 @@
 
       <div class="ui message">
 <?php if ($OJ_REGISTER){ ?>
-        <a href="registerpage.php"><?php echo $MSG_REGISTER ?></a>
+        <!-- <a href="registerpage.php"><?php echo $MSG_REGISTER ?></a> -->
+        <a>注册、忘记密码，请咨询荔枝老师</a>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <?php } ?>
 

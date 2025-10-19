@@ -22,10 +22,11 @@
     </style>
     <?php include(dirname(__FILE__)."/js.php");?>
     <div class="footer">
-        <div class="ui center aligned container" title="如果你想移除这个信息，请编辑template/syzoj/footer.php" >
-            <div><?php echo $domain==$DOMAIN?$OJ_NAME:ucwords($OJ_NAME)."'s OJ"?> is powered by <a style="color: inherit !important;" class=" " title="GitHub"
+        <div class="ui center aligned container">
+        <div>感谢ZhangMaoFan、WuXingYu两位同学对本网站的支持</div>
+            <!-- <div><?php echo $domain==$DOMAIN?$OJ_NAME:ucwords($OJ_NAME)."'s OJ"?> is powered by <a style="color: inherit !important;" class=" " title="GitHub"
                     target="_blank" rel="noreferrer noopener" href="https://github.com/zhblue/hustoj">HUSTOJ</a>, Theme
-                by <a style="color: inherit !important;" href="https://github.com/syzoj">SYZOJ</a></div>
+                by <a style="color: inherit !important;" href="https://github.com/syzoj">SYZOJ</a></div> -->
          <!--   <div> Running on <a href='https://debian.org' target='_blank'>Debian11</a> / <a href='https://www.loongson.cn' target='_blank'>Loongson 3A3000</a> </div> -->
             <?php if ($OJ_BEIAN) { ?>
             <div>

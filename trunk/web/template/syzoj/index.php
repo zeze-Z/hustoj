@@ -1,5 +1,6 @@
 <?php $show_title="$MSG_HOME - $OJ_NAME"; ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
+<?php if(isset($_SESSION[$OJ_NAME.'_'.'user_id'])) : ?>
 <head>
 
 <link rel="stylesheet" href="<?php echo "template/$OJ_TEMPLATE";?>/css/slide.css">
@@ -183,6 +184,7 @@ if($NOIP_flag[0]==0)$view_month_rank=mysql_query_cache("select user_id,nick,coun
         </div>
     </div>
 </div>
+<?php endif; ?>
 <?php include("template/$OJ_TEMPLATE/footer.php");?>
 <?php if(file_exists("image/slide1.jpg")){ ?>
     <script>
