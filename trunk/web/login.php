@@ -2,6 +2,7 @@
 require_once( "./include/db_info.inc.php" );
 require_once("./include/my_func.inc.php");
 require_once( './include/setlang.php' );
+if(isset($OJ_CSRF)&&$OJ_CSRF) require_once("./include/csrf_check.php");
 $use_cookie=false;
 $login=false;
 if($OJ_LONG_LOGIN&&isset($_COOKIE[$OJ_NAME."_user"])&&isset($_COOKIE[$OJ_NAME."_check"])){
@@ -46,9 +47,14 @@ if(!$use_cookie){
   require_once( "./include/login-" . $OJ_LOGIN_MOD . ".php" );
   $user_id = $_POST[ 'user_id' ];
   $password = $_POST[ 'password' ];
-  if ( false ) {
-	$user_id = stripslashes( $user_id );
-	$password = stripslashes( $password );
+  $fiveMinutesAgo = date('Y-m-d H:i:s', strtotime("-5 minutes"));
+  $failed=pdo_query("SELECT
+                        (SELECT COUNT(1) FROM loginlog WHERE user_id=? AND password='login fail' AND time>=?) as user_fail,
+                        (SELECT COUNT(1) FROM loginlog WHERE ip=? AND password='login fail' AND time>=?) as ip_fail;",$user_id,$fiveMinutesAgo,$ip,$fiveMinutesAgo);
+  if (isset($OJ_LOGIN_FAIL_LIMIT)&& ($OJ_LOGIN_FAIL_LIMIT>0) && ( $failed[0][0] > $OJ_LOGIN_FAIL_LIMIT  || $failed[0][1] > $OJ_LOGIN_FAIL_LIMIT*4 ) ) {
+        $view_errors = "Failed login too frequently!";
+        require( "template/" . $OJ_TEMPLATE . "/error.php" );
+        exit(0);
   }
   $login = check_login( $user_id, $password );
 }
@@ -103,12 +109,22 @@ if($login){
 		setcookie($OJ_NAME."_check",$C_res.(strlen($C_res)*strlen($C_res))%7,$C_time);
 	}
 	echo "<script language='javascript'>\n";
-	if ($OJ_NEED_LOGIN)
-		echo "window.location.href='index.php';\n";
-	else
-		echo "setTimeout('history.go(-2)',500);\n";
+        if (isset($_SESSION[$OJ_NAME."_administrator"]))
+                echo "window.location.href='admin';\n";
+        else if (isset($_SESSION[$OJ_NAME."_contest_creator"]))
+                echo "window.location.href='contest.php?my';\n";
+        else if ($OJ_NEED_LOGIN)
+                echo "window.location.href='index.php';\n";
+        else
+                echo "setTimeout('history.go(-2)',500);\n";
 	echo "</script>";
 } else {
+	$sql="INSERT INTO `loginlog`(user_id,password,ip,time) VALUES(?,'login fail',?,NOW())";
+    pdo_query($sql,$user_id,$ip);
+	if(isset($OJ_LOG_ENABLED) && $OJ_LOG_ENABLED){
+		$params = json_encode($_REQUEST, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+		$logger->info($params);
+	}
 	if ( $view_errors ) {
 		require( "template/" . $OJ_TEMPLATE . "/error.php" );
 	} else {

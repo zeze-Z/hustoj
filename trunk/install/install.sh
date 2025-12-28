@@ -33,7 +33,22 @@ else
         else
                 echo "aliyun is faster"
         fi
-
+        # 检查 UFW 是否处于 active 状态
+        STATUS=$(ufw status | grep -i "Status: active")
+        
+        if [ -n "$STATUS" ]; then
+            echo "UFW 已开启，添加 80 和 443 端口规则..."
+            
+            ufw allow 80/tcp
+            ufw allow 443/tcp
+            
+            echo "重新加载 UFW..."
+            ufw reload
+        
+            echo "操作完成。"
+        else
+            echo "UFW 未开启，未进行任何修改。"
+        fi
         "./$INSTALL"
         echo "不要重复运行这个脚本，如果不能访问，检查80端口是否打开，ip地址是否正确。"
         echo "公网地址可能是：http://"`curl http://hustoj.com/ip.php`
@@ -53,6 +68,8 @@ cd /home/judge/src/web/
 wget dl.hustoj.com/hello.tar.gz
 tar xzf hello.tar.gz
 chown www-data -R hello
+cd /home/judge/src/install
+bash set-nofile.sh
 clear
 reset
 
@@ -87,3 +104,45 @@ echo "████ █▄▄▄█ █▀▄▄▄▀▀█ ▀▄ ▄▀██�
 echo "████▄▄▄▄▄▄▄█▄███▄█▄▄▄████▄▄▄▄▄▄█▄██▄█████"
 echo "█████████████████████████████████████████"
 echo "            QQ扫码加官方群"
+
+echo ""
+echo "=============================================="
+echo "安装完成！是否进行详细配置？ ( 建议拍照记录上面的信息后继续... ) "
+echo "=============================================="
+echo ""
+
+read -p "现在配置系统细节? (y/n): " DO_CONFIG
+
+if [[ "$DO_CONFIG" =~ ^[Yy]$ ]]; then
+    echo "启动配置工具..."
+    
+    # 检查setup.sh是否存在
+    if [ -f "setup.sh" ]; then
+        # 确保有执行权限
+        [ ! -x "setup.sh" ] && chmod +x setup.sh
+        
+        # 运行配置工具
+        ./setup.sh
+        
+        echo ""
+        echo "配置已完成！"
+    else
+        echo ""
+        echo "错误: 未找到配置工具 setup.sh"
+        echo "请确保 setup.sh 文件在当前目录"
+    fi
+fi
+
+# 显示后续提示
+echo ""
+echo "=============================================="
+echo "后续操作提示"
+echo "=============================================="
+echo ""
+echo "1. 以后如需修改配置，可运行："
+echo "   ./setup.sh"
+echo ""
+echo "2. 或直接编辑配置文件："
+echo "   nano ../web/include/db_info.inc.php"
+echo ""
+echo "安装完成！感谢使用。"

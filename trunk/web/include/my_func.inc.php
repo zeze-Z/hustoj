@@ -224,21 +224,20 @@ function in_subnet_of_contest($ip,$contest_id){
 
 }
 function getMappedSpecial($user_id) {
-        $map=[
-            '0701' => '人智',
-            '0708' => '网工',
-            '5702' => '电科',
-            '5701' => '软工',
-            '0207' => '数技'
-        ];
-    // 遍历 map 数组
-    foreach ($map as $key => $value) {
-        // 检查 user_id 是否包含当前键
-        if (strpos($user_id, $key) !== false) {
-            return substr($user_id,0,2).$value; // 返回对应的值
-        }
+    $map = [
+        '0701' => '人智',
+        '0708' => '网工',
+        '5702' => '电科',
+        '5701' => '软工',
+        '0207' => '数技'
+    ];
+    // 取第3到第6位的四个字符（索引从0开始）
+    $keyPart = substr($user_id, 2, 4);
+    // 判断是否在映射表中
+    if (isset($map[$keyPart])) {
+        return substr($user_id, 0, 2) . $map[$keyPart];
     }
-    // 如果没有匹配的键，返回空字符串
+    // 没匹配则返回空字符串
     return '';
 }
 function aaiw($html){
@@ -299,16 +298,39 @@ function has_bad_words($words){
         return false;
 }
 function starred($user_id){
-   $stars=pdo_query("select starred from users where user_id=?",$user_id);
-   if(!empty($stars)&& $stars[0][0]>0 ) return true;
-   $stars=json_decode(curl_get("https://api.github.com/users/$user_id/starred?per_page=100"));
-   foreach( $stars as $star){
-           if($star->full_name=="zhblue/hustoj"){
-                return true;
-           }
-   }
-   return false;
+    // 查询本地缓存
+    $rows = pdo_query("SELECT starred FROM users WHERE user_id=?", $user_id);
+    if (!empty($rows) && intval($rows[0][0]) > 0) {
+        return true;
+    }
+
+    // GitHub API 请求
+    $url = "https://api.github.com/users/$user_id/starred?per_page=100";
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_USERAGENT => "HUSTOJ-checker",   // 必须加 User-Agent
+        CURLOPT_TIMEOUT => 10,
+    ]);
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    if ($response === false) return false;
+
+    $stars = json_decode($response);
+    if (!is_array($stars)) return false;
+
+    foreach ($stars as $star) {
+        if (isset($star->full_name) && $star->full_name === "zhblue/hustoj") {
+            // 可选：更新数据库缓存
+            pdo_query("UPDATE users SET starred=1 WHERE user_id=?", $user_id);
+            return true;
+        }
+    }
+
+    return false;
 }
+
 function create_subdomain($user_id,$template="bs3",$friendly="0"){
         $user_id=strtolower($user_id);
         global $DB_NAME,$DB_USER,$DB_PASS,$DOMAIN;
@@ -561,7 +583,7 @@ function RemoveXSS($val) {
    // remove all non-printable characters. CR(0a) and LF(0b) and TAB(9) are allowed
    // this prevents some character re-spacing such as <java\0script>
    // note that you have to handle splits with \n, \r, and \t later since they *are* allowed in some inputs
-   $val = preg_replace('/([\x00-\x08,\x0b-\x0c,\x0e-\x19])/', '', $val);
+   $val = preg_replace('/([\x00-\x08\x0b-\x0c\x0e-\x19])/', '', $val);
 
    // straight replacements, the user should never need these since they're normal characters
    // this prevents like <IMG SRC=@avascript:alert('XSS')>
@@ -639,3 +661,6 @@ function exportToExcel($filename='file', $tileArray=[], $dataArray=[],$cut=true)
         flush();
         ob_end_clean();
 }
+
+
+

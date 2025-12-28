@@ -6,7 +6,7 @@ Greg Kennedy <kennedy.greg@gmail.com>, 2018
   https://github.com/greg-kennedy/php-bbcode
 This is public domain software.  Please see LICENSE for more details.
 ******************************************************************************/
-
+require_once(dirname(__FILE__)."/my_func.inc.php");
 class BBCode
 {
   // Tag aliases.  Item on left translates to item on right.
@@ -450,6 +450,6 @@ function bbcode_to_html($input) : string
 {
   global $OJ_DIV_FILTER;
   if(isset($OJ_DIV_FILTER)&&$OJ_DIV_FILTER) $input=filterDIV($input);
-  return BBCode::bbcode_to_html($input);
+  return BBCode::bbcode_to_html(RemoveXSS($input));    //RemoveXSS // people want to use js in news
 }
 

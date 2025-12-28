@@ -19,7 +19,6 @@ static  $SMTP_SERVER="smtp.qq.com";           //SMTP服务器，通常在邮箱�
 static  $SMTP_PORT=587;                           //SMTP服务器端口，通常是25，有的服务器支持80（阿里云）、465(网易)、587（QQ）以适应不同的网络防火墙配置
 static  $SMTP_USER="mailer@qq.com";      //SMTP服务器的用户名（通常就是发件人的邮箱地址）, 这里修改后视为邮件配置生效，若配置不当可能导致部分页面超时。
 static  $SMTP_PASS="your_smpt_auth_password";       //由邮箱系统生成的口令 (SMTP服务器的密码)
-
 static 	$OJ_DATA="/home/judge/data";  //测试数据目录
 static 	$OJ_BBS=false; //设为"discuss3" 启用， "bbs" for phpBB3 bridge or "discuss" for mini-forum or false for close any 
 static  $OJ_ONLINE=false;  //是否记录在线情况
@@ -34,8 +33,6 @@ static  $OJ_SAE=false; //使用新浪引擎
 static  $OJ_VCODE=false;  //验证码
 static 	$OJ_REG_SPEED=60 ; //限制每小时同ip注册个数，0不限制
 static  $OJ_APPENDCODE=true;  // 代码预定模板
-if (!$OJ_APPENDCODE) 	ini_set("session.cookie_httponly", 1);   // APPENDCODE模式需要允许javascript操作cookie保存当前语言。
-@session_start();
 static  $OJ_CE_PENALTY=false;  // 编译错误是否罚时
 static  $OJ_PRINTER=false;  //启用打印服务
 static  $OJ_MAIL=false; //内邮
@@ -60,8 +57,8 @@ static  $OJ_REGISTER=true; //允许注册新用户
 static  $OJ_REG_NEED_CONFIRM=false; //新注册用户需要审核
 static  $OJ_EMAIL_CONFIRM=false; //允许邮件激活账号
 static  $OJ_EXPIRY_DAYS=365; // 手工添加账户的默认过期天数
-
 static  $OJ_NEED_LOGIN=false; //需要登录才能访问
+static  $OJ_LOGIN_FAIL_LIMIT=5; //5分钟内最大登录错误次数
 static  $OJ_LONG_LOGIN=false; //启用长时间登录信息保留
 static  $OJ_KEEP_TIME="30";  //登录Cookie有效时间(单位:天(day),仅在上一行为true时生效)
 static  $OJ_AUTO_SHOW_OFF = false;//打开题目默认开启编辑器
@@ -79,7 +76,6 @@ static  $OJ_BLOCKLY=false; //是否启用Blockly界面 , remember to execute `wg
 static  $OJ_ENCODE_SUBMIT=false; //是否启用base64编码提交的功能，用来回避WAF防火墙误拦截。
 static  $OJ_OI_1_SOLUTION_ONLY=false; //比赛是否采用noip中的仅保留最后一次提交的规则。true则在新提交发生时，将本场比赛该题老的提交删除。
 static  $OJ_OI_MODE=false; //是否开启OI比赛模式，禁用排名、状态、统计、用户信息、内邮、论坛等。
-
 static  $OJ_BENCHMARK_MODE=false; //此选项仅供测试用，不是正常功能，将影响代码提交，不确定请不要使用，修改提交间隔限制去设后面的OJ_SUBMIT_COOLDOWN_TIME
 static  $OJ_CONTEST_RANK_FIX_HEADER=false; //比赛排名水平滚动时固定名单
 static  $OJ_NOIP_KEYWORD="noip";  // 标题包含此关键词，激活noip模式，赛中不显示结果，仅保留最后一次提交。
@@ -104,6 +100,7 @@ static  $OJ_AI_HTML=false; // 若想开启AI链接，可设为 '<a class="deskto
 static  $OJ_PUBLIC_STATUS=true; //是否公开所有人的判题结果,设为false则除source_browser外，其他人只能看到自己提交的记录。
 static  $OJ_FANCY_RESULT=false; //是否在AC时显示fancy.php里的动画
 static  $OJ_FANCY_MP3='http://cdn.hustoj.com/mp3.php'; // 答案正确时的音效
+static  $OJ_AI_API_URL="aiapi/demo.php" ; //  aiapi/qwen.php 或 aiapi/hy.php 并修改相关文件中的api-key设置
 
 //static  $OJ_EXAM_CONTEST_ID=1000; // 启用考试状态，填写考试比赛ID，比赛开始前可以随便坐，机器有问题及时更换座位，比赛开始后IP锁定，只能从最后一次登录的位置登录。更换机器需要管理员后台手工指定IP。
 //static  $OJ_ON_SITE_CONTEST_ID=1000; //启用现场赛状态，填写现场赛比赛ID，全系统其他功能禁用，自动跳转指定编号的比赛。
@@ -150,6 +147,7 @@ static  $OJ_LOG_TRACE_ENABLED=false;
 
 static $OJ_SaaS_ENABLE=false;
 static $OJ_MENU_NEWS=true;
+static $OJ_MENU_DROPDOWN=false;
 
 require_once(dirname(__FILE__) . "/pdo.php");
 require_once(dirname(__FILE__) . "/init.php");

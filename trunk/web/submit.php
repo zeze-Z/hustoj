@@ -1,7 +1,4 @@
 <?php 
-@ini_set("display_errors", "Off");
-@session_start();
-@ob_start();
 require_once "include/db_info.inc.php";
 require_once "include/my_func.inc.php";
 require_once "include/email.class.php";
@@ -215,7 +212,13 @@ if(isset($tempfile)&&$tempfile!=""){
 			  exit(0);
 		}
 		$source=file_get_contents($tempfile);
-		$len = strlen($source);
+		$encoding = mb_detect_encoding($source, ['UTF-8', 'GBK', 'GB2312', 'BIG5', 'CP936'], true);
+		if(empty($encoding)) $encoding="GBK";
+		if ($encoding != 'UTF-8' ) {
+			$source = mb_convert_encoding($source, 'UTF-8', $encoding);
+		}
+
+		$len = mb_strlen($source);
 		unlink($tempfile);
 	}else{
 		$source="Main.sb3";
