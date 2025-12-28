@@ -1,5 +1,5 @@
 <?php
- //oj-header.php
+ //header.php
  $MSG_FAQ ="常見問答";
  $MSG_BBS ="討論版";
  $MSG_HOME ="首頁";
@@ -159,6 +159,7 @@
  $MSG_CLICK_VIEW_HINT ="點擊查看劇透級題解";
  
  //admin menu
+ $MSG_VIEW_DISABLED_USER="檢視已停用或待審核使用者";
  $MSG_SEEOJ ="檢視前台";
  $MSG_ADD ="新增";
  $MSG_MENU ="選單";

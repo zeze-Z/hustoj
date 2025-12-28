@@ -1,6 +1,7 @@
 <?php
 //a:9:{s:4:"lang";s:2:"en";s:9:"auth_pass";s:32:"d41d8cd98f00b204e9800998ecf8427e";s:8:"quota_mb";i:0;s:17:"upload_ext_filter";a:0:{}s:19:"download_ext_filter";a:0:{}s:15:"error_reporting";i:1;s:7:"fm_root";s:0:"";s:17:"cookie_cache_time";i:2592000;s:7:"version";s:5:"0.9.8";}
 require_once("../include/db_info.inc.php");
+require_once("../include/my_func.inc.php");
 if (!(isset($_SESSION[$OJ_NAME.'_'.'administrator'])
       ||isset($_SESSION[$OJ_NAME.'_'.'problem_editor'])
      )){
@@ -183,15 +184,15 @@ if (!(isset($_SESSION[$OJ_NAME.'_'.'administrator'])
     }
     if(isset($_GET['generate'])){
             //echo "Generate out in $current_dir......";
+	    //make out files
             chdir($current_dir);
-            if(file_exists($current_dir."/Main.c")){
-                if(!$OJ_SaaS_ENABLE)system("/home/judge/src/install/gcc.sh $current_dir");
-                if(!system("/home/judge/src/install/makeout.sh Main"))
-                        echo "makeout fail:<br>chgrp -R www-data ".getcwd();
-            }else if(file_exists($current_dir."/Main.cc")){
-                if(!$OJ_SaaS_ENABLE)system("/home/judge/src/install/g++.sh $current_dir");
-                if(!system("/home/judge/src/install/makeout.sh Main"))
-                        echo "makeout fail:<br>chgrp -R www-data to ".getcwd();
+	    $user_id=$_SESSION[$OJ_NAME.'_user_id'];
+	    $nick=$_SESSION[$OJ_NAME.'_nick'];
+            if(file_exists($current_dir."/Gen.py")  || file_exists($current_dir."/Main.c") || file_exists($current_dir."/Main.cc") ){
+    		$sql = "INSERT INTO solution(problem_id,user_id,nick,in_date,language,ip,code_length,result) VALUES(?,?,?,NOW(),?,?,?,1)";
+    		$insert_id = pdo_query($sql, -$pid, $user_id, $nick, 0 , $ip, 0 );
+		echo "$pid pending".$insert_id;
+           	trigger_judge($insert_id);     // moved to my_func.inc.php
             }else{
                 echo "未找到Main.c或Main.cc,自动生成9组空文件。";
                 for($i=1;$i<10;$i++){
@@ -470,7 +471,7 @@ function et($tag){
     $cn['NoSel'] = '未选择文件或目录';
     $cn['SelDir'] = '在左边的目录树中选择目标目录';
     $cn['TypeDir'] = '请输入目录名';
-    $cn['TypeArq'] = '请输入文件名\\n    输入文件: *.in         输出文件:*.out\\n    指定freopen所用文件名 ↴          上传源码文件名 ↴\\n                  input.name output.name            solution.name \\n    判题机设定 judge.conf \\n详见 hustoj.com ';
+    $cn['TypeArq'] = '请输入文件名\\n    输入文件: *.in         输出文件:*.out\\n    指定freopen所用文件名 ↴          上传源码文件名 ↴\\n                  input.name output.name            solution.name \\n    判题机设定:judge.conf \\n    测试输入生成器:Gen.py    \\n    标程:Main.c/Main.cc\\n详见 hustoj.com ';
     $cn['TypeCmd'] = '请输入命令';
     $cn['TypeArqComp'] = '请输入文件名.扩展名将确定其压缩格式.\\n如:file.zip, file.tar, file.bzip, file.gzip';
     $cn['RemSel'] = '删除选中项';
@@ -522,7 +523,7 @@ function et($tag){
     $cn['Seconds'] = '秒';
     $cn['ErrorReport'] = '错误报告';
     $cn['Random-data'] = '随机测试数据生成器';
-    $cn['GenerateOut'] = '用标程Main.c/Main.cc覆盖生成Out文件';
+    $cn['GenerateOut'] = '用Gen.py+Main.c生成测试数据';
     $cn['Ans2out'] = '自动修订文件名';
     $cn['IOFilename'] = '指定输入输出文件名';
     $cn['SolutionFilename'] = '指定NOIP提交代码文件名';
@@ -2775,6 +2776,7 @@ function html_header($header=""){
     //-->
     </script>
     $header
+    <link rel='stylesheet' href='../template/bs3/bootstrap.min.css'>
     </head>
     <script language=\"Javascript\" type=\"text/javascript\">
     <!--
@@ -3049,6 +3051,73 @@ function getmicrotime(){
    list($usec, $sec) = explode(" ", microtime());
    return ((float)$usec + (float)$sec);
 }
+
+function tips($filename) {
+    // 统一处理大小写（部分匹配不区分大小写）
+    $lower = strtolower($filename);
+
+    // 特定文件名匹配（不区分大小写）
+    if ($lower === 'main.c') {
+        return '标准C程序';
+    } elseif ($lower === 'main.cc') {
+        return '标准C++程序';
+    } elseif ($lower === 'gen.py') {
+        return '测试输入数据生成器Python脚本';
+    } elseif ($lower === 'solution.name') {
+        return '强制上传文件方式提交答案，内含规定文件名';
+    } elseif ($lower === 'input.name') {
+        return '强制文件方式输入，内含规定文件名';
+    } elseif ($lower === 'output.name') {
+        return '强制文件方式输出，内含规定文件名';
+    } elseif ($lower === 'judge.conf') {
+        return '定制化判题参数，参考hustoj.com';
+    }
+
+    // 匹配 .in / .out 结尾且包含 [数字] 的情况
+    if (preg_match('/\.(in|out)$/i', $filename, $ext_matches)) {
+        if (preg_match('/\[([0-9]+)\]/', $filename, $score_matches)) {
+            $score = intval($score_matches[1]);
+            return "分值{$score}";
+        }
+    }
+
+    // 匹配 template.*、prepend.*、append.*
+    $patterns = [
+        '/^template\.([a-z0-9_]+)$/i' => '答案模版',
+        '/^prepend\.([a-z0-9_]+)$/i'  => '前继附加源码',
+        '/^append\.([a-z0-9_]+)$/i'   => '后继附加源码'
+    ];
+
+    foreach ($patterns as $pattern => $suffix) {
+        if (preg_match($pattern, $filename, $matches)) {
+            $lang = $matches[1];
+            // 语言后缀转为中文习惯的“语言”描述（可选美化）
+            // 例如：py → Python，cpp → C++，c → C，java → Java 等
+            $langMap = [
+                'c' => 'C',
+                'cpp' => 'C++',
+                'cc' => 'C++',
+                'cxx' => 'C++',
+                'py' => 'Python',
+                'java' => 'Java',
+                'js' => 'JavaScript',
+                'go' => 'Go',
+                'rs' => 'Rust',
+                'cs' => 'C#',
+                'php' => 'PHP',
+                'rb' => 'Ruby',
+                'scala' => 'Scala',
+                'kt' => 'Kotlin'
+            ];
+            $langName = $langMap[strtolower($lang)] ?? $lang;
+            return "{$langName}语言{$suffix}";
+        }
+    }
+
+    // 未匹配任何规则，返回空或默认提示
+    return '';
+}
+
 function dir_list_form() {
     global $fm_current_root,$current_dir,$quota_mb,$resolveIDs,$order_dir_list_by,$islinux,$cmd_name,$ip,$path_info,$fm_color;
     $ti = getmicrotime();
@@ -3398,7 +3467,7 @@ function dir_list_form() {
         }
         function rename(arg){
             var nome = '';
-            if (nome = prompt('".uppercase(et('Ren'))." \\' '+arg+' \\' ".et('To')." ...')) document.location.href='".addslashes($path_info["basename"])."?frame=3&action=3&current_dir=".addslashes($current_dir)."&old_name='+escape(arg)+'&new_name='+escape(nome);
+            if (nome = prompt('".uppercase(et('Ren'))." \\' '+arg+' \\' ".et('To')." ...',arg)) document.location.href='".addslashes($path_info["basename"])."?frame=3&action=3&current_dir=".addslashes($current_dir)."&old_name='+escape(arg)+'&new_name='+escape(nome);
         }
         function set_dir_dest(arg){
             document.form_action.dir_dest.value=arg;
@@ -3459,7 +3528,7 @@ function dir_list_form() {
             } else if (arg == 2){
                 document.form_action.cmd_arg.value = prompt('".et('TypeArq').".');
             } else if (arg == 21){
-                document.form_action.cmd_arg.value = prompt('".et('IOFilename').".');
+                document.form_action.cmd_arg.value = prompt('".et('IOFilename').",不含扩展名,比如 tree');
             } else if (arg == 22){
                 document.form_action.cmd_arg.value = prompt('".et('SolutionFilename').".');
             } else if (arg == 71){
@@ -3550,10 +3619,10 @@ function dir_list_form() {
             <td bgcolor=\"#DDDDDD\" colspan=50><nobr>
             <input type=button onclick=\"test_prompt(2)\" value=\"".et('CreateArq')."\">
 	    <input type=button onclick=\"upload()\" value=\"".et('Upload')."\">";
-	if(!$OJ_SaaS_ENABLE)$out.="<input type=button onclick=\"generate()\" value=\"".et('GenerateOut')."\">";
-	$out.="<input type=button onclick=\"ans2out()\" value=\"".et('Ans2out')."\">";
-	$out.="<input type=button onclick=\"test_prompt(21)\" value=\"".et('IOFilename')."\">";
-	$out.="<input type=button onclick=\"test_prompt(22)\" value=\"".et('SolutionFilename')."\">";
+	if(!$OJ_SaaS_ENABLE)$out.="<input class='btn-success' type=button onclick=\"generate()\" value=\"".et('GenerateOut')."\" title='自己不会写可以找AI帮忙'>";
+	$out.="<input type=button class='btn-warning' onclick=\"ans2out()\" value=\"".et('Ans2out')."\" title='自动给数字补0排序 + ans改out' >";
+	$out.="<input type=button class='btn-primary' onclick=\"test_prompt(21)\" value=\"".et('IOFilename')."\" title='CCF的比赛每个题目有个英文名'>";
+	$out.="<input type=button class='btn-danger' onclick=\"test_prompt(22)\" value=\"".et('SolutionFilename')."\" title='CCF比赛要求的类似tree.cpp这种'>";
 	if(isset($_GET['pid'])){
                 $pid=intval($_GET['pid']);
                 $_SESSION[$OJ_NAME."_PID"]=$pid;
@@ -3562,8 +3631,8 @@ function dir_list_form() {
         }
         $title=pdo_query('select title from problem where problem_id=?',$pid)[0][0];
         $out.="<b></b>
-            <a class='btn' href='https://muzea-demo.github.io/random-data/' target='_blank'>".et('Random-data')."</a>
-            <b><a href='../problem.php?id=$pid' target='_self'><font color=blue>$title </font></a></b>
+            <a class='btn btn-info' href='https://muzea-demo.github.io/random-data/' target='_blank'>".et('Random-data')."</a>
+            <b><a class='btn' href='../problem.php?id=$pid' target='_self'><font color=blue>$title </font></a></b>
             </nobr>";
         $uplink = "";
 
@@ -3633,7 +3702,7 @@ subtask的题目中也可以有不跟其他数据绑定的，认为是自己一�
                     $file_out[$file_count] = array();
                     $file_out[$file_count][] = "
                         <tr ID=\"entry$ind\" class=\"entryUnselected\" onmouseover=\"selectEntry(this, 'over');\" onmousedown=\"selectEntry(this, 'click');\">
-                        <td><nobr><a href=\"JavaScript:download('".addslashes($file)."')\">$file</a></nobr></td>";
+                        <td><nobr>&nbsp;&nbsp;<a href=\"JavaScript:download('".addslashes($file)."')\">$file</a> <span style='font-size:12px;color:blue'>".tips($file)."</span></nobr></td>";
                     $file_out[$file_count][] = "<td>".$dir_entry["p"]."</td>";
                     if ($islinux) {
                         $file_out[$file_count][] = "<td><nobr>".$dir_entry["u"]."</nobr></td>";
