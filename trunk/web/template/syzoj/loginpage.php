@@ -47,7 +47,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <?php } ?>
 
-        <a href="lostpassword.php"><?php echo $MSG_LOST_PASSWORD ?></a>
+        <!-- <a href="lostpassword.php"><?php echo $MSG_LOST_PASSWORD ?></a> -->
       </div>
     </div>
   </div>
