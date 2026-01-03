@@ -116,16 +116,17 @@
             <a class="header item"  href="/"><span
                     style="font-family: 'Exo 2'; font-size: 1.5em; font-weight: 600; "><?php echo $domain==$DOMAIN?$OJ_NAME:ucwords($OJ_NAME)."'s OJ"?></span></a>
             
-          <?php
+          <?php if(isset($_SESSION[$OJ_NAME.'_'.'user_id'])) { ?>
+            <?php
             if(isset($OJ_AI_HTML)&&$OJ_AI_HTML && !isset($OJ_ON_SITE_CONTEST_ID) ) echo $OJ_AI_HTML;
             else echo '<a class="desktop-only item" href="index.php"><i class="home icon"></i><span class="desktop-only">'.$MSG_HOME.'</span></a>';
             if(file_exists("moodle")){  // 如果存在moodle目录，自动添加链接
               echo '<a class="item" href="moodle"><i class="group icon"></i><span class="desktop-only">Moodle</span></a>';
             }
-            if(file_exists("hello")){  // 如果存在hello目录，自动添加链接
-              echo '<a class="item" onclick=\'window.open("/hello/index.html", "_blank",
-        "width=600,height=850,left=" + (window.screen.width-600)  + ",top=0,toolbar=no,menubar=no,location=no,status=no,resizable=yes");\'><i class="book icon"></i><span class="desktop-only">Hello算法</span></a>';
-            }
+        //     if(file_exists("hello")){  // 如果存在hello目录，自动添加链接
+        //       echo '<a class="item" onclick=\'window.open("/hello/index.html", "_blank",
+        // "width=600,height=850,left=" + (window.screen.width-600)  + ",top=0,toolbar=no,menubar=no,location=no,status=no,resizable=yes");\'><i class="book icon"></i><span class="desktop-only">Hello算法</span></a>';
+        //     }
 
                 
              if( !isset($OJ_ON_SITE_CONTEST_ID) && (!isset($_GET['cid'])||$cid==0) ){
@@ -137,7 +138,7 @@
             <a class="item <?php if ($url=="category.php") echo "active";?>"
                 href="<?php echo $path_fix?>category.php"><i class="globe icon"></i><span class="desktop-only"><?php echo $MSG_SOURCE?></span></a>
             <!-- 竞赛/作业 -->
-            <a class="item <?php if ($url=="contest.php") echo "active";?>" href="<?php echo $path_fix?>contest.php<?php if(isset($_SESSION[$OJ_NAME."_user_id"])) echo "?my" ?>" ><i
+            <a class="item <?php if ($url=="contest.php") echo "active";?>" href="<?php echo $path_fix?>contest.php<?php if(isset($_SESSION[$OJ_NAME."_user_id"])) echo "?my" ?> "><i
                     class="trophy icon"></i><span class="desktop-only"> <?php echo $MSG_CONTEST?></span></a>
             <!-- 状态 -->
             <a class="item <?php if ($url=="status.php") echo "active";?>" href="<?php echo $path_fix?>status.php"><i
@@ -191,6 +192,7 @@
                 ?>
                         </div>
             </div>
+            <?php } ?>
             <?php } ?>
 
             <div class="right menu">

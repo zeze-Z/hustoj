@@ -1,29 +1,10 @@
 <?php $show_title="$MSG_HOME - $OJ_NAME"; ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
-<?php if(isset($_SESSION[$OJ_NAME.'_'.'user_id'])) : ?>
-<head>
-
+<?php if(isset($_SESSION[$OJ_NAME.'_user_id'])) { ?>
 <link rel="stylesheet" href="<?php echo "template/$OJ_TEMPLATE";?>/css/slide.css">
-</head>
 <div class="padding">
     <div class="ui three column grid">
         <div class="eleven wide column">
-            <?php if(file_exists("image/slide1.jpg")){ ?>
-            <h4 class="ui top attached block header" style='margin-top: 10px;'><i class="th icon"></i><?php echo $OJ_NAME ?></h4>
-            <div class="ui bottom attached center aligned segment carousel">
-                <div class="carousel-arrow left" onclick="prevSlide()">&lt;</div> <!-- 左箭头 -->
-                <?php for($i=1;file_exists("image/slide$i.jpg");$i++){ ?>
-                <div class="carousel-slide <?php if($i==1) echo "active";?>" style="background-image: url('image/slide<?php echo $i ?>.jpg')"></div>
-                <?php } ?>
-                <div class="carousel-arrow right" onclick="nextSlide()">&gt;</div> <!-- 右箭头 -->
-                <div class="carousel-dots">
-                    <span class="carousel-dot active" data-index="0"></span>
-                    <span class="carousel-dot" data-index="1"></span>
-                    <span class="carousel-dot" data-index="2"></span>
-                </div>
-            </div>
-            <?php } ?>
-
             <h4 class="ui top attached block header"><i class="ui info icon"></i><?php echo $MSG_NEWS;?></h4>
             <div class="ui bottom attached segment">
                 <table class="ui very basic table">
@@ -182,7 +163,6 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
         </div>
     </div>
 </div>
-<?php endif; ?>
 <?php include("template/$OJ_TEMPLATE/footer.php");?>
 <?php if(file_exists("image/slide1.jpg")){ ?>
     <script>
@@ -238,7 +218,6 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
         carousel.addEventListener('mouseenter', () => clearInterval(autoPlayInterval));
         carousel.addEventListener('mouseleave', () => autoPlayInterval = setInterval(nextSlide, 5000));
     </script>
- <?php } ?>
 <script  src="<?php echo $OJ_CDN_URL.$path_fix."template/$OJ_TEMPLATE"?>/js/echarts.min.js"></script>
         <script type="text/javascript">
 			$( function () {
@@ -283,4 +262,12 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                 } );
                 //alert((new Date()).getTime());
         </script>
+<?php } ?>
+<?php } else { ?>
+<div style="display: flex; justify-content: center; align-items: center; min-height: 50vh; text-align: center;">
+    <h2 style="font-size: 2rem; color: #333;">请先登录后使用</h2>
+</div>
+<?php include("template/$OJ_TEMPLATE/footer.php");?>
+<?php } ?>
+
 

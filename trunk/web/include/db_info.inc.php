@@ -9,10 +9,9 @@
 // connect db 
 static 	$DB_HOST="localhost";  //数据库服务器ip或域名
 static 	$DB_NAME="jol";   //数据库名
-static 	$DB_USER="root";  //数据库账户
-static 	$DB_PASS="root";  //数据库密码
-
-static 	$OJ_NAME="荔枝老师OJ";  //左上角显示的系统名称, 尽量简洁，避免用中文和空格，如需中文、长字符串、图片，可以直接修改template/syzoj/header.php
+static 	$DB_USER="hustoj";  //数据库账户
+static 	$DB_PASS="abc123";  //数据库密码
+static 	$OJ_NAME="LZOJ";  //左上角显示的系统名称, 尽量简洁，避免用中文和空格，如需中文、长字符串、图片，可以直接修改template/syzoj/header.php
 static 	$OJ_HOME="./";    //主页目录
 static 	$OJ_ADMIN="root@localhost";  //管理员email,若启用,建议对SMTP_SERVER等参数进行配置，设好可以接收系统邮件。
 static  $SMTP_SERVER="smtp.qq.com";           //SMTP服务器，通常在邮箱的smtp/pop3设置中可以查询到，推荐用企业邮箱发信，避免被识别为垃圾邮件
@@ -146,12 +145,10 @@ static  $OJ_LOG_TRACE_ENABLED=false;
 
 
 static $OJ_SaaS_ENABLE=false;
-static $OJ_MENU_NEWS=true;
+static $OJ_MENU_NEWS=false;
 static $OJ_MENU_DROPDOWN=false;
 
 require_once(dirname(__FILE__) . "/pdo.php");
 require_once(dirname(__FILE__) . "/init.php");
-
-
 
 
