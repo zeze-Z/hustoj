@@ -90,7 +90,7 @@ static  $OJ_POISON_BOT_COUNT=10; //给机器人账号投毒的起始AC数。例�
 static  $OJ_MARKDOWN="marked.js"; // marked.js/markdown-it 二选一，开启后在后台编辑题目时默认为源码模式，用[md] # Markdown [/md] 格式插入markdown代码, 如果需要用到[]也可以用<div class='md'> </div>。
 static  $OJ_INDEX_NEWS_TITLE='HelloWorld!';   // 在syzoj的首页显示哪一篇标题的文章（可以有多个相同标题）
 static  $OJ_DIV_FILTER=false;   // 过滤题面中的div，修复显示异常，特别是来自其他OJ系统的题面。
-static  $OJ_LIMIT_TO_1_IP=false;  // 限制用户同一时刻只能在一个IP地址登录
+static  $OJ_LIMIT_TO_1_IP=true;  // 限制用户同一时刻只能在一个IP地址登录
 static  $OJ_REMOTE_JUDGE=false; //是否启用Remote Judge ，启用哪些模块请在remote.php中设置
 static  $OJ_NO_CONTEST_WATCHER=false ; //是否禁止无权限用户观战私有比赛
 static  $OJ_CONTEST_TOTAL_100=false; //是否让比赛按100分计分

@@ -117,10 +117,10 @@
 	$MSG_NICK="昵称";
 	$MSG_SOVLED="解决";
 	$MSG_RATIO="比率";
-	$MSG_DAY="日排行";
- 	$MSG_WEEK="周排行";
-	$MSG_MONTH="月排行";
-	$MSG_YEAR="年排行";
+	$MSG_DAY="今日排行";
+ 	$MSG_WEEK="本周排行";
+	$MSG_MONTH="本月排行";
+	$MSG_YEAR="今年排行";
         $MSG_ABSENT="缺席";
 
 	//registerpage.php

@@ -34,14 +34,21 @@
             </div>
 <?php
 /* 本月之星  */
-$month_id=mysql_query_cache("select solution_id from solution where  in_date<date_add(curdate(),interval -day(curdate())+1 DAY) order by solution_id desc limit 1;");
+$month_id=mysql_query_cache("select solution_id from solution where  in_date<date_add(curdate(),interval -1 month) order by solution_id desc limit 1;");
 if(!empty( $month_id) && isset($month_id[0][0]) ) $month_id=$month_id[0][0];else $month_id=0;
-$view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_id)) ac from solution where solution_id>$month_id and problem_id>0  $not_in_noip_contests and user_id not in (".$OJ_RANK_HIDDEN.")  and result=4 and first_time=1 group by user_id,nick order by ac desc limit 10");
+$view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_id)) ac from solution where solution_id>$month_id and problem_id>0  $not_in_noip_contests and user_id not in (".$OJ_RANK_HIDDEN.")  and result=4 group by user_id,nick order by ac desc limit 10");
             if ( !empty($view_month_rank) ) {
         ?>
             <h4 class="ui top attached block header"><i class="ui star icon"></i><?php echo "本月之星"?></h4>
             <div class="ui bottom attached segment">
                 <table class="ui very basic center aligned table" style="table-layout: fixed; ">
+                    <thead>
+                        <tr>
+                            <th>用户名（学号）</th>
+                            <th>昵称</th>
+                            <th>AC数量</th>
+                        </tr>
+                    </thead>
                     <tbody>
         <?php
                             foreach ( $view_month_rank as $row ) {
@@ -60,7 +67,7 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
 /* 本月之星  */
 ?>
 
-            <h4 class="ui top attached block header"><i class="ui star icon"></i><?php echo $OJ_INDEX_NEWS_TITLE;?></h4>
+            <?php if(false) { ?>
             <div class="ui bottom attached segment">
                 <table class="ui very basic left aligned table" style="table-layout: fixed; ">
                     <tbody>
@@ -86,6 +93,7 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                     </tbody>
                 </table>
             </div>
+        <?php } ?>
         </div>
         <div class="right floated five wide column">
             <h4 class="ui top attached block header"><i class="ui rss icon"></i> <?php echo $MSG_RECENT_PROBLEM;?> </h4>

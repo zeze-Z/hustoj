@@ -100,9 +100,55 @@
 
 <!-- Scripts -->
 <script>
-    console.log('\n %c HUSTOJ %c https://github.com/zhblue/hustoj %c\n', 'color: #fadfa3; background: #000000; padding:5px 0;', 'background: #fadfa3; padding:5px 0;', '');
-    console.log('\n %c Theme By %c Baoshuo ( @renbaoshuo ) %c https://baoshuo.ren %c\n', 'color: #fadfa3; background: #000000; padding:5px 0;', 'background: #fadfa3; padding:5px 0;', 'background: #ffbf33; padding:5px 0;', '');
-    console.log('\n GitHub Homepage: https://github.com/zhblue/hustoj \n Document: https://zhblue.github.io/hustoj \n Bug report URL: https://github.com/zhblue/hustoj/issues \n \n%c ★ Please give us a star on GitHub! ★ %c \n', 'color: red;', '')
+    // console.log('\n %c HUSTOJ %c https://github.com/zhblue/hustoj %c\n', 'color: #fadfa3; background: #000000; padding:5px 0;', 'background: #fadfa3; padding:5px 0;', '');
+    // console.log('\n %c Theme By %c Baoshuo ( @renbaoshuo ) %c https://baoshuo.ren %c\n', 'color: #fadfa3; background: #000000; padding:5px 0;', 'background: #fadfa3; padding:5px 0;', 'background: #ffbf33; padding:5px 0;', '');
+    // console.log('\n GitHub Homepage: https://github.com/zhblue/hustoj \n Document: https://zhblue.github.io/hustoj \n Bug report URL: https://github.com/zhblue/hustoj/issues \n \n%c ★ Please give us a star on GitHub! ★ %c \n', 'color: red;', '')
+    
+    // AI体验弹窗函数
+    function openAIExperience() {
+        // 直接在新标签页打开文心一言，解决iframe无法上传图片的问题
+        window.open('https://yiyan.baidu.com/', '_blank');
+    }
+    
+    // 手势识别弹窗函数
+    function openGestureRecognition() {
+        // 创建弹窗容器
+        var gestureModal = document.createElement('div');
+        gestureModal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999999; display: flex; justify-content: center; align-items: center;';
+        
+        // 创建弹窗内容
+        var gestureContent = document.createElement('div');
+        gestureContent.style.cssText = 'width: 90%; height: 90%; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 0 20px rgba(0,0,0,0.3);';
+        
+        // 创建关闭按钮
+        var closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '×';
+        closeBtn.style.cssText = 'position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 20px; cursor: pointer; z-index: 1000000;';
+        closeBtn.onclick = function() {
+            document.body.removeChild(gestureModal);
+        };
+        
+        // 创建iframe
+        var gestureIframe = document.createElement('iframe');
+        gestureIframe.src = 'https://aitools.techsong.cn/gesture-recognition.php';
+        gestureIframe.style.cssText = 'width: 100%; height: 100%; border: none;';
+        
+        // 组装弹窗
+        gestureContent.appendChild(gestureIframe);
+        gestureModal.appendChild(gestureContent);
+        gestureModal.appendChild(closeBtn);
+        
+        // 添加到页面
+        document.body.appendChild(gestureModal);
+        
+        // 点击弹窗外部关闭
+        gestureModal.onclick = function(e) {
+            if (e.target === gestureModal) {
+                document.body.removeChild(gestureModal);
+            }
+        };
+    }
+    
 </script>
 </head>
 
@@ -123,7 +169,7 @@
             if(file_exists("moodle")){  // 如果存在moodle目录，自动添加链接
               echo '<a class="item" href="moodle"><i class="group icon"></i><span class="desktop-only">Moodle</span></a>';
             }
-        //     if(file_exists("hello")){  // 如果存在hello目录，自动添加链接
+         //     if(file_exists("hello")){  // 如果存在hello目录，自动添加链接
         //       echo '<a class="item" onclick=\'window.open("/hello/index.html", "_blank",
         // "width=600,height=850,left=" + (window.screen.width-600)  + ",top=0,toolbar=no,menubar=no,location=no,status=no,resizable=yes");\'><i class="book icon"></i><span class="desktop-only">Hello算法</span></a>';
         //     }
@@ -158,11 +204,19 @@
             <!-- 讨论板 -->
               <?php if (isset($OJ_BBS)&& $OJ_BBS){ ?>
                   <a class='item' href="discuss.php"><i class="clipboard icon"></i> <span class="desktop-only"><?php echo $MSG_BBS?></span></a>
-              <?php }
-
-            }
-                ?>
-            <?php if( isset($_GET['cid']) && intval($_GET['cid'])>0 ){
+              <?php } ?>
+            <!-- AI训练 -->
+            <div class="ui simple dropdown item">
+                <i class="settings icon"></i><span class="desktop-only">AI训练</span><i class="dropdown icon"></i>
+                <div class="menu">
+                    <a class="item" href="AI_training.php?type=image"><i class="image icon"></i>图像分类</a>
+                    <a class="item" href="AI_training.php?type=handpose"><i class="hand peace icon"></i>手势分类</a>
+                </div>
+            </div>
+            <!-- AI进阶 -->
+            <a class="item" onclick="openAIExperience()"><i class="computer icon"></i><span class="desktop-only">AI进阶</span></a>
+            <?php }
+            if( isset($_GET['cid']) && intval($_GET['cid'])>0 ){
                      $cid=intval($_GET['cid']);
                      if(!isset($OJ_ON_SITE_CONTEST_ID)){   ?>
                             <a id="" class="item" href="<?php echo $path_fix?>contest.php" ><i class="arrow left icon"></i><span class="desktop-only"><?php echo $MSG_CONTEST.$MSG_LIST?></span></a>
