@@ -211,6 +211,7 @@
                 <div class="menu">
                     <a class="item" href="AI_training.php?type=image"><i class="image icon"></i>图像分类</a>
                     <a class="item" href="AI_training.php?type=handpose"><i class="hand peace icon"></i>手势分类</a>
+                    <a class="item" href="AI_training.php?type=audio"><i class="microphone icon"></i>语音分类</a>
                 </div>
             </div>
             <!-- AI进阶 -->

@@ -6,6 +6,9 @@ $type = isset($_GET['type']) ? $_GET['type'] : 'image';
 if ($type == 'handpose') {
     $page_title = "AI训练-手势分类";
     $iframe_src = "https://www.openinnolab.org.cn/handposeClassifier";
+} elseif ($type == 'audio') {
+    $page_title = "AI训练-语音分类";
+    $iframe_src = "https://www.openinnolab.org.cn/audioSorter";
 } else {
     $page_title = "AI训练-图像分类";
     $iframe_src = "https://www.openinnolab.org.cn/imageSorter";
