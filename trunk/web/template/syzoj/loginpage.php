@@ -42,7 +42,7 @@
 
       <div class="ui message">
         <!-- <a href="registerpage.php"><?php echo $MSG_REGISTER ?></a> -->
-        <a>注册、忘记密码，请咨询荔枝老师</a>
+        <a>注册、忘记密码，请咨询客服QQ：2326077585</a>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
         <!-- <a href="lostpassword.php"><?php echo $MSG_LOST_PASSWORD ?></a> -->

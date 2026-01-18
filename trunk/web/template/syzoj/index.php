@@ -5,6 +5,11 @@
 <div class="padding">
     <div class="ui three column grid">
         <div class="eleven wide column">
+            <?php
+            $sql_news = "select * FROM `news` WHERE `defunct`!='Y' AND `title`!='faqs.cn' ORDER BY `importance` desc,`time` DESC LIMIT 10";
+            $result_news = mysql_query_cache( $sql_news );
+            if ( !empty($result_news) ) {
+            ?>
             <h4 class="ui top attached block header"><i class="ui info icon"></i><?php echo $MSG_NEWS;?></h4>
             <div class="ui bottom attached segment">
                 <table class="ui very basic table">
@@ -16,22 +21,18 @@
                     </thead>
                     <tbody>
                         <?php
-                        $sql_news = "select * FROM `news` WHERE `defunct`!='Y' AND `title`!='faqs.cn' ORDER BY `importance` desc,`time` DESC LIMIT 10";
-                        $result_news = mysql_query_cache( $sql_news );
-                        if ( $result_news ) {
-                            foreach ( $result_news as $row ) {
-                                echo "<tr>"."<td>"
-                                    ."<a href=\"viewnews.php?id=".$row["news_id"]."\">"
-                                    .$row["title"]."</a></td>"
-                                    ."<td>".$row["time"]."</td>"."</tr>";
-                            }
-                        }else{
-                            echo "check database connection or account ! ";
+                        foreach ( $result_news as $row ) {
+                            echo "<tr>" . "<td>"
+                                . "<a href=\"viewnews.php?id=" . $row["news_id"] . \">". $row["title"] . "</a></td>"
+                                . "<td>" . $row["time"] . "</td>" . "</tr>";
                         }
                         ?>
                     </tbody>
                 </table>
             </div>
+            <?php
+            }
+            ?>
 <?php
 /* 本月之星  */
 $month_id=mysql_query_cache("select solution_id from solution where  in_date<date_add(curdate(),interval -1 month) order by solution_id desc limit 1;");

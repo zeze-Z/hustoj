@@ -212,10 +212,18 @@
                     <a class="item" href="AI_training.php?type=image"><i class="image icon"></i>图像分类</a>
                     <a class="item" href="AI_training.php?type=handpose"><i class="hand peace icon"></i>手势分类</a>
                     <a class="item" href="AI_training.php?type=audio"><i class="microphone icon"></i>语音分类</a>
+                    <a class="item" href="AI_training.php?type=recognition"><i class="search icon"></i>图像识别</a>
                 </div>
             </div>
             <!-- AI进阶 -->
             <a class="item" onclick="openAIExperience()"><i class="computer icon"></i><span class="desktop-only">AI进阶</span></a>
+            <!-- 小游戏 -->
+            <div class="ui simple dropdown item">
+                <i class="gamepad icon"></i><span class="desktop-only">小游戏</span><i class="dropdown icon"></i>
+                <div class="menu">
+                    <a class="item" href="keyboard_game.php"><i class="keyboard icon"></i>打字游戏</a>
+                </div>
+            </div>
             <?php }
             if( isset($_GET['cid']) && intval($_GET['cid'])>0 ){
                      $cid=intval($_GET['cid']);
