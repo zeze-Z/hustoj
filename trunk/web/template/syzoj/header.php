@@ -213,6 +213,7 @@
                     <a class="item" href="AI_training.php?type=handpose"><i class="hand peace icon"></i>手势分类</a>
                     <a class="item" href="AI_training.php?type=audio"><i class="microphone icon"></i>语音分类</a>
                     <a class="item" href="AI_training.php?type=recognition"><i class="search icon"></i>图像识别</a>
+                    <a class="item" href="AI_training.php?type=gesture"><i class="hand lizard icon"></i>手势识别</a>
                 </div>
             </div>
             <!-- AI进阶 -->
@@ -222,6 +223,7 @@
                 <i class="gamepad icon"></i><span class="desktop-only">小游戏</span><i class="dropdown icon"></i>
                 <div class="menu">
                     <a class="item" href="keyboard_game.php"><i class="keyboard icon"></i>打字游戏</a>
+                    <a class="item" href="flappy_bird.php"><i class="gamepad icon"></i>Flappy Bird</a>
                 </div>
             </div>
             <?php }
@@ -326,6 +328,6 @@ if(isset($_SESSION[$OJ_NAME.'_'.'balloon'])){
             </div>
         </div>
     </div>
-    <div style="margin-top: 49px; ">
+    <div style="margin-top: 0px; ">
         <div id="main" class="ui main container">
 <?php } ?>

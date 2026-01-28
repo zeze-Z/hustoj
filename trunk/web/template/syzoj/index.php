@@ -6,11 +6,11 @@
     <div class="ui three column grid">
         <div class="eleven wide column">
             <?php
-            $sql_news = "select * FROM `news` WHERE `defunct`!='Y' AND `title`!='faqs.cn' ORDER BY `importance` desc,`time` DESC LIMIT 10";
-            $result_news = mysql_query_cache( $sql_news );
-            if ( !empty($result_news) ) {
-            ?>
-            <h4 class="ui top attached block header"><i class="ui info icon"></i><?php echo $MSG_NEWS;?></h4>
+                        $sql_news = "select * FROM `news` WHERE `defunct`!='Y' AND `title`!='faqs.cn' ORDER BY `importance` desc,`time` DESC LIMIT 10";
+                        $result_news = mysql_query_cache( $sql_news );
+                        if ( $result_news && !empty($result_news) ) {
+                        ?>
+<h4 class="ui top attached block header"><i class="ui info icon"></i><?php echo $MSG_NEWS;?></h4>
             <div class="ui bottom attached segment">
                 <table class="ui very basic table">
                     <thead>
@@ -21,18 +21,19 @@
                     </thead>
                     <tbody>
                         <?php
-                        foreach ( $result_news as $row ) {
-                            echo "<tr>" . "<td>"
-                                . "<a href=\"viewnews.php?id=" . $row["news_id"] . \">". $row["title"] . "</a></td>"
-                                . "<td>" . $row["time"] . "</td>" . "</tr>";
-                        }
+                            foreach ( $result_news as $row ) {
+                                echo "<tr>" . "<td>"
+                                    . "<a href=\"viewnews.php?id=" . $row["news_id"] . "\">"
+                                    . $row["title"] . "</a></td>"
+                                    . "<td>" . $row["time"] . "</td>" . "</tr>";
+                            }
                         ?>
                     </tbody>
                 </table>
             </div>
-            <?php
-            }
-            ?>
+<?php
+                        }
+                        ?>
 <?php
 /* 本月之星  */
 $month_id=mysql_query_cache("select solution_id from solution where  in_date<date_add(curdate(),interval -1 month) order by solution_id desc limit 1;");
@@ -68,33 +69,7 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
 /* 本月之星  */
 ?>
 
-            <?php if(false) { ?>
-            <div class="ui bottom attached segment">
-                <table class="ui very basic left aligned table" style="table-layout: fixed; ">
-                    <tbody>
-
-                        <?php
-                        $sql_news = "select * FROM `news` WHERE `defunct`!='Y' AND `title`='$OJ_INDEX_NEWS_TITLE' ORDER BY `importance` ASC,`time` DESC LIMIT 10";
-                        $result_news = mysql_query_cache( $sql_news );
-                        if ( $result_news ) {
-                            foreach ( $result_news as $row ) {
-                                echo "<tr>"."<td>"
-                                    .bbcode_to_html($row["content"])."</td></tr>";
-                            }
-                        }
-                        ?>
-                         <tr><td>
-                                <center> Recent submission :
-                                        <?php echo $speed?> .
-                                        <div id=submission style="width:80%;height:300px"></div>
-                                </center>
-
-                        </td></tr>
-
-                    </tbody>
-                </table>
-            </div>
-        <?php } ?>
+            <!-- 移除了永远不会执行的冗余代码块 -->
         </div>
         <div class="right floated five wide column">
             <h4 class="ui top attached block header"><i class="ui rss icon"></i> <?php echo $MSG_RECENT_PROBLEM;?> </h4>
@@ -224,53 +199,11 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
 
         // 鼠标悬停暂停自动播放
         const carousel = document.querySelector('.carousel');
-        carousel.addEventListener('mouseenter', () => clearInterval(autoPlayInterval));
-        carousel.addEventListener('mouseleave', () => autoPlayInterval = setInterval(nextSlide, 5000));
+        if (carousel) {
+            carousel.addEventListener('mouseenter', () => clearInterval(autoPlayInterval));
+            carousel.addEventListener('mouseleave', () => autoPlayInterval = setInterval(nextSlide, 5000));
+        }
     </script>
-<script  src="<?php echo $OJ_CDN_URL.$path_fix."template/$OJ_TEMPLATE"?>/js/echarts.min.js"></script>
-        <script type="text/javascript">
-			$( function () {
-			var all=<?php echo json_encode(array_column($chart_data_all,1))?> ;
-			var sub_echarts= echarts.init( $( "#submission" )[0]);
-			var maxY=Math.max(all);
-			var option = {
-			tooltip: {
-				trigger: 'axis',
-				formatter: '{b0}({a0}): {c0}<br />{b1}({a1}): {c1}'
-			},
-			legend: {
-			data: ['<?php echo $MSG_SUBMIT?>','<?php echo $MSG_AC?>' ]
-			},
-			xAxis: {
-			data: <?php echo json_encode(array_column($chart_data_ac,0))?> 
-			,
-			inverse:true
-			},
-			yAxis: [
-				{
-					type: 'value',
-					name: '<?php echo $MSG_SUBMIT?>'
-				}
-			],
-			series: [
-			{
-				name: '<?php echo $MSG_SUBMIT?>',
-				type: 'bar',
-				data: all
-				}
-			,
-			{
-				name: '<?php echo $MSG_AC?>',
-				type: 'bar',
-				data: <?php echo json_encode(array_column($chart_data_ac,1))?> 
-			}]
-			};
-			sub_echarts.setOption(option);
-
-
-                } );
-                //alert((new Date()).getTime());
-        </script>
 <?php } ?>
 <?php } else { ?>
 <div style="display: flex; justify-content: center; align-items: center; min-height: 50vh; text-align: center;">
@@ -278,5 +211,3 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
 </div>
 <?php include("template/$OJ_TEMPLATE/footer.php");?>
 <?php } ?>
-
-

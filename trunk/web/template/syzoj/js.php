@@ -24,8 +24,8 @@ or
 <script src="<?php echo $OJ_CDN_URL.$path_fix."template/bs3/"?>bootstrap.min.js"></script>
 <script>
 $(document).ready(function(){
-  var msg="<marquee style='margin-top:-10px;margin-bottom:10px' id=broadcast direction='left' scrollamount=3 scrolldelay=50 onMouseOver='this.stop()'"+
-      " onMouseOut='this.start()' class='padding' >"+<?php echo json_encode($view_marquee_msg); ?>+"</marquee>";
+  var msg="<marquee style='margin:0px auto 5px auto; width:80%; max-width:1000px; padding:5px 10px; background-color:rgba(240,240,240,0.5); border-radius:4px' id=broadcast direction='left' scrollamount=3 scrolldelay=50 onMouseOver='this.stop()'"+
+      " onMouseOut='this.start()' >"+<?php echo json_encode($view_marquee_msg); ?>+"</marquee>";
   <?php if ($view_marquee_msg!="") { ?>
 		$("#main").prepend(msg);
   <?php } ?>
