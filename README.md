@@ -150,10 +150,22 @@ Star us, please!
 ## 更新日志
 
 <details open>
+<summary><b>2026年</b></summary>
+	
+日期  | 类型 |  更新内容 | 图
+------- | :--:  | :--: | :-------
+01-29 | 更新 | 基于人工智能的题目分类标签生成 | ![QQ20260129-151030](https://github.com/user-attachments/assets/8018bda2-1af1-4690-a537-9b13c70dd83f)
+01-22 | 更新 | 修改AI调用为异步模式运行，不再影响php-fpm的进程池。|在db_info.inc.php中增加变量 $OJ_AI_API_URL=”aiapi/qwen.php”;    //根据所需选择aiapi目录中的某个文件。配置$OJ_AI_API_URL所指向的文件，主要是提供其中的$apiKey 的值，其他内容可根据自己需求修改调整。
+01-01 | 更新 | 允许AI辅助造题，纯鼠标点击的造题模式。|<img width="623" height="531" alt="image" src="https://github.com/user-attachments/assets/b6d4d937-142b-4068-b0b4-e06f0841492f" />
+
+</details>
+
+<details>
 <summary><b>2025年</b></summary>
 	
 日期  | 类型 |  更新内容 | 图
 ------- | :--:  | :--: | :-------
+12-30 | 更新 | 增加了新的人工智能造数据、标程工具 |<img width="1084" height="175" alt="image" src="https://github.com/user-attachments/assets/615146fb-fee6-4c49-88c7-f27359d103e9" />
 12-09 | 更新 | 增加一个命令行配置工具setup.sh | <img width="390" height="278" alt="image" src="https://github.com/user-attachments/assets/1a1ac6a8-4dc0-4a41-99d5-01d0ece016cb" />
 12-05 | 更新 | 增加比赛的AI辅助开关 | <img width="429" height="361" alt="image" src="https://github.com/user-attachments/assets/f8c5f3f3-bb85-45a6-ba33-323f5c93d849" />
 11-16 | 更新 | 增加aiapi目录，放入千问、Bigmodel、腾讯元宝、腾讯混元、huggingface 等模型接口文件，db_info.inc.php中的$QWEN_API_KEY去掉，换成$OJ_AI_API_URL来指定加载加载AI答疑文件路径。
@@ -481,16 +493,18 @@ sudo bash install.sh
 或2:[卸载阿里云盾](#卸载阿里云盾)。**
 
 	
-### 校园网安装
+### 内网安装
 
-近期 `Github` 的 SVN 访问缓慢，可以到  [Releases](https://github.com/zhblue/hustoj/releases) 中下载 `tar.gz` 版本，然后用 `install` 目录下的 `*-bytgz.sh` 脚本安装。
-
-但是注意这样安装的实例，将来升级时只能手工升级。
-
-以 `Ubuntu 18.04` 为例：下载好 [Releases](https://github.com/zhblue/hustoj/releases) 中的 `Source code(tar.gz)`，然后准备好 `install-ubuntu18-bytgz.sh`
+军政网、教育网等，限制服务器访问外网的用户，请先安装标准版Ubuntu24.04 LTS Desktop，然后下载 
+```
+http://dl.hustoj.com/hustoj-offline.tar.gz
+``` 
+用U盘等方式复制到服务器中。
 
 ```bash
-sudo bash install-ubuntu18-bytgz.sh 19.06.04.tar.gz
+tar xzf hustoj-offline.tar.gz
+cd hustoj-offline
+sudo bash install.sh
 ```
 ### 基于 Ubuntu 22.04+宝塔 安装
 	

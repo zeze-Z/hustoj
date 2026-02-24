@@ -31,6 +31,24 @@
                     </tbody>
                 </table>
             </div>
+			<?php
+if(isset($pages) && $pages>1 ){
+  echo "<div style='display:inline;'>";
+  echo "<nav class='center'>";
+  echo "<ul class='pagination pagination-sm'>";
+  echo "<li class='page-item'><a href='index.php?page=".(strval(1))."'>&lt;&lt;</a></li>";
+  echo "<li class='page-item'><a href='index.php?page=".($page==1?strval(1):strval($page-1))."'>&lt;</a></li>";
+  for($i=$spage; $i<=$epage; $i++){
+    echo "<li class='".($page==$i?"active ":"")."page-item'><a title='go to page' href='index.php?page=".$i."'>".$i."</a></li>";
+  }
+  echo "<li class='page-item'><a href='index.php?page=".($page==$pages?strval($page):strval($page+1))."'>&gt;</a></li>";
+  echo "<li class='page-item'><a href='index.php?page=".(strval($pages))."'>&gt;&gt;</a></li>";
+  echo "</ul>";
+  echo "</nav>";
+  echo "</div>";
+}
+?>
+
 <?php
                         }
                         ?>

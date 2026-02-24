@@ -221,6 +221,7 @@ static char cc_opt[BUFFER_SIZE/10];
 static char cc_std[BUFFER_SIZE/10];
 static char cpp_std[BUFFER_SIZE/10];
 static int auto_result = OJ_AC ;
+static int www_uid= 33 ;  // www-data in ubuntu , might overwrite for BT.cn
 
 int num_of_test = 0;
 //static int sleep_tmp;
@@ -570,6 +571,7 @@ void load_conf(const char * judge_path ,int sys ){
 				read_int(buf, "OJ_COMPILE_CHROOT", &compile_chroot);
 				read_int(buf, "OJ_USE_DOCKER",&use_docker);
 				read_int(buf, "OJ_PYTHON_FREE", &python_free);
+				read_int(buf, "OJ_WWW_UID",&www_uid);
 			}
 			read_int(buf, "OJ_JAVA_TIME_BONUS", &java_time_bonus);
 			read_int(buf, "OJ_JAVA_MEMORY_BONUS", &java_memory_bonus);
@@ -2112,7 +2114,7 @@ void prepare_files(char *filename, int namelen, char *infile, int &p_id,
  	if (access(noip_file_name, R_OK ) != -1){
 		if(DEBUG) printf("NOIP filename:%s\n",noip_file_name);
 		FILE * fpname=fopen(noip_file_name,"r");
-		if(fscanf(fpname,"%s",noip_file_name)){
+		if (fscanf(fpname, "%s", noip_file_name) == 1){
 		    execute_cmd("/bin/cp '%s' %s/%s", infile, work_dir,basename(noip_file_name));   // 如果存在input.name则复制测试数据
 		     execute_cmd("/usr/bin/chown judge %s/%s", work_dir,basename(noip_file_name));   // 修改属主
 		    if(DEBUG) printf("NOIP filename:%s\n",noip_file_name);
@@ -2127,14 +2129,14 @@ void prepare_files(char *filename, int namelen, char *infile, int &p_id,
 
 	sprintf(noip_file_name,"%s/data/%d/output.name",oj_home,p_id);
 	if(DEBUG) printf("NOIP filename:%s\n",noip_file_name);
- 	if (access(noip_file_name, R_OK ) != -1){	
-		FILE * fpname=fopen(noip_file_name,"r");
-		if(fscanf(fpname,"%s",noip_file_name)){
+	FILE * fpname = fopen(noip_file_name, "r");
+	if (fpname != NULL){
+		if (fscanf(fpname, "%s", noip_file_name) == 1){
 		    if(DEBUG) printf("NOIP filename:%s\n",noip_file_name);
 		    if(!strstr("noip_file_name","//")){
                             sprintf(userfile, "%s/run%d/%s", oj_home, runner_id,basename(noip_file_name));
                             execute_cmd("rm %s",userfile);
-                    }
+        }
 		}
 		fclose(fpname);
 	}else{
@@ -3472,9 +3474,9 @@ int get_sim(int solution_id, int lang, int pid, int &sim_s_id)
         pf = fopen("sim", "r");
         if (!sim){
                 execute_cmd("/bin/mkdir ../data/%d/ac/ 2>/dev/null", pid);
-                execute_cmd("/bin/chown www-data ../data/%d/ac/ 2>/dev/null", pid);
+                execute_cmd("/bin/chown %d ../data/%d/ac/ 2>/dev/null", www_uid, pid);
                 execute_cmd("/bin/cp %s ../data/%d/ac/%d.%s 2>/dev/null", src_pth, pid, solution_id,lang_ext[lang]);
-                execute_cmd("/bin/chown www-data ../data/%d/ac/%d.%s 2>/dev/null", pid, solution_id,lang_ext[lang]);
+                execute_cmd("/bin/chown %d ../data/%d/ac/%d.%s 2>/dev/null",www_uid, pid, solution_id,lang_ext[lang]);
  		 //c cpp will
                 if (lang == 0)
                         execute_cmd("/bin/ln ../data/%d/ac/%d.%s ../data/%d/ac/%d.%s 2>/dev/null", pid,
@@ -3639,11 +3641,11 @@ int make_out(int solution_id,int p_id,int lang,char * work_dir,double time_lmt,i
 		}
 		unshare(CLONE_NEWNET);
 		ptrace(PTRACE_TRACEME, 0, NULL, NULL);
-		while (setgid(33) != 0)
+		while (setgid(www_uid) != 0)
 			sleep(1);
-		while (setuid(33) != 0)
+		while (setuid(www_uid) != 0)
 			sleep(1);
-		while (setresuid(33, 33, 33) != 0)
+		while (setresuid(www_uid, www_uid, www_uid) != 0)
 			sleep(1);
 		struct rlimit LIM; // time limit, file limit& memory limit
 		// time limit
@@ -3711,7 +3713,7 @@ int make_out(int solution_id,int p_id,int lang,char * work_dir,double time_lmt,i
 		watch_solution(pidApp, infile, ACflg, spj, userfile, outfile,
 					   solution_id, lang, topmemory, mem_lmt, usedtime, time_lmt,
 					   p_id, PEflg, work_dir);
-		execute_cmd("chown www-data:judge %s/*.out", work_dir);
+		execute_cmd("chgrp judge %s/*.out", work_dir);
 	}
 	if(DEBUG) printf("make out files for problem %d \n",p_id);
 	update_solution(solution_id, OJ_TR, usedtime, topmemory >> 10, 0, 0, 0);
@@ -4111,10 +4113,11 @@ int main(int argc, char **argv)
 			}else{
 				if(same_subtask(last_name,dirp->d_name)){ //相同子任务，初次失败
 					if(minus_mark>=0) get_mark-=minus_mark;  //扣除任务内积分
+				}else{
+					if(DEBUG)printf("1 spj_mark: %.2f mark: %.2f get_mark: %.2f\n",spj_mark,mark,get_mark);
+					get_mark+=mark*spj_mark;	
+					pass_rate+=spj_mark;
 				}
-				if(DEBUG)printf("1 spj_mark: %.2f mark: %.2f get_mark: %.2f\n",spj_mark,mark,get_mark);
-				get_mark+=mark*spj_mark;	
-				pass_rate+=spj_mark;
 				if(DEBUG)printf("2 spj_mark: %.2f mark: %.2f get_mark: %.2f\n",spj_mark,mark,get_mark);
 				minus_mark= -1 ;                          //当前任务失败，标记
 			}

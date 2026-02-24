@@ -22,7 +22,8 @@ if [ ! -f $DIRECTORY ]; then
 else
 	rm /home/judge/src/web/include/db_info.inc.php
 fi
-ln -s $DIRECTORY /home/judge/src/web/include/db_info.inc.php
+#ln -s $DIRECTORY /home/judge/src/web/include/db_info.inc.php
+cp $DIRECTORY /home/judge/src/web/include/db_info.inc.php
 
 DIRECTORY="/data/mysql"
 if [ ! -d $DIRECTORY ]; then
@@ -41,15 +42,20 @@ chgrp -R www-data /data/judge.conf
 chmod 770 -R /data/db_info.inc.php
 chgrp -R www-data /data/db_info.inc.php
 
+chmod o+x /home/ /home/judge/ /home/judge/src/
+chown -R www-data:www-data /home/judge/src/web/
+chmod -R 755 /home/judge/src/web/
+
 #chown -R mysql:mysql /var/lib/mysql 
 chown -R mysql:mysql /data/mysql/
+usermod -d /var/lib/mysql -m mysql
 
-service mysql start
+service mariadb start
 /usr/bin/judged
-php5-fpm
+service php8.3-fpm start
 service nginx start
 
-/bin/bash  
-exit 0 
-
+# /bin/bash  
+# exit 0 
+tail -f /dev/null  # 无限循环，保持容器存活，无需 TTY
 
