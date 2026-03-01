@@ -1,14 +1,34 @@
-##
-# nginx配置修改命令：
-# sudo cp /etc/nginx/sites-enabled/default /etc/nginx/default.bak
-# sudo vim /etc/nginx/sites-enabled/default
-# # 检查配置语法（关键！有错误会提示）
-# sudo nginx -t
-# # 语法无错则重启Nginx
-# sudo systemctl restart nginx
-# 以下为oj系统的nginx配置文件内容：/etc/nginx/sites-enabled/default
-##
+#!/bin/bash
 
+# nginx配置修改脚本
+# 使用方法: sudo bash fix_nginx_conf.sh
+
+# 颜色输出
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo -e "${YELLOW}开始配置 Nginx...${NC}"
+
+# 检查是否以root权限运行
+if [ "$EUID" -ne 0 ]; then
+    echo -e "${RED}请使用 sudo 运行此脚本${NC}"
+    exit 1
+fi
+
+# 1. 备份原配置
+echo -e "${YELLOW}备份原配置...${NC}"
+if [ -f /etc/nginx/sites-enabled/default ]; then
+    cp /etc/nginx/sites-enabled/default /etc/nginx/default.bak
+    echo -e "${GREEN}原配置已备份到 /etc/nginx/default.bak${NC}"
+else
+    echo -e "${YELLOW}原配置文件不存在，跳过备份${NC}"
+fi
+
+# 2. 写入新的nginx配置
+echo -e "${YELLOW}写入新的nginx配置...${NC}"
+cat > /etc/nginx/sites-enabled/default << 'EOF'
 # 1. 核心：所有IP访问/未绑定域名访问 → 自动跳转到你的域名（HTTPS）
 server {
 	listen 80 default_server;
@@ -68,3 +88,28 @@ server {
 		deny all;
 	}
 }
+EOF
+
+echo -e "${GREEN}nginx配置已写入${NC}"
+
+# 3. 检查配置语法
+echo -e "${YELLOW}检查nginx配置语法...${NC}"
+if nginx -t; then
+    echo -e "${GREEN}配置语法检查通过！${NC}"
+else
+    echo -e "${RED}配置语法错误！请检查配置。已备份的原配置位于 /etc/nginx/default.bak${NC}"
+    exit 1
+fi
+
+# 4. 重启nginx
+echo -e "${YELLOW}重启nginx...${NC}"
+if systemctl restart nginx; then
+    echo -e "${GREEN}nginx重启成功！${NC}"
+else
+    echo -e "${RED}nginx重启失败！请检查错误日志${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}========================================${NC}"
+echo -e "${GREEN}Nginx配置完成！${NC}"
+echo -e "${GREEN}========================================${NC}"
