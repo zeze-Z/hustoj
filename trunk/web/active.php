@@ -22,6 +22,15 @@ if (isset($OJ_EMAIL_CONFIRM)) {
     }
 }
 
-// 重定向到登录页面
-header("location:loginpage.php");
+// 检查激活是否成功
+if (isset($result) && $result > 0) {
+    // 激活成功，显示弹窗提示
+    print "<script language='javascript'>\n";
+    print "alert('账号激活成功，请登录');\n";
+    print "window.location.href='loginpage.php';\n";
+    print "</script>";
+} else {
+    // 激活失败或已激活，直接跳转
+    header("location:loginpage.php");
+}
 ?>
