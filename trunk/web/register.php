@@ -179,7 +179,15 @@ else $defunct = "N";
 $sql = "INSERT INTO `users`("
         . "`user_id`,`email`,`ip`,`accesstime`,`password`,`reg_time`,`nick`,`school`,`group_name`,`defunct`,activecode)"
         . "VALUES(?,?,?,NOW(),?,NOW(),?,?,?,?,?)";
-$rows = pdo_query($sql, $user_id, $email, $ip, $password, $nick, $school, getMappedSpecial($user_id), $defunct, $_SESSION[$OJ_NAME . '_' . 'activecode']);// or die("Insert Error!\n");
+$rows = pdo_query($sql, $user_id, $email, $ip, $password, $nick, $school, getMappedSpecial($user_id), $defunct, $_SESSION[$OJ_NAME . '_' . 'activecode']);
+
+// 检查数据库插入是否成功
+if ($rows === -1 || $rows === false) {
+    print "<script language='javascript'>\n";
+    print "alert('数据库错误，注册失败，请联系客服！');\n";
+    print "history.go(-1);\n</script>";
+    exit(0);
+}
 
 //发送激活邮件
 if (isset($OJ_EMAIL_CONFIRM) && $OJ_EMAIL_CONFIRM) {
@@ -187,10 +195,10 @@ if (isset($OJ_EMAIL_CONFIRM) && $OJ_EMAIL_CONFIRM) {
     email($email, "$MSG_ACTIVE_YOUR_ACCOUNT",
             "$MSG_CLICK_COPY $MSG_ACTIVE_YOUR_ACCOUNT $user_id :\n " . $link);
 
-    $view_errors = "<div class='ui main container' ><font size=5 > $MSG_CHECK $email $MSG_EMAIL , $MSG_CLICK_COPY $MSG_ACTIVE_YOUR_ACCOUNT";
-    $view_errors .= "</font></div><hr><hr>";
-
-    require("template/" . $OJ_TEMPLATE . "/error.php");
+    print "<script language='javascript'>\n";
+    print "alert('注册成功！请前往邮箱激活账号');\n";
+    print "window.location.href='loginpage.php';\n";
+    print "</script>";
     exit(0);
 }
 

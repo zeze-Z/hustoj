@@ -2,14 +2,13 @@
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 <div class="padding">
   <h1><?php echo $MSG_REG_INFO?></h1>
-  <h2><br />暂未开放注册功能，账号统一由荔枝老师分配<br /><br /><br /></h1>
-  <!-- <div class="ui error message" id="error" data-am-alert hidden>
+  <div class="ui error message" id="error" data-am-alert hidden>
     <p id="error_info"></p>
   </div>
           <form action="register.php" method="post" role="form" class="ui form">
                 <div class="field">
                     <label for="username"><?php echo $MSG_USER_ID?>*</label>
-                    <input name="user_id" class="form-control" placeholder="同名用户在github给hustoj加🌟可得🌟" type="text">
+                    <input name="user_id" class="form-control" placeholder="学生注册请用学号，老师注册请用手机号" type="text">
                 </div>
                 <div class="field">
                     <label for="username"><?php echo $MSG_NICK?>*</label>
@@ -42,6 +41,6 @@
                 <?php }?>
                 <button name="submit" type="submit" class="ui button"><?php echo $MSG_REGISTER; ?></button>
                 <button name="submit" type="reset" class="ui button"><?php echo $MSG_RESET; ?></button>
-            </form> -->
+            </form>
 </div>
 <?php include("template/$OJ_TEMPLATE/footer.php");?>

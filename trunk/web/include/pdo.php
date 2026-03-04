@@ -43,8 +43,10 @@ function pdo_query($sql){
         $query_used_time=microtime(true)-$query_start_time;
         if($query_used_time>3) {
             global $logger;
-            $logger->warn("slow SQL of [$query_used_time] sec : $sql \n
+            if(isset($logger) && $logger !== null) {
+                $logger->warn("slow SQL of [$query_used_time] sec : $sql \n
                     in page [".$_SERVER['REQUEST_URI']."]");
+            }
         }
 	    return $result;
     }catch(PDOException $e){

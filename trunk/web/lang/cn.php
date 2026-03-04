@@ -132,7 +132,7 @@
 	$MSG_EMAIL="电子邮件";
 	$MSG_REG_INFO="设置注册信息";
 	$MSG_VCODE="验证码";
-        $MSG_ACTIVE_YOUR_ACCOUNT="激活账号";
+        $MSG_ACTIVE_YOUR_ACCOUNT="激活账号后即可登录";
         $MSG_CLICK_COPY="点击或者复制访问链接";
         $MSG_CHECK="检查";
         $MSG_OLD="旧";
@@ -173,7 +173,7 @@
 	$MSG_NEWS="公告";
 	$MSG_CONTENTS="内容";
 	$MSG_SAVE="保存";	
-        $MSG_DELETED="已删除";	
+        $MSG_DELETED="已下线";	
         $MSG_NORMAL="正常";	
         $MSG_RESERVED="未启用";
 
@@ -195,8 +195,8 @@
 	$MSG_OFFLINE_ZIP_IMPORT="导入zip文件，遵循下面的目录结构:";
 	$MSG_OFFLINE="离线";
         $MSG_EXPIRY_DATE="有效期";
-        $MSG_CLICK_TO_DELETE="点击删除";
-        $MSG_CLICK_TO_RECOVER="点击恢复";
+        $MSG_CLICK_TO_DELETE="下线账号";
+        $MSG_CLICK_TO_RECOVER="恢复账号";
 
   //contest.php
   $MSG_PRIVATE_WARNING="比赛尚未开始或私有，不能查看题目。";

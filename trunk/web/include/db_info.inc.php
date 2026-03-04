@@ -11,13 +11,13 @@ static 	$DB_HOST="localhost";  //数据库服务器ip或域名
 static 	$DB_NAME="jol";   //数据库名
 static 	$DB_USER="hustoj";  //数据库账户
 static 	$DB_PASS="abc123";  //数据库密码
-static 	$OJ_NAME="LZOJ";  //左上角显示的系统名称, 尽量简洁，避免用中文和空格，如需中文、长字符串、图片，可以直接修改template/syzoj/header.php
+static 	$OJ_NAME="AI-OJ";  //左上角显示的系统名称, 尽量简洁，避免用中文和空格，如需中文、长字符串、图片，可以直接修改template/syzoj/header.php
 static 	$OJ_HOME="./";    //主页目录
-static 	$OJ_ADMIN="root@localhost";  //管理员email,若启用,建议对SMTP_SERVER等参数进行配置，设好可以接收系统邮件。
+static 	$OJ_ADMIN="aioj.top@qq.com";  //管理员email,若启用,建议对SMTP_SERVER等参数进行配置，设好可以接收系统邮件。
 static  $SMTP_SERVER="smtp.qq.com";           //SMTP服务器，通常在邮箱的smtp/pop3设置中可以查询到，推荐用企业邮箱发信，避免被识别为垃圾邮件
-static  $SMTP_PORT=587;                           //SMTP服务器端口，通常是25，有的服务器支持80（阿里云）、465(网易)、587（QQ）以适应不同的网络防火墙配置
-static  $SMTP_USER="mailer@qq.com";      //SMTP服务器的用户名（通常就是发件人的邮箱地址）, 这里修改后视为邮件配置生效，若配置不当可能导致部分页面超时。
-static  $SMTP_PASS="your_smpt_auth_password";       //由邮箱系统生成的口令 (SMTP服务器的密码)
+static  $SMTP_PORT=465;                           //SMTP服务器端口，通常是25，有的服务器支持80（阿里云）、465(网易)、587（QQ）以适应不同的网络防火墙配置
+static  $SMTP_USER="aioj.top@qq.com";      //SMTP服务器的用户名（通常就是发件人的邮箱地址）, 这里修改后视为邮件配置生效，若配置不当可能导致部分页面超时。
+static  $SMTP_PASS="bocypcoauskhecah";       //由邮箱系统生成的口令 (SMTP服务器的密码)
 static 	$OJ_DATA="/home/judge/data";  //测试数据目录
 static 	$OJ_BBS=false; //设为"discuss3" 启用， "bbs" for phpBB3 bridge or "discuss" for mini-forum or false for close any 
 static  $OJ_ONLINE=false;  //是否记录在线情况
@@ -29,8 +29,8 @@ static  $OJ_ACE_EDITOR=true;  // 是否启用有高亮提示的提交代码输�
 static  $OJ_AUTO_SHARE=false; //true: 设为true则通过的题目可在统计页查看其他人代码.
 static  $OJ_CSS="white.css";  // bing.css | kawai.css | black.css | blue.css | green.css | hznu.css
 static  $OJ_SAE=false; //使用新浪引擎
-static  $OJ_VCODE=false;  //验证码
-static 	$OJ_REG_SPEED=60 ; //限制每小时同ip注册个数，0不限制
+static  $OJ_VCODE=true;  //验证码
+static 	$OJ_REG_SPEED=1 ; //限制每小时同ip注册个数，0不限制
 static  $OJ_APPENDCODE=true;  // 代码预定模板
 static  $OJ_CE_PENALTY=false;  // 编译错误是否罚时
 static  $OJ_PRINTER=false;  //启用打印服务
@@ -52,9 +52,9 @@ static  $OJ_CDN_URL="";  // 如果服务器带宽较小，可选用他人同版�
 static  $OJ_TEMPLATE="syzoj"; //使用的默认模板,template目录下的每个子目录都是一个模板, [bs3 mdui sweet syzoj sidebar bshark] work with discuss3
 static 	$OJ_BG="/image/background.jpg";  //双引号里面填写背景图片的url。 例如配置：$OJ_BG="http://cdn.hustoj.com/upload/bg/bing".date('H').".jpg"; 每个整点更换壁纸，例如准备bing[00~23].jpg在image目录。如果使用变量，需要移除开头的static修饰词。
 static  $OJ_LOGIN_MOD="hustoj"; //需要在include目录下配置login-xxxx.php来调用其他登录模块。
-static  $OJ_REGISTER=false; //允许注册新用户
+static  $OJ_REGISTER=true; //允许注册新用户
 static  $OJ_REG_NEED_CONFIRM=true; //新注册用户需要审核
-static  $OJ_EMAIL_CONFIRM=false; //允许邮件激活账号
+static  $OJ_EMAIL_CONFIRM=true; //允许邮件激活账号
 static  $OJ_EXPIRY_DAYS=365; // 手工添加账户的默认过期天数
 static  $OJ_NEED_LOGIN=true; //需要登录才能访问
 static  $OJ_LOGIN_FAIL_LIMIT=5; //5分钟内最大登录错误次数
@@ -150,5 +150,6 @@ static $OJ_MENU_DROPDOWN=false;
 
 require_once(dirname(__FILE__) . "/pdo.php");
 require_once(dirname(__FILE__) . "/init.php");
+
 
 

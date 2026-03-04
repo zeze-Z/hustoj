@@ -12,8 +12,8 @@ ob_clean();
 function get_rand_string($len = 4, $type = "n")
 {
     if ($len < 0) $len = 4;
-    if ($type == 'a') $chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz023456789';
-    else if ($type == 'c') $chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz';
+    if ($type == 'a') $chars = 'abcdefghijkmnpqrstuvwxyz023456789';
+    else if ($type == 'c') $chars = 'abcdefghijkmnpqrstuvwxyz';
     else if ($type == 'n') $chars = '0123456789';
     else $chars = '0123456789';
 
@@ -36,8 +36,8 @@ $imgtype = 'gif';
 $len = 4;
 $vcodetype = 'n';
 if (isset($_SESSION[$OJ_NAME . '_' . "vfail"]) && $_SESSION[$OJ_NAME . '_' . "vfail"]) {
-    $len = 8;
-    $vcodetype = 'c';
+    $len = 4;
+    $vcodetype = 'a';
 
 }
 $width = 15 * $len;

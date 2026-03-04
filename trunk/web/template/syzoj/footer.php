@@ -23,7 +23,7 @@
     <?php include(dirname(__FILE__)."/js.php");?>
     <div class="footer">
         <div class="ui center aligned container">
-        <div>感谢ZhangMaoFan、WuXingYu两位同学对本网站的支持</div>
+        <div>欢迎广大师生使用，问题咨询，商务合作，请联系客服QQ：2326077585</div>
             <!-- <div><?php echo $domain==$DOMAIN?$OJ_NAME:ucwords($OJ_NAME)."'s OJ"?> is powered by <a style="color: inherit !important;" class=" " title="GitHub"
                     target="_blank" rel="noreferrer noopener" href="https://github.com/zhblue/hustoj">HUSTOJ</a>, Theme
                 by <a style="color: inherit !important;" href="https://github.com/syzoj">SYZOJ</a></div> -->
