@@ -84,16 +84,101 @@
     <title><?php echo $show_title ?></title>
     <?php include(dirname(__FILE__)."/css.php");?>
         <style>
-@media (max-width: 991px) {
-        .mobile-only {
-                display:block !important;
-        }
-
-        .desktop-only {
-            display:none !important;
-        }
+/* 简洁菜单栏样式 */
+#page-header {
+    border-bottom: none !important;
 }
-
+#page-header .item {
+    color: #fff !important;
+    padding: 0 16px !important;
+    line-height: 60px !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+}
+#page-header .item:hover {
+    color: #fff !important;
+    opacity: 1 !important;
+    background: transparent !important;
+}
+#page-header .item:hover::after {
+    content: '' !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 20px !important;
+    height: 3px !important;
+    background: #fff !important;
+    border-radius: 2px !important;
+}
+#page-header .item.active {
+    color: #fff !important;
+    font-weight: 600 !important;
+    opacity: 1 !important;
+}
+#page-header .item.active::after {
+    content: '' !important;
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 20px !important;
+    height: 3px !important;
+    background: #fff !important;
+    border-radius: 2px !important;
+}
+#page-header .header.item {
+    border-right: none !important;
+    color: #fff !important;
+}
+#page-header .header.item:hover {
+    color: #fff !important;
+    opacity: 0.8 !important;
+}
+#page-header .header.item:hover::after {
+    display: none !important;
+}
+/* 下拉菜单样式 */
+#page-header .dropdown .menu {
+    margin-top: 0 !important;
+    border-radius: 4px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    border: 1px solid #e8e8e8 !important;
+}
+#page-header .dropdown .menu .item {
+    line-height: 40px !important;
+    padding: 0 20px !important;
+    color: #333 !important;
+    font-size: 14px !important;
+}
+#page-header .dropdown .menu .item:hover {
+    background: #f5f5f5 !important;
+    color: #1890ff !important;
+}
+#page-header .dropdown .menu .divider {
+    margin: 4px 0 !important;
+}
+/* 右侧按钮样式 */
+#page-header .right.menu .button {
+    border-radius: 4px !important;
+    font-weight: 500 !important;
+    padding: 8px 20px !important;
+}
+#page-header .right.menu .ui.primary.button {
+    background: #1890ff !important;
+}
+#page-header .right.menu .ui.primary.button:hover {
+    background: #40a9ff !important;
+}
+/* 响应式调整 */
+@media (max-width: 991px) {
+    .mobile-only {
+        display:block !important;
+    }
+    .desktop-only {
+        display:none !important;
+    }
+}
 </style>
 
     <script src="<?php echo "$OJ_CDN_URL/include/"?>jquery-latest.js"></script>
@@ -156,74 +241,54 @@
         if(!isset($_GET['spa'])){
 ?>
    
-<body id="MainBg-C" style="position: relative; margin-top: 49px; height: calc(100% - 49px); overflow-y: overlay;">
-    <div id="page-header" class="ui fixed borderless menu" style="position: fixed; height: 49px; z-index:99999">
-        <div id="menu" class="ui stackable mobile ui container computer" style="margin-left:auto;margin-right:auto;">
-            <a class="header item"  href="/"><span
-                    style="font-family: 'Exo 2'; font-size: 1.5em; font-weight: 600; "><?php echo $domain==$DOMAIN?$OJ_NAME:ucwords($OJ_NAME)."'s OJ"?></span></a>
+<body id="MainBg-C" style="position: relative; margin-top: 60px; height: calc(100% - 60px); overflow-y: overlay;">
+    <div id="page-header" class="ui fixed borderless menu" style="position: fixed; height: 60px; z-index:99999; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+        <div id="menu" class="ui stackable mobile ui container computer" style="margin-left:auto;margin-right:auto; max-width: 1200px;">
+            <a class="header item" href="/" style="font-size: 1.3em; font-weight: 600; color: #fff !important; padding: 0 20px;">
+                <?php echo $domain==$DOMAIN?$OJ_NAME:ucwords($OJ_NAME)."'s OJ"?>
+            </a>
             
           <?php if(isset($_SESSION[$OJ_NAME.'_'.'user_id'])) { ?>
             <?php
             if(isset($OJ_AI_HTML)&&$OJ_AI_HTML && !isset($OJ_ON_SITE_CONTEST_ID) ) echo $OJ_AI_HTML;
-            else echo '<a class="desktop-only item" href="index.php"><i class="home icon"></i><span class="desktop-only">'.$MSG_HOME.'</span></a>';
+            else echo '<a class="desktop-only item" href="index.php" style="font-weight: 500;">'.$MSG_HOME.'</a>';
             if(file_exists("moodle")){  // 如果存在moodle目录，自动添加链接
-              echo '<a class="item" href="moodle"><i class="group icon"></i><span class="desktop-only">Moodle</span></a>';
+              echo '<a class="item" href="moodle" style="font-weight: 500;">Moodle</a>';
             }
          //     if(file_exists("hello")){  // 如果存在hello目录，自动添加链接
         //       echo '<a class="item" onclick=\'window.open("/hello/index.html", "_blank",
-        // "width=600,height=850,left=" + (window.screen.width-600)  + ",top=0,toolbar=no,menubar=no,location=no,status=no,resizable=yes");\'><i class="book icon"></i><span class="desktop-only">Hello算法</span></a>';
+        // "width=600,height=850,left=" + (window.screen.width-600)  + ",top=0,toolbar=no,menubar=no,location=no,status=no,resizable=yes");\'><span class="desktop-only">Hello算法</span></a>';
         //     }
 
                 
              if( !isset($OJ_ON_SITE_CONTEST_ID) && (!isset($_GET['cid'])||$cid==0) ){
           ?>
-            <!-- 问题 -->
-            <a class="item <?php if ($url=="problemset.php") echo "active";?>"
-                href="<?php echo $path_fix?>problemset.php"><i class="list icon"></i><span class="desktop-only"><?php echo $MSG_PROBLEMS?></span></a>
-            <!-- 来源/分类 -->
-            <a class="item <?php if ($url=="category.php") echo "active";?>"
-                href="<?php echo $path_fix?>category.php"><i class="globe icon"></i><span class="desktop-only"><?php echo $MSG_SOURCE?></span></a>
-            <!-- 竞赛/作业 -->
-            <a class="item <?php if ($url=="contest.php") echo "active";?>" href="<?php echo $path_fix?>contest.php<?php if(isset($_SESSION[$OJ_NAME."_user_id"])) echo "?my" ?> "><i
-                    class="trophy icon"></i><span class="desktop-only"> <?php echo $MSG_CONTEST?></span></a>
-            <!-- 状态 -->
-            <a class="item <?php if ($url=="status.php") echo "active";?>" href="<?php echo $path_fix?>status.php"><i
-                    class="tasks icon"></i><span class="desktop-only"><?php echo $MSG_STATUS?></span></a>
-            <!-- 排名 -->
-            <a class="item <?php if ($url=="ranklist.php") echo "active";?> "
-                href="<?php echo $path_fix?>ranklist.php"><i class="signal icon"></i><span class="desktop-only"><?php echo $MSG_RANKLIST?></span></a>
-            <!--<a class="item <?php //if ($url=="contest.php") echo "active";?>" href="/discussion/global"><i class="comments icon"></i><span class="desktop-only"><?php echo $MSG_BBS?></span></a>-->
-            <!-- 近期比赛 -->    
+            <a class="item <?php if ($url=="problemset.php") echo "active";?>" href="<?php echo $path_fix?>problemset.php" style="font-weight: 500;"><?php echo $MSG_PROBLEMS?></a>
+            <a class="item <?php if ($url=="category.php") echo "active";?>" href="<?php echo $path_fix?>category.php" style="font-weight: 500;"><?php echo $MSG_SOURCE?></a>
+            <a class="item <?php if ($url=="contest.php") echo "active";?>" href="<?php echo $path_fix?>contest.php<?php if(isset($_SESSION[$OJ_NAME."_user_id"])) echo "?my" ?>" style="font-weight: 500;"><?php echo $MSG_CONTEST?></a>
+            <a class="item <?php if ($url=="status.php") echo "active";?>" href="<?php echo $path_fix?>status.php" style="font-weight: 500;"><?php echo $MSG_STATUS?></a>
+            <a class="item <?php if ($url=="ranklist.php") echo "active";?>" href="<?php echo $path_fix?>ranklist.php" style="font-weight: 500;"><?php echo $MSG_RANKLIST?></a>
 <?php if(isset($OJ_RECENT_CONTEST)&&$OJ_RECENT_CONTEST){    ?>
-            <a class="item <?php if ($url=="recent-contest.php") echo "active";?> "
-                href="<?php echo $path_fix?>recent-contest.php"><i class="bullhorn icon"></i> <span class="desktop-only"><?php echo $MSG_RECENT_CONTEST?></span></a>
+            <a class="item <?php if ($url=="recent-contest.php") echo "active";?>" href="<?php echo $path_fix?>recent-contest.php" style="font-weight: 500;"><?php echo $MSG_RECENT_CONTEST?></a>
 <?php } ?>
-            <!-- 常见问答 -->
-            <a class="item <?php if ($url=="faqs.php") echo "active";?>" href="<?php echo $path_fix?>faqs.php"><i
-                    class="help circle icon"></i><span class="desktop-only"> <?php echo $MSG_FAQ?></span></a>
-            <!-- 讨论板 -->
-              <?php if (isset($OJ_BBS)&& $OJ_BBS){ ?>
-                  <a class='item' href="discuss.php"><i class="clipboard icon"></i> <span class="desktop-only"><?php echo $MSG_BBS?></span></a>
-              <?php } ?>
-            <!-- AI训练 -->
-            <div class="ui simple dropdown item">
-                <i class="settings icon"></i><span class="desktop-only">AI训练</span><i class="dropdown icon"></i>
+            <a class="item <?php if ($url=="faqs.php") echo "active";?>" href="<?php echo $path_fix?>faqs.php" style="font-weight: 500;"><?php echo $MSG_FAQ?></a>
+            <?php if (isset($OJ_BBS)&& $OJ_BBS){ ?>
+                <a class='item' href="discuss.php" style="font-weight: 500;"><?php echo $MSG_BBS?></a>
+            <?php } ?>
+            <!-- 更多功能下拉菜单 -->
+            <div class="ui simple dropdown item" style="font-weight: 500;">
+                更多
                 <div class="menu">
-                    <a class="item" href="AI_training.php?type=image"><i class="image icon"></i>图像分类</a>
-                    <a class="item" href="AI_training.php?type=handpose"><i class="hand peace icon"></i>手势分类</a>
-                    <a class="item" href="AI_training.php?type=audio"><i class="microphone icon"></i>语音分类</a>
-                    <a class="item" href="AI_training.php?type=recognition"><i class="search icon"></i>图像识别</a>
-                    <a class="item" href="AI_training.php?type=gesture"><i class="hand lizard icon"></i>手势识别</a>
-                </div>
-            </div>
-            <!-- AI进阶 -->
-            <a class="item" onclick="openAIExperience()"><i class="computer icon"></i><span class="desktop-only">AI进阶</span></a>
-            <!-- 小游戏 -->
-            <div class="ui simple dropdown item">
-                <i class="gamepad icon"></i><span class="desktop-only">小游戏</span><i class="dropdown icon"></i>
-                <div class="menu">
-                    <a class="item" href="keyboard_game.php"><i class="keyboard icon"></i>打字游戏</a>
-                    <a class="item" href="flappy_bird.php"><i class="gamepad icon"></i>Flappy Bird</a>
+                    <a class="item" href="AI_training.php?type=image">图像分类</a>
+                    <a class="item" href="AI_training.php?type=handpose">手势分类</a>
+                    <a class="item" href="AI_training.php?type=audio">语音分类</a>
+                    <a class="item" href="AI_training.php?type=recognition">图像识别</a>
+                    <a class="item" href="AI_training.php?type=gesture">手势识别</a>
+                    <div class="divider"></div>
+                    <a class="item" onclick="openAIExperience()">AI进阶</a>
+                    <div class="divider"></div>
+                    <a class="item" href="keyboard_game.php">打字游戏</a>
+                    <a class="item" href="flappy_bird.php">Flappy Bird</a>
                 </div>
             </div>
             <?php }
