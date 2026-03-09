@@ -181,6 +181,12 @@
     .desktop-only {
         display:none !important;
     }
+    .mobile-only {
+        display:block !important;
+    }
+    .desktop-only {
+        display:none !important;
+    }
 }
 </style>
 
@@ -250,16 +256,25 @@
             <a class="header item" href="/" style="font-size: 1.3em; font-weight: 600; color: #fff !important; padding: 0 20px;">
                 <?php echo $domain==$DOMAIN?$OJ_NAME:ucwords($OJ_NAME)."'s OJ"?>
             </a>
+<body id="MainBg-C" style="position: relative; margin-top: 60px; height: calc(100% - 60px); overflow-y: overlay;">
+    <div id="page-header" class="ui fixed borderless menu" style="position: fixed; height: 60px; z-index:99999; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+        <div id="menu" class="ui stackable mobile ui container computer" style="margin-left:auto;margin-right:auto; max-width: 1200px;">
+            <a class="header item" href="/" style="font-size: 1.3em; font-weight: 600; color: #fff !important; padding: 0 20px;">
+                <?php echo $domain==$DOMAIN?$OJ_NAME:ucwords($OJ_NAME)."'s OJ"?>
+            </a>
             
           <?php if(isset($_SESSION[$OJ_NAME.'_'.'user_id'])) { ?>
             <?php
             if(isset($OJ_AI_HTML)&&$OJ_AI_HTML && !isset($OJ_ON_SITE_CONTEST_ID) ) echo $OJ_AI_HTML;
             else echo '<a class="desktop-only item" href="index.php" style="font-weight: 500;">'.$MSG_HOME.'</a>';
+            else echo '<a class="desktop-only item" href="index.php" style="font-weight: 500;">'.$MSG_HOME.'</a>';
             if(file_exists("moodle")){  // 如果存在moodle目录，自动添加链接
+              echo '<a class="item" href="moodle" style="font-weight: 500;">Moodle</a>';
               echo '<a class="item" href="moodle" style="font-weight: 500;">Moodle</a>';
             }
          //     if(file_exists("hello")){  // 如果存在hello目录，自动添加链接
         //       echo '<a class="item" onclick=\'window.open("/hello/index.html", "_blank",
+        // "width=600,height=850,left=" + (window.screen.width-600)  + ",top=0,toolbar=no,menubar=no,location=no,status=no,resizable=yes");\'><span class="desktop-only">Hello算法</span></a>';
         // "width=600,height=850,left=" + (window.screen.width-600)  + ",top=0,toolbar=no,menubar=no,location=no,status=no,resizable=yes");\'><span class="desktop-only">Hello算法</span></a>';
         //     }
 
@@ -271,9 +286,22 @@
             <a class="item <?php if ($url=="contest.php") echo "active";?>" href="<?php echo $path_fix?>contest.php<?php if(isset($_SESSION[$OJ_NAME."_user_id"])) echo "?my" ?>" style="font-weight: 500;"><?php echo $MSG_CONTEST?></a>
             <a class="item <?php if ($url=="status.php") echo "active";?>" href="<?php echo $path_fix?>status.php" style="font-weight: 500;"><?php echo $MSG_STATUS?></a>
             <a class="item <?php if ($url=="ranklist.php") echo "active";?>" href="<?php echo $path_fix?>ranklist.php" style="font-weight: 500;"><?php echo $MSG_RANKLIST?></a>
+            <a class="item <?php if ($url=="problemset.php") echo "active";?>" href="<?php echo $path_fix?>problemset.php" style="font-weight: 500;"><?php echo $MSG_PROBLEMS?></a>
+            <a class="item <?php if ($url=="category.php") echo "active";?>" href="<?php echo $path_fix?>category.php" style="font-weight: 500;"><?php echo $MSG_SOURCE?></a>
+            <a class="item <?php if ($url=="contest.php") echo "active";?>" href="<?php echo $path_fix?>contest.php<?php if(isset($_SESSION[$OJ_NAME."_user_id"])) echo "?my" ?>" style="font-weight: 500;"><?php echo $MSG_CONTEST?></a>
+            <a class="item <?php if ($url=="status.php") echo "active";?>" href="<?php echo $path_fix?>status.php" style="font-weight: 500;"><?php echo $MSG_STATUS?></a>
+            <a class="item <?php if ($url=="ranklist.php") echo "active";?>" href="<?php echo $path_fix?>ranklist.php" style="font-weight: 500;"><?php echo $MSG_RANKLIST?></a>
 <?php if(isset($OJ_RECENT_CONTEST)&&$OJ_RECENT_CONTEST){    ?>
             <a class="item <?php if ($url=="recent-contest.php") echo "active";?>" href="<?php echo $path_fix?>recent-contest.php" style="font-weight: 500;"><?php echo $MSG_RECENT_CONTEST?></a>
+            <a class="item <?php if ($url=="recent-contest.php") echo "active";?>" href="<?php echo $path_fix?>recent-contest.php" style="font-weight: 500;"><?php echo $MSG_RECENT_CONTEST?></a>
 <?php } ?>
+            <a class="item <?php if ($url=="faqs.php") echo "active";?>" href="<?php echo $path_fix?>faqs.php" style="font-weight: 500;"><?php echo $MSG_FAQ?></a>
+            <?php if (isset($OJ_BBS)&& $OJ_BBS){ ?>
+                <a class='item' href="discuss.php" style="font-weight: 500;"><?php echo $MSG_BBS?></a>
+            <?php } ?>
+            <!-- 更多功能下拉菜单 -->
+            <div class="ui simple dropdown item" style="font-weight: 500;">
+                更多
             <a class="item <?php if ($url=="faqs.php") echo "active";?>" href="<?php echo $path_fix?>faqs.php" style="font-weight: 500;"><?php echo $MSG_FAQ?></a>
             <?php if (isset($OJ_BBS)&& $OJ_BBS){ ?>
                 <a class='item' href="discuss.php" style="font-weight: 500;"><?php echo $MSG_BBS?></a>
