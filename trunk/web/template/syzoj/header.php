@@ -156,7 +156,10 @@
     color: #1890ff !important;
 }
 #page-header .dropdown .menu .divider {
-    margin: 4px 0 !important;
+    margin: 8px 0 !important;
+    height: 1px !important;
+    background: #e0e0e0 !important;
+    border: none !important;
 }
 /* 右侧按钮样式 */
 #page-header .right.menu .button {
@@ -288,7 +291,11 @@
                     <a class="item" onclick="openAIExperience()">AI进阶</a>
                     <div class="divider"></div>
                     <a class="item" href="keyboard_game.php">打字游戏</a>
-                    <a class="item" href="flappy_bird.php">Flappy Bird</a>
+                    <div class="divider"></div>
+                    <!-- <a class="item" href="flappy_bird.php">Flappy Bird</a> -->
+                    <a class="item" href="scratch.php">Scratch案例</a>
+                    <a class="item" href="https://turbowarp.org/editor" target="_blank">Scratch在线编程</a>
+                    
                 </div>
             </div>
             <?php }
