@@ -278,26 +278,8 @@
             <?php if (isset($OJ_BBS)&& $OJ_BBS){ ?>
                 <a class='item' href="discuss.php" style="font-weight: 500;"><?php echo $MSG_BBS?></a>
             <?php } ?>
-            <!-- 更多功能下拉菜单 -->
-            <div class="ui simple dropdown item" style="font-weight: 500;">
-                更多
-                <div class="menu">
-                    <a class="item" href="AI_training.php?type=image">图像分类</a>
-                    <a class="item" href="AI_training.php?type=handpose">手势分类</a>
-                    <a class="item" href="AI_training.php?type=audio">语音分类</a>
-                    <a class="item" href="AI_training.php?type=recognition">图像识别</a>
-                    <a class="item" href="AI_training.php?type=gesture">手势识别</a>
-                    <div class="divider"></div>
-                    <a class="item" onclick="openAIExperience()">AI进阶</a>
-                    <div class="divider"></div>
-                    <a class="item" href="keyboard_game.php">打字游戏</a>
-                    <div class="divider"></div>
-                    <!-- <a class="item" href="flappy_bird.php">Flappy Bird</a> -->
-                    <a class="item" href="scratch.php">Scratch案例</a>
-                    <a class="item" href="https://turbowarp.org/editor" target="_blank">Scratch在线编程</a>
-                    
-                </div>
-            </div>
+            <!-- 更多功能 -->
+            <a class="item <?php if ($url=="more.php") echo "active";?>" href="<?php echo $path_fix?>more.php" style="font-weight: 500;">更多</a>
             <?php }
             if( isset($_GET['cid']) && intval($_GET['cid'])>0 ){
                      $cid=intval($_GET['cid']);
