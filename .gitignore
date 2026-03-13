@@ -2,3 +2,7 @@ trunk/core/sim/*
 trunk/web/discuss3/*
 .DS_Store
 .venv
+.claude/settings.json
+.claude/memory/hustoj-optimization-issues.md
+.claude/memory/MEMORY.md
+.claude/settings.local.json
