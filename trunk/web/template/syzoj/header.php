@@ -26,6 +26,8 @@
         $dir=basename(getcwd());
         if($dir=="discuss3") $path_fix="../";
         else $path_fix="";
+
+        // 强制登录检查
         if(isset($OJ_NEED_LOGIN)&&$OJ_NEED_LOGIN&&(
                   $url!='loginpage.php'&&
                   $url!='lostpassword.php'&&
@@ -35,6 +37,28 @@
 
            header("location:".$path_fix."loginpage.php");
            exit();
+        }
+
+        // 游客访问白名单 - 只允许访问只读页面
+        $guest_whitelist = [
+            'index.php',          // 首页
+            'problemset.php',     // 题目列表
+            'problem.php',        // 题目详情（只读）
+            'category.php',       // 题目分类
+            'contest.php',        // 比赛列表
+            'viewnews.php',       // 新闻详情
+            'faqs.php',          // 常见问题
+            'registerpage.php',   // 注册页
+            'loginpage.php',      // 登录页
+            'lostpassword.php',    // 找回密码
+            'lostpassword2.php'   // 找回密码第二步
+        ];
+
+        // 游客模式访问限制
+        if(isset($OJ_GUEST) && $OJ_GUEST && !isset($_SESSION[$OJ_NAME.'_'.'user_id']) && !in_array($url, $guest_whitelist)) {
+            // 游客尝试访问非白名单页面，引导到登录页
+            header("location:".$path_fix."loginpage.php");
+            exit();
         }
 
         if($OJ_ONLINE){
