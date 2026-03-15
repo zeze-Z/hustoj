@@ -5,26 +5,157 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
 ?>
 <link rel="stylesheet" href="<?php echo "template/$OJ_TEMPLATE";?>/css/slide.css">
 
-<!-- 游客友好提示 -->
-<?php if(!$is_logged_in) { ?>
-<div class="ui message info" style="margin-top: 20px; border-radius: 8px; background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border: 1px solid #667eea;">
-    <div style="display: flex; align-items: center; justify-content: space-between;">
-        <div>
-            <i class="info circle icon" style="color: #667eea; font-size: 1.5em;"></i>
-            <strong style="color: #333; margin-left: 10px;">欢迎来到 <?php echo $OJ_NAME; ?>！</strong>
-            <p style="margin: 8px 0 0 0; color: #666;">您当前以游客身份浏览，可以查看题目和新闻。如需提交代码，请先<a href="loginpage.php" style="color: #667eea; font-weight: 600;">登录</a>或<a href="registerpage.php" style="color: #667eea; font-weight: 600;">注册</a>。</p>
-        </div>
-        <div>
-            <a href="loginpage.php" class="ui small blue button">登录</a>
-            <?php if(isset($OJ_REGISTER)&&$OJ_REGISTER){ ?>
-            <a href="registerpage.php" class="ui small primary button" style="background: #667eea; border-color: #667eea;">注册</a>
-            <?php } ?>
+<div class="padding" style="padding-top: 15px;">
+
+    <!-- 游客友好提示 -->
+    <?php if(!$is_logged_in) { ?>
+    <div class="ui message info" style="margin-bottom: 20px; border-radius: 8px; background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border: 1px solid #667eea;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+            <div style="display: flex; align-items: center;">
+                <i class="info circle icon" style="color: #667eea; font-size: 1.5em;"></i>
+                <div style="margin-left: 12px;">
+                    <strong style="color: #333; font-size: 1.05em;">欢迎来到 <?php echo $OJ_NAME; ?>！</strong>
+                    <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95em;">您当前以游客身份浏览，可以查看题目和新闻。如需提交代码，请先<a href="loginpage.php" style="color: #667eea; font-weight: 600;">登录</a>或<a href="registerpage.php" style="color: #667eea; font-weight: 600;">注册</a>。</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <a href="loginpage.php" class="ui small blue button">登录</a>
+                <?php if(isset($OJ_REGISTER)&&$OJ_REGISTER){ ?>
+                <a href="registerpage.php" class="ui small primary button" style="background: #667eea; border-color: #667eea;">注册</a>
+                <?php } ?>
+            </div>
         </div>
     </div>
-</div>
-<?php } ?>
+    <?php } ?>
 
-<div class="padding">
+    <!-- 轮播图/系统亮点展示 -->
+    <div style="margin-bottom: 25px;">
+        <?php
+        // 检查是否有轮播图，如果没有则显示默认内容
+        $has_slideshow = file_exists("image/slide1.jpg");
+        if($has_slideshow) {
+            echo '<div class="carousel" style="position: relative; width: 100%; height: 300px; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">';
+            for($i=1; $i<=3; $i++) {
+                if(file_exists("image/slide$i.jpg")) {
+                    $active = $i==1 ? 'active' : '';
+                    echo "<div class='carousel-slide $active' style='position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.5s ease; background-size: cover; background-position: center; background-image: url(image/slide$i.jpg);'>";
+                    echo "</div>";
+                }
+            }
+            echo '<div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px;">';
+            for($i=1; $i<=3; $i++) {
+                if(file_exists("image/slide$i.jpg")) {
+                    $active = $i==1 ? 'active' : '';
+                    echo "<div class='carousel-dot $active' data-index='$i' style='width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s;'></div>";
+                }
+            }
+            echo '</div>';
+            echo '</div>';
+        } else {
+            // 如果没有轮播图，显示默认的系统介绍
+            echo '<div class="ui four cards">';
+            echo '<div class="ui card" style="border-radius: 12px; border: 1px solid #e8e8e8; background: linear-gradient(135deg, #667eea15 0%, #fff 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.06);">';
+            echo '<div class="content" style="text-align: center; padding: 24px 20px;">';
+            echo '<i class="code icon" style="font-size: 2.8em; color: #667eea;"></i>';
+            echo '<div class="header" style="margin-top: 12px; font-weight: 600; font-size: 1.1em;">海量题库</div>';
+            echo '<div class="meta" style="margin-top: 8px; color: #666; font-size: 0.92em;">包含精选题目，从入门到竞赛全涵盖</div>';
+            echo '</div></div>';
+
+            echo '<div class="ui card" style="border-radius: 12px; border: 1px solid #e8e8e8; background: linear-gradient(135deg, #764ba215 0%, #fff 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.06);">';
+            echo '<div class="content" style="text-align: center; padding: 24px 20px;">';
+            echo '<i class="rocket icon" style="font-size: 2.8em; color: #764ba2;"></i>';
+            echo '<div class="header" style="margin-top: 12px; font-weight: 600; font-size: 1.1em;">秒级判题</div>';
+            echo '<div class="meta" style="margin-top: 8px; color: #666; font-size: 0.92em;">高速判题系统，实时反馈结果</div>';
+            echo '</div></div>';
+
+            echo '<div class="ui card" style="border-radius: 12px; border: 1px solid #e8e8e8; background: linear-gradient(135deg, #f0932b15 0%, #fff 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.06);">';
+            echo '<div class="content" style="text-align: center; padding: 24px 20px;">';
+            echo '<i class="graduation cap icon" style="font-size: 2.8em; color: #f0932b;"></i>';
+            echo '<div class="header" style="margin-top: 12px; font-weight: 600; font-size: 1.1em;">学习路径</div>';
+            echo '<div class="meta" style="margin-top: 8px; color: #666; font-size: 0.92em;">科学分阶，助力循序渐进学习</div>';
+            echo '</div></div>';
+
+            echo '<div class="ui card" style="border-radius: 12px; border: 1px solid #e8e8e8; background: linear-gradient(135deg, #4ecdc415 0%, #fff 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.06);">';
+            echo '<div class="content" style="text-align: center; padding: 24px 20px;">';
+            echo '<i class="trophy icon" style="font-size: 2.8em; color: #4ecdc4;"></i>';
+            echo '<div class="header" style="margin-top: 12px; font-weight: 600; font-size: 1.1em;">竞赛活动</div>';
+            echo '<div class="meta" style="margin-top: 8px; color: #666; font-size: 0.92em;">定期举办比赛，检验学习成果</div>';
+            echo '</div></div>';
+
+            echo '</div>';
+        }
+        ?>
+    </div>
+
+    <!-- 系统统计数据卡片 -->
+    <?php
+    if(!isset($OJ_ONLINE)) $OJ_ONLINE=false;
+    // 获取在线人数
+    $online_count = 0;
+    if($OJ_ONLINE) {
+        require_once($path_fix.'include/online.php');
+        $on = new online();
+        $online_count = $on->onlineCount();
+    }
+    // 获取总用户数
+    $user_count_result = mysql_query_cache("select count(*) as count from `users` where defunct!='N'");
+    $user_count = $user_count_result[0]['count'] ?? 0;
+    // 获取题目总数
+    $problem_count_result = mysql_query_cache("select count(*) as count from `problem` where defunct='N'");
+    $problem_count = $problem_count_result[0]['count'] ?? 0;
+    // 获取今日提交数
+    $submit_today_result = mysql_query_cache("select count(*) as count from `solution` where DATE(in_date)=CURDATE()");
+    $submit_today = $submit_today_result[0]['count'] ?? 0;
+    ?>
+    <div style="margin-bottom: 25px;">
+        <div class="ui four cards">
+            <div class="ui card" style="border-radius: 12px; border: 1px solid #e8e8e8; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div class="content" style="text-align: center; padding: 24px 20px;">
+                    <i class="users icon" style="font-size: 2.2em; color: #667eea;"></i>
+                    <div class="header" style="margin-top: 12px; font-size: 1.8em; font-weight: 600; color: #333;">
+                        <?php echo number_format($user_count); ?>
+                    </div>
+                    <div class="meta" style="margin-top: 6px; color: #666; font-size: 0.95em;">
+                        注册用户
+                    </div>
+                </div>
+            </div>
+            <div class="ui card" style="border-radius: 12px; border: 1px solid #e8e8e8; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div class="content" style="text-align: center; padding: 24px 20px;">
+                    <i class="desktop icon" style="font-size: 2.2em; color: #764ba2;"></i>
+                    <div class="header" style="margin-top: 12px; font-size: 1.8em; font-weight: 600; color: #333;">
+                        <?php echo $online_count; ?>
+                    </div>
+                    <div class="meta" style="margin-top: 6px; color: #666; font-size: 0.95em;">
+                        在线人数
+                    </div>
+                </div>
+            </div>
+            <div class="ui card" style="border-radius: 12px; border: 1px solid #e8e8e8; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div class="content" style="text-align: center; padding: 24px 20px;">
+                    <i class="book icon" style="font-size: 2.2em; color: #f0932b;"></i>
+                    <div class="header" style="margin-top: 12px; font-size: 1.8em; font-weight: 600; color: #333;">
+                        <?php echo number_format($problem_count); ?>
+                    </div>
+                    <div class="meta" style="margin-top: 6px; color: #666; font-size: 0.95em;">
+                        题目总数
+                    </div>
+                </div>
+            </div>
+            <div class="ui card" style="border-radius: 12px; border: 1px solid #e8e8e8; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div class="content" style="text-align: center; padding: 24px 20px;">
+                    <i class="send icon" style="font-size: 2.2em; color: #4ecdc4;"></i>
+                    <div class="header" style="margin-top: 12px; font-size: 1.8em; font-weight: 600; color: #333;">
+                        <?php echo number_format($submit_today); ?>
+                    </div>
+                    <div class="meta" style="margin-top: 6px; color: #666; font-size: 0.95em;">
+                        今日提交
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="ui three column grid">
         <div class="eleven wide column">
             <?php
@@ -32,22 +163,22 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                         $result_news = mysql_query_cache( $sql_news );
                         if ( $result_news && !empty($result_news) ) {
                         ?>
-<h4 class="ui top attached block header"><i class="ui info icon"></i><?php echo $MSG_NEWS;?></h4>
-            <div class="ui bottom attached segment">
+            <h4 class="ui top attached block header" style="border-radius: 12px 12px 0 0;"><i class="ui info icon"></i><?php echo $MSG_NEWS;?></h4>
+            <div class="ui bottom attached segment" style="border-radius: 0 0 12px 12px;">
                 <table class="ui very basic table">
                     <thead>
                         <tr>
                             <th><?php echo $MSG_TITLE;?></th>
-                            <th><?php echo $MSG_TIME;?></th>
+                            <th style="width: 140px;"><?php echo $MSG_TIME;?></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
                             foreach ( $result_news as $row ) {
                                 echo "<tr>" . "<td>"
-                                    . "<a href=\"viewnews.php?id=" . $row["news_id"] . "\">"
+                                    . "<a href=\"viewnews.php?id=" . $row["news_id"] . "\" style='color: #333;'>"
                                     . $row["title"] . "</a></td>"
-                                    . "<td>" . $row["time"] . "</td>" . "</tr>";
+                                    . "<td style='color: #888;'>" . $row["time"] . "</td>" . "</tr>";
                             }
                         ?>
                     </tbody>
@@ -81,23 +212,23 @@ if(!empty( $month_id) && isset($month_id[0][0]) ) $month_id=$month_id[0][0];else
 $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_id)) ac from solution where solution_id>$month_id and problem_id>0  $not_in_noip_contests and user_id not in (".$OJ_RANK_HIDDEN.")  and result=4 group by user_id,nick order by ac desc limit 10");
             if ( !empty($view_month_rank) ) {
         ?>
-            <h4 class="ui top attached block header"><i class="ui star icon"></i><?php echo "本月之星"?></h4>
-            <div class="ui bottom attached segment">
+            <h4 class="ui top attached block header" style="border-radius: 12px 12px 0 0; margin-top: 20px;"><i class="ui star icon"></i><?php echo "本月之星"?></h4>
+            <div class="ui bottom attached segment" style="border-radius: 0 0 12px 12px;">
                 <table class="ui very basic center aligned table" style="table-layout: fixed; ">
                     <thead>
                         <tr>
                             <th>用户名（学号）</th>
                             <th>昵称</th>
-                            <th>AC数量</th>
+                            <th style="width: 100px;">AC数量</th>
                         </tr>
                     </thead>
                     <tbody>
         <?php
                             foreach ( $view_month_rank as $row ) {
                                     echo "<tr>".
-                                            "<td><a target='_blank' href='userinfo.php?user=".htmlentities($row[0],ENT_QUOTES,"UTF-8")."'>⭐".htmlentities($row[0],ENT_QUOTES,"UTF-8")."⭐</a></td>".
+                                            "<td><a target='_blank' href='userinfo.php?user=".htmlentities($row[0],ENT_QUOTES,"UTF-8")."' style='color: #333;'>⭐".htmlentities($row[0],ENT_QUOTES,"UTF-8")."⭐</a></td>".
                                             "<td>".($row[1])."</td>".
-                                            "<td>".($row[2])."</td>".
+                                            "<td style='color: #667eea; font-weight: 600;'>".($row[2])."</td>".
                                             "</tr>";
                             }
         ?>
@@ -109,86 +240,16 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
 /* 本月之星  */
 ?>
 
-            <!-- 移除了永远不会执行的冗余代码块 -->
-
-            <!-- 系统统计数据卡片（游客和登录用户都能看到） -->
-            <?php
-            if(!isset($OJ_ONLINE)) $OJ_ONLINE=false;
-            // 获取在线人数
-            $online_count = 0;
-            if($OJ_ONLINE) {
-                require_once($path_fix.'include/online.php');
-                $on = new online();
-                $online_count = $on->onlineCount();
-            }
-            // 获取总用户数
-            $user_count_result = mysql_query_cache("select count(*) as count from `users` where defunct!='N'");
-            $user_count = $user_count_result[0]['count'] ?? 0;
-            // 获取题目总数
-            $problem_count_result = mysql_query_cache("select count(*) as count from `problem` where defunct='N'");
-            $problem_count = $problem_count_result[0]['count'] ?? 0;
-            // 获取今日提交数
-            $submit_today_result = mysql_query_cache("select count(*) as count from `solution` where DATE(in_date)=CURDATE()");
-            $submit_today = $submit_today_result[0]['count'] ?? 0;
-            ?>
-            <div style="margin-top: 20px;">
-                <div class="ui four cards">
-                    <div class="ui card" style="border-radius: 8px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <div class="content" style="text-align: center; padding: 20px;">
-                            <i class="users icon" style="font-size: 2em; color: #667eea;"></i>
-                            <div class="header" style="margin-top: 10px; font-size: 1.5em; font-weight: 600; color: #333;">
-                                <?php echo number_format($user_count); ?>
-                            </div>
-                            <div class="meta" style="margin-top: 5px; color: #666;">
-                                注册用户
-                            </div>
-                        </div>
-                    </div>
-                    <div class="ui card" style="border-radius: 8px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <div class="content" style="text-align: center; padding: 20px;">
-                            <i class="desktop icon" style="font-size: 2em; color: #764ba2;"></i>
-                            <div class="header" style="margin-top: 10px; font-size: 1.5em; font-weight: 600; color: #333;">
-                                <?php echo $online_count; ?>
-                            </div>
-                            <div class="meta" style="margin-top: 5px; color: #666;">
-                                在线人数
-                            </div>
-                        </div>
-                    </div>
-                    <div class="ui card" style="border-radius: 8px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <div class="content" style="text-align: center; padding: 20px;">
-                            <i class="book icon" style="font-size: 2em; color: #f0932b;"></i>
-                            <div class="header" style="margin-top: 10px; font-size: 1.5em; font-weight: 600; color: #333;">
-                                <?php echo number_format($problem_count); ?>
-                            </div>
-                            <div class="meta" style="margin-top: 5px; color: #666;">
-                                题目总数
-                            </div>
-                        </div>
-                    </div>
-                    <div class="ui card" style="border-radius: 8px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                        <div class="content" style="text-align: center; padding: 20px;">
-                            <i class="send icon" style="font-size: 2em; color: #4ecdc4;"></i>
-                            <div class="header" style="margin-top: 10px; font-size: 1.5em; font-weight: 600; color: #333;">
-                                <?php echo number_format($submit_today); ?>
-                            </div>
-                            <div class="meta" style="margin-top: 5px; color: #666;">
-                                今日提交
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
         <div class="right floated five wide column">
-            <h4 class="ui top attached block header"><i class="ui rss icon"></i> <?php echo $is_logged_in ? $MSG_RECENT_PROBLEM : "热门题目";?> </h4>
-            <div class="ui bottom attached segment">
+            <!-- 热门题目/未解之谜 -->
+            <h4 class="ui top attached block header" style="border-radius: 12px 12px 0 0;"><i class="ui fire icon" style="color: #f0932b;"></i> <?php echo $is_logged_in ? $MSG_RECENT_PROBLEM : "热门题目";?> </h4>
+            <div class="ui bottom attached segment" style="border-radius: 0 0 12px 12px;">
                 <table class="ui very basic center aligned table">
                     <thead>
                         <tr>
-                            <th width="60%"><?php echo $MSG_TITLE;?></th>
-                            <th width="40%"><?php echo $is_logged_in ? $MSG_TIME : "通过人数";?></th>
+                            <th width="65%"><?php echo $MSG_TITLE;?></th>
+                            <th width="35%"><?php echo $is_logged_in ? $MSG_TIME : "通过人数";?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -206,10 +267,10 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                                 $i = 1;
                                 foreach ( $result_problems as $row ) {
                                     if(in_array(strval($row['problem_id']),$noip_problems)) continue;
-                                    echo "<tr>"."<td>"
-                                        ."<a href=\"problem.php?id=".$row["problem_id"]."\">"
+                                    echo "<tr>"."<td style='text-align: left;'>"
+                                        ."<a href=\"problem.php?id=".$row["problem_id"]."\" style='color: #333;'>"
                                         .$row["title"]."</a></td>"
-                                        ."<td>".substr($row["max_in_date"],5,5)."</td>"."</tr>";
+                                        ."<td style='color: #888;'>".substr($row["max_in_date"],5,5)."</td>"."</tr>";
                                 }
                             }
                         } else {
@@ -225,11 +286,11 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                             $result_hot = mysql_query_cache( $sql_hot );
                             if ( !empty($result_hot) ) {
                                 foreach ( $result_hot as $row ) {
-                                    echo "<tr>"."<td>"
-                                        ."<a href=\"problem.php?id=".$row["problem_id"]."\">"
-                                        ."<span class='ui mini label' style='background: #667eea15; color: #667eea;'>热门</span> "
+                                    echo "<tr>"."<td style='text-align: left;'>"
+                                        ."<a href=\"problem.php?id=".$row["problem_id"]."\" style='color: #333;'>"
+                                        ."<span class='ui mini label' style='background: #667eea15; color: #667eea; margin-right: 6px;'>热门</span>"
                                         .$row["title"]."</a></td>"
-                                        ."<td>".number_format($row["ac"])."</td>"."</tr>";
+                                        ."<td style='color: #667eea; font-weight: 600;'>".number_format($row["ac"])."</td>"."</tr>";
                                 }
                             } else {
                                 echo "<tr><td colspan='2' style='color: #999;'>暂无热门题目</td></tr>";
@@ -239,25 +300,56 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                     </tbody>
                 </table>
             </div>
-            <h4 class="ui top attached block header"><i class="ui search icon"></i><?php echo $MSG_SEARCH;?></h4>
-            <div class="ui bottom attached segment">
+
+            <!-- 最新题目 -->
+            <h4 class="ui top attached block header" style="border-radius: 12px 12px 0 0; margin-top: 20px;"><i class="ui clock icon" style="color: #4ecdc4;"></i> 最新题目 </h4>
+            <div class="ui bottom attached segment" style="border-radius: 0 0 12px 12px;">
+                <table class="ui very basic center aligned table">
+                    <thead>
+                        <tr>
+                            <th width="65%">题目</th>
+                            <th width="35%">发布时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php
+                        $sql_new = "select problem_id,title,in_date from problem where defunct='N' and problem_id>0 order by problem_id desc LIMIT 5";
+                        $result_new = mysql_query_cache( $sql_new );
+                        if ( !empty($result_new) ) {
+                            foreach ( $result_new as $row ) {
+                                echo "<tr>"."<td style='text-align: left;'>"
+                                    ."<a href=\"problem.php?id=".$row["problem_id"]."\" style='color: #333;'>"
+                                    ."<span class='ui mini label' style='background: #4ecdc415; color: #4ecdc4; margin-right: 6px;'>新</span>"
+                                    .$row["title"]."</a></td>"
+                                    ."<td style='color: #888;'>".substr($row["in_date"],5,5)."</td>"."</tr>";
+                            }
+                        } else {
+                            echo "<tr><td colspan='2' style='color: #999;'>暂无最新题目</td></tr>";
+                        }
+                    ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <h4 class="ui top attached block header" style="border-radius: 12px 12px 0 0; margin-top: 20px;"><i class="ui search icon"></i><?php echo $MSG_SEARCH;?></h4>
+            <div class="ui bottom attached segment" style="border-radius: 0 0 12px 12px;">
                 <form action="problem.php" method="get">
                     <div class="ui search" style="width: 100%; ">
                         <div class="ui left icon input" style="width: 100%; ">
-                            <input class="prompt" style="width: 100%; " type="text" placeholder="<?php echo $MSG_PROBLEM_ID ;?> …" name="id">
+                            <input class="prompt" style="width: 100%; border-radius: 8px;" type="text" placeholder="<?php echo $MSG_PROBLEM_ID ;?> …" name="id">
                             <i class="search icon"></i>
                         </div>
                         <div class="results" style="width: 100%; "></div>
                     </div>
                 </form>
             </div>
-            <h4 class="ui top attached block header"><i class="ui calendar icon"></i><?php echo $MSG_RECENT_CONTEST ;?></h4>
-            <div class="ui bottom attached center aligned segment">
+            <h4 class="ui top attached block header" style="border-radius: 12px 12px 0 0; margin-top: 20px;"><i class="ui calendar icon"></i><?php echo $MSG_RECENT_CONTEST ;?></h4>
+            <div class="ui bottom attached center aligned segment" style="border-radius: 0 0 12px 12px;">
                 <table class="ui very basic center aligned table">
                     <thead>
                         <tr>
                             <th><?php echo $MSG_CONTEST_NAME;?></th>
-                            <th><?php echo $MSG_START_TIME;?></th>
+                            <th style="width: 100px;"><?php echo $MSG_START_TIME;?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -267,10 +359,10 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                         if ( $result_contests ) {
                             $i = 1;
                             foreach ( $result_contests as $row ) {
-                                echo "<tr>"."<td>"
-                                    ."<a href=\"contest.php?cid=".$row["contest_id"]."\">"
+                                echo "<tr>"."<td style='text-align: left;'>"
+                                    ."<a href=\"contest.php?cid=".$row["contest_id"]."\" style='color: #333;'>"
                                     .$row["title"]."</a></td>"
-                                    ."<td>".substr($row["start_time"],5,5)."</td>"."</tr>";
+                                    ."<td style='color: #888;'>".substr($row["start_time"],5,5)."</td>"."</tr>";
                             }
                         }
                     ?>
@@ -279,65 +371,6 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
             </div>
         </div>
     </div>
-</div>
-
-<!-- 轮播图展示系统亮点（放在顶部，游客和登录用户都能看到） -->
-<div style="margin-top: 20px; margin-bottom: 20px;">
-    <?php
-    // 检查是否有轮播图，如果没有则显示默认内容
-    $has_slideshow = file_exists("image/slide1.jpg");
-    if($has_slideshow) {
-        echo '<div class="carousel" style="position: relative; width: 100%; height: 300px; overflow: hidden; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">';
-        for($i=1; $i<=3; $i++) {
-            if(file_exists("image/slide$i.jpg")) {
-                $active = $i==1 ? 'active' : '';
-                echo "<div class='carousel-slide $active' style='position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.5s ease; background-size: cover; background-position: center; background-image: url(image/slide$i.jpg);'>";
-                echo "</div>";
-            }
-        }
-        echo '<div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px;">';
-        for($i=1; $i<=3; $i++) {
-            if(file_exists("image/slide$i.jpg")) {
-                $active = $i==1 ? 'active' : '';
-                echo "<div class='carousel-dot $active' data-index='$i' style='width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s;'></div>";
-            }
-        }
-        echo '</div>';
-        echo '</div>';
-    } else {
-        // 如果没有轮播图，显示默认的系统介绍
-        echo '<div class="ui four cards" style="margin-top: 0;">';
-        echo '<div class="ui card" style="border-radius: 8px; border: 1px solid #e0e0e0; background: linear-gradient(135deg, #667eea15 0%, #fff 100%);">';
-        echo '<div class="content" style="text-align: center; padding: 20px;">';
-        echo '<i class="code icon" style="font-size: 2.5em; color: #667eea;"></i>';
-        echo '<div class="header" style="margin-top: 10px; font-weight: 600;">海量题库</div>';
-        echo '<div class="meta" style="margin-top: 8px; color: #666;">包含精选题目，从入门到竞赛全涵盖</div>';
-        echo '</div></div>';
-
-        echo '<div class="ui card" style="border-radius: 8px; border: 1px solid #e0e0e0; background: linear-gradient(135deg, #764ba215 0%, #fff 100%);">';
-        echo '<div class="content" style="text-align: center; padding: 20px;">';
-        echo '<i class="rocket icon" style="font-size: 2.5em; color: #764ba2;"></i>';
-        echo '<div class="header" style="margin-top: 10px; font-weight: 600;">秒级判题</div>';
-        echo '<div class="meta" style="margin-top: 8px; color: #666;">高速判题系统，实时反馈结果</div>';
-        echo '</div></div>';
-
-        echo '<div class="ui card" style="border-radius: 8px; border: 1px solid #e0e0e0; background: linear-gradient(135deg, #f0932b15 0%, #fff 100%);">';
-        echo '<div class="content" style="text-align: center; padding: 20px;">';
-        echo '<i class="graduation cap icon" style="font-size: 2.5em; color: #f0932b;"></i>';
-        echo '<div class="header" style="margin-top: 10px; font-weight: 600;">学习路径</div>';
-        echo '<div class="meta" style="margin-top: 8px; color: #666;">科学分阶，助力循序渐进学习</div>';
-        echo '</div></div>';
-
-        echo '<div class="ui card" style="border-radius: 8px; border: 1px solid #e0e0e0; background: linear-gradient(135deg, #4ecdc415 0%, #fff 100%);">';
-        echo '<div class="content" style="text-align: center; padding: 20px;">';
-        echo '<i class="trophy icon" style="font-size: 2.5em; color: #4ecdc4;"></i>';
-        echo '<div class="header" style="margin-top: 10px; font-weight: 600;">竞赛活动</div>';
-        echo '<div class="meta" style="margin-top: 8px; color: #666;">定期举办比赛，检验学习成果</div>';
-        echo '</div></div>';
-
-        echo '</div>';
-    }
-    ?>
 </div>
 
 <?php include("template/$OJ_TEMPLATE/footer.php");?>
@@ -376,7 +409,7 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
         }
 
         // 自动播放，调整为 5 秒切换一次
-        autoPlayInterval = setInterval(nextSlide, 5000); 
+        autoPlayInterval = setInterval(nextSlide, 5000);
 
         dots.forEach(dot => {
             dot.addEventListener('click', () => {
