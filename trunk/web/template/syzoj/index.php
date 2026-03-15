@@ -29,63 +29,60 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
     </div>
     <?php } ?>
 
-    <!-- 轮播图/系统亮点展示 -->
+    <!-- 功能介绍轮播图 -->
     <div style="margin-bottom: 25px;">
-        <?php
-        // 检查是否有轮播图，如果没有则显示默认内容
-        $has_slideshow = file_exists("image/slide1.jpg");
-        if($has_slideshow) {
-            echo '<div class="carousel" style="position: relative; width: 100%; height: 300px; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">';
-            for($i=1; $i<=3; $i++) {
-                if(file_exists("image/slide$i.jpg")) {
-                    $active = $i==1 ? 'active' : '';
-                    echo "<div class='carousel-slide $active' style='position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.5s ease; background-size: cover; background-position: center; background-image: url(image/slide$i.jpg);'>";
-                    echo "</div>";
-                }
-            }
-            echo '<div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px;">';
-            for($i=1; $i<=3; $i++) {
-                if(file_exists("image/slide$i.jpg")) {
-                    $active = $i==1 ? 'active' : '';
-                    echo "<div class='carousel-dot $active' data-index='$i' style='width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s;'></div>";
-                }
-            }
-            echo '</div>';
-            echo '</div>';
-        } else {
-            // 如果没有轮播图，显示默认的系统介绍
-            echo '<div class="ui four cards">';
-            echo '<div class="ui card" style="border-radius: 12px; border: 1px solid #e8e8e8; background: linear-gradient(135deg, #667eea15 0%, #fff 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.06);">';
-            echo '<div class="content" style="text-align: center; padding: 24px 20px;">';
-            echo '<i class="code icon" style="font-size: 2.8em; color: #667eea;"></i>';
-            echo '<div class="header" style="margin-top: 12px; font-weight: 600; font-size: 1.1em;">海量题库</div>';
-            echo '<div class="meta" style="margin-top: 8px; color: #666; font-size: 0.92em;">包含精选题目，从入门到竞赛全涵盖</div>';
-            echo '</div></div>';
-
-            echo '<div class="ui card" style="border-radius: 12px; border: 1px solid #e8e8e8; background: linear-gradient(135deg, #764ba215 0%, #fff 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.06);">';
-            echo '<div class="content" style="text-align: center; padding: 24px 20px;">';
-            echo '<i class="rocket icon" style="font-size: 2.8em; color: #764ba2;"></i>';
-            echo '<div class="header" style="margin-top: 12px; font-weight: 600; font-size: 1.1em;">秒级判题</div>';
-            echo '<div class="meta" style="margin-top: 8px; color: #666; font-size: 0.92em;">高速判题系统，实时反馈结果</div>';
-            echo '</div></div>';
-
-            echo '<div class="ui card" style="border-radius: 12px; border: 1px solid #e8e8e8; background: linear-gradient(135deg, #f0932b15 0%, #fff 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.06);">';
-            echo '<div class="content" style="text-align: center; padding: 24px 20px;">';
-            echo '<i class="graduation cap icon" style="font-size: 2.8em; color: #f0932b;"></i>';
-            echo '<div class="header" style="margin-top: 12px; font-weight: 600; font-size: 1.1em;">学习路径</div>';
-            echo '<div class="meta" style="margin-top: 8px; color: #666; font-size: 0.92em;">科学分阶，助力循序渐进学习</div>';
-            echo '</div></div>';
-
-            echo '<div class="ui card" style="border-radius: 12px; border: 1px solid #e8e8e8; background: linear-gradient(135deg, #4ecdc415 0%, #fff 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.06);">';
-            echo '<div class="content" style="text-align: center; padding: 24px 20px;">';
-            echo '<i class="trophy icon" style="font-size: 2.8em; color: #4ecdc4;"></i>';
-            echo '<div class="header" style="margin-top: 12px; font-weight: 600; font-size: 1.1em;">竞赛活动</div>';
-            echo '<div class="meta" style="margin-top: 8px; color: #666; font-size: 0.92em;">定期举办比赛，检验学习成果</div>';
-            echo '</div></div>';
-
-            echo '</div>';
-        }
-        ?>
+        <div class="carousel" id="featureCarousel" style="position: relative; width: 100%; height: 280px; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+            <!-- 轮播项 1: 海量题库 -->
+            <div class="carousel-slide active" data-index="0" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div style="text-align: center; color: white; padding: 40px;">
+                    <i class="code icon" style="font-size: 5em; margin-bottom: 20px;"></i>
+                    <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">海量题库</h2>
+                    <p style="font-size: 1.1em; opacity: 0.95; margin: 0 0 20px 0;">包含精选编程题目，从入门到竞赛全涵盖</p>
+                    <a href="problemset.php" class="ui button inverted">开始刷题</a>
+                </div>
+            </div>
+            <!-- 轮播项 2: 秒级判题 -->
+            <div class="carousel-slide" data-index="1" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div style="text-align: center; color: white; padding: 40px;">
+                    <i class="rocket icon" style="font-size: 5em; margin-bottom: 20px;"></i>
+                    <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">秒级判题</h2>
+                    <p style="font-size: 1.1em; opacity: 0.95; margin: 0 0 20px 0;">高速判题系统，实时反馈评测结果</p>
+                    <a href="status.php" class="ui button inverted">查看状态</a>
+                </div>
+            </div>
+            <!-- 轮播项 3: 学习路径 -->
+            <div class="carousel-slide" data-index="2" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div style="text-align: center; color: white; padding: 40px;">
+                    <i class="graduation cap icon" style="font-size: 5em; margin-bottom: 20px;"></i>
+                    <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">学习路径</h2>
+                    <p style="font-size: 1.1em; opacity: 0.95; margin: 0 0 20px 0;">科学分阶设计，助力循序渐进学习编程</p>
+                    <a href="category.php" class="ui button inverted">浏览分类</a>
+                </div>
+            </div>
+            <!-- 轮播项 4: 竞赛活动 -->
+            <div class="carousel-slide" data-index="3" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <div style="text-align: center; color: white; padding: 40px;">
+                    <i class="trophy icon" style="font-size: 5em; margin-bottom: 20px;"></i>
+                    <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">竞赛活动</h2>
+                    <p style="font-size: 1.1em; opacity: 0.95; margin: 0 0 20px 0;">定期举办比赛，检验学习成果</p>
+                    <a href="contest.php" class="ui button inverted">参加竞赛</a>
+                </div>
+            </div>
+            <!-- 左右箭头 -->
+            <button class="carousel-prev" style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.2); border: none; color: white; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-size: 1.5em; transition: background 0.3s;">
+                <i class="chevron left icon"></i>
+            </button>
+            <button class="carousel-next" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.2); border: none; color: white; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-size: 1.5em; transition: background 0.3s;">
+                <i class="chevron right icon"></i>
+            </button>
+            <!-- 指示点 -->
+            <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px;">
+                <div class="carousel-dot active" data-index="0" style="width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s;"></div>
+                <div class="carousel-dot" data-index="1" style="width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s;"></div>
+                <div class="carousel-dot" data-index="2" style="width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s;"></div>
+                <div class="carousel-dot" data-index="3" style="width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s;"></div>
+            </div>
+        </div>
     </div>
 
     <!-- 系统统计数据卡片 -->
@@ -375,27 +372,22 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
 </div>
 
 <?php include("template/$OJ_TEMPLATE/footer.php");?>
-<?php if($has_slideshow){ ?>
     <script>
-        const slides = document.querySelectorAll('.carousel-slide');
-        const dots = document.querySelectorAll('.carousel-dot');
+        const slides = document.querySelectorAll('#featureCarousel .carousel-slide');
+        const dots = document.querySelectorAll('#featureCarousel .carousel-dot');
+        const prevBtn = document.querySelector('#featureCarousel .carousel-prev');
+        const nextBtn = document.querySelector('#featureCarousel .carousel-next');
         let currentIndex = 0;
         let autoPlayInterval;
 
         function showSlide(index) {
             slides.forEach((slide, i) => {
-                if (i === index) {
-                    slide.classList.add('active');
-                } else {
-                    slide.classList.remove('active');
-                }
+                slide.style.opacity = (i === index) ? '1' : '0';
+                slide.style.zIndex = (i === index) ? '1' : '0';
             });
             dots.forEach((dot, i) => {
-                if (i === index) {
-                    dot.classList.add('active');
-                } else {
-                    dot.classList.remove('active');
-                }
+                dot.style.background = (i === index) ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.5)';
+                dot.style.transform = (i === index) ? 'scale(1.2)' : 'scale(1)';
             });
         }
 
@@ -409,13 +401,17 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
             showSlide(currentIndex);
         }
 
-        // 自动播放，调整为 5 秒切换一次
+        // 初始化显示第一张
+        showSlide(0);
+
+        // 自动播放，5秒切换一次
         autoPlayInterval = setInterval(nextSlide, 5000);
 
+        // 点击指示点
         dots.forEach(dot => {
             dot.addEventListener('click', () => {
                 const targetIndex = parseInt(dot.dataset.index);
-                if (targetIndex!== currentIndex) {
+                if (targetIndex !== currentIndex) {
                     currentIndex = targetIndex;
                     showSlide(currentIndex);
                     clearInterval(autoPlayInterval);
@@ -424,11 +420,36 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
             });
         });
 
+        // 左右箭头点击
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                prevSlide();
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = setInterval(nextSlide, 5000);
+            });
+        }
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                nextSlide();
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = setInterval(nextSlide, 5000);
+            });
+        }
+
         // 鼠标悬停暂停自动播放
-        const carousel = document.querySelector('.carousel');
+        const carousel = document.querySelector('#featureCarousel');
         if (carousel) {
             carousel.addEventListener('mouseenter', () => clearInterval(autoPlayInterval));
             carousel.addEventListener('mouseleave', () => autoPlayInterval = setInterval(nextSlide, 5000));
         }
+
+        // 箭头悬停效果
+        if (prevBtn) {
+            prevBtn.addEventListener('mouseenter', () => prevBtn.style.background = 'rgba(255,255,255,0.35)');
+            prevBtn.addEventListener('mouseleave', () => prevBtn.style.background = 'rgba(255,255,255,0.2)');
+        }
+        if (nextBtn) {
+            nextBtn.addEventListener('mouseenter', () => nextBtn.style.background = 'rgba(255,255,255,0.35)');
+            nextBtn.addEventListener('mouseleave', () => nextBtn.style.background = 'rgba(255,255,255,0.2)');
+        }
     </script>
-<?php } ?>
