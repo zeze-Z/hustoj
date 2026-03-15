@@ -55,7 +55,8 @@
             'registerpage.php',   // 注册页
             'loginpage.php',      // 登录页
             'lostpassword.php',    // 找回密码
-            'lostpassword2.php'   // 找回密码第二步
+            'lostpassword2.php',  // 找回密码第二步
+            'more.php'            // 更多功能页
         ];
 
         // 游客模式访问限制
