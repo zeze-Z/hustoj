@@ -19,6 +19,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                 </div>
             </div>
             <div style="display: flex; gap: 10px;">
+                <a href="more.php" class="ui small button">更多功能</a>
                 <a href="loginpage.php" class="ui small blue button">登录</a>
                 <?php if(isset($OJ_REGISTER)&&$OJ_REGISTER){ ?>
                 <a href="registerpage.php" class="ui small primary button" style="background: #667eea; border-color: #667eea;">注册</a>
