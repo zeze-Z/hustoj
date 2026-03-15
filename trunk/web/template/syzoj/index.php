@@ -33,7 +33,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
     <div style="margin-bottom: 25px;">
         <div class="carousel" id="featureCarousel" style="position: relative; width: 100%; height: 280px; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
             <!-- 轮播项 1: 海量题库 -->
-            <div class="carousel-slide active" data-index="0" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); z-index: 1;">
+            <div class="carousel-slide active" data-index="0" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); z-index: 1; pointer-events: none;">
                 <div style="text-align: center; color: white; padding: 40px;">
                     <i class="code icon" style="font-size: 5em; margin-bottom: 20px;"></i>
                     <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">海量题库</h2>
@@ -42,7 +42,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                 </div>
             </div>
             <!-- 轮播项 2: 秒级判题 -->
-            <div class="carousel-slide" data-index="1" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); z-index: 1;">
+            <div class="carousel-slide" data-index="1" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); z-index: 1; pointer-events: none;">
                 <div style="text-align: center; color: white; padding: 40px;">
                     <i class="rocket icon" style="font-size: 5em; margin-bottom: 20px;"></i>
                     <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">秒级判题</h2>
@@ -51,7 +51,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                 </div>
             </div>
             <!-- 轮播项 3: 学习路径 -->
-            <div class="carousel-slide" data-index="2" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); z-index: 1;">
+            <div class="carousel-slide" data-index="2" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); z-index: 1; pointer-events: none;">
                 <div style="text-align: center; color: white; padding: 40px;">
                     <i class="graduation cap icon" style="font-size: 5em; margin-bottom: 20px;"></i>
                     <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">学习路径</h2>
@@ -60,7 +60,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                 </div>
             </div>
             <!-- 轮播项 4: 竞赛活动 -->
-            <div class="carousel-slide" data-index="3" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); z-index: 1;">
+            <div class="carousel-slide" data-index="3" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); z-index: 1; pointer-events: none;">
                 <div style="text-align: center; color: white; padding: 40px;">
                     <i class="trophy icon" style="font-size: 5em; margin-bottom: 20px;"></i>
                     <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">竞赛活动</h2>
@@ -383,6 +383,7 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
         function showSlide(index) {
             slides.forEach((slide, i) => {
                 slide.style.opacity = (i === index) ? '1' : '0';
+                slide.style.pointerEvents = (i === index) ? 'auto' : 'none';
             });
             dots.forEach((dot, i) => {
                 dot.style.background = (i === index) ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.5)';
