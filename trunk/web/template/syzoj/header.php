@@ -23,6 +23,10 @@
             return $result;
         }
         $url=basename($_SERVER['REQUEST_URI']);
+        // 当访问根目录时，basename返回空或'.'，修正为index.php
+        if(empty($url) || $url=='.' || $url=='/') {
+            $url='index.php';
+        }
         $dir=basename(getcwd());
         if($dir=="discuss3") $path_fix="../";
         else $path_fix="";
