@@ -22,9 +22,14 @@
             }
             return $result;
         }
-        $url=basename($_SERVER['REQUEST_URI']);
-        // 当访问根目录时，basename返回空或'.'，修正为index.php
-        if(empty($url) || $url=='.' || $url=='/') {
+        // 解析当前访问的页面文件名
+        $request_uri = $_SERVER['REQUEST_URI'];
+        // 移除查询字符串
+        $path = parse_url($request_uri, PHP_URL_PATH);
+        // 获取文件名
+        $url = basename($path);
+        // 当访问根目录时，修正为index.php
+        if(empty($url) || $url=='.' || $url=='/' || $path=='/') {
             $url='index.php';
         }
         $dir=basename(getcwd());
