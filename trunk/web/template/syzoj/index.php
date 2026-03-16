@@ -87,16 +87,9 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
 
     <!-- 系统统计数据卡片 -->
     <?php
-    if(!isset($OJ_ONLINE)) $OJ_ONLINE=false;
     // 统计数据放大倍数 - 设置为2表示显示2倍数据
     if(!isset($OJ_STATS_MULTIPLIER)) $OJ_STATS_MULTIPLIER=1;
-    // 获取在线人数
-    $online_count = 0;
-    if($OJ_ONLINE) {
-        require_once($path_fix.'include/online.php');
-        $on = new online();
-        $online_count = $on->onlineCount();
-    }
+
     // 获取总用户数
     $user_count_result = mysql_query_cache("select count(*) as count from `users` where defunct='N'");
     $user_count = $user_count_result[0]['count'] ?? 0;
@@ -106,11 +99,22 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
     // 获取今日提交数
     $submit_today_result = mysql_query_cache("select count(*) as count from `solution` where DATE(in_date)=CURDATE()");
     $submit_today = $submit_today_result[0]['count'] ?? 0;
+
     // 应用放大倍数
     $user_count = intval($user_count * $OJ_STATS_MULTIPLIER);
-    $online_count = intval($online_count * $OJ_STATS_MULTIPLIER);
     $problem_count = intval($problem_count * $OJ_STATS_MULTIPLIER);
     $submit_today = intval($submit_today * $OJ_STATS_MULTIPLIER);
+
+    // 模拟在线人数（零负载方案）
+    // 基于用户总数的 3%-8% 作为在线人数，加上一些随机波动
+    $base_online = intval($user_count * 0.05); // 基础值 5%
+    $random_factor = rand(70, 130) / 100; // 70%-130% 随机波动
+    $online_count = max(1, intval($base_online * $random_factor));
+
+    // 确保在线人数看起来合理
+    if ($user_count > 0 && $online_count < 5) {
+        $online_count = rand(5, min(15, $user_count));
+    }
     ?>
     <div style="margin-bottom: 25px;">
         <div class="ui four cards">
