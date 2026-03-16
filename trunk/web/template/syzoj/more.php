@@ -110,6 +110,20 @@
     <h1 class="page-title">更多功能</h1>
     <p class="page-subtitle">探索平台提供的丰富功能与工具</p>
 
+    <!-- 每日一题 -->
+    <div class="section">
+        <h2 class="section-title">每日推荐</h2>
+        <div class="cards-grid">
+            <a href="index.php" class="card">
+                <div class="card-icon" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);">
+                    <i class="calendar alternate outline icon"></i>
+                </div>
+                <div class="card-title">每日一题</div>
+                <div class="card-desc">每天一道精选题目，保持编程习惯</div>
+            </a>
+        </div>
+    </div>
+
     <!-- 核心功能 -->
     <div class="section">
         <h2 class="section-title">核心功能</h2>

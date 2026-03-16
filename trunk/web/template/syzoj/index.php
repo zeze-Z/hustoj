@@ -85,6 +85,93 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
         </div>
     </div>
 
+    <!-- 每日一题 -->
+    <div style="margin-bottom: 25px;">
+        <?php
+        // 每日一题算法：基于日期选择题目
+        // 使用日期作为种子，确保同一天内题目不变
+        $today = date('Y-m-d');
+        $seed = crc32($today);
+
+        // 获取可用题目总数（排除已禁用的题目）
+        $problem_count_result = mysql_query_cache("select count(*) as count from `problem` where defunct='N' and problem_id>0");
+        $total_problems = $problem_count_result[0]['count'] ?? 0;
+
+        $daily_problem = null;
+        if ($total_problems > 0) {
+            // 使用日期种子计算偏移量
+            mt_srand($seed);
+            $offset = mt_rand(0, max(0, $total_problems - 1));
+
+            // 获取当日题目，优先选择有一定AC数的题目
+            $daily_problem_result = mysql_query_cache("select p.problem_id, p.title, p.accepted, p.submit, p.source
+                from problem p
+                where p.defunct='N' and p.problem_id>0
+                order by p.accepted desc
+                limit 1 offset ?", $offset);
+
+            if (empty($daily_problem_result)) {
+                // 如果偏移量获取失败，直接获取一个热门题目
+                $daily_problem_result = mysql_query_cache("select p.problem_id, p.title, p.accepted, p.submit, p.source
+                    from problem p
+                    where p.defunct='N' and p.problem_id>0
+                    order by p.accepted desc
+                    limit 1");
+            }
+
+            if (!empty($daily_problem_result)) {
+                $daily_problem = $daily_problem_result[0];
+            }
+        }
+        ?>
+        <?php if ($daily_problem) { ?>
+        <div class="ui card" style="width: 100%; border-radius: 12px; border: 1px solid #e8e8e8; box-shadow: 0 4px 16px rgba(0,0,0,0.08);">
+            <div class="content" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); border-radius: 12px 12px 0 0;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center;">
+                        <i class="calendar alternate outline icon" style="font-size: 2em; color: #e74c3c;"></i>
+                        <div style="margin-left: 15px;">
+                            <div style="font-size: 1.1em; font-weight: 600; color: #c0392b;">每日一题</div>
+                            <div style="font-size: 0.9em; color: #7f8c8d;"><?php echo $today; ?></div>
+                        </div>
+                    </div>
+                    <span class="ui label" style="background: #e74c3c; color: white;">推荐</span>
+                </div>
+            </div>
+            <div class="content">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <a href="problem.php?id=<?php echo $daily_problem['problem_id']; ?>" style="font-size: 1.3em; font-weight: 600; color: #333; text-decoration: none;">
+                            <?php echo htmlentities($daily_problem['title'], ENT_QUOTES, 'UTF-8'); ?>
+                        </a>
+                        <?php if ($daily_problem['source']) { ?>
+                        <div style="margin-top: 8px; color: #7f8c8d; font-size: 0.9em;">
+                            <i class="tag icon"></i> <?php echo htmlentities($daily_problem['source'], ENT_QUOTES, 'UTF-8'); ?>
+                        </div>
+                        <?php } ?>
+                        <div style="margin-top: 12px; display: flex; gap: 20px;">
+                            <span style="color: #27ae60; font-weight: 600;">
+                                <i class="checkmark icon"></i> 通过: <?php echo number_format($daily_problem['accepted']); ?>
+                            </span>
+                            <span style="color: #3498db; font-weight: 600;">
+                                <i class="send icon"></i> 提交: <?php echo number_format($daily_problem['submit']); ?>
+                            </span>
+                            <?php if ($daily_problem['submit'] > 0) { ?>
+                            <span style="color: #9b59b6; font-weight: 600;">
+                                <i class="percent icon"></i> 通过率: <?php echo round($daily_problem['accepted'] / $daily_problem['submit'] * 100, 1); ?>%
+                            </span>
+                            <?php } ?>
+                        </div>
+                    </div>
+                    <a href="problem.php?id=<?php echo $daily_problem['problem_id']; ?>" class="ui button large" style="background: #e74c3c; color: white;">
+                        开始挑战 <i class="right arrow icon"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <?php } ?>
+    </div>
+
     <!-- 系统统计数据卡片 -->
     <?php
     // 统计数据放大倍数 - 设置为2表示显示2倍数据
