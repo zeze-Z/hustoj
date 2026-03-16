@@ -2,13 +2,69 @@
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 <div class="padding">
 
+  <!-- 知识点标签快捷搜索 -->
+  <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 12px;">
+    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+      <i class="tags icon" style="color: #667eea; font-size: 1.2em;"></i>
+      <span style="font-weight: 600; color: #333; margin-left: 8px;">知识点标签快速筛选</span>
+      <span style="margin-left: auto; color: #888; font-size: 0.9em;">点击标签搜索相关题目</span>
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+      <?php
+      // 常用算法和数据结构标签
+      $common_tags = array(
+        '入门' => '入门',
+        '数组' => '数组',
+        '字符串' => '字符串',
+        '排序' => '排序',
+        '查找' => '查找',
+        '贪心' => '贪心',
+        '动态规划' => '动态规划',
+        'DP' => 'DP',
+        '搜索' => '搜索',
+        'DFS' => 'DFS',
+        'BFS' => 'BFS',
+        '图论' => '图论',
+        '最短路' => '最短路',
+        '最小生成树' => '最小生成树',
+        '树' => '树',
+        '链表' => '链表',
+        '栈' => '栈',
+        '队列' => '队列',
+        '哈希' => '哈希',
+        '二分' => '二分',
+        '数学' => '数学',
+        '数论' => '数论',
+        '几何' => '几何',
+        '模拟' => '模拟',
+        '暴力' => '暴力'
+      );
+      $tag_colors = array(
+        'red', 'orange', 'yellow', 'olive', 'green', 'teal', 'blue', 'violet', 'purple', 'pink', 'brown', 'grey'
+      );
+      $color_idx = 0;
+      foreach ($common_tags as $tag_display => $tag_search) {
+        $color = $tag_colors[$color_idx % count($tag_colors)];
+        $color_idx++;
+        ?>
+        <a href="problemset.php?search=<?php echo urlencode($tag_search); ?>"
+           class="ui tiny label"
+           style="background: <?php echo $color; ?>15; color: <?php echo $color; ?>; border: 1px solid <?php echo $color; ?>30; padding: 6px 12px; cursor: pointer; transition: all 0.2s;"
+           onmouseover="this.style.background='<?php echo $color; ?>25'; this.style.transform='scale(1.05)';"
+           onmouseout="this.style.background='<?php echo $color; ?>15'; this.style.transform='scale(1)';">
+          <?php echo htmlentities($tag_display, ENT_QUOTES, 'UTF-8'); ?>
+        </a>
+      <?php } ?>
+    </div>
+  </div>
+
   <div class="ui grid" style="margin-bottom: 10px; ">
     <div class="row" style="white-space: nowrap; ">
       <div class="seven wide column">
           <form action="" method="get">
             <div class="ui search" style="width: 280px; height: 28px; margin-top: -5.3px;float:left ">
               <div class="ui left icon input" style="width: 100%; ">
-                <input class="prompt" style="width: 100%; " type="text" placeholder=" <?php echo $MSG_TITLE;?> …" name="search"
+                <input class="prompt" style="width: 100%; " type="text" placeholder="搜索题目/知识点/来源…" name="search"
 		       value="<?php if(isset($_GET['search']))echo htmlentities($_GET['search'],ENT_QUOTES,'UTF-8') ?>"
                 >
 

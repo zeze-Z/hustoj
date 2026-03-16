@@ -47,14 +47,36 @@ sort($category);
 if (!$result) {
     $view_category = "<h3>No Category Now!</h3>";
 } else {
+    // 扩展颜色主题
+    $extended_colors = array(
+        'primary' => '#667eea',
+        'success' => '#27ae60',
+        'info' => '#3498db',
+        'warning' => '#f39c12',
+        'danger' => '#e74c3c',
+        'purple' => '#9b59b6',
+        'teal' => '#1abc9c',
+        'orange' => '#e67e22',
+        'pink' => '#e91e63',
+        'cyan' => '#00bcd4',
+        'lime' => '#8bc34a',
+        'indigo' => '#3f51b5'
+    );
+    $color_keys = array_keys($extended_colors);
+
     $view_category .= "<div style='word-wrap:break-word;'>";
     foreach ($category as $cat) {
         if (trim($cat) == "") continue;
         $hash_num = hexdec(substr(md5($cat), 0, 7));
-        $label_theme = $color_theme[$hash_num % count($color_theme)];
-        if ($label_theme == "") $label_theme = "default";
-        $view_category .= "<a class='label label-$label_theme' style='display: inline-block; margin:5px ' href='problemset.php?search=" . htmlentities(urlencode($cat), ENT_QUOTES, 'utf-8') . "'>" . htmlentities($cat, ENT_QUOTES, 'utf-8') . "</a>&nbsp;";
+        $color_idx = $hash_num % count($color_keys);
+        $color_key = $color_keys[$color_idx];
+        $color_val = $extended_colors[$color_key];
 
+        // 使用Semantic UI标签样式但添加自定义颜色
+        $view_category .= "<a class='ui label' style='display: inline-block; margin:6px; padding: 8px 16px; background: {$color_val}15; color: {$color_val}; border: 1px solid {$color_val}30; font-size: 0.95em; transition: all 0.2s; cursor: pointer;'
+            onmouseover=\"this.style.background='{$color_val}25'; this.style.transform='scale(1.05)';\"
+            onmouseout=\"this.style.background='{$color_val}15'; this.style.transform='scale(1)';\"
+            href='problemset.php?search=" . htmlentities(urlencode($cat), ENT_QUOTES, 'utf-8') . "'>" . htmlentities($cat, ENT_QUOTES, 'utf-8') . "</a> ";
     }
 
     $view_category .= "</div>";
