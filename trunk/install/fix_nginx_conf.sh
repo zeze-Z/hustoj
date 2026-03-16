@@ -26,16 +26,26 @@ else
     echo -e "${YELLOW}原配置文件不存在，跳过备份${NC}"
 fi
 
-# 2. 写入新的nginx配置
+# 2. 生成自签名证书（用于IP访问的443端口）
+echo -e "${YELLOW}生成自签名证书...${NC}"
+mkdir -p /etc/nginx/ssl
+if [ ! -f /etc/nginx/ssl/default.crt ]; then
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/nginx/ssl/default.key -out /etc/nginx/ssl/default.crt -subj "/CN=default" 2>/dev/null
+    echo -e "${GREEN}自签名证书已生成${NC}"
+else
+    echo -e "${YELLOW}自签名证书已存在，跳过生成${NC}"
+fi
+
+# 3. 写入新的nginx配置
 echo -e "${YELLOW}写入新的nginx配置...${NC}"
 cat > /etc/nginx/sites-enabled/default << 'EOF'
-# 1. 核心：所有IP访问/未绑定域名访问 → 自动跳转到你的域名（HTTPS）
+# 1. 核心：所有IP访问/未绑定域名访问 → 禁止访问
 server {
 	listen 80 default_server;
 	listen [::]:80 default_server;
 	server_name _;
-	# 跳转到HTTPS的域名（替换成你的实际域名）
-	return 301 https://aioj.top$request_uri;
+	# 禁止IP访问，返回403
+	return 403;
 }
 
 # 2. 域名的HTTP访问 → 强制跳转到HTTPS
@@ -46,10 +56,22 @@ server {
 	return 301 https://$host$request_uri;
 }
 
-# 3. HTTPS主配置（443端口）- 保留所有HUSTOJ原有配置
+# 3. 禁止通过IP访问HTTPS（443端口）
 server {
 	listen 443 ssl http2 default_server;
 	listen [::]:443 ssl http2 default_server;
+	server_name _;
+	# 配置一个自签名证书占位符（用于处理IP访问时的SSL握手）
+	ssl_certificate /etc/nginx/ssl/default.crt;
+	ssl_certificate_key /etc/nginx/ssl/default.key;
+	# 禁止IP访问，返回403
+	return 403;
+}
+
+# 4. 域名的HTTPS主配置（443端口）- 保留所有HUSTOJ原有配置
+server {
+	listen 443 ssl http2;
+	listen [::]:443 ssl http2;
 
 	# 你的域名
 	server_name aioj.top;  # 替换成你的实际域名
@@ -67,7 +89,7 @@ server {
 
 	# 原HUSTOJ配置 - 完全保留
 	root /home/judge/src/web;
-	index loginpage.php index.php index.htm index.nginx-debian.html;
+	index index.php index.html index.htm index.nginx-debian.html;
 
 	location / {
 		try_files $uri $uri/ =404;
@@ -92,7 +114,7 @@ EOF
 
 echo -e "${GREEN}nginx配置已写入${NC}"
 
-# 3. 检查配置语法
+# 4. 检查配置语法
 echo -e "${YELLOW}检查nginx配置语法...${NC}"
 if nginx -t; then
     echo -e "${GREEN}配置语法检查通过！${NC}"
@@ -101,7 +123,7 @@ else
     exit 1
 fi
 
-# 4. 重启nginx
+# 5. 重启nginx
 echo -e "${YELLOW}重启nginx...${NC}"
 if systemctl restart nginx; then
     echo -e "${GREEN}nginx重启成功！${NC}"

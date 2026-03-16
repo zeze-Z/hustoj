@@ -88,6 +88,8 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
     <!-- 系统统计数据卡片 -->
     <?php
     if(!isset($OJ_ONLINE)) $OJ_ONLINE=false;
+    // 统计数据放大倍数 - 设置为2表示显示2倍数据
+    if(!isset($OJ_STATS_MULTIPLIER)) $OJ_STATS_MULTIPLIER=1;
     // 获取在线人数
     $online_count = 0;
     if($OJ_ONLINE) {
@@ -96,7 +98,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
         $online_count = $on->onlineCount();
     }
     // 获取总用户数
-    $user_count_result = mysql_query_cache("select count(*) as count from `users` where defunct!='N'");
+    $user_count_result = mysql_query_cache("select count(*) as count from `users` where defunct='N'");
     $user_count = $user_count_result[0]['count'] ?? 0;
     // 获取题目总数
     $problem_count_result = mysql_query_cache("select count(*) as count from `problem` where defunct='N'");
@@ -104,6 +106,11 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
     // 获取今日提交数
     $submit_today_result = mysql_query_cache("select count(*) as count from `solution` where DATE(in_date)=CURDATE()");
     $submit_today = $submit_today_result[0]['count'] ?? 0;
+    // 应用放大倍数
+    $user_count = intval($user_count * $OJ_STATS_MULTIPLIER);
+    $online_count = intval($online_count * $OJ_STATS_MULTIPLIER);
+    $problem_count = intval($problem_count * $OJ_STATS_MULTIPLIER);
+    $submit_today = intval($submit_today * $OJ_STATS_MULTIPLIER);
     ?>
     <div style="margin-bottom: 25px;">
         <div class="ui four cards">

@@ -152,5 +152,4 @@ static $OJ_MENU_DROPDOWN=false;
 require_once(dirname(__FILE__) . "/pdo.php");
 require_once(dirname(__FILE__) . "/init.php");
 
-
-
+static $OJ_STATS_MULTIPLIER = 5;  // 显示5倍数据
