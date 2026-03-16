@@ -90,30 +90,62 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
     // 统计数据放大倍数 - 设置为2表示显示2倍数据
     if(!isset($OJ_STATS_MULTIPLIER)) $OJ_STATS_MULTIPLIER=1;
 
-    // 获取总用户数
-    $user_count_result = mysql_query_cache("select count(*) as count from `users` where defunct='N'");
-    $user_count = $user_count_result[0]['count'] ?? 0;
-    // 获取题目总数
-    $problem_count_result = mysql_query_cache("select count(*) as count from `problem` where defunct='N'");
-    $problem_count = $problem_count_result[0]['count'] ?? 0;
-    // 获取今日提交数
-    $submit_today_result = mysql_query_cache("select count(*) as count from `solution` where DATE(in_date)=CURDATE()");
-    $submit_today = $submit_today_result[0]['count'] ?? 0;
+    // 缓存配置 - 统计数据缓存60秒，避免频繁刷新数据库
+    $stats_cache_ttl = 60; // 缓存过期时间（秒）
+    $stats_cache_key = $OJ_NAME . '_stats_cache';
 
-    // 应用放大倍数
-    $user_count = intval($user_count * $OJ_STATS_MULTIPLIER);
-    $problem_count = intval($problem_count * $OJ_STATS_MULTIPLIER);
-    $submit_today = intval($submit_today * $OJ_STATS_MULTIPLIER);
+    // 尝试从session获取缓存数据
+    $use_cache = false;
+    $cached_data = null;
+    if (isset($_SESSION[$stats_cache_key])) {
+        $cached_data = $_SESSION[$stats_cache_key];
+        if (isset($cached_data['timestamp']) && (time() - $cached_data['timestamp'] < $stats_cache_ttl)) {
+            $use_cache = true;
+        }
+    }
 
-    // 模拟在线人数（零负载方案）
-    // 基于用户总数的 3%-8% 作为在线人数，加上一些随机波动
-    $base_online = intval($user_count * 0.05); // 基础值 5%
-    $random_factor = rand(70, 130) / 100; // 70%-130% 随机波动
-    $online_count = max(1, intval($base_online * $random_factor));
+    if ($use_cache && $cached_data) {
+        // 使用缓存数据
+        $user_count = $cached_data['user_count'];
+        $problem_count = $cached_data['problem_count'];
+        $submit_today = $cached_data['submit_today'];
+        $online_count = $cached_data['online_count'];
+    } else {
+        // 重新查询数据库
+        // 获取总用户数
+        $user_count_result = mysql_query_cache("select count(*) as count from `users` where defunct='N'");
+        $user_count = $user_count_result[0]['count'] ?? 0;
+        // 获取题目总数
+        $problem_count_result = mysql_query_cache("select count(*) as count from `problem` where defunct='N'");
+        $problem_count = $problem_count_result[0]['count'] ?? 0;
+        // 获取今日提交数
+        $submit_today_result = mysql_query_cache("select count(*) as count from `solution` where DATE(in_date)=CURDATE()");
+        $submit_today = $submit_today_result[0]['count'] ?? 0;
 
-    // 确保在线人数看起来合理
-    if ($user_count > 0 && $online_count < 5) {
-        $online_count = rand(5, min(15, $user_count));
+        // 应用放大倍数
+        $user_count = intval($user_count * $OJ_STATS_MULTIPLIER);
+        $problem_count = intval($problem_count);
+        $submit_today = intval($submit_today + $OJ_STATS_MULTIPLIER);
+
+        // 模拟在线人数（零负载方案）
+        // 基于用户总数的 3%-8% 作为在线人数，加上一些随机波动
+        $base_online = intval($user_count * 0.05); // 基础值 5%
+        $random_factor = rand(70, 130) / 100; // 70%-130% 随机波动
+        $online_count = max(1, intval($base_online * $random_factor));
+
+        // 确保在线人数看起来合理
+        if ($user_count > 0 && $online_count < 5) {
+            $online_count = rand(5, min(15, $user_count));
+        }
+
+        // 保存到session缓存
+        $_SESSION[$stats_cache_key] = [
+            'timestamp' => time(),
+            'user_count' => $user_count,
+            'problem_count' => $problem_count,
+            'submit_today' => $submit_today,
+            'online_count' => $online_count
+        ];
     }
     ?>
     <div style="margin-bottom: 25px;">
