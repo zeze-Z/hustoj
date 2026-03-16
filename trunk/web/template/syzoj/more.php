@@ -110,6 +110,60 @@
     <h1 class="page-title">更多功能</h1>
     <p class="page-subtitle">探索平台提供的丰富功能与工具</p>
 
+    <!-- 核心功能 -->
+    <div class="section">
+        <h2 class="section-title">核心功能</h2>
+        <div class="cards-grid">
+            <a href="problemset.php" class="card">
+                <div class="card-icon">
+                    <i class="book icon"></i>
+                </div>
+                <div class="card-title">题库练习</div>
+                <div class="card-desc">海量编程题目，从入门到竞赛全涵盖</div>
+            </a>
+
+            <a href="status.php" class="card">
+                <div class="card-icon">
+                    <i class="list icon"></i>
+                </div>
+                <div class="card-title">评测状态</div>
+                <div class="card-desc">实时查看提交记录与评测结果</div>
+            </a>
+
+            <a href="contest.php" class="card">
+                <div class="card-icon">
+                    <i class="trophy icon"></i>
+                </div>
+                <div class="card-title">竞赛活动</div>
+                <div class="card-desc">参加各类编程竞赛，挑战自我</div>
+            </a>
+
+            <a href="ranklist.php" class="card">
+                <div class="card-icon">
+                    <i class="chart bar icon"></i>
+                </div>
+                <div class="card-title">排行榜</div>
+                <div class="card-desc">查看用户排名与解题统计</div>
+            </a>
+
+            <a href="category.php" class="card">
+                <div class="card-icon">
+                    <i class="tags icon"></i>
+                </div>
+                <div class="card-title">题目分类</div>
+                <div class="card-desc">按知识点分类浏览题目</div>
+            </a>
+
+            <a href="discuss.php" class="card">
+                <div class="card-icon">
+                    <i class="comments icon"></i>
+                </div>
+                <div class="card-title">讨论区</div>
+                <div class="card-desc">与其他用户交流解题思路</div>
+            </a>
+        </div>
+    </div>
+
     <!-- AI训练分类 -->
     <div class="section">
         <h2 class="section-title">AI训练</h2>
