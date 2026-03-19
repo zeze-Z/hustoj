@@ -1,6 +1,6 @@
-# CLAUDE.md
+# CLAUDE.md - HUSTOJ 项目开发指南
 
-本文件为 Claude Code (claude.ai/code) 在此代码库中工作时提供指导。
+本文件为 AI 助手在此代码库中工作时提供指导。
 
 ## 项目概述
 
@@ -105,6 +105,7 @@ sudo bash /home/judge/src/install/fix_nginx_conf.sh
 2. 游客可访问 more.php
 3. 首页添加功能介绍轮播图（4张幻灯片：海量题库、秒级判题、学习路径、竞赛活动）
 4. 轮播图 UI 修复（z-index、按钮点击事件）
+5. more.php 页面优化 - 移除"每日推荐"和"核心功能"模块，保留 AI训练、AI体验、趣味工具
 
 ### 待优化项（来自推广计划）
 - 用户体验：微信/钉钉登录、游客体验模式、PWA 支持
@@ -127,3 +128,7 @@ sudo bash /home/judge/src/install/fix_nginx_conf.sh
 - [Wiki](https://zhblue.github.io/hustoj)
 - [问题追踪](https://github.com/zhblue/hustoj/issues)
 - 官方 QQ 群：23361372
+
+---
+
+*本文件由 AI 助手维护，记录项目开发上下文和进度。*
