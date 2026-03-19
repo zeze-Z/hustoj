@@ -118,8 +118,10 @@ sudo bash /home/judge/src/install/fix_nginx_conf.sh
 
 1. 始终在 `my_oj` 分支上工作
 2. 前端修改只改动 `trunk/web/template/syzoj/` 中的文件
-3. 提交前本地测试修改
-4. 提交信息中引用优化进度
+3. 代码改动要求尽量少消耗服务器资源
+4. 修改代码需防范用户恶意攻击行为
+5. 提交前本地测试修改
+6. 提交信息中引用优化进度
 
 ## 重要链接
 
