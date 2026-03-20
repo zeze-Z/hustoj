@@ -191,8 +191,6 @@ if ($OJ_SIM & $showsim > 0) {
     $fields = "solution.*,users.nick,users.group_name,users.starred";
 }
 if (isset($_GET['school']) && trim($_GET['school']) != "" || isset($_GET['group_name']) && trim($_GET['group_name']) != "") {
-    $topwhere = $sql;
-    $sql0 = "select $fields from (select * from solution $topwhere $order_str LIMIT 1500) solution inner join users users on solution.user_id=users.user_id  and users.defunct='N' ";
     if (!empty($param)) {
         $values = array_values($param);
         foreach ($values as $v) {
@@ -218,13 +216,15 @@ if (isset($_GET['school']) && trim($_GET['school']) != "" || isset($_GET['group_
         array_push($param, trim($_GET['group_name']));
         $str2 = $str2 . "&group_name=" . htmlentities(trim($_GET['group_name']), ENT_QUOTES);
     }
+    $topwhere = $sql;
+    $sql0 = "select $fields from (select * from solution $topwhere $order_str LIMIT 1500) solution inner join users users on solution.user_id=users.user_id  and users.defunct='N' ";
 } else {
     // 用户没有指定任何过滤条件，应用系统学校过滤
-    $topwhere = $sql;
     $system_school_filter = getSolutionSchoolFilter();
     if ($system_school_filter) {
         $sql .= $system_school_filter;
     }
+    $topwhere = $sql;
     if (!empty($param)) {
         $values = array_values($param);
         foreach ($values as $v) {
