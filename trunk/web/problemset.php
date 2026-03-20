@@ -23,6 +23,10 @@ require_once('./include/curl.php');
 require_once('./include/memcache.php');
 require_once('./include/setlang.php');
 require_once("./include/set_get_key.php");
+// 引入学校过滤函数
+if (file_exists('./include/school.php')) {
+    require_once('./include/school.php');
+}
 
 /**
  * 页面标题设置
@@ -140,8 +144,10 @@ if (isset($_SESSION[$OJ_NAME . '_' . 'administrator'])) {  //all problems
  * 统计总页数，获取当前页的问题数据
  */
 pdo_query("SET sort_buffer_size = 1024*1024");   // Out of sort memory, consider increasing server sort buffer size
-$sql = "select `problem_id`,`title`,`source`,`submit`,`accepted`,defunct FROM problem A WHERE $filter_sql $order_by $limit_sql ";
-$count_sql = "select count(1) from problem where  $filter_sql ";
+// 添加学校过滤条件
+$school_filter = getProblemSchoolFilter();
+$sql = "select `problem_id`,`title`,`source`,`submit`,`accepted`,defunct FROM problem A WHERE $filter_sql $school_filter $order_by $limit_sql ";
+$count_sql = "select count(1) from problem where  $filter_sql $school_filter ";
 //echo htmlentities( $sql);
 if (isset($_GET['search']) && trim($_GET['search']) != "") {
     $total = pdo_query($count_sql, $search, $search);
