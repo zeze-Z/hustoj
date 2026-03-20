@@ -153,3 +153,4 @@ require_once(dirname(__FILE__) . "/pdo.php");
 require_once(dirname(__FILE__) . "/init.php");
 
 static $OJ_STATS_MULTIPLIER = 5;  // 显示5倍数据
+static $OJ_SCHOOL_MODE = true; // 是否开启学校隔离模式

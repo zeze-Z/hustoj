@@ -7,7 +7,8 @@
 HUSTOJ 是一个广泛使用的开源在线评测系统，用于程序设计竞赛、算法训练和代码自动评测。它具有基于 PHP 的 Web 前端和 C/C++ 编写的评测后端。
 
 **关键技术栈：**
-- 前端：PHP、Nginx、MySQL/MariaDB
+- 前端：PHP、Nginx
+- 数据库：MySQL 10.3.39-MariaDB-0ubuntu0.20.04.2
 - 后端：C/C++（judge_client、judged）
 - 模板：多种主题（syzoj 是默认和主要模板）
 - 容器支持：Docker/Podman 用于安全评测
