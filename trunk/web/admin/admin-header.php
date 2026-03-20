@@ -3,6 +3,10 @@ ini_set("memory_limit", "1024M");  //set this bigger to import big files.
 ini_set("max_execution_time", "600");
 require_once("../include/db_info.inc.php");
 require_once ("../include/my_func.inc.php");
+// 引入学校管理函数
+if (file_exists('../include/school.php')) {
+    require_once('../include/school.php');
+}
 if(isset($OJ_LOG_ENABLED) && $OJ_LOG_ENABLED){
 	$params = json_encode($_REQUEST, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 	$logger->info($params);

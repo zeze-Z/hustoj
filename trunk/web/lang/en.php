@@ -489,3 +489,13 @@
   $MSG_FRIENDLY_L7="Enable discus";
   $MSG_FRIENDLY_L8="Allow download test data";
   $MSG_FRIENDLY_L9="Allow guest to submit";
+
+  // School Management
+  $MSG_SCHOOL_ADMIN="School Admin";
+  $MSG_SCHOOL_NAME="School Name";
+  $MSG_OPERATOR="Operator";
+  $MSG_CONFIRM_DELETE="Are you sure to delete?";
+  $MSG_ENABLED="Enabled";
+  $MSG_DISABLED="Disabled";
+  $MSG_USER_COUNT="Users";
+  $MSG_CANNOT_EMPTY=" cannot be empty";

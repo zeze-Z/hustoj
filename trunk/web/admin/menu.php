@@ -53,6 +53,9 @@ $OJ_TEMPLATE = "bs3";
                     <li><a href="privilege_list.php" target="main" title="<?php echo $MSG_HELP_PRIVILEGE_LIST?>"><i class="glyphicon glyphicon-list-alt"></i><?php echo $MSG_USER."-".$MSG_PRIVILEGE."-".$MSG_LIST?></a></li>
                     <li><a href="privilege_add.php" target="main" title="<?php echo $MSG_HELP_ADD_PRIVILEGE?>"><i class="glyphicon glyphicon-plus-sign"></i><?php echo $MSG_USER."-".$MSG_PRIVILEGE."-".$MSG_ADD?></a></li>
                 <?php }?>
+                <?php if (isset($_SESSION[$OJ_NAME.'_'.'administrator']) || isSchoolAdmin()){?>
+                    <li><a href="school_list.php" target="main" title="<?php echo $MSG_SCHOOL.$MSG_ADMIN?>"><i class="glyphicon glyphicon-education"></i><?php echo $MSG_SCHOOL."-".$MSG_LIST?></a></li>
+                <?php }?>
             </ul>
         </div>
 

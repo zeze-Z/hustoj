@@ -10,6 +10,10 @@ require_once('./include/db_info.inc.php');
 require_once('./include/memcache.php');
 require_once('./include/setlang.php');
 require_once("./include/my_func.inc.php");
+// 引入学校过滤函数
+if (file_exists('./include/school.php')) {
+    require_once('./include/school.php');
+}
 $view_title = "$MSG_STATUS";
 
 if (isset($OJ_LANG)) {
@@ -177,6 +181,9 @@ if (isset($_GET['jresult'])) {
 } else {
     $result = -1;
 }
+
+// 不再在这里添加学校过滤，改为在下面的条件分支中分别处理
+
 $showsim = isset($_GET['showsim']) ? intval($_GET['showsim']) : 0;
 if ($OJ_SIM & $showsim > 0) {
     $fields = "solution.*,users.nick,users.group_name,users.starred,sim.*";
@@ -193,10 +200,17 @@ if (isset($_GET['school']) && trim($_GET['school']) != "" || isset($_GET['group_
         }
     }
     if (isset($_GET['school']) && trim($_GET['school']) != "") {
+        // 用户明确指定学校名称，按名称过滤
         $school = trim($_GET['school']);
         $sql .= " and users.school=? ";
         array_push($param, trim($_GET['school']));
         $str2 = $str2 . "&school=" . htmlentities(trim($_GET['school']), ENT_QUOTES);
+    } else {
+        // 用户未指定学校时，应用系统学校过滤
+        $system_school_filter = getSolutionSchoolFilter();
+        if ($system_school_filter) {
+            $sql .= $system_school_filter;
+        }
     }
     if (isset($_GET['group_name']) && trim($_GET['group_name']) != "") {
         $group_name = trim($_GET['group_name']);
@@ -205,7 +219,12 @@ if (isset($_GET['school']) && trim($_GET['school']) != "" || isset($_GET['group_
         $str2 = $str2 . "&group_name=" . htmlentities(trim($_GET['group_name']), ENT_QUOTES);
     }
 } else {
+    // 用户没有指定任何过滤条件，应用系统学校过滤
     $topwhere = $sql;
+    $system_school_filter = getSolutionSchoolFilter();
+    if ($system_school_filter) {
+        $sql .= $system_school_filter;
+    }
     if (!empty($param)) {
         $values = array_values($param);
         foreach ($values as $v) {

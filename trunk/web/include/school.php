@@ -167,11 +167,12 @@ function getSchoolInfo($school_id) {
  * 添加学校（超级管理员）
  * @param string $name 学校名称
  * @param string $code 学校代码
+ * @param int $status 状态，默认1启用
  * @return int|false 新增的学校ID
  */
-function addSchool($name, $code) {
-    $sql = "INSERT INTO `school` (`name`, `code`) VALUES (?, ?)";
-    $result = pdo_query($sql, $name, $code);
+function addSchool($name, $code, $status = 1) {
+    $sql = "INSERT INTO `school` (`name`, `code`, `status`) VALUES (?, ?, ?)";
+    $result = pdo_query($sql, $name, $code, $status);
     
     if ($result) {
         return pdo_last_insert_id();
@@ -310,4 +311,33 @@ function getUserSchoolFilter() {
     }
     
     return " AND school_id = $school_id";
+}
+
+/**
+ * 获取提交记录过滤条件（用于SQL）
+ * 根据用户学校过滤：只能看到本校用户的提交
+ * @return string SQL条件片段（包含 AND）
+ */
+function getSolutionSchoolFilter() {
+    global $OJ_SCHOOL_MODE;
+    
+    // 未开启学校模式，不过滤
+    if (!$OJ_SCHOOL_MODE) {
+        return '';
+    }
+    
+    // 超级管理员看所有
+    if (isSuperAdmin()) {
+        return '';
+    }
+    
+    $school_id = getCurrentUserSchoolId();
+    
+    // 未分配学校的普通用户，看不到其他用户的提交（或可看公开的）
+    if (!$school_id) {
+        return " AND users.school_id IS NULL";
+    }
+    
+    // 过滤：本校用户
+    return " AND users.school_id = $school_id";
 }

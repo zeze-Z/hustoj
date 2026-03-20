@@ -513,3 +513,13 @@
   $MSG_FRIENDLY_L8="可以下载测试数据";
   $MSG_FRIENDLY_L9="允许访客提交";
 
+
+  // School Management
+  $MSG_SCHOOL_ADMIN="学校管理员";
+  $MSG_SCHOOL_NAME="学校名称";
+  $MSG_OPERATOR="操作";
+  $MSG_CONFIRM_DELETE="确定要删除吗？";
+  $MSG_ENABLED="启用";
+  $MSG_DISABLED="禁用";
+  $MSG_USER_COUNT="用户数";
+  $MSG_CANNOT_EMPTY="不能为空";
