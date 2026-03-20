@@ -25,8 +25,22 @@
                     </div>
                 </div>
                 <div class="field">
-                    <label for="username"><?php echo $MSG_SCHOOL?></label>
-                    <input name="school" placeholder="" type="text" value="">
+                    <label for="school"><?php echo $MSG_SCHOOL?>*</label>
+                    <?php 
+                    // 引入学校函数库
+                    if (file_exists("./include/school.php")) {
+                        require_once("./include/school.php");
+                        $school_list = getSchoolList(true);
+                    }
+                    ?>
+                    <select name="school_id" class="ui dropdown" required>
+                        <option value="">请选择学校</option>
+                        <?php if (!empty($school_list)): ?>
+                            <?php foreach ($school_list as $school): ?>
+                                <option value="<?php echo $school['id']; ?>"><?php echo htmlentities($school['name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
                 </div>
                 <div class="field">
                     <label for="email"><?php echo $MSG_EMAIL?>*</label>

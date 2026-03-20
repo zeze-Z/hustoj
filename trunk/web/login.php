@@ -62,11 +62,18 @@ if ($login) {
     //提取组名
     session_regenerate_id();
     $group_name = "";
-    $group_row = pdo_query("select group_name,nick from users where user_id=?", $login);
+    $school_id = null;
+    $school = "";
+    $group_row = pdo_query("select group_name,nick,school_id,school from users where user_id=?", $login);
     if (!empty($group_row)) {
         $group_name = $group_row[0]['group_name'];
+        $school_id = $group_row[0]['school_id'];
+        $school = $group_row[0]['school'];
         $_SESSION[$OJ_NAME . '_nick'] = $group_row[0]['nick'];
         $_SESSION[$OJ_NAME . '_group_name'] = $group_name;
+        // 存储学校信息到 session
+        $_SESSION[$OJ_NAME . '_school_id'] = $school_id;
+        $_SESSION[$OJ_NAME . '_school'] = $school;
     }
     if (empty($group_name)) {
         $sql = "SELECT * FROM `privilege` WHERE `user_id`=?";

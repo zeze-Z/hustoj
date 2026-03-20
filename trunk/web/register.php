@@ -15,7 +15,18 @@ $len;
 $user_id = trim($_POST['user_id']);
 $len = mb_strlen($user_id);
 $email = trim($_POST['email']);
-$school = trim($_POST['school']);
+
+// 处理学校：优先使用下拉选择的学校ID
+$school_id = isset($_POST['school_id']) ? intval($_POST['school_id']) : 0;
+$school = "";
+if ($school_id > 0) {
+    // 根据school_id获取学校名称
+    require_once("./include/school.php");
+    $school = getSchoolName($school_id);
+} else {
+    // 兼容旧的文本输入
+    $school = trim($_POST['school']);
+}
 
 // 如果启用验证码，则获取验证码
 if (isset($OJ_VCODE) && $OJ_VCODE) $vcode = trim($_POST['vcode']);
@@ -175,11 +186,11 @@ else
 if (isset($OJ_REG_NEED_CONFIRM) && $OJ_REG_NEED_CONFIRM) $defunct = "Y";
 else $defunct = "N";
 
-// 插入新用户到数据库
+// 插入新用户到数据库（包含 school_id）
 $sql = "INSERT INTO `users`("
-        . "`user_id`,`email`,`ip`,`accesstime`,`password`,`reg_time`,`nick`,`school`,`group_name`,`defunct`,activecode)"
-        . "VALUES(?,?,?,NOW(),?,NOW(),?,?,?,?,?)";
-$rows = pdo_query($sql, $user_id, $email, $ip, $password, $nick, $school, getMappedSpecial($user_id), $defunct, $_SESSION[$OJ_NAME . '_' . 'activecode']);
+        . "`user_id`,`email`,`ip`,`accesstime`,`password`,`reg_time`,`nick`,`school`,`school_id`,`group_name`,`defunct`,activecode)"
+        . "VALUES(?,?,?,NOW(),?,NOW(),?,?,?,?,?,?)";
+$rows = pdo_query($sql, $user_id, $email, $ip, $password, $nick, $school, $school_id, getMappedSpecial($user_id), $defunct, $_SESSION[$OJ_NAME . '_' . 'activecode']);
 
 // 检查数据库插入是否成功
 if ($rows === -1 || $rows === false) {
