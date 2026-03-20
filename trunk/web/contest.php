@@ -24,6 +24,10 @@ require_once('./include/memcache.php');
 require_once('./include/my_func.inc.php');
 require_once('./include/const.inc.php');
 require_once('./include/setlang.php');
+// 引入学校过滤函数
+if (file_exists('./include/school.php')) {
+    require_once('./include/school.php');
+}
 
 /**
  * 设置页面标题为竞赛标题
@@ -214,15 +218,18 @@ if (isset($_GET['cid'])) {
             if (isset($_GET['my'])) $wheremy = " and( contest_id in ($mycontests) or user_id='" . $_SESSION[$OJ_NAME . '_user_id'] . "')";
     }
 
-    $sql = "SELECT * FROM `contest` WHERE `defunct`='N' ORDER BY `contest_id` DESC LIMIT 1000";
+    // 添加学校过滤条件
+    $school_filter = getContestSchoolFilter();
+    
+    $sql = "SELECT * FROM `contest` WHERE `defunct`='N' $school_filter ORDER BY `contest_id` DESC LIMIT 1000";
 
     if ($keyword) {
-        $sql = "SELECT *  FROM contest WHERE contest.defunct='N' AND contest.title LIKE ? $wheremy  ORDER BY contest_id DESC";
+        $sql = "SELECT *  FROM contest WHERE contest.defunct='N' $school_filter AND contest.title LIKE ? $wheremy  ORDER BY contest_id DESC";
         $sql .= " limit " . strval($pstart) . "," . strval($pend);
 
         $result = pdo_query($sql, $keyword);
     } else {
-        $sql = "SELECT *  FROM contest WHERE contest.defunct='N' $wheremy  ORDER BY contest_id DESC";
+        $sql = "SELECT *  FROM contest WHERE contest.defunct='N' $school_filter $wheremy  ORDER BY contest_id DESC";
         $sql .= " limit " . strval($pstart) . "," . strval($pend);
         //echo $sql;
         $result = mysql_query_cache($sql);

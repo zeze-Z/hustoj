@@ -6,6 +6,10 @@ require_once('./include/db_info.inc.php');
 require_once("./include/my_func.inc.php");
 require_once('./include/setlang.php');
 require_once('./include/memcache.php');
+// 引入学校过滤函数
+if (file_exists('./include/school.php')) {
+    require_once('./include/school.php');
+}
 $now = date('Y-m-d H:i', time());
 $sql = "select count(contest_id) from contest where start_time<'$now' and end_time>'$now' and ( title like '%$OJ_NOIP_KEYWORD%' or (contest_type & 20)>0 )  ";
 $rows = pdo_query($sql);
@@ -40,7 +44,10 @@ if (isset($_GET['group_name']) && !empty($_GET['group_name'])) {
 }
 $rank = 0;
 
-$sql = "SELECT count(1) as `mycount` FROM `users` where defunct='N' ";
+// 添加学校过滤条件
+$school_filter = getUserSchoolFilter();
+
+$sql = "SELECT count(1) as `mycount` FROM `users` where defunct='N' $school_filter";
 $result = mysql_query_cache($sql);
 $row = $result[0];
 $view_total = $row['mycount'];
@@ -57,7 +64,7 @@ $page_size = 50;
 if ($rank < 0)
     $rank = 0;
 
-$sql = "SELECT `user_id`,`nick`,`solved`,`submit`,group_name,starred FROM `users` $where ORDER BY `solved` DESC,submit,reg_time  LIMIT  " . strval($rank) . ",$page_size";
+$sql = "SELECT `user_id`,`nick`,`solved`,`submit`,group_name,starred FROM `users` $where $school_filter ORDER BY `solved` DESC,submit,reg_time  LIMIT  " . strval($rank) . ",$page_size";
 
 if ($scope) {
     $s = "";
