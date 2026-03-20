@@ -499,3 +499,4 @@
   $MSG_DISABLED="Disabled";
   $MSG_USER_COUNT="Users";
   $MSG_CANNOT_EMPTY=" cannot be empty";
+$MSG_FAILED="Failed";

@@ -33,8 +33,8 @@ $sql = "DELETE FROM `school` WHERE `id` = ?";
 $result = pdo_query($sql, $school_id);
 
 if ($result !== false) {
-    echo "<script>alert('Delete success'); window.location.href='school_list.php';</script>";
+    echo "<script>alert('$MSG_DELETE $MSG_SUCCESS'); window.location.href='school_list.php';</script>";
 } else {
-    echo "<script>alert('Delete failed'); history.go(-1);</script>";
+    echo "<script>alert('$MSG_DELETE $MSG_FAILED'); history.go(-1);</script>";
 }
 ?>

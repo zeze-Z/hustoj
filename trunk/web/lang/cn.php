@@ -523,3 +523,4 @@
   $MSG_DISABLED="禁用";
   $MSG_USER_COUNT="用户数";
   $MSG_CANNOT_EMPTY="不能为空";
+$MSG_FAILED="失败";
