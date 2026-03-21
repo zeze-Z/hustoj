@@ -38,7 +38,7 @@ $view_title = $MSG_EDIT . " " . $MSG_SCHOOL;
 
 // 处理表单提交
 if (isset($_POST['do'])) {
-    // require_once("../include/check_post_key.php"); // Disabled
+    require_once("../include/check_post_key.php");
 
     $name = trim($_POST['name']);
     $code = trim($_POST['code']);
@@ -67,7 +67,7 @@ if (isset($_POST['do'])) {
 
 <div class="padding">
     <form action="school_edit.php?id=<?php echo $school_id ?>" method="post" class="form-horizontal">
-        <?php // CSRF protection disabled ?>
+        <?php require_once("../include/set_post_key.php"); ?>
 
         <div class="form-group">
             <label class="col-sm-2 control-label">ID</label>

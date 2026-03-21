@@ -17,7 +17,7 @@ $view_title = $MSG_ADD . " " . $MSG_SCHOOL;
 
 // 处理表单提交
 if (isset($_POST['do'])) {
-    // require_once("../include/check_post_key.php"); // Disabled - postkey not in form
+    require_once("../include/check_post_key.php");
 
     $name = trim($_POST['name']);
     $code = trim($_POST['code']);
@@ -45,7 +45,7 @@ if (isset($_POST['do'])) {
 
 <div class="padding">
     <form action="school_add.php" method="post" class="form-horizontal">
-        <?php // CSRF protection disabled - file not exist ?>
+        <?php require_once("../include/set_post_key.php"); ?>
 
         <div class="form-group">
             <label class="col-sm-2 control-label"><?php echo $MSG_SCHOOL_NAME ?></label>

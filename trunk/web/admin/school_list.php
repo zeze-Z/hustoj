@@ -53,7 +53,7 @@ $result = pdo_query($sql);
 
 <div class="padding">
     <form action="school_add.php" method="post" style="margin-bottom: 10px;">
-        <?php require_once("../include/csrf.php"); ?>
+        <?php require_once("../include/set_post_key.php"); ?>
         <button type="submit" class="btn btn-success">
             <i class="glyphicon glyphicon-plus"></i> <?php echo $MSG_ADD . " " . $MSG_SCHOOL ?>
         </button>
