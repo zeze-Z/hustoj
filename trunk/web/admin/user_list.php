@@ -1,6 +1,10 @@
 <?php
 require("admin-header.php");
 require_once("../include/set_get_key.php");
+
+// 引入学校函数库
+require_once("../include/school.php");
+
 if(!(isset($_SESSION[$OJ_NAME.'_'.'administrator'])||isset($_SESSION[$OJ_NAME.'_'.'password_setter']))){
   echo "<a href='../loginpage.php'>Please Login First!</a>";
   exit(1);
@@ -14,7 +18,10 @@ if(isset($OJ_LANG)){
 <center><h3><?php echo $MSG_USER."-".$MSG_LIST?></h3></center>
 <div class='' style="overflow:auto">
 <?php
-$sql = "select COUNT('user_id') AS ids FROM `users`";
+// 学校管理员只能看本校用户
+$school_filter = getUserSchoolFilter();
+
+$sql = "select COUNT('user_id') AS ids FROM `users` WHERE 1=1 $school_filter";
 $result = pdo_query($sql);
 $row = $result[0];
 $ids = intval($row['ids']);

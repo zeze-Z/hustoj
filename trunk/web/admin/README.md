@@ -6,7 +6,7 @@
 trunk/web/admin/
 ├── admin-header.php    # 公共头部（权限检查、加载资源）
 ├── admin-footer.php    # 公共尾部
-├── menu.php           # 左侧菜单（旧版，bs3模板）
+├── menu.php           # 左侧菜单（sidebar模板，已废弃，不建议使用）
 ├── menu2.php          # 左侧菜单（syzoj模板，当前使用）
 ├── ajax.php           # AJAX 处理
 ├── xxx_list.php       # 列表页
@@ -16,7 +16,7 @@ trunk/web/admin/
 └── xxx_df_change.php  # 状态切换（如启用/禁用）
 ```
 
-> ⚠️ **重要**：syzoj 模板使用 `menu.php` 作为后台菜单入口，新增菜单请同时修改 `menu.php` 和 `menu2.php`！
+> ⚠️ **重要**：syzoj 模板使用 `menu2.php` 作为后台菜单入口，菜单修改只用改 `menu2.php` 即可。
 
 ## 页面模板
 
@@ -316,14 +316,6 @@ $id = pdo_last_insert_id();
 <?php }?>
 ```
 
-### menu.php（旧版，非syzoj模板）
-
-```php
-<li><a href="xxx_list.php" target="main" title="<?php echo $MSG_xxx.$MSG_ADMIN ?>">
-    <i class="glyphicon glyphicon-xxx"></i><?php echo $MSG_xxx ?>
-</a></li>
-```
-
 ## 注意事项
 
 1. **CSRF 防护**：表单使用 `require_once("../include/csrf.php")`，提交时用 `check_post_key.php`
@@ -344,7 +336,7 @@ $id = pdo_last_insert_id();
 ┌─────────────────────────────────────────────┐
 │  frameset (外层框架)                         │
 │  ┌────────────┬──────────────────────────┐  │
-│  │ menu.php   │ main (iframe)             │  │
+│  │ menu2.php   │ main (iframe)             │  │
 │  │ 左侧菜单    │ 右侧内容区                 │  │
 │  │            │                          │  │
 │  │ <a target=│ user_list.php            │  │
@@ -359,12 +351,12 @@ $id = pdo_last_insert_id();
 **入口文件** `index.php`:
 ```html
 <frameset cols="16%,*">
-    <frame name="menu" src="menu.php">  <!-- 左侧菜单 -->
+    <frame name="menu" src="menu2.php">  <!-- 左侧菜单 -->
     <frame name="main" src="help.php">   <!-- 右侧内容 -->
 </frameset>
 ```
 
-**菜单链接** `menu.php`:
+**菜单链接** `menu2.php`:
 ```html
 <li>
     <a href="xxx_list.php" target="main" title="xxx管理">
