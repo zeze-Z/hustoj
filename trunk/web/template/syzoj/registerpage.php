@@ -34,7 +34,7 @@
                     }
                     ?>
                     <select name="school_id" class="ui dropdown" required>
-                        <option value="">请选择学校</option>
+                        <option value="">请选择学校，如果没有，请联系客服</option>
                         <?php if (!empty($school_list)): ?>
                             <?php foreach ($school_list as $school): ?>
                                 <option value="<?php echo $school['id']; ?>"><?php echo htmlentities($school['name'], ENT_QUOTES, 'UTF-8'); ?></option>
