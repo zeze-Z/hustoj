@@ -17,8 +17,122 @@ $OJ_TEMPLATE = "bs3";
     <!-- 最新的 Bootstrap 核心JavaScript文件 -->
     <script src="<?php echo $OJ_CDN_URL.$path_fix."template/$OJ_TEMPLATE/"?>bootstrap.min.js"></script>
     <link rel="stylesheet" href="admin.css">
+    <style>
+        /* 侧边栏样式优化 */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 240px;
+            height: 100vh;
+            background-color: #2c3e50;
+            padding: 20px 0;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        #sidebar:hover {
+            box-shadow: 4px 0 15px rgba(0,0,0,0.15);
+        }
+        
+        #sidebar a {
+            display: block;
+            color: #ecf0f1;
+            padding: 10px 20px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-radius: 0 20px 20px 0;
+            margin: 2px 0;
+        }
+        
+        #sidebar a:hover {
+            background-color: rgba(255,255,255,0.1);
+            color: #3498db;
+            transform: translateX(5px);
+        }
+        
+        #sidebar a.btn {
+            margin: 10px 20px;
+            width: calc(100% - 40px);
+            text-align: left;
+            border: none;
+            background-color: #34495e;
+        }
+        
+        #sidebar a.btn:hover {
+            background-color: #2980b9;
+            color: white;
+            transform: none;
+        }
+        
+        #sidebar .sidebar-section {
+            margin: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        #sidebar .sidebar-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #bdc3c7;
+            padding: 0 20px 10px;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        #sidebar .sidebar-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        #sidebar .sidebar-section li {
+            margin: 0;
+        }
+        
+        #sidebar .sidebar-section li a {
+            font-size: 13px;
+            padding: 8px 20px 8px 30px;
+        }
+        
+        #sidebar .sidebar-section li a:hover {
+            background-color: rgba(255,255,255,0.08);
+        }
+        
+        /* 主内容区域 */
+        .main-content {
+            margin-left: 240px;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            #sidebar {
+                width: 200px;
+            }
+            
+            .main-content {
+                margin-left: 200px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
 </head>
-<body style="text-align:center;min-width:100px; margin-left: 250px;"> <!-- 给主体内容预留侧边栏宽度的边距 -->
+<body>
     <div id="sidebar">
         <a class='btn btn-sm' href="help.php" target="main" title="<?php echo $MSG_ADMIN?>"><i class="glyphicon glyphicon-star-empty"></i><b><?php echo $MSG_ADMIN?></b></a>
         <a class='btn btn-sm' href="../status.php" target="_top" title="<?php echo $MSG_HELP_SEEOJ?>"><i class="glyphicon glyphicon-eye"></i><b><?php echo $MSG_SEEOJ?></b></a>
@@ -103,20 +217,20 @@ $OJ_TEMPLATE = "bs3";
         <?php }?>
 
         <?php if (isset($_SESSION[$OJ_NAME.'_'.'administrator'])){?>
-            <a class='btn btn-sm' href="https://github.com/zhblue/hustoj/" target="_blank"><i class="fab glyphicon-github"></i><b>HUSTOJ</b></a><br>
-            <a class='btn btn-sm' href="https://yuanqi.tencent.com/agent/jADpOEWqLvTv" target="_blank"><i class="glyphicon glyphicon-robot"></i><b>小张老师(AI-help)</b></a><br>
-            <div><a class="btn btn-sm" target='main' href="http://hustoj.com"><i class="glyphicon glyphicon-question-circle"></i><?php echo $MSG_ADMIN." ".$MSG_FAQ?></a></div>
-            <a class='btn btn-sm' href="https://github.com/zhblue/freeproblemset/" target="_blank"><i class="fab glyphicon-github"></i><b>FreeProblemSet</b></a><br>
-            <a class='btn btn-sm' href="http://tk.hustoj.com" target="_blank"><i class="glyphicon glyphicon-book"></i><b>自助题库</b></a><br>
+            <a class='btn btn-sm' href="https://github.com/zhblue/hustoj/" target="_blank"><i class="fab glyphicon-github"></i><b>HUSTOJ</b></a>
+            <a class='btn btn-sm' href="https://yuanqi.tencent.com/agent/jADpOEWqLvTv" target="_blank"><i class="glyphicon glyphicon-robot"></i><b>小张老师(AI-help)</b></a>
+            <a class="btn btn-sm" target='main' href="http://hustoj.com"><i class="glyphicon glyphicon-question-circle"></i><?php echo $MSG_ADMIN." ".$MSG_FAQ?></a>
+            <a class='btn btn-sm' href="https://github.com/zhblue/freeproblemset/" target="_blank"><i class="fab glyphicon-github"></i><b>FreeProblemSet</b></a>
+            <a class='btn btn-sm' href="http://tk.hustoj.com" target="_blank"><i class="glyphicon glyphicon-book"></i><b>自助题库</b></a>
             <?php if(isset($OJ_REMOTE_JUDGE)&&$OJ_REMOTE_JUDGE){?>
-                <a class='btn btn-sm' href="https://www.ssoier.cn/api/" target="_blank"><i class="glyphicon glyphicon-link"></i><b>一本通远程账户管理</b></a><br>
+                <a class='btn btn-sm' href="https://www.ssoier.cn/api/" target="_blank"><i class="glyphicon glyphicon-link"></i><b>一本通远程账户管理</b></a>
             <?php }?>
-            <a class='btn btn-sm' href="https://mp.weixin.qq.com/s?__biz=MzI1MTAwMTI2NA==&mid=2656403287&idx=1&sn=2b1b9a5cd0b271aa4a050c349981e715" target="_blank"><i class="glyphicon glyphicon-book-open"></i><b>二次开发教程</b></a><br>
+            <a class='btn btn-sm' href="https://mp.weixin.qq.com/s?__biz=MzI1MTAwMTI2NA==&mid=2656403287&idx=1&sn=2b1b9a5cd0b271aa4a050c349981e715" target="_blank"><i class="glyphicon glyphicon-book-open"></i><b>二次开发教程</b></a>
         <?php }?>
 
         <?php if (isset($_SESSION[$OJ_NAME.'_'.'administrator'])&&!$OJ_SAE){?>
-            <a href="solution_statistics.php" target="main" title="Create your own data"><i class="glyphicon glyphicon-chart-line"></i><font color="eeeeee">SS Report</font></a> <br>
-            <a href="problem_copy.php" target="main" title="Create your own data"><i class="glyphicon glyphicon-copy"></i><font color="eeeeee">CopyProblem</font></a> <br>
+            <a href="solution_statistics.php" target="main" title="Create your own data"><i class="glyphicon glyphicon-chart-line"></i><font color="eeeeee">SS Report</font></a>
+            <a href="problem_copy.php" target="main" title="Create your own data"><i class="glyphicon glyphicon-copy"></i><font color="eeeeee">CopyProblem</font></a>
             <a href="problem_changeid.php" target="main" title="Danger,Use it on your own risk"><i class="glyphicon glyphicon-exchange-alt"></i><font color="eeeeee">ReOrderProblem</font></a>
         <?php }?>
     </div>
