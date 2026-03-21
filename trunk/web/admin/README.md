@@ -316,3 +316,61 @@ $id = pdo_last_insert_id();
 3. **语言支持**：使用 `$MSG_xxx` 变量，不要硬编码中文
 4. **SQL 安全**：使用参数化查询，禁止字符串拼接
 5. **XSS 防护**：输出用 `htmlentities($str, ENT_QUOTES, 'UTF-8')`
+
+---
+
+## Frameset 后台架构
+
+管理后台使用 **frameset + iframe** 架构，浏览器 URL 不会变化。
+
+### 架构说明
+
+```
+┌─────────────────────────────────────────────┐
+│  frameset (外层框架)                         │
+│  ┌────────────┬──────────────────────────┐  │
+│  │ menu.php   │ main (iframe)             │  │
+│  │ 左侧菜单    │ 右侧内容区                 │  │
+│  │            │                          │  │
+│  │ <a target=│ user_list.php            │  │
+│  │   "main">  │ news_list.php            │  │
+│  │            │ school_list.php          │  │
+│  └────────────┴──────────────────────────┘  │
+└─────────────────────────────────────────────┘
+```
+
+### 实现方式
+
+**入口文件** `index.php`:
+```html
+<frameset cols="16%,*">
+    <frame name="menu" src="menu.php">  <!-- 左侧菜单 -->
+    <frame name="main" src="help.php">   <!-- 右侧内容 -->
+</frameset>
+```
+
+**菜单链接** `menu.php`:
+```html
+<li>
+    <a href="xxx_list.php" target="main" title="xxx管理">
+        <i class="glyphicon glyphicon-xxx"></i>xxx列表
+    </a>
+</li>
+```
+
+### 为什么这样设计
+
+| 优点 | 说明 |
+|------|------|
+| 无刷新 | 点击菜单只刷新右侧 iframe，左侧菜单保持 |
+| 状态保持 | 左侧菜单展开状态不会因刷新丢失 |
+| 减少请求 | 只需加载一次左侧菜单 HTML/CSS |
+| 历史干净 | 不会产生大量历史记录，避免误点返回键 |
+| 简单稳定 | 比 SPA 更容易实现和维护 |
+
+### 后续开发要求
+
+⚠️ **新增管理功能时，必须遵循此架构**：
+1. 页面在 iframe 中打开（`target="main"`）
+2. 不要使用 SPA 或 React/Vue 重构
+3. 保持与现有页面风格一致
