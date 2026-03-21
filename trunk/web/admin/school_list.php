@@ -2,14 +2,15 @@
 require("admin-header.php");
 require_once("../include/set_get_key.php");
 
+// 强制加载语言文件
+if (isset($OJ_LANG)) {
+    require_once("../lang/$OJ_LANG.php");
+}
+
 // 权限检查：仅超管和学校管理员可访问
 if (!isset($_SESSION[$OJ_NAME.'_'.'administrator']) && !isSchoolAdmin()) {
     echo "<a href='../loginpage.php'>Please Login First!</a>";
     exit(1);
-}
-
-if (isset($OJ_LANG)) {
-    require_once("../lang/$OJ_LANG.php");
 }
 ?>
 
