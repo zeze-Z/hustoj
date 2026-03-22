@@ -272,7 +272,7 @@ function canAccessData($data_school_id, $is_public = false) {
  * @return string
  */
 function getProblemSchoolFilter() {
-    return getSchoolSQLFilter('p', 'school_id', 'is_public');
+    return getSchoolSQLFilter('A', 'school_id', 'is_public');
 }
 
 /**
