@@ -26,8 +26,17 @@ $content = str_replace("</p>", "<br />", $content);
 
 
 
-$sql = "INSERT INTO news(`user_id`,`title`,`content`,`time`,`menu`) VALUES(?,?,?,now(),?)";
-pdo_query($sql,$user_id,$title,$content,$menu);
+// 判断是更新还是插入
+if (isset($_POST['news_id']) && $_POST['news_id'] != '') {
+    // 更新新闻
+    $news_id = intval($_POST['news_id']);
+    $sql = "UPDATE news SET `title`=?,`content`=?,`time`=now(),`menu`=? WHERE `news_id`=?";
+    pdo_query($sql,$title,$content,$menu,$news_id);
+} else {
+    // 插入新新闻
+    $sql = "INSERT INTO news(`user_id`,`title`,`content`,`time`,`menu`) VALUES(?,?,?,now(),?)";
+    pdo_query($sql,$user_id,$title,$content,$menu);
+}
 $sessionDataKey = $OJ_NAME.'_'."_MENU_NEWS_CACHE";
 unset($_SESSION[$sessionDataKey]);
 

@@ -7,20 +7,20 @@ if(!(isset($_SESSION[$OJ_NAME.'_'.'administrator']))){
 }
 
 echo "<hr>";
-echo "<center><h3>".$MSG_NEWS."-".$MSG_ADD."</h3></center>";
+echo "<center><h3>".$MSG_NEWS."-".$MSG_EDIT."</h3></center>";
 
 include_once("kindeditor.php");
 ?>
 
 <?php
-if(isset($_GET['cid'])){
-  $cid = intval($_GET['cid']);
+if(isset($_GET['id'])){
+  $cid = intval($_GET['id']);
   $sql = "SELECT * FROM news WHERE `news_id`=?";
   $result = pdo_query($sql,$cid);
   $row = $result[0];
   $title = $row['title'];
   $content = $row['content'];
-  $defunct = $row['defunct'];
+  $menu = $row['menu'];
 }
 $plist = "";
 if(isset($_POST['pid'])){
@@ -43,17 +43,18 @@ if(isset($_POST['pid'])){
 ?>
 
 <div class="padding">
-  <form method=POST action=news_add.php>
+  <form method=POST action=news_edit.php>
+      <input type=hidden name=news_id value='<?php echo isset($cid)?$cid:""?>'>
     <p align=left>
       <label class="col control-label"><?php echo $MSG_TITLE?></label>
-	  <input class="input input-large" style="width:100%;" size=71 value='<?php echo isset($title)?$title."-Copy":""?>' type=text name='title' id='title' > 
+	  <input class="input input-large" style="width:100%;" size=71 value='<?php echo isset($title)?htmlentities($title,ENT_QUOTES,"UTF-8"):""?>' type=text name='title' id='title' > 
 	  <input type=submit class='btn btn-success' value='<?php echo $MSG_SAVE?>' name=submit> 
 	  <input class='btn btn-primary' id='ai_bt' type=button value='AI一下' onclick='ai_gen()' >
 	  <input class='btn btn-danger'  type=reset value='<?php echo $MSG_RESET?>' onclick='setTimeout("ai_gen()",500);' >
     </p>
     <p align=left>
       <label class="col control-label"><?php echo $MSG_NEWS_MENU?>
-        <input style="display: inline-block;" type="checkbox" name=showInMenu />
+        <input style="display: inline-block;" type="checkbox" name=showInMenu <?php echo isset($menu) && $menu==1?"checked":""?> />
       </label>
     </p>
     <p align=left>
