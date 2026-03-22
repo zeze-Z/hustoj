@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ssh:*)",
+      "Bash(scp:*)",
+      "Bash(mysql:*)",
+      "Bash(git:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(pwd:*)",
+      "Bash(echo:*)",
+      "Bash(curl:*)",
+      "Bash(cd:*)",
+      "Bash(tar:*)",
+      "Bash(rm:*)",
+      "Bash(mv:*)",
+      "Bash(cp:*)",
+      "Bash(mkdir:*)",
+      "Bash(chmod:*)",
+      "Bash(chown:*)",
+      "Bash(npx:*)",
+      "Bash(npm:*)",
+      "Bash(php:*)",
+      "Bash(sed:*)",
+      "Read",
+      "Write",
+      "Edit"
+    ]
+  }
+}
