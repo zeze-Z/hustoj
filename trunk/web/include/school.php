@@ -175,7 +175,8 @@ function addSchool($name, $code, $status = 1) {
     $result = pdo_query($sql, $name, $code, $status);
     
     if ($result) {
-        return pdo_last_insert_id();
+        global $dbh;
+        return $dbh->lastInsertId();
     }
     return false;
 }

@@ -1,137 +1,53 @@
-# CLAUDE.md - HUSTOJ 项目开发指南
+# HUSTOJ 项目 Claude Code 指南
 
-本文件为 AI 助手在此代码库中工作时提供指导。
-
-## 项目概述
-
-HUSTOJ 是一个广泛使用的开源在线评测系统，用于程序设计竞赛、算法训练和代码自动评测。它具有基于 PHP 的 Web 前端和 C/C++ 编写的评测后端。
-
-**关键技术栈：**
-- 前端：PHP、Nginx
-- 数据库：MySQL 10.3.39-MariaDB-0ubuntu0.20.04.2
-- 后端：C/C++（judge_client、judged）
-- 模板：多种主题（syzoj 是默认和主要模板）
-- 容器支持：Docker/Podman 用于安全评测
-
-## 重要开发规则
-
-### 模板修改限制
-**关键：只能修改 `syzoj` 模板。不要修改任何其他模板（mdui、sweet、sidebar、bs3、bshark 等）。**
-
-用户仅使用 syzoj 模板作为学生端界面。所有修改应仅限于 `trunk/web/template/syzoj/` 目录。
-
-### 当前分支
-- 活跃开发分支：`my_oj`
-- 主分支：`master`
+## 项目信息
+- **路径**: `/Users/zhangmaofan/PycharmProjects/hustoj`
+- **分支**: `my_oj`
+- **模板**: syzoj
 
 ## 目录结构
-
 ```
-hustoj/
-├── trunk/
-│   ├── core/              # 评测后端（C/C++）
-│   │   ├── judge_client/  # 评测客户端守护进程
-│   │   ├── judged/        # 评测中心
-│   │   └── sim/           # 沙箱隔离
-│   ├── install/           # 安装脚本
-│   └── web/               # Web 前端（PHP）
-│       ├── admin/         # 管理后台
-│       ├── include/       # 核心 PHP 库
-│       ├── template/      # 前端主题
-│       │   └── syzoj/    # 主要模板 - 只修改这个
-│       └── upload/        # 用户上传
-├── docs/                  # 文档
-├── wiki/                  # 技术文档
-└── README.md              # 项目主 README
+trunk/web/
+├── admin/           # 管理后台 (menu2.php 是菜单)
+├── include/          # 核心函数库 (school.php)
+├── template/syzoj/   # 前端模板
+└── lang/            # 语言包 (cn.php, en.php)
 ```
 
-## 关键配置文件
-
-安装后，重要配置文件位于：
-
-- `/home/judge/etc/judge.conf` - 评测服务器配置
-- `/home/judge/src/web/include/db_info.inc.php` - Web 应用设置
-- `/etc/nginx/sites-enabled/default` - Nginx 配置
-
-## 编译后端
-
+## 常用 Git 命令
 ```bash
-cd trunk/core/judge_client
-make
-cd ../judged
-make
+git status
+git add -A && git commit -m "提交信息"
+git push
+git pull
 ```
 
-## 安装
+## 代码规范
 
-对于 Ubuntu 22.04+/24.04/Debian 12（推荐）：
+### 管理后台 (admin/)
+遵循 `admin/README.md` 规范：
+- 页面: list/add/edit/del/df_change
+- 菜单: `menu2.php` (syzoj 模板)
+- 架构: frameset (target="main")
+- 权限: `$_SESSION[$OJ_NAME.'_'.'administrator']`
+- CSRF: `check_post_key.php` / `csrf.php`
+- SQL: 参数化查询
+- XSS: `htmlentities($str, ENT_QUOTES, 'UTF-8')`
 
-```bash
-wget http://dl.hustoj.com/install.sh
-sudo bash install.sh
+### 语言变量
+在 `lang/cn.php` 和 `lang/en.php` 中定义：
+```php
+$MSG_SCHOOL = "学校";
+$MSG_ADD = "添加";
+$MSG_EDIT = "编辑";
 ```
 
-安装后，使用用户名 `admin` 注册即可自动获得管理员权限。
+## 数据库
+- school 表: 学校信息
+- users.school_id: 用户所属学校
+- problem.school_id / is_public: 题目归属
+- contest.school_id / is_public: 比赛归属
 
-## 常用维护命令
-
-```bash
-# 备份
-sudo bash /home/judge/src/install/bak.sh
-
-# 更新/修复
-sudo bash /home/judge/src/install/fixing.sh
-
-# 恢复备份
-sudo bash /home/judge/src/install/restore.sh <backup_file>
-
-# 恢复nginx配置
-sudo bash /home/judge/src/install/fix_nginx_conf.sh
-```
-
-## 近期功能（2026年）
-
-- 基于 AI 的题目分类和生成
-- 异步 AI API 集成
-- 基于 GUI 的 AI 辅助题目创建
-- Podman 容器化支持
-- PHP 8.4 兼容性
-
-## 项目背景与进行中的工作
-
-本仓库有一个持续的推广和优化计划，重点关注：
-
-### 已完成的优化（在 my_oj 分支上）
-1. 首页游客访问修复 - 访客无需登录即可查看首页
-2. 游客可访问 more.php
-3. 首页添加功能介绍轮播图（4张幻灯片：海量题库、秒级判题、学习路径、竞赛活动）
-4. 轮播图 UI 修复（z-index、按钮点击事件）
-5. more.php 页面优化 - 移除"每日推荐"和"核心功能"模块，保留 AI训练、AI体验、趣味工具
-
-### 待优化项（来自推广计划）
-- 用户体验：微信/钉钉登录、游客体验模式、PWA 支持
-- 内容：分级题库、趣味编程题、学习路径
-- 功能：班级管理、作业系统、错题本、AI 提示
-- 推广：自定义品牌、学校定制页面、邀请码
-- 技术：一键部署、离线安装包、健康检查页面
-
-## 开发工作流
-
-1. 始终在 `my_oj` 分支上工作
-2. 前端修改只改动 `trunk/web/template/syzoj/` 中的文件
-3. 代码改动要求尽量少消耗服务器资源
-4. 修改代码需防范用户恶意攻击行为
-5. 提交前本地测试修改
-6. 提交信息中引用优化进度
-
-## 重要链接
-
-- [常见问题](http://hustoj.com)
-- [线上地址](https://aioj.top/)
-- [Wiki](https://zhblue.github.io/hustoj)
-- [问题追踪](https://github.com/zhblue/hustoj/issues)
-- 官方 QQ 群：23361372
-
----
-
-*本文件由 AI 助手维护，记录项目开发上下文和进度。*
+## 配置文件
+- `include/db_info.inc.php`: 数据库配置
+- `include/school.php`: 学校管理函数
