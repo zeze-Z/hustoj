@@ -98,6 +98,7 @@ function isSchoolAdmin() {
  * @return string 'super_admin' | 'school_admin' | 'user' | 'guest'
  */
 function getCurrentUserRole() {
+    global $OJ_NAME;
     if (isSuperAdmin()) return 'super_admin';
     if (isSchoolAdmin()) return 'school_admin';
     if (isset($_SESSION[$OJ_NAME.'_'.'user_id'])) return 'user';
