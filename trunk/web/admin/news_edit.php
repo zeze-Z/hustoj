@@ -6,6 +6,22 @@ if(!(isset($_SESSION[$OJ_NAME.'_'.'administrator']))){
   exit(1);
 }
 
+// 处理表单提交 - 更新公告
+if(isset($_POST['submit']) && isset($_POST['news_id']) && $_POST['news_id']!=""){
+  require_once("../include/check_post_key.php");
+  
+  $news_id = intval($_POST['news_id']);
+  $title = $_POST['title'];
+  $content = $_POST['content'];
+  $menu = isset($_POST['showInMenu']) ? 1 : 0;
+  
+  $sql = "UPDATE news SET title=?, content=?, menu=?, user_id=? WHERE news_id=?";
+  pdo_query($sql, $title, $content, $menu, $_SESSION[$OJ_NAME.'_'.'user_id'], $news_id);
+  
+  echo "<script>alert('公告更新成功'); window.location.href='news_list.php';</script>";
+  exit();
+}
+
 echo "<hr>";
 echo "<center><h3>".$MSG_NEWS."-".$MSG_EDIT."</h3></center>";
 

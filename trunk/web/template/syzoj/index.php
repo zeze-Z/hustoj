@@ -108,7 +108,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                 from problem p
                 where p.defunct='N' and p.problem_id>0
                 order by p.accepted desc
-                limit 1 offset " . intval($offset));
+                limit 1");
 
             if (empty($daily_problem_result)) {
                 // 如果偏移量获取失败，直接获取一个热门题目
