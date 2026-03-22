@@ -11,9 +11,16 @@ if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
     exit(0);
 }
 
-$sql = "SELECT `school`,`nick`,`email` FROM `users` WHERE `user_id`=?";
+$sql = "SELECT `school`,`school_id`,`nick`,`email` FROM `users` WHERE `user_id`=?";
 $result = pdo_query($sql, $_SESSION[$OJ_NAME . '_' . 'user_id']);
 $row = $result[0];
+
+// 获取学校列表（用于下拉选择）
+$school_list = array();
+if (file_exists('./include/school.php')) {
+    require_once('./include/school.php');
+    $school_list = getSchoolList(true);
+}
 
 
 /////////////////////////Template

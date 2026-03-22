@@ -65,9 +65,22 @@
                             </div>
                         </div>
                         <div class="field">
-                            <label for="username">个性签名</label>
-                            <input name="school" placeholder="请<?php echo $MSG_Input; ?>个性签名" type="text"
+                            <label for="school_id">
+                                <?php echo $MSG_SCHOOL; ?>
+                            </label>
+                            <?php if (!empty($school_list)): ?>
+                            <select name="school_id" class="form-control">
+                              <option value=""><?php echo $MSG_SCHOOL; ?></option>
+                              <?php foreach ($school_list as $school): ?>
+                              <option value="<?php echo $school['id'] ?>" <?php if (isset($row['school_id']) && $row['school_id'] == $school['id']) echo 'selected'; ?>>
+                                <?php echo htmlentities($school['name'], ENT_QUOTES, 'UTF-8') ?>
+                              </option>
+                              <?php endforeach; ?>
+                            </select>
+                            <?php else: ?>
+                            <input name="school" placeholder="请<?php echo $MSG_Input; ?>学校" type="text"
                                 value="<?php echo htmlentities($row['school'], ENT_QUOTES, "UTF-8") ?>">
+                            <?php endif; ?>
                         </div>
                         <div class="field">
                             <label for="email">

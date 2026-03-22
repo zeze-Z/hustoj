@@ -94,14 +94,29 @@
                     </div>
                     <div style="position: relative;">
                         <a class="mdui-btn mdui-btn-icon" style="display: inline-block; top: 40px; position: absolute;">
-                            <i class="mdui-icon material-icons">border_color</i>
+                            <i class="mdui-icon material-icons">school</i>
                         </a>
+                        <?php if (!empty($school_list)): ?>
                         <div class="mdui-textfield mdui-textfield-floating-label"
                             style="width: calc(100% - 50px); display: inline-block; margin-left: 45px;">
-                            <label class="mdui-textfield-label">个性签名</label>
-                            <input class="mdui-textfield-input" id="school" name="school" type="text"
-                                value="<?php echo htmlentities($row['school'], ENT_QUOTES, "UTF-8")?>" />
+                            <label class="mdui-textfield-label"><?php echo $MSG_SCHOOL?></label>
+                            <select class="mdui-textfield-input" name="school_id">
+                              <option value=""><?php echo $MSG_SCHOOL?></option>
+                              <?php foreach ($school_list as $school): ?>
+                              <option value="<?php echo $school['id'] ?>" <?php if (isset($row['school_id']) && $row['school_id'] == $school['id']) echo 'selected'; ?>>
+                                <?php echo htmlentities($school['name'], ENT_QUOTES, 'UTF-8') ?>
+                              </option>
+                              <?php endforeach; ?>
+                            </select>
                         </div>
+                        <?php else: ?>
+                        <div class="mdui-textfield mdui-textfield-floating-label"
+                            style="width: calc(100% - 50px); display: inline-block; margin-left: 45px;">
+                            <label class="mdui-textfield-label"><?php echo $MSG_SCHOOL?></label>
+                            <input class="mdui-textfield-input" id="school" name="school" type="text"
+                                value="<?php echo htmlentities($row['school'], ENT_QUOTES, 'UTF-8')?>" />
+                        </div>
+                        <?php endif; ?>
                     </div>
                     <div class="mdui-card-actions mdui-m-t-4">
                         <div class="mdui-float-left" style="display: inline-block;">

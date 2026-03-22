@@ -90,8 +90,27 @@ if($_SERVER['REQUEST_METHOD']=="POST"){
 	 */
 	// try_ajax("user","nick","administrator");
 	try_ajax("user","expiry_date","administrator");
-	try_ajax("user","school","administrator");
+	// try_ajax("user","school","administrator"); // 已废弃，改用下面的 user_update_school_schoolid
 	try_ajax("user","group_name","administrator");
+	
+	// 用户学校更新（同时更新 school_id 和 school）
+	if($m=="user_update_school_schoolid" && isset($_SESSION[$OJ_NAME.'_administrator'])){
+		$user_id=$_POST['user_id'];
+		$school_id=intval($_POST['school_id']);
+		
+		// 引入学校函数库
+		if (file_exists('../include/school.php')) {
+			require_once('../include/school.php');
+			// 使用 setUserSchool 函数同时更新 school_id 和 school
+			$result = setUserSchool($user_id, $school_id);
+			echo $result ? 1 : 0;
+		} else {
+			// 如果 school.php 不存在，回退到只更新 school 名称
+			$school=$_POST['school'];
+			$sql= "update users set school=? where user_id=?";
+			echo pdo_query($sql,$school,$user_id);
+		}
+	}
 	try_ajax("news","importance","administrator");
 	try_ajax("problem","time_limit","administrator");
         try_ajax("problem","memory_limit","administrator");

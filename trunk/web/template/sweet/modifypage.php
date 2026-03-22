@@ -51,7 +51,20 @@
         </div>
         <div class="form-group">
           <label class="col-sm-4 control-label"><?php echo $MSG_SCHOOL?></label>
-          <div class="col-sm-4"><input name="school" class="form-control" value="<?php echo htmlentities($row['school'],ENT_QUOTES,"UTF-8")?>" type="text"></div>
+          <div class="col-sm-4">
+            <?php if (!empty($school_list)): ?>
+            <select name="school_id" class="form-control">
+              <option value=""><?php echo $MSG_SCHOOL?></option>
+              <?php foreach ($school_list as $school): ?>
+              <option value="<?php echo $school['id'] ?>" <?php if (isset($row['school_id']) && $row['school_id'] == $school['id']) echo 'selected'; ?>>
+                <?php echo htmlentities($school['name'], ENT_QUOTES, 'UTF-8') ?>
+              </option>
+              <?php endforeach; ?>
+            </select>
+            <?php else: ?>
+            <input name="school" class="form-control" value="<?php echo htmlentities($row['school'],ENT_QUOTES,"UTF-8")?>" type="text">
+            <?php endif; ?>
+          </div>
           <?php if(isset($_SESSION[$OJ_NAME."_printer"])) echo "$MSG_HELP_BALLOON_SCHOOL";?>
         </div>
         <div class="form-group">

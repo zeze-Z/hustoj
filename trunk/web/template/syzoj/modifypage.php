@@ -29,8 +29,19 @@
                     </div>
                 </div>
                 <div class="field">
-                    <label for="username"><?php echo $MSG_SCHOOL?></label>
+                    <label for="school_id"><?php echo $MSG_SCHOOL?></label>
+                    <?php if (!empty($school_list)): ?>
+                    <select name="school_id" class="ui dropdown">
+                        <option value=""><?php echo $MSG_SCHOOL?></option>
+                        <?php foreach ($school_list as $school): ?>
+                        <option value="<?php echo $school['id'] ?>" <?php if (isset($row['school_id']) && $row['school_id'] == $school['id']) echo 'selected'; ?>>
+                            <?php echo htmlentities($school['name'], ENT_QUOTES, 'UTF-8') ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <?php else: ?>
                     <input name="school" placeholder="<?php echo $MSG_SCHOOL?>" type="text" value="<?php echo htmlentities($row['school'],ENT_QUOTES,"UTF-8")?>">
+                    <?php endif; ?>
                 </div>
                 <div class="field">
                     <label for="email"><?php echo $MSG_EMAIL?>*</label>

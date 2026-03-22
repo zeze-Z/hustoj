@@ -20,7 +20,8 @@ $err_cnt = 0;
 $len;
 $user_id = $_SESSION[$OJ_NAME . '_' . 'user_id'];
 $email = trim($_POST['email']);
-$school = trim($_POST['school']);
+$school = isset($_POST['school']) ? trim($_POST['school']) : '';
+$school_id = isset($_POST['school_id']) ? intval($_POST['school_id']) : 0;
 $nick = trim($_POST['nick']);
 $len = strlen($nick);
 if ($len > 100) {
@@ -84,15 +85,28 @@ else $password = pwGen($_POST['npassword']);
 $nick = htmlentities($nick, ENT_QUOTES, "UTF-8");
 $school = (htmlentities($school, ENT_QUOTES, "UTF-8"));
 $email = (htmlentities($email, ENT_QUOTES, "UTF-8"));
-$sql = "UPDATE `users` SET"
-    . "`password`=?,"
-    . "`nick`=?,"    //注释此行  +   删除96行的,$nick +  注释97行   ->   禁用昵称修改
-    . "`school`=?,"
-    . "`email`=?"
-    . "WHERE `user_id`=?";
-//echo $sql;
-//exit(0);
-pdo_query($sql, $password, $nick, $school, $email, $user_id);
+
+// 如果选择了学校ID，使用 setUserSchool 同时更新 school_id 和 school
+if ($school_id > 0 && file_exists('./include/school.php')) {
+    require_once('./include/school.php');
+    setUserSchool($user_id, $school_id);
+    // 更新密码、昵称、邮箱（school已由setUserSchool更新）
+    $sql = "UPDATE `users` SET"
+        . "`password`=?,"
+        . "`nick`=?,"
+        . "`email`=?"
+        . "WHERE `user_id`=?";
+    pdo_query($sql, $password, $nick, $email, $user_id);
+} else {
+    // 旧逻辑：只更新 school
+    $sql = "UPDATE `users` SET"
+        . "`password`=?,"
+        . "`nick`=?,"
+        . "`school`=?,"
+        . "`email`=?"
+        . "WHERE `user_id`=?";
+    pdo_query($sql, $password, $nick, $school, $email, $user_id);
+}
 if ($nick != "") {
     $sql = "update solution set nick=? where user_id=?";
     pdo_query($sql, $nick, $user_id);
