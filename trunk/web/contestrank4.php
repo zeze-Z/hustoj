@@ -26,6 +26,10 @@ require_once("./include/my_func.inc.php");
 
 // 包含内存缓存文件
 require_once("./include/memcache.php");
+// 引入学校过滤函数
+if (file_exists('./include/school.php')) {
+    require_once('./include/school.php');
+}
 
 // ACM 补题榜
 $view_title = $MSG_CONTEST . $MSG_RANKLIST;
@@ -141,7 +145,8 @@ foreach ($result as $row) {
 }
 
 // 查询比赛基本信息
-$sql = "SELECT `start_time`,`title`,`end_time` FROM `contest` WHERE `contest_id`=?";
+$school_filter = getContestSchoolFilter();
+$sql = "SELECT `start_time`,`title`,`end_time` FROM `contest` WHERE `contest_id`=? $school_filter ";
 $result = mysql_query_cache($sql, $cid);
 
 if ($result)

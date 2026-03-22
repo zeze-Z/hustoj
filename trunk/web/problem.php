@@ -8,6 +8,10 @@ require_once('./include/bbcode.php');
 require_once('./include/const.inc.php');
 require_once('./include/my_func.inc.php');
 require_once('./include/setlang.php');
+// 引入学校过滤函数
+if (file_exists('./include/school.php')) {
+    require_once('./include/school.php');
+}
 if (isset($OJ_LANG)) {
     require_once("./lang/$OJ_LANG.php");
 }
@@ -27,17 +31,22 @@ if (isset($_GET['id'])) {
     $id = intval($_GET['id']);
     //require("oj-header.php");
 
-    $sql = "select c.contest_id,c.title from contest c inner join contest_problem cp on c.contest_id=cp.contest_id and cp.problem_id=?  WHERE ( c.`end_time`>'$now' and c.defunct='N' ) or c.`private`='1' ";
+    // 获取学校过滤条件
+    $school_filter = getProblemSchoolFilter();
+    $contest_filter = getContestSchoolFilter();
+
+    $sql = "select c.contest_id,c.title from contest c inner join contest_problem cp on c.contest_id=cp.contest_id and cp.problem_id=?  WHERE ( c.`end_time`>'$now' and c.defunct='N' ) or c.`private`='1' $contest_filter ";
     $used_in_contests = pdo_query($sql, $id);
+    // 用于显示题目关联的比赛列表，也需要过滤
 
     if (isset($_SESSION[$OJ_NAME . '_' . 'administrator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_verifiter']) || isset($_SESSION[$OJ_NAME . '_' . 'contest_creator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_editor']))
         $sql = "SELECT * FROM `problem` WHERE `problem_id`=?";
     else if ($OJ_FREE_PRACTICE)
-        $sql = "SELECT * FROM `problem` WHERE defunct='N' and `problem_id`=?";
+        $sql = "SELECT * FROM `problem` WHERE defunct='N' and `problem_id`=? $school_filter ";
     else
-        $sql = "SELECT * FROM `problem` WHERE `problem_id`=? AND `defunct`='N' AND `problem_id` NOT IN (
+        $sql = "SELECT * FROM `problem` WHERE `problem_id`=? AND `defunct`='N' $school_filter AND `problem_id` NOT IN (
 				SELECT `problem_id` FROM `contest_problem` WHERE `contest_id` IN (
-					SELECT `contest_id` FROM `contest` WHERE ( `end_time`>'$now' and defunct='N' ) or `private`='1'    
+					SELECT `contest_id` FROM `contest` WHERE ( `end_time`>'$now' and defunct='N' ) $contest_filter or `private`='1'    
 				)
 			)";        //////////  people should not see the problem used in contest before they end by modifying url in browser address bar
     /////////   if you give students opportunities to test their result out side the contest ,they can bypass the penalty time of 20 mins for
@@ -54,7 +63,7 @@ if (isset($_GET['id'])) {
     if (isset($_SESSION[$OJ_NAME . '_' . 'administrator']) || isset($_SESSION[$OJ_NAME . '_' . 'contest_creator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_editor']))
         $sql = "SELECT langmask,private,defunct FROM `contest` WHERE `contest_id`=?";
     else
-        $sql = "SELECT langmask,private,defunct FROM `contest` WHERE `defunct`='N' AND `contest_id`=? AND (`start_time`<='$now' AND ('$now'<`end_time` or private='N') )";
+        $sql = "SELECT langmask,private,defunct FROM `contest` WHERE `defunct`='N' AND `contest_id`=? AND (`start_time`<='$now' AND ('$now'<`end_time` or private='N') ) $contest_filter";
 
     $result = pdo_query($sql, $cid);
     $rows_cnt = empty($result) ? 0 : count($result);

@@ -10,6 +10,10 @@ $title = "";
 require_once("./include/const.inc.php");
 require_once("./include/my_func.inc.php");
 require_once("./include/memcache.php");
+// 引入学校过滤函数
+if (file_exists('./include/school.php')) {
+    require_once('./include/school.php');
+}
 
 class TM
 {
@@ -90,7 +94,9 @@ function s_cmp($A, $B)
 if (!isset($_GET['cid'])) die("No Such Contest!");
 $cid = intval($_GET['cid']);
 
-$sql = "SELECT `start_time`,`title`,`end_time` FROM `contest` WHERE `contest_id`=?";
+// 获取学校过滤条件
+$school_filter = getContestSchoolFilter();
+$sql = "SELECT `start_time`,`title`,`end_time` FROM `contest` WHERE `contest_id`=? $school_filter ";
 $result = mysql_query_cache($sql, $cid);
 if ($result) $rows_cnt = count($result);
 else $rows_cnt = 0;

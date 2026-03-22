@@ -13,6 +13,10 @@ $title = "";
 require_once("./include/const.inc.php");
 require_once("./include/my_func.inc.php");
 require_once("./include/memcache.php");
+// 引入学校过滤函数
+if (file_exists('./include/school.php')) {
+    require_once('./include/school.php');
+}
 
 /**
  * 竞赛用户成绩统计类
@@ -123,7 +127,8 @@ foreach ($result as $row) {
 }
 
 // 获取竞赛基本信息
-$sql = "SELECT `start_time`,`title`,`end_time` FROM `contest` WHERE `contest_id`=?";
+$school_filter = getContestSchoolFilter();
+$sql = "SELECT `start_time`,`title`,`end_time` FROM `contest` WHERE `contest_id`=? $school_filter ";
 $result = mysql_query_cache($sql, $cid);
 if ($result) $rows_cnt = count($result);
 else $rows_cnt = 0;

@@ -15,6 +15,10 @@ $title = "";
 require_once("./include/const.inc.php");
 require_once("./include/my_func.inc.php");
 require_once("./include/memcache.php");
+// 引入学校过滤函数
+if (file_exists('./include/school.php')) {
+    require_once('./include/school.php');
+}
 if (!(isset($_SESSION[$OJ_NAME . '_' . 'administrator']) || isset($_SESSION[$OJ_NAME . '_' . 'contest_creator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_editor']) || isset($_SESSION[$OJ_NAME . '_' . 'password_setter']))) {
     echo "<a href='../loginpage.php'>Please Login First!</a>";
     exit(1);
@@ -171,8 +175,8 @@ if (!isset($OJ_RANK_LOCK_PERCENT) || $OJ_RANK_LOCK_PERCENT == 0) {
 }
 
 //  查询比赛是否存在
-
-$sql = "SELECT `start_time`,`title`,`end_time` FROM `contest` WHERE `contest_id`=?";
+$school_filter = getContestSchoolFilter();
+$sql = "SELECT `start_time`,`title`,`end_time` FROM `contest` WHERE `contest_id`=? $school_filter ";
 $result = mysql_query_cache($sql, $cid);
 
 

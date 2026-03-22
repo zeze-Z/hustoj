@@ -11,6 +11,10 @@ if (isset($OJ_LANG)) {
 }
 require_once("./include/const.inc.php");
 require_once("./include/my_func.inc.php");
+// 引入学校过滤函数
+if (file_exists('./include/school.php')) {
+    require_once('./include/school.php');
+}
 
 /**
  * 竞赛选手类，用于记录和计算选手的解题情况、时间和分数
@@ -163,7 +167,8 @@ $cid = intval($_GET['cid']);
 if (isset($OJ_NO_CONTEST_WATCHER) && $OJ_NO_CONTEST_WATCHER) require_once("contest-check.php");
 
 // 获取竞赛信息
-$sql = "SELECT `start_time`,`title`,`end_time` FROM `contest` WHERE `contest_id`=?";
+$school_filter = getContestSchoolFilter();
+$sql = "SELECT `start_time`,`title`,`end_time` FROM `contest` WHERE `contest_id`=? $school_filter ";
 $result = mysql_query_cache($sql, $cid);
 $rows_cnt = count($result);
 $start_time = 0;
