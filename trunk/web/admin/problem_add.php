@@ -10,6 +10,11 @@ require_once ("../include/db_info.inc.php");
 require_once ("../include/my_func.inc.php");
 require_once ("../include/problem.php");
 
+// 加载学校相关函数
+if (file_exists("../include/school.php")) {
+    require_once("../include/school.php");
+}
+
 // contest_id
 $title = $_POST['title'];
 $title = str_replace(",", "&#44;", $title);
@@ -73,8 +78,13 @@ $description = ($description);
 $input = ($input);
 $output = ($output);
 $hint = ($hint);
+
+// 获取学校和公开设置
+$school_id = isset($_POST['school_id']) && $_POST['school_id'] !== '' ? intval($_POST['school_id']) : null;
+$is_public = isset($_POST['is_public']) ? 1 : 0;
+
 //echo "->".$OJ_DATA."<-"; 
-$pid = addproblem($title, $time_limit, $memory_limit, $description, $input, $output, $sample_input, $sample_output, $hint, $source, $spj, $OJ_DATA);
+$pid = addproblem($title, $time_limit, $memory_limit, $description, $input, $output, $sample_input, $sample_output, $hint, $source, $spj, $OJ_DATA, $school_id, $is_public);
 $basedir = "$OJ_DATA/$pid";
 mkdir($basedir);
 if(strlen($sample_output) && !strlen($sample_input)) $sample_input = "0";

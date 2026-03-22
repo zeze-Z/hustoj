@@ -1,9 +1,14 @@
 <?php
-function addproblem($title, $time_limit, $memory_limit, $description, $input, $output, $sample_input, $sample_output, $hint, $source, $spj, $OJ_DATA) {
-  //$spj=($spj);
-  $sql = "INSERT INTO `problem` (`title`,`time_limit`,`memory_limit`,`description`,`input`,`output`,`sample_input`,`sample_output`,`hint`,`source`,`spj`,`in_date`,`defunct`) VALUES(?,?,?,?,?,?,?,?,?,?,?,NOW(),'Y')";
+function addproblem($title, $time_limit, $memory_limit, $description, $input, $output, $sample_input, $sample_output, $hint, $source, $spj, $OJ_DATA, $school_id = null, $is_public = 0) {
+  global $OJ_NAME;
+  // 如果未指定school_id且开启了学校模式，则使用当前用户学校
+  if (!isset($school_id) && isset($OJ_SCHOOL_MODE) && $OJ_SCHOOL_MODE) {
+    $school_id = getCurrentUserSchoolId();
+  }
+  
+  $sql = "INSERT INTO `problem` (`title`,`time_limit`,`memory_limit`,`description`,`input`,`output`,`sample_input`,`sample_output`,`hint`,`source`,`spj`,`in_date`,`defunct`,`school_id`,`is_public`) VALUES(?,?,?,?,?,?,?,?,?,?,?,NOW(),'Y',?,?)";
   //echo $sql;
-  $pid = pdo_query($sql, $title, $time_limit, $memory_limit, $description, $input, $output, $sample_input, $sample_output, $hint, $source, $spj);
+  $pid = pdo_query($sql, $title, $time_limit, $memory_limit, $description, $input, $output, $sample_input, $sample_output, $hint, $source, $spj, $school_id, $is_public);
 
   echo "New Problem:<a target=_blank href='../problem.php?id=$pid'>$pid ".htmlentities($title,ENT_QUOTES)."</a> added!<br>";
 

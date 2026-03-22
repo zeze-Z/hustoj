@@ -8,6 +8,13 @@
     echo "<a href='../loginpage.php'>Please Login First!</a>";
     exit(1);
   }
+  
+  // 加载学校相关函数
+  if (file_exists("../include/school.php")) {
+      require_once("../include/school.php");
+      $school_list = getSchoolList(true);
+  }
+  
   echo "<center><h3>"."Edit-".$MSG_CONTEST."</h3></center>";
   include_once("kindeditor.php") ;
 ?>
@@ -67,10 +74,14 @@ if(isset($_POST['startdate'])){
   $description = str_replace("</p>", "<br />", $description);
   $description = str_replace(",", "&#44;", $description);
   //echo "$subnet[$contest_type]";
+  
+  // 获取学校和公开设置
+  $school_id = isset($_POST['school_id']) && $_POST['school_id'] !== '' ? intval($_POST['school_id']) : null;
+  $is_public = isset($_POST['is_public']) ? 1 : 0;
 
-  $sql = "UPDATE `contest` SET `title`=?,`description`=?,`start_time`=?,`end_time`=?,`private`=?,`langmask`=?,`password`=?,subnet=?,contest_type=? WHERE `contest_id`=?";
+  $sql = "UPDATE `contest` SET `title`=?,`description`=?,`start_time`=?,`end_time`=?,`private`=?,`langmask`=?,`password`=?,subnet=?,contest_type=?,`school_id`=?,`is_public`=? WHERE `contest_id`=?";
   //echo $sql;
-  pdo_query($sql,$title,$description,$starttime,$endtime,$private,$langmask,$password,$subnet,$contest_type,$cid);
+  pdo_query($sql,$title,$description,$starttime,$endtime,$private,$langmask,$password,$subnet,$contest_type,$school_id,$is_public,$cid);
 
   $sql = "DELETE FROM `contest_problem` WHERE `contest_id`=?";
   pdo_query($sql,$cid);
@@ -258,6 +269,25 @@ if(isset($_POST['startdate'])){
           </td>
         </tr>
       </table>
+
+      <?php if(isset($school_list) && is_array($school_list)): ?>
+      <p align=left>
+        <?php echo "<h4>".$MSG_SCHOOL."</h4>"?>
+        <select name="school_id" class="form-control" style="width:100%;">
+          <option value="">选择学校</option>
+          <?php foreach ($school_list as $school): ?>
+            <option value="<?php echo $school['id'] ?>" <?php echo ($row['school_id'] == $school['id']) ? 'selected' : ''; ?>>
+              <?php echo htmlentities($school['name'], ENT_QUOTES, 'UTF-8') ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </p>
+      <p align=left>
+        <label>
+          <input type="checkbox" name="is_public" value="1" <?php echo (!empty($row['is_public'])) ? 'checked' : ''; ?>> 公开比赛（允许其他学校访问）
+        </label>
+      </p>
+      <?php endif; ?>
 
       <div align=center>
         <?php require_once("../include/set_post_key.php");?>

@@ -5,6 +5,13 @@
     echo "<a href='../loginpage.php'>Please Login First!</a>";
     exit(1);
   }
+  
+  // 加载学校相关函数
+  if (file_exists("../include/school.php")) {
+      require_once("../include/school.php");
+      $school_list = getSchoolList(true);
+      $current_user_school_id = getCurrentUserSchoolId();
+  }
 ?>
 	  
 <html>
@@ -107,6 +114,25 @@
             }?>
           </select>
         </p>
+        
+        <?php if(isset($school_list) && is_array($school_list)): ?>
+        <p align=left>
+          <?php echo "<h4>".$MSG_SCHOOL."</h4>"?>
+          <select name="school_id" class="form-control" style="width:100%;">
+            <option value="">选择学校</option>
+            <?php foreach ($school_list as $school): ?>
+              <option value="<?php echo $school['id'] ?>" <?php echo ($current_user_school_id == $school['id']) ? 'selected' : ''; ?>>
+                <?php echo htmlentities($school['name'], ENT_QUOTES, 'UTF-8') ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </p>
+        <p align=left>
+          <label>
+            <input type="checkbox" name="is_public" value="1"> 公开题目（允许其他学校访问）
+          </label>
+        </p>
+        <?php endif; ?>
 
         <div align=center>
           <?php require_once("../include/set_post_key.php");?>

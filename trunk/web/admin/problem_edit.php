@@ -7,6 +7,12 @@ if (!(isset($_SESSION[$OJ_NAME.'_'.'administrator']) || isset($_SESSION[$OJ_NAME
   echo "<a href='../loginpage.php'>Please Login First!</a>";
   exit(1);
 }
+
+// 加载学校相关函数
+if (file_exists("../include/school.php")) {
+    require_once("../include/school.php");
+    $school_list = getSchoolList(true);
+}
 ?>
   <html>
 <head>
@@ -100,6 +106,25 @@ include_once("kindeditor.php") ;
         <input name=remote_oj value='<?php echo htmlentities((string)$row['remote_oj'],ENT_QUOTES,"UTF-8")?>' placeholder='<?php echo $MSG_HELP_LOCAL_EMPTY ?>' >
         <input name=remote_id value='<?php echo htmlentities((string)$row['remote_id'],ENT_QUOTES,"UTF-8")?>' placeholder='<?php echo $MSG_HELP_LOCAL_EMPTY ?>' ><br>
       </p>
+
+      <?php if(isset($school_list) && is_array($school_list)): ?>
+      <p align=left>
+        <?php echo "<h4>".$MSG_SCHOOL."</h4>"?>
+        <select name="school_id" class="form-control" style="width:100%;">
+          <option value="">选择学校</option>
+          <?php foreach ($school_list as $school): ?>
+            <option value="<?php echo $school['id'] ?>" <?php echo ($row['school_id'] == $school['id']) ? 'selected' : ''; ?>>
+              <?php echo htmlentities($school['name'], ENT_QUOTES, 'UTF-8') ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </p>
+      <p align=left>
+        <label>
+          <input type="checkbox" name="is_public" value="1" <?php echo (!empty($row['is_public'])) ? 'checked' : ''; ?>> 公开题目（允许其他学校访问）
+        </label>
+      </p>
+      <?php endif; ?>
 
       <div align=center>
         <?php require_once("../include/set_post_key.php");?>
@@ -278,11 +303,15 @@ include_once("kindeditor.php") ;
 
       $spj = intval($spj);
 
-      $sql = "UPDATE `problem` SET `title`=?,`time_limit`=?,`memory_limit`=?, `description`=?,`input`=?,`output`=?,`sample_input`=?,`sample_output`=?,`hint`=?,`source`=?,`spj`=?,remote_oj=?,remote_id=?,`in_date`=NOW() WHERE `problem_id`=?";
+      // 获取学校和公开设置
+      $school_id = isset($_POST['school_id']) && $_POST['school_id'] !== '' ? intval($_POST['school_id']) : null;
+      $is_public = isset($_POST['is_public']) ? 1 : 0;
+
+      $sql = "UPDATE `problem` SET `title`=?,`time_limit`=?,`memory_limit`=?, `description`=?,`input`=?,`output`=?,`sample_input`=?,`sample_output`=?,`hint`=?,`source`=?,`spj`=?,remote_oj=?,remote_id=?,`in_date`=NOW(),`school_id`=?,`is_public`=? WHERE `problem_id`=?";
 
       //echo "SQL: " . $sql . "<br>";
       //echo "Params: remote_oj=[$remote_oj] (" . strlen($remote_oj) . "), remote_id=[$remote_id] (" . strlen($remote_id) . ")<br>"; 
-      @pdo_query($sql,$title,$time_limit,$memory_limit,$description,$input,$output,$sample_input,$sample_output,$hint,$source,$spj,$remote_oj,$remote_id,$id);
+      @pdo_query($sql,$title,$time_limit,$memory_limit,$description,$input,$output,$sample_input,$sample_output,$hint,$source,$spj,$remote_oj,$remote_id,$school_id,$is_public,$id);
   
       echo "Edit OK!<br>";
       echo "<a href='../problem.php?id=$id'>See The Problem!</a>";

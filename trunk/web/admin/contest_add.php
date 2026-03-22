@@ -9,6 +9,14 @@ if(!(isset($_SESSION[$OJ_NAME.'_'.'administrator'])||isset($_SESSION[$OJ_NAME.'_
     echo "<a href='../loginpage.php'>Please Login First!</a>";
     exit(1);
   }
+  
+  // 加载学校相关函数
+  if (file_exists("../include/school.php")) {
+      require_once("../include/school.php");
+      $school_list = getSchoolList(true);
+      $current_user_school_id = getCurrentUserSchoolId();
+  }
+  
   echo "<center><h3>".$MSG_CONTEST."-".$MSG_ADD."</h3></center>";
   include_once("kindeditor.php") ;
 ?>
@@ -51,15 +59,20 @@ if(isset($_POST['startdate'])){
   foreach($contest_types as $t){
     $contest_type |= 1<<$t;
   } 
-  $sql = "INSERT INTO `contest`(`title`,`start_time`,`end_time`,`private`,`langmask`,`description`,`password`,subnet,contest_type,`user_id`)
-          VALUES(?,?,?,?,?,?,?,?,?,?)";
+  $sql = "INSERT INTO `contest`(`title`,`start_time`,`end_time`,`private`,`langmask`,`description`,`password`,subnet,contest_type,`user_id`,`school_id`,`is_public`)
+          VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
 
   $description = str_replace("<p>", "", $description); 
   $description = str_replace("</p>", "<br />", $description);
   $description = str_replace(",", "&#44; ", $description);
   $user_id=$_SESSION[$OJ_NAME.'_'.'user_id'];
+  
+  // 获取学校和公开设置
+  $school_id = isset($_POST['school_id']) && $_POST['school_id'] !== '' ? intval($_POST['school_id']) : null;
+  $is_public = isset($_POST['is_public']) ? 1 : 0;
+  
  // echo $sql.$title.$starttime.$endtime.$private.$langmask.$description.$password,$user_id;
-  $cid = pdo_query($sql,$title,$starttime,$endtime,$private,$langmask,$description,$password,$subnet,$contest_type,$user_id) ;
+  $cid = pdo_query($sql,$title,$starttime,$endtime,$private,$langmask,$description,$password,$subnet,$contest_type,$user_id,$school_id,$is_public) ;
   echo "Add Contest ".$cid;
 
   $sql = "DELETE FROM `contest_problem` WHERE `contest_id`=$cid";
@@ -298,6 +311,25 @@ else{
         <input type=submit value='<?php echo $MSG_SAVE?>' name=submit>
       </div>
     </p>
+    
+    <?php if(isset($school_list) && is_array($school_list)): ?>
+    <p align=left>
+      <?php echo "<h4>".$MSG_SCHOOL."</h4>"?>
+      <select name="school_id" class="form-control" style="width:100%;">
+        <option value="">选择学校</option>
+        <?php foreach ($school_list as $school): ?>
+          <option value="<?php echo $school['id'] ?>" <?php echo ($current_user_school_id == $school['id']) ? 'selected' : ''; ?>>
+            <?php echo htmlentities($school['name'], ENT_QUOTES, 'UTF-8') ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </p>
+    <p align=left>
+      <label>
+        <input type="checkbox" name="is_public" value="1"> 公开比赛（允许其他学校访问）
+      </label>
+    </p>
+    <?php endif; ?>
   </form>
 </div>
 
