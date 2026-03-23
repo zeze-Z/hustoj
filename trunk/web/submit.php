@@ -8,7 +8,8 @@ if (isset($OJ_CSRF) && $OJ_CSRF && $OJ_TEMPLATE == "bs3" && !isset($_SESSION[$OJ
     require_once(dirname(__FILE__) . "/include/csrf_check.php");
 
 if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
-    header("Location: loginpage.php?redirect=" . urlencode($_SERVER['REQUEST_URI']));
+    $redirect = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'index.php';
+    header("Location: loginpage.php?redirect=" . urlencode($redirect));
     exit(0);
 }
 

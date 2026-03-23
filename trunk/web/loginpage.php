@@ -16,6 +16,15 @@ if (isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
     exit(1);
 }
 
+// 验证 redirect 参数，防止开放重定向
+$redirect = isset($_GET['redirect']) ? $_GET['redirect'] : '';
+if ($redirect) {
+    // 只允许相对路径或绝对路径，禁止外部域名
+    if (strpos($redirect, '://') !== false || !preg_match('/^[\/a-zA-Z0-9._-]+$/', $redirect)) {
+        $redirect = '';
+    }
+}
+
 /////////////////////////Template
 if ($OJ_LONG_LOGIN == true && isset($_COOKIE[$OJ_NAME . "_user"]) && isset($_COOKIE[$OJ_NAME . "_check"])) {
     ?>
