@@ -23,7 +23,7 @@ Copy from http://ybt.ssoier.cn:8088/......
 <li>
 Copy from http://hustoj......
 <form method=POST action=problem_add_page_hustoj.php>
-  <input name=url type=text size=100 value="http://hustoj.com/oj/problem.php?id=1000">
+  <input name=url type=text size=100 value="">
   <input type=submit>
 </form>
 </li>

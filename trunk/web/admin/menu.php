@@ -215,11 +215,6 @@ $OJ_TEMPLATE = "bs3";
         <?php }?>
 
         <?php if (isset($_SESSION[$OJ_NAME.'_'.'administrator'])){?>
-            <a class='btn btn-sm' href="https://github.com/zhblue/hustoj/" target="_blank"><i class="fab glyphicon-github"></i><b>HUSTOJ</b></a>
-            <a class='btn btn-sm' href="https://yuanqi.tencent.com/agent/jADpOEWqLvTv" target="_blank"><i class="glyphicon glyphicon-robot"></i><b>小张老师(AI-help)</b></a>
-            <a class="btn btn-sm" target='main' href="http://hustoj.com"><i class="glyphicon glyphicon-question-circle"></i><?php echo $MSG_ADMIN." ".$MSG_FAQ?></a>
-            <a class='btn btn-sm' href="https://github.com/zhblue/freeproblemset/" target="_blank"><i class="fab glyphicon-github"></i><b>FreeProblemSet</b></a>
-            <a class='btn btn-sm' href="http://tk.hustoj.com" target="_blank"><i class="glyphicon glyphicon-book"></i><b>自助题库</b></a>
             <?php if(isset($OJ_REMOTE_JUDGE)&&$OJ_REMOTE_JUDGE){?>
                 <a class='btn btn-sm' href="https://www.ssoier.cn/api/" target="_blank"><i class="glyphicon glyphicon-link"></i><b>一本通远程账户管理</b></a>
             <?php }?>

@@ -129,8 +129,7 @@
     <br><br>
 
     <?php if ($OJ_LANG == "cn") { ?>
-    免费题目<a href="https://github.com/zhblue/freeproblemset/tree/master/fps-examples" target="_blank">下载</a><br>
-    更多题目请到 <a href="http://tk.hustoj.com/problemset.php?search=free" target="_blank">TK 题库免费专区</a>。
+    免费题目<a href="https://github.com/zhblue/freeproblemset/tree/master/fps-examples" target="_blank">下载</a>
     <?php } ?>
 
     <br><br>

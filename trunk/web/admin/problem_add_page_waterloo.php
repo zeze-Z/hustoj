@@ -23,7 +23,7 @@ include_once("kindeditor.php") ;
 <tr>
 <td width="100"></td>
 <td>
-<p align="center"><font color="#333399" size="4">Welcome To Administrator's Page of Judge Online of ACM ICPC,<?php echo $OJ_NAME?>.</font></td>
+<p align="center"><font color="#333399" size="4">Administrator's Page - <?php echo $OJ_NAME?></font></td>
 <td width="100"></td>
 </tr>
 </table>

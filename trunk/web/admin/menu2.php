@@ -64,6 +64,9 @@
     }
     
     .btn-secondary {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         background-color: #f6f8fa;
         border: 1px solid #d1d5da;
         color: #24292e;
@@ -301,9 +304,6 @@
             <div class="external-links">
 <!--                 <a class='btn btn-sm' href="https://github.com/zhblue/hustoj/" target="_blank"><i class="fab glyphicon-github"></i> HUSTOJ</a> -->
 <!--                 <a class='btn btn-sm' href="https://yuanqi.tencent.com/agent/jADpOEWqLvTv" target="_blank"><i class="glyphicon glyphicon-robot"></i> 小张老师(AI-help)</a> -->
-                <a class="btn btn-sm" target='main' href="http://hustoj.com"><i class="glyphicon glyphicon-question-circle"></i> <?php echo $MSG_ADMIN." ".$MSG_FAQ?></a>
-<!--                 <a class='btn btn-sm' href="https://github.com/zhblue/freeproblemset/" target="_blank"><i class="fab glyphicon-github"></i> FreeProblemSet</a> -->
-                <a class='btn btn-sm' href="http://tk.hustoj.com" target="_blank"><i class="glyphicon glyphicon-book"></i> 自助题库</a>
                 <?php if(isset($OJ_REMOTE_JUDGE)&&$OJ_REMOTE_JUDGE){ ?>
                       <a class='btn btn-sm' href="https://www.ssoier.cn/api/" target="_blank"><i class="glyphicon glyphicon-link"></i> 一本通远程账户管理</a>
                 <?php } ?>
