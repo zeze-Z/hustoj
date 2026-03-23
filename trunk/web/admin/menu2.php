@@ -95,6 +95,9 @@
     }
     
     .dropdown-item {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         color: #24292e;
         padding: 8px 16px;
         transition: all 0.3s ease;
