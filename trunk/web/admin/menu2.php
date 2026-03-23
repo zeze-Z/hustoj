@@ -64,13 +64,13 @@
     }
     
     .btn-secondary {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
         background-color: #f6f8fa;
         border: 1px solid #d1d5da;
         color: #24292e;
         width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         text-align: left;
         margin-bottom: 8px;
     }
