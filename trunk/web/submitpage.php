@@ -7,13 +7,9 @@ require_once('./include/setlang.php');
 require_once('./include/curl.php');
 $view_title = $MSG_SUBMIT;
 if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
-    if (isset($OJ_GUEST) && $OJ_GUEST) {
-        $_SESSION[$OJ_NAME . '_' . 'user_id'] = "Guest";
-    } else {
-        $view_errors = "<a href=loginpage.php>$MSG_Login</a>";
-        require("template/" . $OJ_TEMPLATE . "/error.php");
-        exit(0);
-    }
+    $view_errors = "<a href=loginpage.php>$MSG_Login</a>";
+    require("template/" . $OJ_TEMPLATE . "/error.php");
+    exit(0);
 }
 $langmask = $OJ_LANGMASK;
 $problem_id = 1000;

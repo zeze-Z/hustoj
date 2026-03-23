@@ -8,7 +8,6 @@ if (isset($OJ_CSRF) && $OJ_CSRF && $OJ_TEMPLATE == "bs3" && !isset($_SESSION[$OJ
     require_once(dirname(__FILE__) . "/include/csrf_check.php");
 
 if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
-
     $view_errors = "<a href=loginpage.php>$MSG_Login</a>";
     require("template/" . $OJ_TEMPLATE . "/error.php");
     exit(0);
