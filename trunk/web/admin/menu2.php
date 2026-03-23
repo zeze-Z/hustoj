@@ -296,23 +296,23 @@
 
     <?php if (isset($_SESSION[$OJ_NAME.'_'.'administrator'])){?>
             <div class="external-links">
-                <a class='btn btn-sm' href="https://github.com/zhblue/hustoj/" target="_blank"><i class="fab glyphicon-github"></i> HUSTOJ</a>
-                <a class='btn btn-sm' href="https://yuanqi.tencent.com/agent/jADpOEWqLvTv" target="_blank"><i class="glyphicon glyphicon-robot"></i> 小张老师(AI-help)</a>
+<!--                 <a class='btn btn-sm' href="https://github.com/zhblue/hustoj/" target="_blank"><i class="fab glyphicon-github"></i> HUSTOJ</a> -->
+<!--                 <a class='btn btn-sm' href="https://yuanqi.tencent.com/agent/jADpOEWqLvTv" target="_blank"><i class="glyphicon glyphicon-robot"></i> 小张老师(AI-help)</a> -->
                 <a class="btn btn-sm" target='main' href="http://hustoj.com"><i class="glyphicon glyphicon-question-circle"></i> <?php echo $MSG_ADMIN." ".$MSG_FAQ?></a>
-                <a class='btn btn-sm' href="https://github.com/zhblue/freeproblemset/" target="_blank"><i class="fab glyphicon-github"></i> FreeProblemSet</a>
+<!--                 <a class='btn btn-sm' href="https://github.com/zhblue/freeproblemset/" target="_blank"><i class="fab glyphicon-github"></i> FreeProblemSet</a> -->
                 <a class='btn btn-sm' href="http://tk.hustoj.com" target="_blank"><i class="glyphicon glyphicon-book"></i> 自助题库</a>
                 <?php if(isset($OJ_REMOTE_JUDGE)&&$OJ_REMOTE_JUDGE){ ?>
                       <a class='btn btn-sm' href="https://www.ssoier.cn/api/" target="_blank"><i class="glyphicon glyphicon-link"></i> 一本通远程账户管理</a>
                 <?php } ?>
-                <a class='btn btn-sm' href="https://mp.weixin.qq.com/s?__biz=MzI1MTAwMTI2NA==&mid=2656403287&idx=1&sn=2b1b9a5cd0b271aa4a050c349981e715" target="_blank"><i class="glyphicon glyphicon-book-open"></i> 二次开发教程</a>
+<!--                 <a class='btn btn-sm' href="https://mp.weixin.qq.com/s?__biz=MzI1MTAwMTI2NA==&mid=2656403287&idx=1&sn=2b1b9a5cd0b271aa4a050c349981e715" target="_blank"><i class="glyphicon glyphicon-book-open"></i> 二次开发教程</a> -->
             </div>
     <?php }?>
 
     <?php if (isset($_SESSION[$OJ_NAME.'_'.'administrator'])&&!$OJ_SAE){?>
             <div class="admin-links">
-                <a href="solution_statistics.php" target="main" title="Create your own data">SS Report</a>
-                <a href="problem_copy.php" target="main" title="Create your own data">CopyProblem</a>
-                <a href="problem_changeid.php" target="main" title="Danger,Use it on your own risk">ReOrderProblem</a>
+<!--                 <a href="solution_statistics.php" target="main" title="Create your own data">SS Report</a> -->
+<!--                 <a href="problem_copy.php" target="main" title="Create your own data">CopyProblem</a> -->
+<!--                 <a href="problem_changeid.php" target="main" title="Danger,Use it on your own risk">ReOrderProblem</a> -->
             </div>
     <?php }?>
         </div>

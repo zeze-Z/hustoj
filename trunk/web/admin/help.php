@@ -178,23 +178,23 @@ $delay=pdo_query($sql);
       <td><p><?php echo $MSG_HELP_UPDATE_DATABASE?></p></td>
     </tr>
     <tr>
-      <td><a class='btn btn-block btn-sm' href="https://github.com/zhblue/hustoj/" target="_blank"><b>HUSTOJ</b></a></td>
-      <td><p>HUSTOJ</p></td>
+<!--       <td><a class='btn btn-block btn-sm' href="https://github.com/zhblue/hustoj/" target="_blank"><b>HUSTOJ</b></a></td> -->
+<!--       <td><p>HUSTOJ</p></td> -->
     </tr>
     <tr>
       <td><center><a class='btn btn-sm' target='_blank' href="https://github.com/zhblue/hustoj/blob/master/wiki/FAQ.md" target="main"><?php echo $MSG_ADMIN." ".$MSG_FAQ?></a></center></td>
       <td><p><?php echo $MSG_ADMIN." ".$MSG_FAQ?></p></td>
     </tr>
     <tr>
-      <td><a class='btn btn-block btn-sm' href="https://github.com/zhblue/freeproblemset/" target="_blank"><b>FreeProblemSet</b></a></td>
-      <td><p>FreeProblemSet</p></td>
+<!--       <td><a class='btn btn-block btn-sm' href="https://github.com/zhblue/freeproblemset/" target="_blank"><b>FreeProblemSet</b></a></td> -->
+<!--       <td><p>FreeProblemSet</p></td> -->
     </tr>
     <tr>
       <td><a class='btn btn-block btn-sm' href="http://tk.hustoj.com" target="_blank"><b>自助题库</b></a></td>
       <td><p></p></td>
     </tr>
     <tr>
-      <td><a class='btn btn-block btn-sm' href="http://shang.qq.com/wpa/qunwpa?idkey=d52c3b12ddaffb43420d308d39118fafe5313e271769277a5ac49a6fae63cf7a" target="_blank">手机QQ加官方群23361372</a></td>
+<!--       <td><a class='btn btn-block btn-sm' href="http://shang.qq.com/wpa/qunwpa?idkey=d52c3b12ddaffb43420d308d39118fafe5313e271769277a5ac49a6fae63cf7a" target="_blank">手机QQ加官方群23361372</a></td> -->
       <td><p></p></td>
     </tr>
   <?php }?>
@@ -202,8 +202,8 @@ $delay=pdo_query($sql);
 </table>
 
 <?php if (isset($_SESSION[$OJ_NAME.'_'.'administrator'])&&!$OJ_SAE){?>
-  <a href="problem_copy.php" target="main" title="Create your own data"><font color="eeeeee">CopyProblem</font></a> <br>
-  <a href="problem_changeid.php" target="main" title="Danger,Use it on your own risk"><font color="eeeeee">ReOrderProblem</font></a>
+<!--   <a href="problem_copy.php" target="main" title="Create your own data"><font color="eeeeee">CopyProblem</font></a> <br> -->
+<!--   <a href="problem_changeid.php" target="main" title="Danger,Use it on your own risk"><font color="eeeeee">ReOrderProblem</font></a> -->
   
 <?php }?>
 
