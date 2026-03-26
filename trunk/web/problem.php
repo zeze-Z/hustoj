@@ -35,18 +35,25 @@ if (isset($_GET['id'])) {
     $school_filter = getProblemSchoolFilter();
     $contest_filter = getContestSchoolFilter();
 
+    // 调试信息
+    $debug_user_id = isset($_SESSION[$OJ_NAME . '_' . 'user_id']) ? $_SESSION[$OJ_NAME . '_' . 'user_id'] : 'N/A';
+    $debug_school_id = getCurrentUserSchoolId();
+    $debug_is_admin = isset($_SESSION[$OJ_NAME . '_' . 'administrator']) ? 'yes' : 'no';
+    $debug_free_practice = $OJ_FREE_PRACTICE ? 'yes' : 'no';
+    error_log("DEBUG problem.php: user_id=$debug_user_id, school_id=$debug_school_id, is_admin=$debug_is_admin, free_practice=$debug_free_practice, school_filter=$school_filter");
+
     $sql = "select c.contest_id,c.title from contest c inner join contest_problem cp on c.contest_id=cp.contest_id and cp.problem_id=?  WHERE ( c.`end_time`>'$now' and c.defunct='N' ) or c.`private`='1' $contest_filter ";
     $used_in_contests = pdo_query($sql, $id);
     // 用于显示题目关联的比赛列表，也需要过滤
 
     if (isset($_SESSION[$OJ_NAME . '_' . 'administrator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_verifiter']) || isset($_SESSION[$OJ_NAME . '_' . 'contest_creator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_editor']))
-        $sql = "SELECT * FROM `problem` WHERE `problem_id`=?";
+        $sql = "SELECT * FROM `problem` A WHERE `problem_id`=?";
     else if ($OJ_FREE_PRACTICE)
-        $sql = "SELECT * FROM `problem` WHERE defunct='N' and `problem_id`=? $school_filter ";
+        $sql = "SELECT * FROM `problem` A WHERE defunct='N' and `problem_id`=? $school_filter ";
     else
-        $sql = "SELECT * FROM `problem` WHERE `problem_id`=? AND `defunct`='N' $school_filter AND `problem_id` NOT IN (
+        $sql = "SELECT * FROM `problem` A WHERE `problem_id`=? AND `defunct`='N' $school_filter AND `problem_id` NOT IN (
 				SELECT `problem_id` FROM `contest_problem` WHERE `contest_id` IN (
-					SELECT `contest_id` FROM `contest` WHERE ( `end_time`>'$now' and defunct='N' ) $contest_filter or `private`='1'    
+					SELECT `contest_id` FROM `contest` c WHERE ( c.`end_time`>'$now' and c.defunct='N' ) $contest_filter or c.`private`='1'
 				)
 			)";        //////////  people should not see the problem used in contest before they end by modifying url in browser address bar
     /////////   if you give students opportunities to test their result out side the contest ,they can bypass the penalty time of 20 mins for
@@ -54,7 +61,9 @@ if (isset($_GET['id'])) {
     /////////   code for them in advance, if you want to share private contest problem to practice you should modify the contest into public
 
     $pr_flag = true;
+    error_log("DEBUG problem.php SQL: $sql, id=$id");
     $result = pdo_query($sql, $id);
+    error_log("DEBUG problem.php result count: " . count($result));
 } else if (isset($_GET['cid']) && isset($_GET['pid'])) {
     //contest
     $cid = intval($_GET['cid']);
