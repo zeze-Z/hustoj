@@ -7,19 +7,11 @@ require_once('./include/setlang.php');
 require_once('./include/curl.php');
 $view_title = $MSG_SUBMIT;
 if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
-    // 如果在iframe中（有&spa参数），用JavaScript让父窗口跳转
-    if (isset($_GET['spa'])) {
-        $redirect = isset($_SERVER['REQUEST_URI']) ? str_replace('&spa', '', $_SERVER['REQUEST_URI']) : 'index.php';
-        echo "<script>";
-        echo "if (window.parent !== window) {";
-        echo "  window.parent.location.href = 'loginpage.php?redirect=" . urlencode($redirect) . "';";
-        echo "} else {";
-        echo "  window.location.href = 'loginpage.php?redirect=" . urlencode($redirect) . "';";
-        echo "}";
-        echo "</script>";
-        exit(0);
-    }
     $redirect = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'index.php';
+    // 如果是spa模式（在iframe中），移除&spa参数，避免跳转循环
+    if (strpos($redirect, '&spa') !== false) {
+        $redirect = str_replace('&spa', '', $redirect);
+    }
     header("Location: loginpage.php?redirect=" . urlencode($redirect));
     exit(0);
 }
