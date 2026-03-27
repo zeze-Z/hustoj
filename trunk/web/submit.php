@@ -1,5 +1,7 @@
 <?php
 require_once "include/db_info.inc.php";
+// 强制禁用验证码
+$OJ_VCODE = false;
 require_once "include/my_func.inc.php";
 require_once "include/email.class.php";
 require_once "include/base64.php";
@@ -25,9 +27,10 @@ if (!$OJ_BENCHMARK_MODE) {
     $sql = "select count(1) cnt FROM `solution` WHERE result<4";
     $result = mysql_query_cache($sql);
     $row = $result[0];
-    if ($row['cnt'] > 50) {
-        $OJ_VCODE = true;
-    }
+    // 禁用验证码，不根据提交数量自动启用
+    // if ($row['cnt'] > 50) {
+    //     $OJ_VCODE = true;
+    // }
 
     if ($OJ_VCODE) {
         $vcode = $_POST["vcode"];

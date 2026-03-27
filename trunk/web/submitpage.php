@@ -6,6 +6,8 @@ require_once('./include/memcache.php');
 require_once('./include/setlang.php');
 require_once('./include/curl.php');
 $view_title = $MSG_SUBMIT;
+// 禁用提交页面验证码
+$OJ_VCODE = false;
 if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
     $redirect = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'index.php';
     // 如果是spa模式（在iframe中），移除&spa参数，避免跳转循环
@@ -243,9 +245,10 @@ $result = pdo_query($sql);
 
 $row = $result[0];
 
-if ($row[0] > 10) {
-    $OJ_VCODE = true;
-}
+// 禁用验证码，不根据提交数量自动启用
+// if ($row[0] > 10) {
+//     $OJ_VCODE = true;
+// }
 
 /////////////////////////Template
 require("template/" . $OJ_TEMPLATE . "/submitpage.php");
