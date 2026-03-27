@@ -1,5 +1,11 @@
 <?php $show_title="$MSG_LOGIN - $OJ_NAME"; ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
+<script>
+// 如果在iframe中，跳出iframe到顶层页面
+if (window.top !== window.self) {
+    window.top.location.href = window.location.href;
+}
+</script>
 
 <div class="ui error message" id="error" hidden></div>
 <div class="ui middle aligned center aligned grid"  style="height: 500px;" >

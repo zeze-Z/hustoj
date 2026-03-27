@@ -331,10 +331,10 @@ if (~$OJ_LANGMASK & (1 << $language)) {
 
 
     if (!isset($pid)) {
-        $sql = "INSERT INTO solution(problem_id,user_id,nick,in_date,language,ip,code_length,result) VALUES(?,?,?,NOW(),?,?,?,14)";
+        $sql = "INSERT INTO solution(problem_id,user_id,nick,in_date,language,ip,code_length,result) VALUES(?,?,?,NOW(),?,?,?,0)";
         $insert_id = pdo_query($sql, $id, $user_id, $nick, $language, $ip, $len);
     } else {
-        $sql = "INSERT INTO solution(problem_id,user_id,nick,in_date,language,ip,code_length,contest_id,num,result) VALUES(?,?,?,NOW(),?,?,?,?,?,14)";
+        $sql = "INSERT INTO solution(problem_id,user_id,nick,in_date,language,ip,code_length,contest_id,num,result) VALUES(?,?,?,NOW(),?,?,?,?,?,0)";
         // 仅保留最后一次的提交，之前的提交记作测试运行，记分清零
         if (contest_locked($cid, 128) || (stripos($title, $OJ_NOIP_KEYWORD) !== false || contest_locked($cid, 16)) && isset($OJ_OI_1_SOLUTION_ONLY) && $OJ_OI_1_SOLUTION_ONLY) {
             $delete = pdo_query("update solution set result=13,pass_rate=0.0 WHERE contest_id=? AND user_id=? AND num=?", $cid, $user_id, $pid);
