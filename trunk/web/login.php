@@ -116,14 +116,27 @@ if ($login) {
         setcookie($OJ_NAME . "_check", $C_res . (strlen($C_res) * strlen($C_res)) % 7, $C_time);
     }
     echo "<script language='javascript'>\n";
-    if (isset($_SESSION[$OJ_NAME . "_administrator"]))
-        echo "window.location.href='admin';\n";
-    else if (isset($_SESSION[$OJ_NAME . "_contest_creator"]))
-        echo "window.location.href='contest.php?my';\n";
-    else if ($OJ_NEED_LOGIN)
-        echo "window.location.href='index.php';\n";
-    else
-        echo "setTimeout('history.go(-2)',500);\n";
+    // 获取 redirect 参数，优先使用 POST，其次 GET
+    $redirect = isset($_POST['redirect']) ? $_POST['redirect'] : (isset($_GET['redirect']) ? $_GET['redirect'] : '');
+    if ($redirect) {
+        // 验证 redirect 参数，防止开放重定向
+        if (strpos($redirect, '://') !== false || !preg_match('/^[\/a-zA-Z0-9._-]+$/', $redirect)) {
+            $redirect = '';
+        }
+    }
+
+    if ($redirect) {
+        // 使用 window.top 确保在顶层窗口跳转
+        echo "window.top.location.href='" . htmlspecialchars($redirect, ENT_QUOTES, 'UTF-8') . "';\n";
+    } else if (isset($_SESSION[$OJ_NAME . "_administrator"])) {
+        echo "window.top.location.href='admin';\n";
+    } else if (isset($_SESSION[$OJ_NAME . "_contest_creator"])) {
+        echo "window.top.location.href='contest.php?my';\n";
+    } else if ($OJ_NEED_LOGIN) {
+        echo "window.top.location.href='index.php';\n";
+    } else {
+        echo "window.top.setTimeout('history.go(-2)',500);\n";
+    }
     echo "</script>";
 } else {
     if (isset($OJ_LOG_ENABLED) && $OJ_LOG_ENABLED) {
