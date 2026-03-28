@@ -190,6 +190,9 @@ if ($OJ_SIM & $showsim > 0) {
 } else {
     $fields = "solution.*,users.nick,users.group_name,users.starred";
 }
+// 用于存储外层查询的学校过滤条件
+$outer_school_filter = '';
+
 if (isset($_GET['school']) && trim($_GET['school']) != "" || isset($_GET['group_name']) && trim($_GET['group_name']) != "") {
     if (!empty($param)) {
         $values = array_values($param);
@@ -200,30 +203,28 @@ if (isset($_GET['school']) && trim($_GET['school']) != "" || isset($_GET['group_
     if (isset($_GET['school']) && trim($_GET['school']) != "") {
         // 用户明确指定学校名称，按名称过滤
         $school = trim($_GET['school']);
-        $sql .= " and users.school=? ";
+        $outer_school_filter = " and users.school=? ";
         array_push($param, trim($_GET['school']));
         $str2 = $str2 . "&school=" . htmlentities(trim($_GET['school']), ENT_QUOTES);
     } else {
         // 用户未指定学校时，应用系统学校过滤
         $system_school_filter = getSolutionSchoolFilter();
         if ($system_school_filter) {
-            $sql .= $system_school_filter;
+            $outer_school_filter = $system_school_filter;
         }
     }
     if (isset($_GET['group_name']) && trim($_GET['group_name']) != "") {
         $group_name = trim($_GET['group_name']);
-        $sql .= " and users.group_name=? ";
+        $outer_school_filter .= " and users.group_name=? ";
         array_push($param, trim($_GET['group_name']));
         $str2 = $str2 . "&group_name=" . htmlentities(trim($_GET['group_name']), ENT_QUOTES);
     }
     $topwhere = $sql;
-    $sql0 = "select $fields from (select * from solution $topwhere $order_str LIMIT 1500) solution inner join users users on solution.user_id=users.user_id  and users.defunct='N' ";
+    $sql0 = "select $fields from (select * from solution $topwhere $order_str LIMIT 1500) solution inner join users users on solution.user_id=users.user_id  and users.defunct='N' $outer_school_filter ";
 } else {
     // 用户没有指定任何过滤条件，应用系统学校过滤
     $system_school_filter = getSolutionSchoolFilter();
-    if ($system_school_filter) {
-        $sql .= $system_school_filter;
-    }
+    $outer_school_filter = $system_school_filter ? $system_school_filter : '';
     $topwhere = $sql;
     if (!empty($param)) {
         $values = array_values($param);
@@ -233,7 +234,7 @@ if (isset($_GET['school']) && trim($_GET['school']) != "" || isset($_GET['group_
     }
 
     // if ($_SESSION[$OJ_NAME."_user_id"]=='zhblue')echo $sql;
-    $sql0 = "select $fields from ( select * from solution $topwhere $order_str limit 50 )solution inner join users on solution.user_id=users.user_id  and users.defunct='N' ";
+    $sql0 = "select $fields from ( select * from solution $topwhere $order_str limit 50 )solution inner join users on solution.user_id=users.user_id  and users.defunct='N' $outer_school_filter ";
 }
 
 if ($OJ_SIM & $showsim > 0) {
