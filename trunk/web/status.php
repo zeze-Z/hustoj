@@ -305,12 +305,6 @@ if ($OJ_SIM & $showsim > 0) {
 
 $sql = $sql . $order_str . " LIMIT 50";
 
-// 临时调试：在HTML注释中输出调试信息
-echo "<!-- Debug: Role=" . htmlspecialchars(getCurrentUserRole()) . " -->";
-echo "<!-- Debug: UserID=" . htmlspecialchars(isset($_SESSION[$OJ_NAME.'_'.'user_id']) ? $_SESSION[$OJ_NAME.'_'.'user_id'] : 'not set') . " -->";
-echo "<!-- Debug: SchoolID=" . htmlspecialchars(getCurrentUserSchoolId() ?: 'not set') . " -->";
-echo "<!-- Debug: SQL=" . htmlspecialchars($sql) . " -->";
-
 
 if (!empty($param)) {
     $result = pdo_query($sql, $param);
