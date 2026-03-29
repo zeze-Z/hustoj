@@ -6,9 +6,6 @@ header("Expires: Sat, 26 Jul 1997 05:00:00 GMT"); // Date in the past
 $cache_time = 2;
 $OJ_CACHE_SHARE = false;
 
-// 引入初始化文件（确保session正确启动）
-require_once('./include/init.php');
-
 require_once('./include/cache_start.php');
 require_once('./include/db_info.inc.php');
 require_once('./include/memcache.php');
