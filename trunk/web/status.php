@@ -250,7 +250,16 @@ if ($has_school_filter || $has_group_filter) {
         // 如果学校相关函数不存在，使用原有逻辑
         $system_school_filter = getSolutionSchoolFilter();
         $outer_school_filter = $system_school_filter ? $system_school_filter : '';
-    } else {
+    }
+    $topwhere = $sql;
+    if (!empty($param)) {
+        $values = array_values($param);
+        foreach ($values as $v) {
+            array_push($param, $v);
+        }
+    }
+    // 再添加权限过滤参数（只在外层查询需要）
+    if (function_exists('getCurrentUserRole') && function_exists('getCurrentUserSchoolId')) {
         $role = getCurrentUserRole();
         if ($role === 'super_admin') {
             // 超级管理员：看到所有提交
@@ -262,7 +271,7 @@ if ($has_school_filter || $has_group_filter) {
                 $outer_school_filter = " AND users.school_id = ?";
                 array_push($param, $school_id);
             } else {
-                $outer_school_filter = ' AND 1=0'; // 学校管理员无学校时看不到任何提交
+                $outer_school_filter = ' AND 1=0';
             }
         } elseif ($role === 'user') {
             // 普通用户：只能看到自己的提交
@@ -271,18 +280,11 @@ if ($has_school_filter || $has_group_filter) {
                 $outer_school_filter = " AND solution.user_id = ?";
                 array_push($param, $current_user_id);
             } else {
-                $outer_school_filter = ' AND 1=0'; // 无用户时看不到任何提交
+                $outer_school_filter = ' AND 1=0';
             }
         } else {
             // 游客：看不到任何提交
             $outer_school_filter = ' AND 1=0';
-        }
-    }
-    $topwhere = $sql;
-    if (!empty($param)) {
-        $values = array_values($param);
-        foreach ($values as $v) {
-            array_push($param, $v);
         }
     }
 
@@ -560,4 +562,3 @@ else
 /////////////////////////Common foot
 if (file_exists('./include/cache_end.php'))
     require_once('./include/cache_end.php');
-
