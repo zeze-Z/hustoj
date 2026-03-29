@@ -42,7 +42,7 @@ if (isset($_GET['cid'])) {
 
     $view_cid = $cid;
     $result = pdo_query($sql_lock, $cid);
-    $rows_cnt = count($result);
+    $rows_cnt = is_array($result) ? count($result) : 0;
     $start_time = 0;
     $end_time = 0;
 
@@ -312,7 +312,7 @@ if (!empty($param)) {
     $result = pdo_query($sql);
 }
 
-if (!empty($result))
+if (is_array($result) && !empty($result))
     $rows_cnt = count($result);
 else
     $rows_cnt = 0;
