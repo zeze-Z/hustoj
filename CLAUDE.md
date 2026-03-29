@@ -51,3 +51,11 @@ $MSG_EDIT = "编辑";
 ## 配置文件
 - `include/db_info.inc.php`: 数据库配置
 - `include/school.php`: 学校管理函数
+
+## 测试环境操作规范
+本地编码完成后，必须将代码同步到测试虚机web-2204进行自测验证：
+- 虚机执行命令格式：`multipass exec web-2204 -- sudo -S [shell命令] <<< "judge"`
+- 虚机上OJ部署路径：/home/judge/src/web/
+- sudo密码：`judge`
+- 文件传输到/tmp：`multipass transfer [本地文件路径] web-2204:/tmp/[文件名]`
+- 从/tmp复制到目标：`multipass exec web-2204 -- sudo -S cp /tmp/[文件名] /home/judge/src/web/[目标路径] <<< "judge"`

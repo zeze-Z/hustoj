@@ -98,10 +98,17 @@ function isSchoolAdmin() {
  * @return string 'super_admin' | 'school_admin' | 'user' | 'guest'
  */
 function getCurrentUserRole() {
-    global $OJ_NAME;
-    if (isSuperAdmin()) return 'super_admin';
-    if (isSchoolAdmin()) return 'school_admin';
+    global $OJ_NAME, $OJ_SCHOOL_MODE;
+
+    // 检查是否为超级管理员
+    if (isset($_SESSION[$OJ_NAME.'_'.'administrator'])) return 'super_admin';
+
+    // 如果开启了学校模式，检查学校管理员
+    if ($OJ_SCHOOL_MODE && isset($_SESSION[$OJ_NAME.'_'.'school_admin'])) return 'school_admin';
+
+    // 检查是否为已登录用户
     if (isset($_SESSION[$OJ_NAME.'_'.'user_id'])) return 'user';
+
     return 'guest';
 }
 

@@ -5,6 +5,10 @@ header("Expires: Sat, 26 Jul 1997 05:00:00 GMT"); // Date in the past
 ////////////////////////////Common head
 $cache_time = 2;
 $OJ_CACHE_SHARE = false;
+
+// 引入初始化文件（确保session正确启动）
+require_once('./include/init.php');
+
 require_once('./include/cache_start.php');
 require_once('./include/db_info.inc.php');
 require_once('./include/memcache.php');
@@ -83,19 +87,8 @@ if (isset($_GET['cid'])) {
     }
 
 } else {
-    // 根据用户权限设置不同的SQL查询条件
-    if (isset($_SESSION[$OJ_NAME . '_' . 'administrator'])      // 管理员
-            || isset($_SESSION[$OJ_NAME . '_' . 'source_browser'])   //代码审查员
-            || (isset($_SESSION[$OJ_NAME . '_' . 'user_id']) && (isset($_GET['user_id']) && $_GET['user_id'] == $_SESSION[$OJ_NAME . '_' . 'user_id']))  // 普通用户查询自己的
-    ) {
-        if (isset($_SESSION[$OJ_NAME . '_' . 'source_browser'])) {
-            $sql = "WHERE problem_id>0  ";                               // 默认只有管理员可以在练习状态看所有人的比赛提交，其他人只能在特意查询时查到自己的比赛提交
-        } else if ($_SESSION[$OJ_NAME . '_' . 'user_id'] != "guest") {
-            $sql = "WHERE (contest_id=0 or contest_id is null)  ";      // 如果希望所有人能在练习状态直接查看自己的比赛提交，这里改成 where problem_id>0
-        }
-    } else {
-        $sql = "WHERE solution.user_id not in ($OJ_RANK_HIDDEN) and  problem_id>0 and (contest_id=0 or contest_id is null) "; // 如果希望所有人能在练习状态直接查看别人的比赛提交，这里改成 where problem_id>0
-    }
+    // 统一使用基础条件，具体权限过滤由下面的学校权限逻辑处理
+    $sql = "WHERE problem_id>0 ";
 }
 
 $start_first = true;
@@ -193,7 +186,9 @@ if ($OJ_SIM & $showsim > 0) {
 // 用于存储外层查询的学校过滤条件
 $outer_school_filter = '';
 
-if (isset($_GET['school']) && trim($_GET['school']) != "" || isset($_GET['group_name']) && trim($_GET['group_name']) != "") {
+$has_school_filter = isset($_GET['school']) && trim($_GET['school']) != "";
+$has_group_filter = isset($_GET['group_name']) && trim($_GET['group_name']) != "";
+if ($has_school_filter || $has_group_filter) {
     if (!empty($param)) {
         $values = array_values($param);
         foreach ($values as $v) {
@@ -207,10 +202,41 @@ if (isset($_GET['school']) && trim($_GET['school']) != "" || isset($_GET['group_
         array_push($param, trim($_GET['school']));
         $str2 = $str2 . "&school=" . htmlentities(trim($_GET['school']), ENT_QUOTES);
     } else {
-        // 用户未指定学校时，应用系统学校过滤
-        $system_school_filter = getSolutionSchoolFilter();
-        if ($system_school_filter) {
-            $outer_school_filter = $system_school_filter;
+        // 用户未指定学校时，应用系统权限过滤
+        // 根据用户角色设置不同的过滤条件
+        if (!function_exists('getCurrentUserRole') || !function_exists('getCurrentUserSchoolId')) {
+            // 如果学校相关函数不存在，使用原有逻辑
+            $system_school_filter = getSolutionSchoolFilter();
+            if ($system_school_filter) {
+                $outer_school_filter = $system_school_filter;
+            }
+        } else {
+            $role = getCurrentUserRole();
+            if ($role === 'super_admin') {
+                // 超级管理员：看到所有提交
+                $outer_school_filter = '';
+            } elseif ($role === 'school_admin') {
+                // 学校管理员：看到本校所有提交
+                $school_id = getCurrentUserSchoolId();
+                if ($school_id) {
+                    $outer_school_filter = " AND users.school_id = ?";
+                    array_push($param, $school_id);
+                } else {
+                    $outer_school_filter = ' AND 1=0'; // 学校管理员无学校时看不到任何提交
+                }
+            } elseif ($role === 'user') {
+                // 普通用户：只能看到自己的提交
+                $current_user_id = isset($_SESSION[$OJ_NAME.'_'.'user_id']) ? $_SESSION[$OJ_NAME.'_'.'user_id'] : '';
+                if (!empty($current_user_id) && $current_user_id !== 'guest') {
+                    $outer_school_filter = " AND solution.user_id = ?";
+                    array_push($param, $current_user_id);
+                } else {
+                    $outer_school_filter = ' AND 1=0'; // 无用户时看不到任何提交
+                }
+            } else {
+                // 游客：看不到任何提交
+                $outer_school_filter = ' AND 1=0';
+            }
         }
     }
     if (isset($_GET['group_name']) && trim($_GET['group_name']) != "") {
@@ -222,9 +248,39 @@ if (isset($_GET['school']) && trim($_GET['school']) != "" || isset($_GET['group_
     $topwhere = $sql;
     $sql0 = "select $fields from (select * from solution $topwhere $order_str LIMIT 1500) solution inner join users users on solution.user_id=users.user_id  and users.defunct='N' $outer_school_filter ";
 } else {
-    // 用户没有指定任何过滤条件，应用系统学校过滤
-    $system_school_filter = getSolutionSchoolFilter();
-    $outer_school_filter = $system_school_filter ? $system_school_filter : '';
+    // 用户没有指定任何过滤条件，应用系统权限过滤
+    if (!function_exists('getCurrentUserRole') || !function_exists('getCurrentUserSchoolId')) {
+        // 如果学校相关函数不存在，使用原有逻辑
+        $system_school_filter = getSolutionSchoolFilter();
+        $outer_school_filter = $system_school_filter ? $system_school_filter : '';
+    } else {
+        $role = getCurrentUserRole();
+        if ($role === 'super_admin') {
+            // 超级管理员：看到所有提交
+            $outer_school_filter = '';
+        } elseif ($role === 'school_admin') {
+            // 学校管理员：看到本校所有提交
+            $school_id = getCurrentUserSchoolId();
+            if ($school_id) {
+                $outer_school_filter = " AND users.school_id = ?";
+                array_push($param, $school_id);
+            } else {
+                $outer_school_filter = ' AND 1=0'; // 学校管理员无学校时看不到任何提交
+            }
+        } elseif ($role === 'user') {
+            // 普通用户：只能看到自己的提交
+            $current_user_id = isset($_SESSION[$OJ_NAME.'_'.'user_id']) ? $_SESSION[$OJ_NAME.'_'.'user_id'] : '';
+            if ($current_user_id && $current_user_id !== 'guest') {
+                $outer_school_filter = " AND solution.user_id = ?";
+                array_push($param, $current_user_id);
+            } else {
+                $outer_school_filter = ' AND 1=0'; // 无用户时看不到任何提交
+            }
+        } else {
+            // 游客：看不到任何提交
+            $outer_school_filter = ' AND 1=0';
+        }
+    }
     $topwhere = $sql;
     if (!empty($param)) {
         $values = array_values($param);
@@ -238,22 +294,22 @@ if (isset($_GET['school']) && trim($_GET['school']) != "" || isset($_GET['group_
 }
 
 if ($OJ_SIM & $showsim > 0) {
-    //$old=$sql;
-    $sql = $sql0 . " left join `sim` sim on solution.solution_id=sim.s_id " . $sql;
+    $sql = $sql0 . " left join `sim` sim on solution.solution_id=sim.s_id ";
     if ($showsim > 0) {
         $sql .= " and sim.sim>=$showsim";
         $str2 .= "&showsim=$showsim";
     }
-
-    //$sql=$sql.$order_str." LIMIT 20";
 } else {
-    $sql = $sql0 . " " . $sql;
+    $sql = $sql0;
 }
 
-//echo $sql;
-//exit();
 $sql = $sql . $order_str . " LIMIT 50";
-// if ($_SESSION[$OJ_NAME."_user_id"]=='zhblue')echo $sql;
+
+// 临时调试：在HTML注释中输出调试信息
+echo "<!-- Debug: Role=" . htmlspecialchars(getCurrentUserRole()) . " -->";
+echo "<!-- Debug: UserID=" . htmlspecialchars(isset($_SESSION[$OJ_NAME.'_'.'user_id']) ? $_SESSION[$OJ_NAME.'_'.'user_id'] : 'not set') . " -->";
+echo "<!-- Debug: SchoolID=" . htmlspecialchars(getCurrentUserSchoolId() ?: 'not set') . " -->";
+echo "<!-- Debug: SQL=" . htmlspecialchars($sql) . " -->";
 
 
 if (!empty($param)) {
