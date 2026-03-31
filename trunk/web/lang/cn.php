@@ -20,6 +20,31 @@
 	$MSG_MAIL="短消息";
 	$MSG_TODO="待完成的任务";
 
+	//course module
+	$MSG_COURSE="课程";
+	$MSG_COURSE_LIST="课程列表";
+	$MSG_COURSE_SUBJECT="学科";
+	$MSG_COURSE_TITLE="课程标题";
+	$MSG_PRICE="价格";
+	$MSG_LESSON_COUNT="课时数";
+	$MSG_LINK_EXPIRE_DATE="链接到期时间";
+	$MSG_COURSEWARE="课件";
+	$MSG_LESSON_PLAN="教案";
+	$MSG_PREVIEW_URL="预览链接";
+	$MSG_DOWNLOAD_LINK="下载链接";
+	$MSG_ACCESS_CODE="提取码";
+	$MSG_TAGS="标签";
+	$MSG_DESCRIPTION="描述";
+	$MSG_SORT="排序";
+	$MSG_FREE="免费";
+	$MSG_ALL="全部";
+	$MSG_ACQUIRED="已获取";
+	$MSG_NOT_ACQUIRED="未获取";
+	$MSG_REDOWNLOAD="重新获取下载链接";
+	$MSG_FREE_GET="免费获取";
+	$MSG_BUY_NOW="立即购买";
+	$MSG_BACK="返回";
+
 	//status.php
 	$MSG_Pending="等待";
 	$MSG_Pending_Rejudging="等待重判";

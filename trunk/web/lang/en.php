@@ -20,6 +20,31 @@
 	$MSG_MAIL="Mail";
 	$MSG_TODO="ToDo";
 
+	//course module
+	$MSG_COURSE="Course";
+	$MSG_COURSE_LIST="Course List";
+	$MSG_COURSE_SUBJECT="Subject";
+	$MSG_COURSE_TITLE="Course Title";
+	$MSG_PRICE="Price";
+	$MSG_LESSON_COUNT="Lesson Count";
+	$MSG_LINK_EXPIRE_DATE="Link Expire Date";
+	$MSG_COURSEWARE="Courseware";
+	$MSG_LESSON_PLAN="Lesson Plan";
+	$MSG_PREVIEW_URL="Preview URL";
+	$MSG_DOWNLOAD_LINK="Download Link";
+	$MSG_ACCESS_CODE="="Access Code";
+	$MSG_TAGS="Tags";
+	$MSG_DESCRIPTION="Description";
+	$MSG_SORT="Sort";
+	$MSG_FREE="Free";
+	$MSG_ALL="All";
+	$MSG_ACQUIRED="Acquired";
+	$MSG_NOT_ACQUIRED="Not Acquired";
+	$MSG_REDOWNLOAD="Redownload";
+	$MSG_FREE_GET="Get Free";
+	$MSG_BUY_NOW="Buy Now";
+	$MSG_BACK="Back";
+
 	//status.php
 	$MSG_Pending="Pending";
 	$MSG_Pending_Rejudging="Pending Rejudging";
