@@ -525,3 +525,42 @@
   $MSG_USER_COUNT="Users";
   $MSG_CANNOT_EMPTY=" cannot be empty";
 $MSG_FAILED="Failed";
+
+	// Course Get & My Course
+	$MSG_COURSE_GET="Get Course";
+	$MSG_MY_COURSE="My Courses";
+	$MSG_MY_COURSE_DESC="View all courses you have acquired";
+	$MSG_RECEIVER_EMAIL="Email Address";
+	$MSG_EMAIL_PLACEHOLDER="Please enter your email";
+	$MSG_EMAIL_TIP="Download link will be sent to this email";
+	$MSG_CONFIRM_GET="Confirm Get";
+	$MSG_PAID_COURSE_HINT="Paid course purchase will be available in future version";
+	$MSG_EMAIL_INVALID="Invalid email format";
+	$MSG_COURSE_NOT_AVAILABLE="Course not available or has been removed";
+	$MSG_PURCHASE_PENDING="Paid course purchase is not available yet";
+	$MSG_ALREADY_ACQUIRED="You have already acquired this course";
+	$MSG_ALREADY_ACQUIRED_HINT="You have already acquired this course, you can resend email";
+	$MSG_RESEND_SUCCESS="Email sent successfully";
+	$MSG_MAIL_SEND_FAILED="Failed to send email, please try again later";
+	$MSG_MAIL_TOO_FREQUENT="Email sent too frequently, please try again later";
+	$MSG_ORDER_UNPAID="Order unpaid";
+	$MSG_GET_SUCCESS="Successfully acquired, download link sent to email";
+	$MSG_GET_SUCCESS_NO_MAIL="Successfully acquired, but email sending failed";
+	$MSG_ERROR="Error";
+	$MSG_NO_COURSE_YET="You haven't acquired any courses yet";
+	$MSG_BROWSE_COURSE="Browse Courses";
+	$MSG_GET_TIME="Acquired Time";
+	$MSG_MAIL_SENT="Sent";
+	$MSG_MAIL_FAILED="Failed";
+	$MSG_RESEND="Resend";
+	$MSG_PREV="Previous";
+	$MSG_NEXT="Next";
+	$MSG_ORDER_NOT_FOUND="Order not found";
+	$MSG_INVALID_REQUEST="Invalid request";
+
+	// Course Payment
+	$MSG_PAYMENT_METHOD="Payment Method";
+	$MSG_BUY_NOW="Buy Now";
+	$MSG_WXPAY="WeChat Pay";
+	$MSG_ALIPAY="Alipay";
+	$MSG_PAY_SUCCESS="Payment Successful";

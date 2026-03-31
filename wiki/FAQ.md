@@ -146,6 +146,41 @@ echo "insert into jol.privilege values('admin','administrator','true','N');" | .
 * 如果如果OJ_USE_DOCKER=0时系统正常，OJ_USE_DOCKER=1时卡住，请检查install目录下的Dockerfile文件内容是否符合需求，并再次运行docker.sh确认运行结果正常。
 * 修改OJ_USER_DOCKER参数，需要重启judged生效，方法是sudo pkill -9 judged && sudo judged
 
+远程服务器OJ卡在"编译中"实战案例
+--
+**问题现象**：远程服务器（42.193.17.226）所有提交一直卡在"编译中"（result=2）状态，本地虚机判题正常。
+
+**排查过程**：
+1. 检查 judged 进程：进程存在但未处理任务
+2. 检查数据库队列：有12个提交卡在 result=2
+3. 检查 Docker 配置：OJ_USE_DOCKER=1，但 Docker 镜像列表为空
+4. 确认根因：配置要求 Docker 判题，但服务器未构建 Docker 镜像
+
+**处理方法**：
+```bash
+# 1. 禁用 Docker 模式
+sudo sed -i "s/OJ_USE_DOCKER=1/OJ_USE_DOCKER=0/" /home/judge/etc/judge.conf
+
+# 2. 可选：禁用 UDP 模式（如果也有问题）
+sudo sed -i "s/OJ_UDP_ENABLE=1/OJ_UDP_ENABLE=0/" /home/judge/etc/judge.conf
+
+# 3. 重启 judged 守护进程
+sudo pkill -9 judged
+sudo judged &
+
+# 4. 手动处理卡住的提交
+sudo /usr/bin/judge_client <solution_id> 0 /home/judge
+```
+
+**关键配置**：
+| 配置项 | 说明 |
+|--------|------|
+| OJ_USE_DOCKER | 1 需要Docker镜像，0 使用本地判题 |
+| OJ_UDP_ENABLE | 1 使用UDP推送，0 使用数据库轮询 |
+| Docker 镜像 | 使用 Docker 判题时必须先构建镜像（docker.sh） |
+
+**验证**：处理后所有卡住的提交正常判题（AC），新提交也能正确判题。
+
 为什么 提交代码/在某些特定页面 显示“连接已重置“ (connection_reset) ?
 --
 * 请确认”连接已重置“是特定操作(可永远复现)后出现的

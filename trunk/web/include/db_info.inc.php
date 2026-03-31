@@ -149,6 +149,12 @@ static $OJ_SaaS_ENABLE=false;
 static $OJ_MENU_NEWS=false;
 static $OJ_MENU_DROPDOWN=false;
 
+// YunGouOS 支付配置（需要填写实际值）
+static $YUNGOUOS_MCH_ID = '';      // 商户ID
+static $YUNGOUOS_KEY = '';         // 商户密钥
+static $YUNGOUOS_NOTIFY_URL = '';  // 回调地址，如 https://yourdomain.com/course_notify.php
+static $YUNGOUOS_RETURN_URL = '';  // 支付成功跳转地址
+
 require_once(dirname(__FILE__) . "/pdo.php");
 require_once(dirname(__FILE__) . "/init.php");
 

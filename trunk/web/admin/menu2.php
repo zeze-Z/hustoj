@@ -248,6 +248,18 @@
 
                 <div class="btn-group" role="menu">
                     <button type="button" class="btn btn-secondary dropdown-toggle btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="glyphicon glyphicon-book"></i> <?php echo $MSG_COURSE."-".$MSG_ADMIN ?> <span class="caret"></span>
+                    </button>
+                    <div class="dropdown-menu">
+    <?php if (isset($_SESSION[$OJ_NAME.'_'.'administrator'])){?>
+                        <a class="dropdown-item btn-sm" href="course/list.php" target="main" title="<?php echo $MSG_COURSE."-".$MSG_LIST?>"><i class="glyphicon glyphicon-list"></i> <?php echo $MSG_COURSE."-".$MSG_LIST?></a>
+                        <a class="dropdown-item btn-sm" href="course/add.php" target="main" title="<?php echo $MSG_ADD." ".$MSG_COURSE?>"><i class="glyphicon glyphicon-plus"></i> <?php echo $MSG_ADD." ".$MSG_COURSE?></a>
+    <?php }?>
+                    </div>
+                </div>
+
+                <div class="btn-group" role="menu">
+                    <button type="button" class="btn btn-secondary dropdown-toggle btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class="glyphicon glyphicon-question-sign"></i> <?php echo $MSG_PROBLEM."-".$MSG_ADMIN ?> <span class="caret"></span>
                     </button>
                     <div class="dropdown-menu">

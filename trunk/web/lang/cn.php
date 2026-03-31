@@ -549,3 +549,42 @@
   $MSG_USER_COUNT="用户数";
   $MSG_CANNOT_EMPTY="不能为空";
 $MSG_FAILED="失败";
+
+  // Course Get & My Course
+  $MSG_COURSE_GET="课程获取";
+  $MSG_MY_COURSE="我的获取";
+  $MSG_MY_COURSE_DESC="查看您已获取的所有课程";
+  $MSG_RECEIVER_EMAIL="收件邮箱";
+  $MSG_EMAIL_PLACEHOLDER="请输入邮箱地址";
+  $MSG_EMAIL_TIP="下载链接将发送至该邮箱";
+  $MSG_CONFIRM_GET="确认获取";
+  $MSG_PAID_COURSE_HINT="付费课程购买功能将在后续版本开放";
+  $MSG_EMAIL_INVALID="邮箱格式不正确";
+  $MSG_COURSE_NOT_AVAILABLE="课程不存在或已下架";
+  $MSG_PURCHASE_PENDING="付费课程购买功能暂未开放";
+  $MSG_ALREADY_ACQUIRED="您已获取过该课程";
+  $MSG_ALREADY_ACQUIRED_HINT="您已获取过该课程，可以重新发送邮件";
+  $MSG_RESEND_SUCCESS="邮件发送成功";
+  $MSG_MAIL_SEND_FAILED="邮件发送失败，请稍后重试";
+  $MSG_MAIL_TOO_FREQUENT="邮件发送过于频繁，请稍后再试";
+  $MSG_ORDER_UNPAID="订单未支付";
+  $MSG_GET_SUCCESS="获取成功，下载链接已发送至邮箱";
+  $MSG_GET_SUCCESS_NO_MAIL="获取成功，但邮件发送失败";
+  $MSG_ERROR="错误";
+  $MSG_NO_COURSE_YET="您还没有获取任何课程";
+  $MSG_BROWSE_COURSE="浏览课程";
+  $MSG_GET_TIME="获取时间";
+  $MSG_MAIL_SENT="已发送";
+  $MSG_MAIL_FAILED="发送失败";
+  $MSG_RESEND="重新发送";
+  $MSG_PREV="上一页";
+  $MSG_NEXT="下一页";
+  $MSG_ORDER_NOT_FOUND="订单不存在";
+  $MSG_INVALID_REQUEST="无效请求";
+
+  // Course Payment
+  $MSG_PAYMENT_METHOD="支付方式";
+  $MSG_BUY_NOW="立即购买";
+  $MSG_WXPAY="微信支付";
+  $MSG_ALIPAY="支付宝";
+  $MSG_PAY_SUCCESS="支付成功";

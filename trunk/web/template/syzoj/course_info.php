@@ -61,17 +61,17 @@
               <i class="checkmark icon"></i>
               <?php echo $MSG_ACQUIRED; ?>
             </div>
-            <a href="course_info.php?id=<?php echo $view_course['id']; ?>"
+            <a href="course_get.php?id=<?php echo $view_course['id']; ?>"
                class="ui large positive button">
               <i class="download icon"></i><?php echo $MSG_REDOWNLOAD; ?>
             </a>
           <?php elseif ($is_free): ?>
-            <a href="course_info.php?id=<?php echo $view_course['id']; ?>"
+            <a href="course_get.php?id=<?php echo $view_course['id']; ?>"
                class="ui large green button">
               <i class="gift icon"></i><?php echo $MSG_FREE_GET; ?>
             </a>
           <?php else: ?>
-            <a href="course_info.php?id=<?php echo $view_course['id']; ?>"
+            <a href="course_get.php?id=<?php echo $view_course['id']; ?>"
                class="ui large primary button">
               <i class="shopping cart icon"></i><?php echo $MSG_BUY_NOW; ?>
             </a>
