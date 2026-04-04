@@ -18,5 +18,8 @@ function verify_sign($params, $key, $remote_sign) {
 }
 
 function validate_amount($order_amount, $callback_amount) {
-    return abs(floatval($order_amount) - floatval($callback_amount)) <= 0.01;
+    $order = round(floatval($order_amount) * 100);
+    $callback = round(floatval($callback_amount) * 100);
+    // 转为整数比较，容差 1 分
+    return abs($order - $callback) <= 1;
 }

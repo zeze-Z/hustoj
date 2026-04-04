@@ -102,15 +102,7 @@
             <div class="ui form" style="display: flex; gap: 15px; margin-top: 10px;">
               <div class="field" style="flex: 1;">
                 <div class="ui radio checkbox">
-                <input type="radio" name="pay_channel" value="wxpay" id="wxpay" checked>
-                <label for="wxpay">
-                    <i class="wechat icon" style="color: #09bb07;"></i> 微信支付
-                </label>
-                </div>
-              </div>
-              <div class="field" style="flex: 1;">
-                <div class="ui radio checkbox">
-                <input type="radio" name="pay_channel" value="alipay" id="alipay">
+                <input type="radio" name="pay_channel" value="alipay" id="alipay" checked>
                 <label for="alipay">
                     <i class="paypal icon" style="color: #1678ff;"></i> 支付宝
                 </label>

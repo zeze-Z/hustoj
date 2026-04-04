@@ -54,6 +54,13 @@ $MSG_EDIT = "编辑";
 
 ## 测试环境操作规范
 本地编码完成后，必须将代码同步到测试虚机web-2204进行自测验证：
+
+### 浏览器测试
+访问测试虚机地址进行系统测试：
+- 普通用户：zezhang / zezhang123
+- 管理员：admin / admin123
+
+### 虚机操作
 - 虚机执行命令格式：`multipass exec web-2204 -- sudo -S [shell命令] <<< "judge"`
 - 虚机上OJ部署路径：/home/judge/src/web/
 - sudo密码：`judge`

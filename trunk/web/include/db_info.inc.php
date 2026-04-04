@@ -149,11 +149,19 @@ static $OJ_SaaS_ENABLE=false;
 static $OJ_MENU_NEWS=false;
 static $OJ_MENU_DROPDOWN=false;
 
-// YunGouOS 支付配置（需要填写实际值）
-static $YUNGOUOS_MCH_ID = '';      // 商户ID
-static $YUNGOUOS_KEY = '';         // 商户密钥
-static $YUNGOUOS_NOTIFY_URL = '';  // 回调地址，如 https://yourdomain.com/course_notify.php
-static $YUNGOUOS_RETURN_URL = '';  // 支付成功跳转地址
+// YunGouOS 支付配置（已废弃，保留备用）
+// static $YUNGOUOS_MCH_ID = '';      // 商户ID
+// static $YUNGOUOS_KEY = '';         // 商户密钥
+// static $YUNGOUOS_NOTIFY_URL = '';  // 回调地址，如 https://yourdomain.com/course_notify.php
+// static $YUNGOUOS_RETURN_URL = '';  // 支付成功跳转地址
+
+// 支付宝电脑网站支付配置（需要填写实际值）
+static $ALIPAY_APP_ID = '2021006143698198';           // 支付宝应用ID
+static $ALIPAY_PRIVATE_KEY = 'zfb_sy';       // 商户应用私钥（注意：保留完整的PKCS#8格式，包括-----BEGIN PRIVATE KEY-----）
+static $ALIPAY_PUBLIC_KEY = 'zfb_gy';        // 支付宝公钥（注意：保留完整的PKCS#8格式，包括-----BEGIN PUBLIC KEY-----）
+static $ALIPAY_GATEWAY_URL = 'https://openapi.alipay.com/gateway.do';  // 正式环境网关，沙箱环境使用 https://openapi-sandbox.dl.alipaydev.com/gateway.do
+static $ALIPAY_NOTIFY_URL = 'https://aioj.top/course_notify.php';        // 支付宝异步通知地址，如 https://yourdomain.com/course_notify.php
+static $ALIPAY_RETURN_URL = 'https://aioj.top/course.php';        // 支付宝同步返回地址，如 https://yourdomain.com/course.php
 
 require_once(dirname(__FILE__) . "/pdo.php");
 require_once(dirname(__FILE__) . "/init.php");

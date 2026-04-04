@@ -26,16 +26,16 @@ $success_message = '';
 $redirect_url = '';
 
 /**
- * YunGouOS 签名生成函数
+ * 支付宝 RSA2 签名函数
  * @param array $params 参数数组
- * @param string $key 商户密钥
+ * @param string $private_key 商户私钥
  * @return string 签名
  */
-function yungouos_sign($params, $key) {
-    // 过滤空值和sign参数
+function alipay_sign($params, $private_key) {
+    // 过滤空值和sign/sign_type参数
     $filtered = array();
     foreach ($params as $k => $v) {
-        if ($v !== '' && $v !== null && $k != 'sign') {
+        if ($v !== '' && $v !== null && $k != 'sign' && $k != 'sign_type') {
             $filtered[$k] = $v;
         }
     }
@@ -46,45 +46,78 @@ function yungouos_sign($params, $key) {
     foreach ($filtered as $k => $v) {
         $string .= "$k=$v&";
     }
-    $string = trim($string, '&') . $key;
-    // MD5加密并转大写
-    return strtoupper(md5($string));
+    $string = trim($string, '&');
+
+    // 签名
+    $private_key = str_replace(["\r\n", "\n", "\r"], '', $private_key);
+    openssl_sign($string, $sign, $private_key, OPENSSL_ALGO_SHA256);
+    return base64_encode($sign);
 }
 
 /**
- * 发起支付请求
+ * 发起支付宝电脑网站支付请求
  * @param array $order 订单数据
  * @param array $course 课程数据
- * @param string $pay_channel 支付渠道
- * @return string|false 支付URL或false
+ * @return string|false 返回表单HTML或false
  */
-function initiate_payment($order, $course, $pay_channel) {
-    global $YUNGOUOS_MCH_ID, $YUNGOUOS_KEY, $YUNGOUOS_NOTIFY_URL, $YUNGOUOS_RETURN_URL;
+function initiate_alipay_payment($order, $course) {
+    global $ALIPAY_APP_ID, $ALIPAY_PRIVATE_KEY, $ALIPAY_GATEWAY_URL, $ALIPAY_NOTIFY_URL, $ALIPAY_RETURN_URL;
 
     // 检查配置是否完整
-    if (empty($YUNGOUOS_MCH_ID) || empty($YUNGOUOS_KEY)) {
-        error_log("YunGouOS 配置不完整");
+    if (empty($ALIPAY_APP_ID) || empty($ALIPAY_PRIVATE_KEY)) {
+        error_log("支付宝配置不完整");
         return false;
     }
 
-    // 构建支付参数
-    $params = array(
+    // 构建业务参数
+    $biz_content = array(
         'out_trade_no' => $order['order_no'],
-        'total_fee' => intval($order['amount'] * 100), // 转换为分
-        'body' => $course['title'],
-        'mch_id' => $YUNGOUOS_MCH_ID,
-        'notify_url' => $YUNGOUOS_NOTIFY_URL,
-        'return_url' => $YUNGOUOS_RETURN_URL,
-        'type' => 1  // 1=扫码支付
+        'total_amount' => number_format(floatval($order['amount']), 2, '.', ''),
+        'subject' => $course['title'],
+        'product_code' => 'FAST_INSTANT_TRADE_PAY'
+    );
+
+    // 构建公共参数
+    $params = array(
+        'app_id' => $ALIPAY_APP_ID,
+        'method' => 'alipay.trade.page.pay',
+        'charset' => 'UTF-8',
+        'sign_type' => 'RSA2',
+        'timestamp' => date('Y-m-d H:i:s'),
+        'version' => '1.0',
+        'notify_url' => $ALIPAY_NOTIFY_URL,
+        'return_url' => $ALIPAY_RETURN_URL,
+        'biz_content' => json_encode($biz_content, JSON_UNESCAPED_UNICODE)
     );
 
     // 生成签名
-    $params['sign'] = yungouos_sign($params, $YUNGOUOS_KEY);
+    $params['sign'] = alipay_sign($params, $ALIPAY_PRIVATE_KEY);
 
-    // 构建支付URL（扫码支付模式）
-    $pay_url = 'https://api.pay.yungouos.com/api/pay/nativePay?' . http_build_query($params);
+    // 构建自动提交表单
+    $form = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>正在跳转到支付宝...</title>
+</head>
+<body>
+    <div style="text-align: center; margin-top: 100px; font-family: Arial, sans-serif;">
+        <p>正在跳转到支付宝，请稍候...</p>
+    </div>
+    <form id="alipay_form" method="post" action="' . htmlspecialchars($ALIPAY_GATEWAY_URL, ENT_QUOTES, 'UTF-8') . '">';
 
-    return $pay_url;
+    foreach ($params as $k => $v) {
+        $form .= '<input type="hidden" name="' . htmlspecialchars($k, ENT_QUOTES, 'UTF-8') . '" value="' . htmlspecialchars($v, ENT_QUOTES, 'UTF-8') . '">';
+    }
+
+    $form .= '</form>
+    <script type="text/javascript">
+        document.getElementById("alipay_form").submit();
+    </script>
+</body>
+</html>';
+
+    return $form;
 }
 
 // 处理POST请求（获取课程或发起支付）
@@ -144,10 +177,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     }
                 } else if ($is_paid && !empty($pay_channel)) {
                     // 付费课程，继续支付
-                    $pay_url = initiate_payment($order, $course, $pay_channel);
-                    if ($pay_url) {
-                        // 跳转到支付页面
-                        header("Location: " . $pay_url);
+                    $pay_form = initiate_alipay_payment($order, $course);
+                    if ($pay_form) {
+                        // 输出支付表单
+                        echo $pay_form;
                         exit();
                     } else {
                         $error_message = "支付系统未配置，请联系管理员";
@@ -163,25 +196,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     // 付费课程，创建待支付订单
                     pdo_query(
                         "INSERT INTO course_order (order_no, user_id, course_id, amount, email, pay_status, pay_time, pay_channel, mail_status)
-                         VALUES (?, ?, ?, ?, ?, 0, NULL, ?, 0)",
-                        $order_no, $user_id, $course_id, $course['price'], $email, $pay_channel
+                         VALUES (?, ?, ?, ?, ?, 0, NULL, 'alipay', 0)",
+                        $order_no, $user_id, $course_id, $course['price'], $email
                     );
 
-                    // 发起支付
-                    if (!empty($pay_channel)) {
-                        $new_order = array(
-                            'order_no' => $order_no,
-                            'amount' => $course['price']
-                        );
-                        $pay_url = initiate_payment($new_order, $course, $pay_channel);
-                        if ($pay_url) {
-                            header("Location: " . $pay_url);
-                            exit();
-                        } else {
-                            $error_message = "支付系统未配置，请联系管理员";
-                        }
+                    // 发起支付宝支付
+                    $new_order = array(
+                        'order_no' => $order_no,
+                        'amount' => $course['price']
+                    );
+                    $pay_form = initiate_alipay_payment($new_order, $course);
+                    if ($pay_form) {
+                        echo $pay_form;
+                        exit();
                     } else {
-                        $error_message = "请选择支付方式";
+                        $error_message = "支付系统未配置，请联系管理员";
                     }
                 } else {
                     // 免费课程，直接创建订单并发送邮件

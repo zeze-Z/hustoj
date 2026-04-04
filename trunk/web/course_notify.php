@@ -1,24 +1,24 @@
 <?php
 /**
- * YunGouOS 支付回调处理
- * 接收支付平台的异步通知，验证签名并更新订单状态
+ * 支付宝支付回调处理
+ * 接收支付宝的异步通知，验证签名并更新订单状态
  */
 
 require_once('./include/db_info.inc.php');
 require_once('./include/course_mail.php');
 
 /**
- * YunGouOS 签名验证函数
+ * 支付宝签名验证函数
  * @param array $params 参数数组
- * @param string $key 商户密钥
+ * @param string $public_key 支付宝公钥
  * @param string $remote_sign 远程签名
  * @return bool
  */
-function verify_yungouos_sign($params, $key, $remote_sign) {
-    // 过滤空值和sign参数
+function verify_alipay_sign($params, $public_key, $remote_sign) {
+    // 过滤空值、sign和sign_type参数
     $filtered = array();
     foreach ($params as $k => $v) {
-        if ($v !== '' && $v !== null && $k != 'sign') {
+        if ($v !== '' && $v !== null && $k != 'sign' && $k != 'sign_type') {
             $filtered[$k] = $v;
         }
     }
@@ -29,10 +29,12 @@ function verify_yungouos_sign($params, $key, $remote_sign) {
     foreach ($filtered as $k => $v) {
         $string .= "$k=$v&";
     }
-    $string = trim($string, '&') . $key;
-    // MD5加密并转大写
-    $local_sign = strtoupper(md5($string));
-    return $local_sign === $remote_sign;
+    $string = trim($string, '&');
+
+    // 验证签名
+    $public_key = str_replace(["\r\n", "\n", "\r"], '', $public_key);
+    $remote_sign = base64_decode($remote_sign);
+    return openssl_verify($string, $remote_sign, $public_key, OPENSSL_ALGO_SHA256) === 1;
 }
 
 // 记录回调日志
@@ -42,26 +44,35 @@ function log_notify($message) {
     file_put_contents($log_file, "[$timestamp] $message\n", FILE_APPEND);
 }
 
-// 获取POST参数
-$out_trade_no = isset($_POST['out_trade_no']) ? trim($_POST['out_trade_no']) : '';
-$total_fee = isset($_POST['total_fee']) ? floatval($_POST['total_fee']) / 100 : 0; // 转换为元
-$trade_no = isset($_POST['trade_no']) ? trim($_POST['trade_no']) : '';
-$code = isset($_POST['code']) ? intval($_POST['code']) : 0;
-$sign = isset($_POST['sign']) ? trim($_POST['sign']) : '';
+// 获取请求参数（支付宝可能是POST或GET）
+$params = array_merge($_GET, $_POST);
+$out_trade_no = isset($params['out_trade_no']) ? trim($params['out_trade_no']) : '';
+$total_amount = isset($params['total_amount']) ? floatval($params['total_amount']) : 0;
+$trade_no = isset($params['trade_no']) ? trim($params['trade_no']) : '';
+$trade_status = isset($params['trade_status']) ? trim($params['trade_status']) : '';
+$app_id = isset($params['app_id']) ? trim($params['app_id']) : '';
+$sign = isset($params['sign']) ? trim($params['sign']) : '';
 
 // 记录原始请求
-log_notify("收到回调: out_trade_no=$out_trade_no, total_fee=$total_fee, trade_no=$trade_no, code=$code");
+log_notify("收到支付宝回调: out_trade_no=$out_trade_no, total_amount=$total_amount, trade_no=$trade_no, trade_status=$trade_status, app_id=$app_id");
 
 // 验证签名
-if (!verify_yungouos_sign($_POST, $YUNGOUOS_KEY, $sign)) {
-    log_notify("签名验证失败: out_trade_no=$out_trade_no");
+if (empty($sign) || !verify_alipay_sign($params, $ALIPAY_PUBLIC_KEY, $sign)) {
+    log_notify("支付宝签名验证失败: out_trade_no=$out_trade_no");
+    echo 'FAIL';
+    exit();
+}
+
+// 验证APP_ID
+if ($app_id !== $ALIPAY_APP_ID) {
+    log_notify("APP_ID不匹配: 回调APP_ID=$app_id, 配置APP_ID=$ALIPAY_APP_ID");
     echo 'FAIL';
     exit();
 }
 
 // 检查支付状态
-if ($code != 1) {
-    log_notify("支付未成功: out_trade_no=$out_trade_no, code=$code");
+if ($trade_status != 'TRADE_SUCCESS' && $trade_status != 'TRADE_FINISHED') {
+    log_notify("支付未成功: out_trade_no=$out_trade_no, trade_status=$trade_status");
     echo 'FAIL';
     exit();
 }
@@ -86,8 +97,9 @@ if ($order['pay_status'] == 1) {
 }
 
 // 验证金额
-if (abs(floatval($order['amount']) - $total_fee) > 0.01) {
-    log_notify("金额不匹配: 订单金额={$order['amount']}, 回调金额=$total_fee, out_trade_no=$out_trade_no");
+$order_amount = floatval($order['amount']);
+if (abs($order_amount - $total_amount) > 0.01) {
+    log_notify("金额不匹配: 订单金额=$order_amount, 回调金额=$total_amount, out_trade_no=$out_trade_no");
     echo 'FAIL';
     exit();
 }
