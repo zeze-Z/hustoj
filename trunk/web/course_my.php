@@ -74,10 +74,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 // 查询已获取课程总数
-$count_sql = "SELECT COUNT(*) as total FROM course_order WHERE user_id = ? AND pay_status = 1";
-$count_result = pdo_query($count_sql, $user_id);
+$count_sql = "SELECT COUNT(*) as total FROM course_order WHERE user_id = '$user_id' AND pay_status = 1";
+$count_result = pdo_query($count_sql);
 $total = $count_result[0]['total'];
-$total_pages = ceil($total / $per_page);
+$total_pages = $total > 0 ? ceil($total / $per_page) : 0;
 
 // 查询已获取课程列表
 $sql = "SELECT co.*, c.title, c.price
@@ -85,8 +85,8 @@ $sql = "SELECT co.*, c.title, c.price
         INNER JOIN course c ON co.course_id = c.id
         WHERE co.user_id = ? AND co.pay_status = 1
         ORDER BY co.created_at DESC
-        LIMIT ? OFFSET ?";
-$courses = pdo_query($sql, $user_id, $per_page, $offset);
+        LIMIT $per_page OFFSET $offset";
+$courses = pdo_query($sql, $user_id);
 
 // 模板变量
 $view_courses = $courses;

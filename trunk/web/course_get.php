@@ -260,10 +260,15 @@ if ($course_id > 0 && empty($error_message) && empty($success_message)) {
     } else {
         $course = $result[0];
 
-        // 检查是否已获取过
+        // 检查是否已成功获取（pay_status = 1）
         $order_sql = "SELECT * FROM course_order WHERE user_id = ? AND course_id = ? AND pay_status = 1";
         $order_result = pdo_query($order_sql, $user_id, $course_id);
         $is_acquired = !empty($order_result);
+
+        // 如果已获取，获取订单信息用于重发邮件
+        if ($is_acquired) {
+            $order = $order_result[0];
+        }
     }
 }
 

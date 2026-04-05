@@ -2,8 +2,21 @@
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 <div class="padding">
 
-  <!-- 学科 Tab 切换 -->
+  <!-- 搜索框和学科 Tab -->
   <div style="margin-bottom: 20px;">
+    <!-- 搜索框 -->
+    <div style="margin-bottom: 15px;">
+      <form action="course.php" method="get" class="ui form" style="max-width: 400px;">
+        <?php if ($view_current_subject > 0): ?>
+        <input type="hidden" name="subject" value="<?php echo $view_current_subject; ?>">
+        <?php endif; ?>
+        <div class="ui action input" style="width: 100%; border-radius: 8px;">
+          <input type="text" name="search" placeholder="搜索课程名称、标签..." value="<?php echo htmlspecialchars($view_search_keyword ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+          <button class="ui button" type="submit"><i class="search icon"></i>搜索</button>
+        </div>
+      </form>
+    </div>
+
     <div class="ui top attached tabular menu" style="border-radius: 12px 12px 0 0;">
       <a class="item <?php echo $view_current_subject == 0 ? 'active' : ''; ?>" href="course.php">
         <?php echo $MSG_ALL; ?>

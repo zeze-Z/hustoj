@@ -43,6 +43,7 @@ $MSG_EDIT = "编辑";
 ```
 
 ## 数据库
+- 数据库名称：jol
 - school 表: 学校信息
 - users.school_id: 用户所属学校
 - problem.school_id / is_public: 题目归属
