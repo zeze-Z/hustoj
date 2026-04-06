@@ -1,6 +1,8 @@
 -- HUSTOJ 课件商城模块 - 数据库初始化脚本
 -- 创建日期: 2026-03-31
 
+USE jol;
+
 -- 1. 创建课程学科表
 CREATE TABLE IF NOT EXISTS `course_subject` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
