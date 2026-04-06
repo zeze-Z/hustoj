@@ -126,7 +126,7 @@
 
             <div class="extra content" style="padding: 12px 15px; border-top: 1px solid #eee;">
               <div class="right aligned">
-                <?php if (!isset($_SESSION['user_id'])): ?>
+                <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
                   <a href="loginpage.php" class="ui small primary button">
                     <?php echo $MSG_LOGIN; ?>
                   </a>

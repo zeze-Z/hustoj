@@ -52,7 +52,7 @@
 
         <div class="six wide column right aligned">
           <!-- 操作按钮 -->
-          <?php if (!isset($_SESSION['user_id'])): ?>
+          <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
             <a href="loginpage.php" class="ui large primary button">
               <i class="user icon"></i><?php echo $MSG_LOGIN; ?>
             </a>

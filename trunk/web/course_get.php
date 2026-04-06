@@ -175,18 +175,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     } else {
                         $error_message = $MSG_MAIL_TOO_FREQUENT;
                     }
-                } else if ($is_paid && !empty($pay_channel)) {
-                    // 付费课程，继续支付
-                    $pay_form = initiate_alipay_payment($order, $course);
-                    if ($pay_form) {
-                        // 输出支付表单
-                        echo $pay_form;
-                        exit();
-                    } else {
-                        $error_message = "支付系统未配置，请联系管理员";
-                    }
                 } else {
-                    $error_message = $is_paid ? "请选择支付方式" : $MSG_ORDER_UNPAID;
+                    // 订单未支付，复用已有订单
+                    if ($is_paid && !empty($pay_channel)) {
+                        $pay_form = initiate_alipay_payment($order, $course);
+                        if ($pay_form) {
+                            echo $pay_form;
+                            exit();
+                        } else {
+                            $error_message = "支付系统未配置，请联系管理员";
+                        }
+                    } else if (!$is_paid) {
+                        // 免费课程，直接将已有订单标记为已支付并发送邮件
+                        pdo_query(
+                            "UPDATE course_order SET pay_status = 1, pay_time = NOW(), pay_channel = 'free' WHERE id = ?",
+                            $order['id']
+                        );
+                        $course_data = array(
+                            'title' => $course['title'],
+                            'courseware_link' => $course['courseware_link'],
+                            'courseware_code' => $course['courseware_code'],
+                            'lesson_plan_link' => $course['lesson_plan_link'],
+                            'lesson_plan_code' => $course['lesson_plan_code']
+                        );
+                        if (send_course_mail($email, $course_data)) {
+                            pdo_query(
+                                "UPDATE course_order SET mail_status = 1, mail_sent_at = NOW() WHERE id = ?",
+                                $order['id']
+                            );
+                            $success_message = $MSG_GET_SUCCESS;
+                        } else {
+                            $error_message = $MSG_GET_SUCCESS_NO_MAIL;
+                            pdo_query(
+                                "UPDATE course_order SET mail_status = 2 WHERE id = ?",
+                                $order['id']
+                            );
+                        }
+                    } else {
+                        $error_message = $is_paid ? "请选择支付方式" : $MSG_ORDER_UNPAID;
+                    }
                 }
             } else {
                 // 未获取过，创建订单

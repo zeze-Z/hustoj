@@ -74,8 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 // 查询已获取课程总数
-$count_sql = "SELECT COUNT(*) as total FROM course_order WHERE user_id = '$user_id' AND pay_status = 1";
-$count_result = pdo_query($count_sql);
+$count_sql = "SELECT COUNT(*) as total FROM course_order WHERE user_id = ? AND pay_status = 1";
+$count_result = pdo_query($count_sql, $user_id);
 $total = $count_result[0]['total'];
 $total_pages = $total > 0 ? ceil($total / $per_page) : 0;
 

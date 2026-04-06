@@ -135,7 +135,7 @@ if ($login) {
     } else if ($OJ_NEED_LOGIN) {
         echo "window.top.location.href='index.php';\n";
     } else {
-        echo "window.top.setTimeout('history.go(-2)',500);\n";
+        echo "window.top.location.href='index.php';\n";
     }
     echo "</script>";
 } else {
