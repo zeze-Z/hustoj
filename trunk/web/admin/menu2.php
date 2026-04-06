@@ -252,8 +252,8 @@
                     </button>
                     <div class="dropdown-menu">
     <?php if (isset($_SESSION[$OJ_NAME.'_'.'administrator'])){?>
-                        <a class="dropdown-item btn-sm" href="course/list.php" target="main" title="<?php echo $MSG_COURSE."-".$MSG_LIST?>"><i class="glyphicon glyphicon-list"></i> <?php echo $MSG_COURSE."-".$MSG_LIST?></a>
-                        <a class="dropdown-item btn-sm" href="course/add.php" target="main" title="<?php echo $MSG_ADD." ".$MSG_COURSE?>"><i class="glyphicon glyphicon-plus"></i> <?php echo $MSG_ADD." ".$MSG_COURSE?></a>
+                        <a class="dropdown-item btn-sm" href="course_list.php" target="main" title="<?php echo $MSG_COURSE."-".$MSG_LIST?>"><i class="glyphicon glyphicon-list"></i> <?php echo $MSG_COURSE."-".$MSG_LIST?></a>
+                        <a class="dropdown-item btn-sm" href="course_add.php" target="main" title="<?php echo $MSG_ADD." ".$MSG_COURSE?>"><i class="glyphicon glyphicon-plus"></i> <?php echo $MSG_ADD." ".$MSG_COURSE?></a>
     <?php }?>
                     </div>
                 </div>

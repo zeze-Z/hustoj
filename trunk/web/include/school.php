@@ -105,11 +105,23 @@ function getCurrentUserRole() {
 
     // 如果开启了学校模式，检查学校管理员
     if ($OJ_SCHOOL_MODE && isset($_SESSION[$OJ_NAME.'_'.'school_admin'])) return 'school_admin';
+    
+    // 检查是否为教师
+    if (isset($_SESSION[$OJ_NAME.'_'.'teacher'])) return 'teacher';
 
     // 检查是否为已登录用户
     if (isset($_SESSION[$OJ_NAME.'_'.'user_id'])) return 'user';
 
     return 'guest';
+}
+
+/**
+ * 检查是否为教师
+ * @return bool
+ */
+function isTeacher() {
+    global $OJ_NAME;
+    return isset($_SESSION[$OJ_NAME.'_'.'teacher']);
 }
 
 /**

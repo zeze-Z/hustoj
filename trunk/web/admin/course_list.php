@@ -1,15 +1,10 @@
 <?php
-require("../admin-header.php");
-require_once("../../include/set_get_key.php");
+require("admin-header.php");
+require_once("../include/set_get_key.php");
 
-// 强制加载语言文件
-if (isset($OJ_LANG)) {
-    require_once("../../lang/$OJ_LANG.php");
-}
-
-// 权限检查：仅管理员可访问
+// 权限检查已在 admin-header.php 中处理
 if (!isset($_SESSION[$OJ_NAME.'_'.'administrator'])) {
-    echo "<a href='../../loginpage.php'>Please Login First!</a>";
+    echo "<a href='../loginpage.php'>Please Login First!</a>";
     exit(1);
 }
 ?>
@@ -121,11 +116,11 @@ echo "</nav>";
 echo "</div>";
 ?>
 
+<?php require_once("../include/set_post_key.php"); ?>
 <script>
 function changeStatus(id, status, actionName) {
     if (confirm('Confirm to ' + actionName + ' this course?')) {
-        <?php require_once("../../include/set_post_key.php"); ?>
-        $.post("status_change.php", {
+        $.post("course_status_change.php", {
             id: id,
             status: status,
             postkey: "<?php echo $_SESSION[$OJ_NAME.'_'.'postkey']; ?>"
@@ -140,4 +135,4 @@ function changeStatus(id, status, actionName) {
 }
 </script>
 
-<?php require("../admin-footer.php"); ?>
+<?php require("admin-footer.php"); ?>

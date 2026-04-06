@@ -312,6 +312,13 @@
             <?php if (isset($OJ_BBS)&& $OJ_BBS){ ?>
                 <a class='item' href="discuss.php" style="font-weight: 500;"><?php echo $MSG_BBS?></a>
             <?php } ?>
+            <!-- 课件功能 -->
+            <?php if(isset($_SESSION[$OJ_NAME.'_'.'teacher']) || isset($_SESSION[$OJ_NAME.'_'.'administrator'])){ ?>
+            <a class="item <?php if ($url=="course.php") echo "active";?>" href="<?php echo $path_fix?>course.php" style="font-weight: 500;">课件</a>
+            <?php } else { ?>
+            <a class="item" href="https://docs.qq.com/doc/DUkRMQUpYemRZYkti#" target="_blank" style="font-weight: 500;">课件</a>
+            <?php } ?>
+            
             <!-- 更多功能 -->
             <a class="item <?php if ($url=="more.php") echo "active";?>" href="<?php echo $path_fix?>more.php" style="font-weight: 500;">更多</a>
             <?php }

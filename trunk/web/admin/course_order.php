@@ -1,15 +1,10 @@
 <?php
-require("../admin-header.php");
-require_once("../../include/set_get_key.php");
+require("admin-header.php");
+require_once("../include/set_get_key.php");
 
-// 强制加载语言文件
-if (isset($OJ_LANG)) {
-    require_once("../../lang/$OJ_LANG.php");
-}
-
-// 权限检查：仅管理员可访问
+// 权限检查已在 admin-header.php 中处理
 if (!isset($_SESSION[$OJ_NAME.'_'.'administrator'])) {
-    echo "<a href='../../loginpage.php'>Please Login First!</a>";
+    echo "<a href='../loginpage.php'>Please Login First!</a>";
     exit(1);
 }
 
@@ -145,7 +140,7 @@ $pay_channel_map = array(
             foreach ($result as $row) {
                 $row_bg = ($row['pay_status'] == 0) ? '#ffebee' : '#fff';
                 $mail_resend_btn = ($row['pay_status'] == 1 && $row['mail_status'] != 1)
-                    ? '<a href="order_resend.php?id=' . $row['id'] . '" class="ui orange mini button" onclick="return confirm(\'确定重新发送邮件？\');">手动重发</a>'
+                    ? '<a href="course_order_resend.php?id=' . $row['id'] . '" class="ui orange mini button" onclick="return confirm(\'确定重新发送邮件？\');">手动重发</a>'
                     : '';
             ?>
             <tr style='height:30px; background: <?php echo $row_bg; ?>;' order_id='<?php echo $row['id'] ?>'>
@@ -180,4 +175,4 @@ $pay_channel_map = array(
     </center>
 </div>
 
-<?php require_once("../admin-footer.php");?>
+<?php require_once("admin-footer.php");?>

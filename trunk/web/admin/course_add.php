@@ -1,15 +1,10 @@
 <?php
-require("../admin-header.php");
-require_once("../../include/set_get_key.php");
+require("admin-header.php");
+require_once("../include/set_get_key.php");
 
-// 强制加载语言文件
-if (isset($OJ_LANG)) {
-    require_once("../../lang/$OJ_LANG.php");
-}
-
-// 仅管理员可添加课程
+// 权限检查已在 admin-header.php 中处理
 if (!isset($_SESSION[$OJ_NAME.'_'.'administrator'])) {
-    echo "<a href='../../loginpage.php'>Please Login First!</a>";
+    echo "<a href='../loginpage.php'>Please Login First!</a>";
     exit(1);
 }
 
@@ -17,7 +12,7 @@ $view_title = $MSG_ADD . " " . $MSG_COURSE;
 
 // 处理表单提交
 if (isset($_POST['do'])) {
-    require_once("../../include/check_post_key.php");
+    require_once("../include/check_post_key.php");
 
     $title = trim($_POST['title']);
     $subject_id = intval($_POST['subject_id']);
@@ -62,6 +57,24 @@ if (isset($_POST['do'])) {
         exit();
     }
 
+    // 预览链接域名白名单校验（仅允许kdocs.cn）
+    function validate_preview_domain($url) {
+        $parsed = parse_url($url);
+        if (!isset($parsed['host'])) return false;
+        $host = strtolower($parsed['host']);
+        return $host === 'kdocs.cn' || substr($host, -9) === '.kdocs.cn';
+    }
+
+    if (!empty($courseware_preview_url) && !validate_preview_domain($courseware_preview_url)) {
+        echo "<script>alert('$MSG_COURSEWARE preview URL only allows kdocs.cn domain'); history.go(-1);</script>";
+        exit();
+    }
+
+    if (!empty($lesson_plan_preview_url) && !validate_preview_domain($lesson_plan_preview_url)) {
+        echo "<script>alert('$MSG_LESSON_PLAN preview URL only allows kdocs.cn domain'); history.go(-1);</script>";
+        exit();
+    }
+
     if (!empty($courseware_link) && !filter_var($courseware_link, FILTER_VALIDATE_URL)) {
         echo "<script>alert('$MSG_COURSEWARE download link is invalid'); history.go(-1);</script>";
         exit();
@@ -76,7 +89,7 @@ if (isset($_POST['do'])) {
 
     try {
         pdo_query($sql, $title, $subject_id, $tags, $lesson_count, $description, $price, $status, $courseware_preview_url, $lesson_plan_preview_url, $courseware_link, $courseware_code, $lesson_plan_link, $lesson_plan_code, $link_expire_date, $sort_order);
-        echo "<script>alert('$MSG_ADD $MSG_SUCCESS'); window.location.href='list.php';</script>";
+        echo "<script>alert('$MSG_ADD $MSG_SUCCESS'); window.location.href='course_list.php';</script>";
     } catch (Exception $e) {
         echo "<script>alert('$MSG_ADD $MSG_FAILED: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "'); history.go(-1);</script>";
     }
@@ -93,8 +106,8 @@ $subject_list = pdo_query($sql);
 <center><h3><?php echo $view_title ?></h3></center>
 
 <div class="padding">
-    <form action="add.php" method="post" class="form-horizontal">
-        <?php require_once("../../include/set_post_key.php"); ?>
+    <form action="course_add.php" method="post" class="form-horizontal">
+        <?php require_once("../include/set_post_key.php"); ?>
 
         <div class="form-group">
             <label class="col-sm-2 control-label"><?php echo $MSG_COURSE_TITLE ?> <span class="text-danger">*</span></label>
@@ -219,7 +232,7 @@ $subject_list = pdo_query($sql);
                 <button type="submit" name="do" value="true" class="btn btn-primary">
                     <i class="glyphicon glyphicon-ok"></i> <?php echo $MSG_SUBMIT ?>
                 </button>
-                <a href="list.php" class="btn btn-default">
+                <a href="course_list.php" class="btn btn-default">
                     <i class="glyphicon glyphicon-arrow-left"></i> <?php echo $MSG_BACK ?>
                 </a>
             </div>
@@ -227,4 +240,4 @@ $subject_list = pdo_query($sql);
     </form>
 </div>
 
-<?php require("../admin-footer.php"); ?>
+<?php require("admin-footer.php"); ?>

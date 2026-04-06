@@ -212,14 +212,14 @@ if ($has_school_filter || $has_group_filter) {
             if ($role === 'super_admin') {
                 // 超级管理员：看到所有提交
                 $outer_school_filter = '';
-            } elseif ($role === 'school_admin') {
-                // 学校管理员：看到本校所有提交
+            } elseif ($role === 'school_admin' || $role === 'teacher') {
+                // 学校管理员/教师：看到本校所有提交
                 $school_id = getCurrentUserSchoolId();
                 if ($school_id) {
                     $outer_school_filter = " AND users.school_id = ?";
                     array_push($param, $school_id);
                 } else {
-                    $outer_school_filter = ' AND 1=0'; // 学校管理员无学校时看不到任何提交
+                    $outer_school_filter = ' AND 1=0'; // 学校管理员/教师无学校时看不到任何提交
                 }
             } elseif ($role === 'user') {
                 // 普通用户：只能看到自己的提交
@@ -264,8 +264,8 @@ if ($has_school_filter || $has_group_filter) {
         if ($role === 'super_admin') {
             // 超级管理员：看到所有提交
             $outer_school_filter = '';
-        } elseif ($role === 'school_admin') {
-            // 学校管理员：看到本校所有提交
+        } elseif ($role === 'school_admin' || $role === 'teacher') {
+            // 学校管理员/教师：看到本校所有提交
             $school_id = getCurrentUserSchoolId();
             if ($school_id) {
                 $outer_school_filter = " AND users.school_id = ?";
