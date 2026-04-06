@@ -10,7 +10,7 @@
 static 	$DB_HOST="localhost";  //数据库服务器ip或域名
 static 	$DB_NAME="jol";   //数据库名
 static 	$DB_USER="hustoj";  //数据库账户
-static 	$DB_PASS="abc123";  //数据库密码
+static 	$DB_PASS="DPLVBLgxotC7ti8unvhwjvA7ECC1mC";  //数据库密码
 static 	$OJ_NAME="AI-OJ";  //左上角显示的系统名称, 尽量简洁，避免用中文和空格，如需中文、长字符串、图片，可以直接修改template/syzoj/header.php
 static 	$OJ_HOME="./";    //主页目录
 static 	$OJ_ADMIN="aioj.top@qq.com";  //管理员email,若启用,建议对SMTP_SERVER等参数进行配置，设好可以接收系统邮件。
@@ -148,12 +148,6 @@ static  $OJ_LOG_TRACE_ENABLED=false;
 static $OJ_SaaS_ENABLE=false;
 static $OJ_MENU_NEWS=false;
 static $OJ_MENU_DROPDOWN=false;
-
-// YunGouOS 支付配置（已废弃，保留备用）
-// static $YUNGOUOS_MCH_ID = '';      // 商户ID
-// static $YUNGOUOS_KEY = '';         // 商户密钥
-// static $YUNGOUOS_NOTIFY_URL = '';  // 回调地址，如 https://yourdomain.com/course_notify.php
-// static $YUNGOUOS_RETURN_URL = '';  // 支付成功跳转地址
 
 // 支付宝电脑网站支付配置（需要填写实际值）
 static $ALIPAY_APP_ID = '9021000162658784';           // 支付宝应用ID
