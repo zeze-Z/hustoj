@@ -35,6 +35,7 @@ static  $OJ_APPENDCODE=true;  // 代码预定模板
 static  $OJ_CE_PENALTY=false;  // 编译错误是否罚时
 static  $OJ_PRINTER=false;  //启用打印服务
 static  $OJ_MAIL=false; //内邮
+// static  $OJ_SUOJIN=true; //自动检测缩减规范，不知道干啥的配置，先注释掉
 static  $OJ_MARK="mark"; // "mark" 显示正确得分， "percent" 显示错误比率
 static  $OJ_MEMCACHE=false;  //使用内存缓存
 static  $OJ_MEMSERVER="127.0.0.1";
@@ -82,7 +83,7 @@ static  $OJ_NOIP_KEYWORD="noip";  // 标题包含此关键词，激活noip模式
 static  $OJ_NOIP_HINT=false;  //noip比赛中 设置为true则在noip比赛中显示题目提示，false不显示提示
 static  $OJ_CONTEST_LIMIT_KEYWORD="限时"; //比赛中个人限时关键词。
 static  $OJ_OFFLINE_ZIP_CCF_DIRNAME=true; // 是否强制判断导入离线比赛时，按CCF规则要求提交答案的目录名。
-static  $OJ_BEIAN=false;  // 如果有备案号，填写备案号
+static  $OJ_BEIAN="蜀ICP备2026007934号-1";  // 如果有备案号，填写备案号
 static  $OJ_RANK_HIDDEN="'admin','zhblue'";  // 管理员不显示在排名中,这里的值用单引号包裹，用逗号分隔，注意单引号的配对，改错会导致部分页面无法打开。
 static  $OJ_FRIENDLY_LEVEL=1; //系统友好级别，暂定0-9级，级别越高越傻瓜，系统易用度高的同时将降低安全性，仅供非专业用途，造成泄题、抄袭概不负责。
 static  $OJ_FREE_PRACTICE=false; //自由练习，不受比赛作业用题限制
@@ -148,6 +149,14 @@ static  $OJ_LOG_TRACE_ENABLED=false;
 static $OJ_SaaS_ENABLE=false;
 static $OJ_MENU_NEWS=false;
 static $OJ_MENU_DROPDOWN=false;
+
+// 支付宝电脑网站支付配置（需要填写实际值）
+static $ALIPAY_APP_ID = '9021000162658784';           // 支付宝应用ID
+static $ALIPAY_PRIVATE_KEY = 'zfb_sy';       // 商户应用私钥（注意：保留完整的PKCS#8格式，包括-----BEGIN PRIVATE KEY-----）
+static $ALIPAY_PUBLIC_KEY = 'zfb_gy';        // 支付宝公钥（注意：保留完整的PKCS#8格式，包括-----BEGIN PUBLIC KEY-----）
+static $ALIPAY_GATEWAY_URL = 'https://openapi-sandbox.dl.alipaydev.com/gateway.do';  // 正式环境网关https://openapi.alipay.com/gateway.do，沙箱环境使用 https://openapi-sandbox.dl.alipaydev.com/gateway.do
+static $ALIPAY_NOTIFY_URL = 'https://aioj.top/course_notify.php';        // 支付宝异步通知地址，如 https://yourdomain.com/course_notify.php
+static $ALIPAY_RETURN_URL = 'https://aioj.top/course.php';        // 支付宝同步返回地址，如 https://yourdomain.com/course.php
 
 require_once(dirname(__FILE__) . "/pdo.php");
 require_once(dirname(__FILE__) . "/init.php");
