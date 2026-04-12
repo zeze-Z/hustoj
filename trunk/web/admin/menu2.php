@@ -203,9 +203,7 @@
                     </button>
                     <div class="dropdown-menu">
     <?php if (isset($_SESSION[$OJ_NAME.'_'.'administrator'])){?>
-                        <?php if ($OJ_TP=="bs3"){?>
                             <a class="dropdown-item btn-sm" href="setmsg.php" target="main" title="<?php echo $MSG_HELP_SETMESSAGE?>"><i class="glyphicon glyphicon-edit"></i> <?php echo $MSG_NEWS."-".$MSG_SETMESSAGE?></a>
-                        <?php }?>
                         <a class="dropdown-item btn-sm" href="news_list.php" target="main" title="<?php echo $MSG_HELP_NEWS_LIST?>"><i class="glyphicon glyphicon-list"></i> <?php echo $MSG_NEWS."-".$MSG_LIST?></a>
                         <a class="dropdown-item btn-sm" href="news_add_page.php" target="main" title="<?php echo $MSG_HELP_ADD_NEWS?>"><i class="glyphicon glyphicon-plus"></i> <?php echo $MSG_NEWS."-".$MSG_ADD?></a>
     <?php }?>
