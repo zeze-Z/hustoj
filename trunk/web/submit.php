@@ -29,6 +29,12 @@ if (isset($_POST['problem_type']) && in_array($_POST['problem_type'], ['choice_s
     }
     
     $row = $result[0];
+
+    // 校验题目类型与请求类型一致
+    if ($row['problem_type'] !== $problem_type) {
+        // 类型不匹配，跳过选择题分支，交给下方正常编程题流程
+        unset($_POST['problem_type']);
+    } else {
     $correct_answer = $row['answer'];
     $score = $row['score'];
     
@@ -90,6 +96,7 @@ if (isset($_POST['problem_type']) && in_array($_POST['problem_type'], ['choice_s
     }
     header("Location: $redirect_url");
     exit(0);
+    }
 }
 
 if (isset($OJ_CSRF) && $OJ_CSRF && $OJ_TEMPLATE == "bs3" && !isset($_SESSION[$OJ_NAME . '_' . 'http_judge']))
