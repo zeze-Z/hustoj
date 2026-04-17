@@ -175,6 +175,66 @@
 					</div>
 					<?php }
 
+        // 处理选择题
+        $problem_type = $row['problem_type'];
+        $options = json_decode($row['options'], true);
+        if ($problem_type != 'programming' && !empty($options)) {
+        ?>
+					<div class='panel panel-default'>
+						<div class='panel-heading'>
+							<h4>
+								<?php echo $problem_type == 'choice_single' ? '单选题' : ($problem_type == 'choice_multi' ? '多选题' : '判断题') ?>
+							</h4>
+						</div>
+						<div id="options" class='panel-body content'>
+							<form action="submit.php" method="post">
+								<input type="hidden" name="problem_id" value="<?php echo $row['problem_id'] ?>">
+								<?php if (isset($cid)) { ?>
+								<input type="hidden" name="cid" value="<?php echo $cid ?>">
+								<input type="hidden" name="pid" value="<?php echo $pid ?>">
+								<?php } ?>
+								<input type="hidden" name="problem_type" value="<?php echo $problem_type ?>">
+								<?php foreach ($options as $option) { ?>
+								<div style="margin-bottom: 10px;">
+									<label>
+										<input type="<?php echo $problem_type == 'choice_multi' ? 'checkbox' : 'radio' ?>" name="<?php echo $problem_type == 'choice_multi' ? 'answer[]' : 'answer' ?>" value="<?php echo $option['label'] ?>">
+										<strong><?php echo $option['label'] ?>.</strong> <?php echo $option['content'] ?>
+									</label>
+								</div>
+								<?php } ?>
+								<br>
+								<button type="submit" class="btn btn-primary">提交答案</button>
+							</form>
+						</div>
+					</div>
+					<?php 
+            // 显示结果和解析
+            if (isset($_GET['result'])) {
+                $result = intval($_GET['result']);
+                $correct = $result == 4;
+                $correct_answer = htmlspecialchars($row['answer']);
+                $analysis = $row['analysis'];
+            ?>
+					<div class='panel panel-default'>
+						<div class='panel-heading'>
+							<h4>
+								提交结果
+							</h4>
+						</div>
+						<div class='panel-body content'>
+							<div class="alert alert-<?php echo $correct ? 'success' : 'danger' ?>">
+								<strong><?php echo $correct ? '回答正确！' : '回答错误！' ?></strong><br>
+								正确答案：<?php echo $correct_answer ?><br>
+								<?php if (!empty($analysis)) { ?>
+								<br><strong>答案解析：</strong><br>
+								<?php echo $analysis ?>
+								<?php } ?>
+							</div>
+						</div>
+					</div>
+					<?php } ?>
+					<?php }
+
         if($row['hint']){?>
 					<div class='panel panel-default'>
 						<div class='panel-heading'>

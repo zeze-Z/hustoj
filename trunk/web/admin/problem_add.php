@@ -53,7 +53,57 @@ $hint = str_replace(",", "&#44;", $hint);
 
 $source = $_POST['source'];
 
+// 添加竞赛来源到source字段
+if(isset($_POST['contest_source']) && $_POST['contest_source']!=""){
+    $contest_source = $_POST['contest_source'];
+    if($source != "") $source .= " ";
+    $source .= $contest_source;
+}
+
+// 获取难度
+$level = intval($_POST['level']);
+if($level < 1 || $level >8) $level = 1;
+
 $spj = $_POST['spj'];
+
+// 处理选择题相关字段
+$problem_type = isset($_POST['problem_type']) ? $_POST['problem_type'] : 'programming';
+$options = array();
+$answer = '';
+$analysis = '';
+$score = 0;
+
+if ($problem_type != 'programming') {
+    // 处理选项
+    if (isset($_POST['option_content']) && is_array($_POST['option_content'])) {
+        foreach ($_POST['option_content'] as $index => $content) {
+            if (!empty($content)) {
+                $label = chr(65 + $index);
+                $options[] = array(
+                    'label' => $label,
+                    'content' => $content
+                );
+            }
+        }
+    }
+    
+    // 处理答案
+    if ($problem_type == 'choice_single' || $problem_type == 'judge') {
+        $answer = isset($_POST['answer']) ? $_POST['answer'] : '';
+    } else if ($problem_type == 'choice_multi') {
+        if (isset($_POST['answer']) && is_array($_POST['answer'])) {
+            sort($_POST['answer']);
+            $answer = implode('', $_POST['answer']);
+        }
+    }
+    
+    // 处理解析和分值
+    $analysis = isset($_POST['analysis']) ? $_POST['analysis'] : '';
+    $score = isset($_POST['score']) ? intval($_POST['score']) : 0;
+}
+
+// 转换选项为JSON
+$options_json = !empty($options) ? json_encode($options, JSON_UNESCAPED_UNICODE) : null;
 
 
 if (false) {
@@ -84,7 +134,13 @@ $school_id = isset($_POST['school_id']) && $_POST['school_id'] !== '' ? intval($
 $is_public = isset($_POST['is_public']) ? 1 : 0;
 
 //echo "->".$OJ_DATA."<-"; 
-$pid = addproblem($title, $time_limit, $memory_limit, $description, $input, $output, $sample_input, $sample_output, $hint, $source, $spj, $OJ_DATA, $school_id, $is_public);
+$pid = addproblem($title, $time_limit, $memory_limit, $description, $input, $output, $sample_input, $sample_output, $hint, $source, $spj, $OJ_DATA, $school_id, $is_public, $level);
+
+// 更新选择题相关字段
+if ($problem_type != 'programming') {
+    $sql = "UPDATE problem SET problem_type = ?, options = ?, answer = ?, analysis = ?, score = ? WHERE problem_id = ?";
+    pdo_query($sql, $problem_type, $options_json, $answer, $analysis, $score, $pid);
+}
 $basedir = "$OJ_DATA/$pid";
 mkdir($basedir);
 if(strlen($sample_output) && !strlen($sample_input)) $sample_input = "0";

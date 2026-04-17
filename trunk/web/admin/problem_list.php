@@ -46,13 +46,45 @@ $epage = min($spage+$pagesperframe-1, $pages);
 $sid = ($page-1)*$idsperpage;
 
 $sql = "";
+$params = array();
+$where = array();
+
+// 关键词搜索
 if(isset($_GET['keyword']) && $_GET['keyword']!=""){
   $keyword = $_GET['keyword'];
   $keyword = "%$keyword%";
-  $sql = "SELECT `problem_id`,`title`,`accepted`,`in_date`,`defunct`,`source`,`remote_oj`,`remote_id`  FROM `problem` WHERE (problem_id LIKE ?) OR (title LIKE ?) OR (description LIKE ?) OR (source LIKE ?) OR (hint LIKE ?) ORDER BY `problem_id` ASC";
-  $result = pdo_query($sql,$keyword,$keyword,$keyword,$keyword,$keyword);
+  $where[] = "(problem_id LIKE ? OR title LIKE ? OR description LIKE ? OR source LIKE ? OR hint LIKE ?)";
+  $params = array_merge($params, array($keyword,$keyword,$keyword,$keyword,$keyword));
+}
+
+// 来源筛选
+if(isset($_GET['source']) && $_GET['source']!=""){
+  $source = $_GET['source'];
+  $where[] = "source LIKE ?";
+  $params[] = "%$source%";
+}
+
+// 难度筛选
+if(isset($_GET['level']) && $_GET['level']!=""){
+  $level = intval($_GET['level']);
+  $where[] = "level BETWEEN ? AND ?";
+  $params[] = $level;
+  $params[] = $level + 1;
+}
+
+// 题型筛选
+if(isset($_GET['problem_type']) && $_GET['problem_type']!=""){
+  $problem_type = $_GET['problem_type'];
+  $where[] = "problem_type = ?";
+  $params[] = $problem_type;
+}
+
+// 构建SQL
+if(!empty($where)){
+  $sql = "SELECT `problem_id`,`title`,`accepted`,`in_date`,`defunct`,`source`,`level`,`remote_oj`,`remote_id`,`problem_type` FROM `problem` WHERE ".implode(" AND ", $where)." ORDER BY `problem_id` ASC";
+  $result = pdo_query($sql, ...$params);
 }else{
-  $sql = "SELECT `problem_id`,`title`,`accepted`,`in_date`,`defunct`,`source`,`remote_oj`,`remote_id`  FROM `problem` ORDER BY `problem_id` DESC LIMIT $sid, $idsperpage";
+  $sql = "SELECT `problem_id`,`title`,`accepted`,`in_date`,`defunct`,`source`,`level`,`remote_oj`,`remote_id`,`problem_type` FROM `problem` ORDER BY `problem_id` DESC LIMIT $sid, $idsperpage";
   $result = pdo_query($sql);
 }
 ?>
@@ -60,6 +92,36 @@ if(isset($_GET['keyword']) && $_GET['keyword']!=""){
 <center>
 <form action=problem_list.php class="form-search form-inline">
   <input type="text" name=keyword value="<?php if(isset($_GET['keyword']))echo htmlentities($_GET['keyword'],ENT_QUOTES,"utf-8")?>" class="form-control search-query" placeholder="<?php echo $MSG_PROBLEM_ID.', '.$MSG_TITLE.', '.$MSG_Description.', '.$MSG_SOURCE?>">
+  
+  <!-- 竞赛来源筛选 -->
+  <select name="source" class="form-control">
+    <option value="">所有来源</option>
+    <option value="蓝桥杯" <?php if(isset($_GET['source']) && $_GET['source']=="蓝桥杯")echo "selected"?>>蓝桥杯</option>
+    <option value="CSP-J" <?php if(isset($_GET['source']) && $_GET['source']=="CSP-J")echo "selected"?>>CSP-J</option>
+    <option value="CSP-S" <?php if(isset($_GET['source']) && $_GET['source']=="CSP-S")echo "selected"?>>CSP-S</option>
+    <option value="GESP" <?php if(isset($_GET['source']) && $_GET['source']=="GESP")echo "selected"?>>GESP</option>
+    <option value="NOIP" <?php if(isset($_GET['source']) && $_GET['source']=="NOIP")echo "selected"?>>NOIP</option>
+    <option value="其他" <?php if(isset($_GET['source']) && $_GET['source']=="其他")echo "selected"?>>其他</option>
+  </select>
+  
+  <!-- 难度筛选 -->
+  <select name="level" class="form-control">
+    <option value="">所有难度</option>
+    <option value="1" <?php if(isset($_GET['level']) && $_GET['level']=="1")echo "selected"?>>入门1-2</option>
+    <option value="3" <?php if(isset($_GET['level']) && $_GET['level']=="3")echo "selected"?>>基础3-4</option>
+    <option value="5" <?php if(isset($_GET['level']) && $_GET['level']=="5")echo "selected"?>>进阶5-6</option>
+    <option value="7" <?php if(isset($_GET['level']) && $_GET['level']=="7")echo "selected"?>>竞赛7-8</option>
+  </select>
+  
+  <!-- 题型筛选 -->
+  <select name="problem_type" class="form-control">
+    <option value="">所有题型</option>
+    <option value="programming" <?php if(isset($_GET['problem_type']) && $_GET['problem_type']=="programming")echo "selected"?>>编程题</option>
+    <option value="choice_single" <?php if(isset($_GET['problem_type']) && $_GET['problem_type']=="choice_single")echo "selected"?>>单选题</option>
+    <option value="choice_multi" <?php if(isset($_GET['problem_type']) && $_GET['problem_type']=="choice_multi")echo "selected"?>>多选题</option>
+    <option value="judge" <?php if(isset($_GET['problem_type']) && $_GET['problem_type']=="judge")echo "selected"?>>判断题</option>
+  </select>
+  
   <button type="submit" class="form-control"><?php echo $MSG_SEARCH?></button>
 </form>
 
@@ -106,8 +168,10 @@ echo "</select>";
     <tr>
       <td width=60px><?php echo $MSG_PROBLEM_ID?><input type=checkbox style='vertical-align:2px;' onchange='$("input[type=checkbox]").prop("checked", this.checked)'></td>
       <td><?php echo $MSG_TITLE?></td>
+      <td>题型</td>
       <td><?php echo $MSG_AC?></td>	 
       <td><?php echo $MSG_SAVED_DATE?></td>
+      <td>难度</td>
 	   <td><?php echo $MSG_SOURCE ?></td><!--分类-->
       <?php
       if(isset($_SESSION[$OJ_NAME.'_'.'administrator']) ||isset($_SESSION[$OJ_NAME.'_'.'problem_editor'])){
@@ -136,8 +200,24 @@ echo "</select>";
         echo "<td><a href='../problem.php?id=".$row['problem_id']."'>".$row['title']."</a>";
                if(!empty($row['remote_oj']))echo "&nbsp;<a href='".$row['source']."' target=_blank>  ".$row['remote_oj'].$row['remote_id']."</a>";   	
         echo "</td>";
+        echo "<td>";
+        $problem_type = $row['problem_type'];
+        if($problem_type == "programming") echo "<span class='label label-info'>编程题</span>";
+        else if($problem_type == "choice_single") echo "<span class='label label-success'>单选题</span>";
+        else if($problem_type == "choice_multi") echo "<span class='label label-warning'>多选题</span>";
+        else if($problem_type == "judge") echo "<span class='label label-primary'>判断题</span>";
+        else echo "<span class='label label-default'>未知</span>";
+        echo "</td>";
         echo "<td>".$row['accepted']."</td>";
         echo "<td>".$row['in_date']."</td>";
+        echo "<td>";
+        $level = intval($row['level']);
+        if($level >= 1 && $level <= 2) echo "<span class='label label-success'>入门</span>";
+        else if($level >= 3 && $level <=4) echo "<span class='label label-info'>基础</span>";
+        else if($level >=5 && $level <=6) echo "<span class='label label-warning'>进阶</span>";
+        else if($level >=7 && $level <=8) echo "<span class='label label-danger'>竞赛</span>";
+        else echo "<span class='label label-default'>未设置</span>";
+        echo " ({$level})</td>";
 		echo "<td onDblClick='modify_source(".$row['problem_id'].")' style='cursor: pointer;' >";//分类
 		
 		$category = array();

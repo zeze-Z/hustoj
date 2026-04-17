@@ -46,11 +46,67 @@
 		<input class='btn btn-danger'  type=reset value='<?php echo $MSG_RESET?>' >
 	</p>
         <p align=left>
-          <?php echo $MSG_Time_Limit?>
-          <input class="input input-mini" type=number min="0.001" max="300" step="0.001" name=time_limit size=20 value=1> sec
-          <?php echo $MSG_Memory_Limit?>
-          <input class="input input-mini" type=number min="1" max="2048" step="1" name=memory_limit size=20 value=128> MiB<br><br>
+          <h4>题型</h4>
+          <select name="problem_type" id="problem_type" class="form-control" onchange="toggleProblemFields()">
+            <option value="programming">编程题</option>
+            <option value="choice_single">单选题</option>
+            <option value="choice_multi">多选题</option>
+            <option value="judge">判断题</option>
+          </select>
+          <br><br>
         </p>
+        
+        <div id="programming_fields">
+          <p align=left>
+            <?php echo $MSG_Time_Limit?>
+            <input class="input input-mini" type=number min="0.001" max="300" step="0.001" name=time_limit size=20 value=1> sec
+            <?php echo $MSG_Memory_Limit?>
+            <input class="input input-mini" type=number min="1" max="2048" step="1" name=memory_limit size=20 value=128> MiB<br><br>
+          </p>
+        </div>
+        
+        <!-- 选择题选项区域 -->
+        <div id="choice_fields" style="display:none;">
+          <h4>选项</h4>
+          <div id="options_container">
+            <div class="option_item">
+              <label>A: </label>
+              <input type="text" name="option_content[]" class="form-control" style="width:90%; display:inline-block;" placeholder="选项A内容">
+              <button type="button" class="btn btn-danger btn-sm" onclick="removeOption(this)" style="display:none;">删除</button>
+            </div>
+            <div class="option_item">
+              <label>B: </label>
+              <input type="text" name="option_content[]" class="form-control" style="width:90%; display:inline-block;" placeholder="选项B内容">
+              <button type="button" class="btn btn-danger btn-sm" onclick="removeOption(this)" style="display:none;">删除</button>
+            </div>
+            <div class="option_item">
+              <label>C: </label>
+              <input type="text" name="option_content[]" class="form-control" style="width:90%; display:inline-block;" placeholder="选项C内容">
+              <button type="button" class="btn btn-danger btn-sm" onclick="removeOption(this)" style="display:none;">删除</button>
+            </div>
+            <div class="option_item">
+              <label>D: </label>
+              <input type="text" name="option_content[]" class="form-control" style="width:90%; display:inline-block;" placeholder="选项D内容">
+              <button type="button" class="btn btn-danger btn-sm" onclick="removeOption(this)" style="display:none;">删除</button>
+            </div>
+          </div>
+          <button type="button" class="btn btn-success btn-sm" onclick="addOption()">添加选项</button>
+          <br><br>
+          
+          <h4>正确答案</h4>
+          <div id="answer_container">
+            <!-- 单选/判断题用radio，多选用checkbox，动态生成 -->
+          </div>
+          <br><br>
+          
+          <h4>分值</h4>
+          <input type="number" name="score" class="form-control" min="1" max="100" value="10">
+          <br><br>
+          
+          <h4>答案解析</h4>
+          <textarea name="analysis" class="kindeditor" rows=5 cols=80></textarea>
+          <br><br>
+        </div>
         <p align=left>
           <?php echo "<h4>".$MSG_Description."(<64kB)</h4>"?>
 	  <textarea class="kindeditor" rows=13 name=description cols=80><span class='md auto_select'>&nbsp;
@@ -96,8 +152,33 @@
 	  <input type=radio name=spj value='2' ><?php echo $MSG_RTJ?>)<br>
         </p>
         <p align=left>
+          <?php echo "<h4>竞赛来源</h4>"?>
+          <select name="contest_source" class="form-control" style="width:100%;">
+            <option value="">无</option>
+            <option value="蓝桥杯">蓝桥杯</option>
+            <option value="CSP-J">CSP-J</option>
+            <option value="CSP-S">CSP-S</option>
+            <option value="GESP">GESP</option>
+            <option value="NOIP">NOIP</option>
+            <option value="其他">其他</option>
+          </select>
+          <br><br>
           <?php echo "<h4>".$MSG_SOURCE."</h4>"?>
           <textarea name=source style="width:100%;" rows=1><?php echo htmlentities($source,ENT_QUOTES,'UTF-8') ?></textarea><br><br>
+        </p>
+        <p align=left>
+          <?php echo "<h4>难度</h4>"?>
+          <select name="level" class="form-control">
+            <option value="1">1 - 入门</option>
+            <option value="2">2 - 入门</option>
+            <option value="3">3 - 基础</option>
+            <option value="4">4 - 基础</option>
+            <option value="5">5 - 进阶</option>
+            <option value="6">6 - 进阶</option>
+            <option value="7">7 - 竞赛</option>
+            <option value="8">8 - 竞赛</option>
+          </select>
+          <br><br>
         </p>
         <p align=left><?php echo "<h4>".$MSG_CONTEST."</h4>"?>
           <select name=contest_id>
@@ -143,6 +224,103 @@
   </div>
 <script src="<?php echo $OJ_CDN_URL."/template/bs3/"?>marked.min.js"></script>
 <script>
+  function toggleProblemFields() {
+    var problemType = document.getElementById('problem_type').value;
+    var programmingFields = document.getElementById('programming_fields');
+    var choiceFields = document.getElementById('choice_fields');
+    var answerContainer = document.getElementById('answer_container');
+    
+    if (problemType == 'programming') {
+      programmingFields.style.display = 'block';
+      choiceFields.style.display = 'none';
+    } else {
+      programmingFields.style.display = 'none';
+      choiceFields.style.display = 'block';
+      
+      // 生成答案选择项
+      answerContainer.innerHTML = '';
+      var options = document.querySelectorAll('#options_container .option_item input');
+      
+      if (problemType == 'choice_single' || problemType == 'judge') {
+        // 单选或判断题用radio
+        if (problemType == 'judge') {
+          // 判断题只有对/错两个选项
+          document.getElementById('options_container').innerHTML = `
+            <div class="option_item">
+              <label>A: </label>
+              <input type="text" name="option_content[]" class="form-control" style="width:90%; display:inline-block;" value="对" readonly>
+            </div>
+            <div class="option_item">
+              <label>B: </label>
+              <input type="text" name="option_content[]" class="form-control" style="width:90%; display:inline-block;" value="错" readonly>
+            </div>
+          `;
+          options = document.querySelectorAll('#options_container .option_item input');
+        }
+        
+        for (var i = 0; i < options.length; i++) {
+          var label = String.fromCharCode(65 + i); // A, B, C, D...
+          answerContainer.innerHTML += `
+            <label style="margin-right: 20px;">
+              <input type="radio" name="answer" value="${label}"> ${label}
+            </label>
+          `;
+        }
+      } else if (problemType == 'choice_multi') {
+        // 多选题用checkbox
+        for (var i = 0; i < options.length; i++) {
+          var label = String.fromCharCode(65 + i); // A, B, C, D...
+          answerContainer.innerHTML += `
+            <label style="margin-right: 20px;">
+              <input type="checkbox" name="answer[]" value="${label}"> ${label}
+            </label>
+          `;
+        }
+      }
+    }
+  }
+  
+  function addOption() {
+    var container = document.getElementById('options_container');
+    var optionCount = container.querySelectorAll('.option_item').length;
+    var label = String.fromCharCode(65 + optionCount); // A, B, C, D...
+    
+    var newOption = document.createElement('div');
+    newOption.className = 'option_item';
+    newOption.innerHTML = `
+      <label>${label}: </label>
+      <input type="text" name="option_content[]" class="form-control" style="width:90%; display:inline-block;" placeholder="选项${label}内容">
+      <button type="button" class="btn btn-danger btn-sm" onclick="removeOption(this)">删除</button>
+    `;
+    
+    container.appendChild(newOption);
+    
+    // 更新答案选项
+    toggleProblemFields();
+  }
+  
+  function removeOption(btn) {
+    var container = document.getElementById('options_container');
+    var optionItems = container.querySelectorAll('.option_item');
+    
+    if (optionItems.length <= 2) {
+      alert('至少需要2个选项');
+      return;
+    }
+    
+    btn.parentElement.remove();
+    
+    // 重新排序标签
+    optionItems = container.querySelectorAll('.option_item');
+    for (var i = 0; i < optionItems.length; i++) {
+      var label = String.fromCharCode(65 + i);
+      optionItems[i].querySelector('label').textContent = label + ': ';
+    }
+    
+    // 更新答案选项
+    toggleProblemFields();
+  }
+  
   function transform(){
         let height=document.body.clientHeight;
         let width=parseInt(document.body.clientWidth*0.6);
