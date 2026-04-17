@@ -227,6 +227,55 @@ document.addEventListener('keydown', function(e) {
         </div>
     </div>
   <?php }?>
+  <?php
+    $problem_type = $row['problem_type'];
+    $options = json_decode($row['options'], true);
+    if ($problem_type != 'programming' && !empty($options)) {
+  ?>
+  <div class="row">
+      <div class="column">
+          <h4 class="ui top attached block header">
+              <?php echo $problem_type == 'choice_single' ? '单选题' : ($problem_type == 'choice_multi' ? '多选题' : '判断题') ?>
+          </h4>
+          <div class="ui bottom attached segment font-content">
+              <form action="submit.php" method="post">
+                  <input type="hidden" name="problem_id" value="<?php echo $row['problem_id'] ?>">
+                  <?php if (isset($cid)) { ?>
+                  <input type="hidden" name="cid" value="<?php echo $cid ?>">
+                  <input type="hidden" name="pid" value="<?php echo $pid ?>">
+                  <?php } ?>
+                  <input type="hidden" name="problem_type" value="<?php echo $problem_type ?>">
+                  <?php foreach ($options as $option) { ?>
+                  <div style="margin-bottom: 10px;">
+                      <label style="font-weight: normal; cursor: pointer;">
+                          <input type="<?php echo $problem_type == 'choice_multi' ? 'checkbox' : 'radio' ?>"
+                                 name="<?php echo $problem_type == 'choice_multi' ? 'answer[]' : 'answer' ?>"
+                                 value="<?php echo $option['label'] ?>"
+                                 style="margin-right: 8px;">
+                          <strong><?php echo $option['label'] ?>.</strong> <?php echo $option['content'] ?>
+                      </label>
+                  </div>
+                  <?php } ?>
+                  <br>
+                  <button type="submit" class="ui primary button">提交答案</button>
+              </form>
+              <?php
+              if (isset($_GET['result'])) {
+                  $result = intval($_GET['result']);
+                  $correct = $result == 4;
+              ?>
+              <div class="ui <?php echo $correct ? 'positive' : 'negative' ?> message" style="margin-top: 15px;">
+                  <strong><?php echo $correct ? '回答正确！' : '回答错误！' ?></strong>
+                  正确答案：<?php echo htmlspecialchars($row['answer']) ?>
+                  <?php if (!empty($row['analysis'])) { ?>
+                  <br><br><strong>答案解析：</strong><br><?php echo $row['analysis'] ?>
+                  <?php } ?>
+              </div>
+              <?php } ?>
+          </div>
+      </div>
+  </div>
+  <?php } ?>
   <?php if($row['hint']||isset($_GET['spa'])){ ?>
     <div class="row">
         <div class="column">
