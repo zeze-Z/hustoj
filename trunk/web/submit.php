@@ -8,6 +8,14 @@ require_once "include/base64.php";
 
 // 处理选择题提交
 if (isset($_POST['problem_type']) && in_array($_POST['problem_type'], ['choice_single', 'choice_multi', 'judge'])) {
+    // ✅ 先检查登录状态
+    if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id']) || empty($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
+        $view_errors = "请先登录后再提交答案！";
+        require "template/" . $OJ_TEMPLATE . "/error.php";
+        exit(0);
+    }
+    $user_id = $_SESSION[$OJ_NAME . '_' . 'user_id'];
+    
     $problem_id = intval($_POST['problem_id']);
     $problem_type = $_POST['problem_type'];
     
@@ -38,13 +46,6 @@ if (isset($_POST['problem_type']) && in_array($_POST['problem_type'], ['choice_s
     // 比较答案
     $result = trim(strtoupper($user_answer)) == trim(strtoupper($correct_answer)) ? 4 : 6;
     
-    // 获取用户ID（session为空时用测试用户）
-    if (isset($_SESSION[$OJ_NAME . '_' . 'user_id']) && $_SESSION[$OJ_NAME . '_' . 'user_id'] != '') {
-        $user_id = $_SESSION[$OJ_NAME . '_' . 'user_id'];
-    } else {
-        // 无session时用匿名用户
-        $user_id = 'guest_' . substr(md5(uniqid()), 0, 8);
-    }
     $language = 99; // 特殊标记表示选择题
     $ip = $_SERVER['REMOTE_ADDR'];
     $len = strlen($user_answer);
