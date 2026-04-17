@@ -1,5 +1,14 @@
 <?php
-require_once("admin-header.php");
+require_once("../include/db_info.inc.php");
+// API 认证：返回 JSON 错误，不输出 HTML
+if (!isset($_SESSION[$OJ_NAME.'_'.'administrator']) &&
+    !isset($_SESSION[$OJ_NAME.'_'.'contest_creator']) &&
+    !isset($_SESSION[$OJ_NAME.'_'.'problem_editor']) &&
+    !isset($_SESSION[$OJ_NAME.'_'.'password_setter'])) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['ok' => false, 'error' => '请先登录'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 header('Content-Type: application/json; charset=utf-8');
 
 $action = $_GET['action'] ?? '';
