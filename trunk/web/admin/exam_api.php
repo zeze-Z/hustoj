@@ -1,35 +1,6 @@
 <?php
-// 独立API入口，直接连接数据库
+require_once("admin-header.php");
 header('Content-Type: application/json; charset=utf-8');
-
-$host = 'localhost';
-$dbname = 'jol';
-$user = 'hustoj';
-$pass = 'DPLVBLgxotC7ti8unvhwjvA7ECC1mC';
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    echo json_encode(['ok' => false, 'error' => 'DB connection failed: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
-function pdo_query($sql) {
-    global $pdo;
-    $args = func_get_args();
-    array_shift($args);
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($args);
-    $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    return $result;
-}
-
-function pdo_exec($sql) {
-    global $pdo;
-    $args = func_get_args();
-    array_shift($args);
-    return $pdo->prepare($sql)->execute($args) ? 1 : 0;
-}
 
 $action = $_GET['action'] ?? '';
 $result = ['ok' => false, 'error' => 'Unknown action'];
@@ -55,13 +26,12 @@ try {
 
             if ($eid > 0) {
                 $sql = "UPDATE exam SET title=?,description=?,total_score=?,duration_min=?,start_time=?,end_time=?,school_id=?,is_public=? WHERE exam_id=?";
-                pdo_exec($sql, $title, $description, $total_score, $duration_min, $start_time, $end_time, $school_id, $is_public, $eid);
+                pdo_query($sql, $title, $description, $total_score, $duration_min, $start_time, $end_time, $school_id, $is_public, $eid);
                 $result = ['ok' => true, 'eid' => $eid];
             } else {
                 $sql = "INSERT INTO exam(title,description,total_score,duration_min,start_time,end_time,school_id,is_public,creator_id) VALUES(?,?,?,?,?,?,?,?,?)";
-                pdo_exec($sql, $title, $description, $total_score, $duration_min, $start_time, $end_time, $school_id, $is_public, 'admin');
-                $new_id = $pdo->lastInsertId();
-                $result = ['ok' => true, 'eid' => intval($new_id)];
+                pdo_query($sql, $title, $description, $total_score, $duration_min, $start_time, $end_time, $school_id, $is_public, 'admin');
+                $result = ['ok' => true, 'eid' => intval(@reset(pdo_query("SELECT LAST_INSERT_ID()")[0]))];
             }
             break;
         }
@@ -106,7 +76,7 @@ try {
                 $prob = pdo_query("SELECT problem_type FROM problem WHERE problem_id=?", $pid);
                 $score = (!empty($prob) && $prob[0]['problem_type'] != 'programming') ? 5 : 10;
                 $num++;
-                pdo_exec("INSERT INTO exam_problem(exam_id, problem_id, score, num) VALUES(?,?,?,?)", $exam_id, $pid, $score, $num);
+                pdo_query("INSERT INTO exam_problem(exam_id, problem_id, score, num) VALUES(?,?,?,?)", $exam_id, $pid, $score, $num);
             }
             $result = ['ok' => true];
             break;
@@ -116,7 +86,7 @@ try {
             $data = json_decode(file_get_contents('php://input'), true);
             $ep_id = intval($data['ep_id'] ?? 0);
             if ($ep_id > 0) {
-                pdo_exec("DELETE FROM exam_problem WHERE ep_id=?", $ep_id);
+                pdo_query("DELETE FROM exam_problem WHERE ep_id=?", $ep_id);
                 $result = ['ok' => true];
             }
             break;
@@ -127,7 +97,7 @@ try {
             $ep_id = intval($data['ep_id'] ?? 0);
             $score = intval($data['score'] ?? 0);
             if ($ep_id > 0 && $score > 0) {
-                pdo_exec("UPDATE exam_problem SET score=? WHERE ep_id=?", $score, $ep_id);
+                pdo_query("UPDATE exam_problem SET score=? WHERE ep_id=?", $score, $ep_id);
                 $result = ['ok' => true];
             }
             break;
