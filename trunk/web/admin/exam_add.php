@@ -1,10 +1,5 @@
 <?php
-require_once("../include/common.php");
-$OJ_NAME = isset($OJ_NAME) ? $OJ_NAME : 'AI-OJ';
-if (!isset($_SESSION[$OJ_NAME . '_' . 'administrator']) && !isset($_SESSION[$OJ_NAME . '_' . 'contest_creator'])) {
-    header("Location: ../loginpage.php");
-    exit;
-}
+require_once("admin-header.php");
 $eid = intval($_GET['eid'] ?? 0);
 $exam = null;
 if ($eid > 0) {

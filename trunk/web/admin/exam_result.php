@@ -1,6 +1,5 @@
 <?php
-$allow_check = true;
-require_once("../admin-header.php");
+require_once("admin-header.php");
 $eid = intval($_GET['eid'] ?? 0);
 if (!$eid) exit("参数错误");
 
