@@ -6,6 +6,91 @@ require_once "include/my_func.inc.php";
 require_once "include/email.class.php";
 require_once "include/base64.php";
 
+// 处理选择题提交
+if (isset($_POST['problem_type']) && in_array($_POST['problem_type'], ['choice_single', 'choice_multi', 'judge'])) {
+    $problem_id = intval($_POST['problem_id']);
+    $problem_type = $_POST['problem_type'];
+    
+    // 获取正确答案
+    $sql = "SELECT answer, problem_type, options, score FROM problem WHERE problem_id = ?";
+    $result = pdo_query($sql, $problem_id);
+    if (empty($result)) {
+        $view_errors = "题目不存在！";
+        require "template/" . $OJ_TEMPLATE . "/error.php";
+        exit(0);
+    }
+    
+    $row = $result[0];
+    $correct_answer = $row['answer'];
+    $score = $row['score'];
+    
+    // 获取用户答案
+    $user_answer = "";
+    if ($problem_type == 'choice_single' || $problem_type == 'judge') {
+        $user_answer = isset($_POST['answer']) ? $_POST['answer'] : '';
+    } else if ($problem_type == 'choice_multi') {
+        if (isset($_POST['answer']) && is_array($_POST['answer'])) {
+            sort($_POST['answer']);
+            $user_answer = implode('', $_POST['answer']);
+        }
+    }
+    
+    // 比较答案
+    $result = trim(strtoupper($user_answer)) == trim(strtoupper($correct_answer)) ? 4 : 6;
+    
+    // 获取用户ID（session为空时用测试用户）
+    if (isset($_SESSION[$OJ_NAME . '_' . 'user_id']) && $_SESSION[$OJ_NAME . '_' . 'user_id'] != '') {
+        $user_id = $_SESSION[$OJ_NAME . '_' . 'user_id'];
+    } else {
+        // 无session时用匿名用户
+        $user_id = 'guest_' . substr(md5(uniqid()), 0, 8);
+    }
+    $language = 99; // 特殊标记表示选择题
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $len = strlen($user_answer);
+    
+    if (isset($_POST['cid']) && isset($_POST['pid'])) {
+        $cid = intval($_POST['cid']);
+        $pid = intval($_POST['pid']);
+        $sql = "INSERT INTO solution(problem_id, user_id, in_date, language, ip, code_length, contest_id, num, result, pass_rate) VALUES(?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?)";
+        $insert_id = pdo_query($sql, $problem_id, $user_id, $language, $ip, $len, $cid, $pid, $result, $result == 4 ? 100 : 0);
+        
+        // 更新比赛题目提交计数
+        $sql = "UPDATE contest_problem SET c_submit = c_submit + 1 WHERE contest_id = ? AND num = ?";
+        pdo_query($sql, $cid, $pid);
+        if ($result == 4) {
+            $sql = "UPDATE contest_problem SET c_accepted = c_accepted + 1 WHERE contest_id = ? AND num = ?";
+            pdo_query($sql, $cid, $pid);
+        }
+    } else {
+        $sql = "INSERT INTO solution(problem_id, user_id, in_date, language, ip, code_length, result, pass_rate) VALUES(?, ?, NOW(), ?, ?, ?, ?, ?)";
+        $insert_id = pdo_query($sql, $problem_id, $user_id, $language, $ip, $len, $result, $result == 4 ? 100 : 0);
+    }
+    
+    // 更新题目提交计数
+    $sql = "UPDATE problem SET submit = submit + 1 WHERE problem_id = ?";
+    pdo_query($sql, $problem_id);
+    if ($result == 4) {
+        $sql = "UPDATE problem SET accepted = accepted + 1 WHERE problem_id = ?";
+        pdo_query($sql, $problem_id);
+    }
+    
+    // 记录用户答案
+    $sql = "INSERT INTO `source_code_user`(`solution_id`,`source`) VALUES(?, ?)";
+    pdo_query($sql, $insert_id, $user_answer);
+    
+    $sql = "INSERT INTO `source_code`(`solution_id`,`source`) VALUES(?, ?)";
+    pdo_query($sql, $insert_id, $user_answer);
+    
+    // 重定向回题目页面并显示结果
+    $redirect_url = "problem.php?id=$problem_id&result=$result";
+    if (isset($_POST['cid']) && isset($_POST['pid'])) {
+        $redirect_url = "problem.php?cid=$cid&pid=$pid&result=$result";
+    }
+    header("Location: $redirect_url");
+    exit(0);
+}
+
 if (isset($OJ_CSRF) && $OJ_CSRF && $OJ_TEMPLATE == "bs3" && !isset($_SESSION[$OJ_NAME . '_' . 'http_judge']))
     require_once(dirname(__FILE__) . "/include/csrf_check.php");
 
