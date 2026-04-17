@@ -287,7 +287,16 @@
                         <a class="dropdown-item btn-sm" href="team_generate.php" target="main" title="<?php echo $MSG_HELP_TEAMGENERATOR?>"><i class="glyphicon glyphicon-share"></i> <?php echo $MSG_CONTEST."-".$MSG_TEAMGENERATOR?></a>
                         <a class="dropdown-item btn-sm" href="team_generate2.php" target="main" title="<?php echo $MSG_HELP_TEAMGENERATOR?>"><i class="glyphicon glyphicon-share"></i> <?php echo $MSG_CONTEST."-".$MSG_TEAMGENERATOR?></a>
                         <a class="dropdown-item btn-sm" href="offline_import.php" target="main" title="<?php echo $MSG_IMPORT.$MSG_CONTEST ?>"><i class="glyphicon glyphicon-import"></i> <?php echo $MSG_CONTEST."-".$MSG_IMPORT ?></a>
-    <?php }?>
+                    </div>
+                </div>
+
+                <div class="btn-group" role="menu">
+                    <button type="button" class="btn btn-secondary dropdown-toggle btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="glyphicon glyphicon-file"></i> 试卷管理 <span class="caret"></span>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item btn-sm" href="exam_list.php" target="main" title="试卷列表"><i class="glyphicon glyphicon-list"></i> 试卷列表</a>
+                        <a class="dropdown-item btn-sm" href="exam_add.php" target="main" title="创建试卷"><i class="glyphicon glyphicon-plus"></i> 创建试卷</a>
                     </div>
                 </div>
 
