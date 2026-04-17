@@ -55,11 +55,93 @@ include_once("kindeditor.php") ;
         </center>
       </p>
         <p align=left>
-          <?php echo $MSG_Time_Limit?>
-          <input class="input input-mini" type=number min="0.001" max="300" step="0.001" name=time_limit size=20 value="<?php echo $row['time_limit']?>"> sec
-          <?php echo $MSG_Memory_Limit?>
-          <input class="input input-mini" type=number min="1" max="1024" step="1" name=memory_limit size=20 value="<?php echo $row['memory_limit']?>"> MiB
+          <h4>题型</h4>
+          <select name="problem_type" id="problem_type" class="form-control" onchange="toggleProblemFields()">
+            <option value="programming" <?php if($row['problem_type'] == 'programming') echo 'selected'?>>编程题</option>
+            <option value="choice_single" <?php if($row['problem_type'] == 'choice_single') echo 'selected'?>>单选题</option>
+            <option value="choice_multi" <?php if($row['problem_type'] == 'choice_multi') echo 'selected'?>>多选题</option>
+            <option value="judge" <?php if($row['problem_type'] == 'judge') echo 'selected'?>>判断题</option>
+          </select>
+          <br><br>
         </p>
+        
+        <div id="programming_fields" <?php if($row['problem_type'] != 'programming') echo 'style="display:none;"'?>>
+          <p align=left>
+            <?php echo $MSG_Time_Limit?>
+            <input class="input input-mini" type=number min="0.001" max="300" step="0.001" name=time_limit size=20 value="<?php echo $row['time_limit']?>"> sec
+            <?php echo $MSG_Memory_Limit?>
+            <input class="input input-mini" type=number min="1" max="1024" step="1" name=memory_limit size=20 value="<?php echo $row['memory_limit']?>"> MiB
+          </p>
+        </div>
+        
+        <!-- 选择题选项区域 -->
+        <div id="choice_fields" <?php if($row['problem_type'] == 'programming') echo 'style="display:none;"'?>>
+          <h4>选项</h4>
+          <div id="options_container">
+            <?php
+            $options = json_decode($row['options'], true);
+            if (empty($options)) {
+              // 默认4个选项
+              $options = array(
+                array('label' => 'A', 'content' => ''),
+                array('label' => 'B', 'content' => ''),
+                array('label' => 'C', 'content' => ''),
+                array('label' => 'D', 'content' => '')
+              );
+            }
+            foreach ($options as $index => $option):
+              $readonly = ($row['problem_type'] == 'judge') ? 'readonly' : '';
+              $delete_style = ($row['problem_type'] == 'judge' || $index < 2) ? 'style="display:none;"' : '';
+            ?>
+            <div class="option_item">
+              <label><?php echo $option['label'] ?>: </label>
+              <input type="text" name="option_content[]" class="form-control" style="width:90%; display:inline-block;" 
+                     value="<?php echo htmlentities($option['content'], ENT_QUOTES, 'UTF-8') ?>" <?php echo $readonly ?>>
+              <button type="button" class="btn btn-danger btn-sm" onclick="removeOption(this)" <?php echo $delete_style ?>>删除</button>
+            </div>
+            <?php endforeach; ?>
+          </div>
+          <?php if ($row['problem_type'] != 'judge'): ?>
+          <button type="button" class="btn btn-success btn-sm" onclick="addOption()">添加选项</button>
+          <?php endif; ?>
+          <br><br>
+          
+          <h4>正确答案</h4>
+          <div id="answer_container">
+            <?php
+            $answer = $row['answer'];
+            if ($row['problem_type'] == 'choice_single' || $row['problem_type'] == 'judge') {
+              foreach ($options as $index => $option) {
+                $checked = ($answer == $option['label']) ? 'checked' : '';
+                echo "
+                <label style=\"margin-right: 20px;\">
+                  <input type=\"radio\" name=\"answer\" value=\"{$option['label']}\" $checked> {$option['label']}
+                </label>
+                ";
+              }
+            } else if ($row['problem_type'] == 'choice_multi') {
+              $answer_arr = str_split($answer);
+              foreach ($options as $index => $option) {
+                $checked = in_array($option['label'], $answer_arr) ? 'checked' : '';
+                echo "
+                <label style=\"margin-right: 20px;\">
+                  <input type=\"checkbox\" name=\"answer[]\" value=\"{$option['label']}\" $checked> {$option['label']}
+                </label>
+                ";
+              }
+            }
+            ?>
+          </div>
+          <br><br>
+          
+          <h4>分值</h4>
+          <input type="number" name="score" class="form-control" min="1" max="100" value="<?php echo $row['score'] ?>">
+          <br><br>
+          
+          <h4>答案解析</h4>
+          <textarea name="analysis" class="kindeditor" rows=5 cols=80><?php echo htmlentities($row['analysis'], ENT_QUOTES, 'UTF-8') ?></textarea>
+          <br><br>
+        </div>
       <p align=left>
         <?php echo "<h4>".$MSG_Description."</h4>"?>
         <textarea class="kindeditor" rows=13 name=description cols=80><?php echo htmlentities($row['description'],ENT_QUOTES,"UTF-8")?></textarea><br>
@@ -99,8 +181,32 @@ include_once("kindeditor.php") ;
       </p>
 
       <p align=left>
+        <?php echo "<h4>竞赛来源</h4>"?>
+        <select name="contest_source" class="form-control" style="width:100%;">
+          <option value="">无</option>
+          <option value="蓝桥杯" <?php if(str_contains($row['source'], "蓝桥杯")) echo "selected"?>>蓝桥杯</option>
+          <option value="CSP-J" <?php if(str_contains($row['source'], "CSP-J")) echo "selected"?>>CSP-J</option>
+          <option value="CSP-S" <?php if(str_contains($row['source'], "CSP-S")) echo "selected"?>>CSP-S</option>
+          <option value="GESP" <?php if(str_contains($row['source'], "GESP")) echo "selected"?>>GESP</option>
+          <option value="NOIP" <?php if(str_contains($row['source'], "NOIP")) echo "selected"?>>NOIP</option>
+          <option value="其他" <?php if(str_contains($row['source'], "其他")) echo "selected"?>>其他</option>
+        </select>
+        <br><br>
         <?php echo "<h4>".$MSG_SOURCE."</h4>"?>
         <textarea name=source style="width:100%;" rows=1><?php echo htmlentities($row['source'],ENT_QUOTES,"UTF-8")?></textarea><br>
+
+        <?php echo "<h4>难度</h4>"?>
+        <select name="level" class="form-control">
+          <option value="1" <?php if($row['level']==1) echo "selected"?>>1 - 入门</option>
+          <option value="2" <?php if($row['level']==2) echo "selected"?>>2 - 入门</option>
+          <option value="3" <?php if($row['level']==3) echo "selected"?>>3 - 基础</option>
+          <option value="4" <?php if($row['level']==4) echo "selected"?>>4 - 基础</option>
+          <option value="5" <?php if($row['level']==5) echo "selected"?>>5 - 进阶</option>
+          <option value="6" <?php if($row['level']==6) echo "selected"?>>6 - 进阶</option>
+          <option value="7" <?php if($row['level']==7) echo "selected"?>>7 - 竞赛</option>
+          <option value="8" <?php if($row['level']==8) echo "selected"?>>8 - 竞赛</option>
+        </select>
+        <br><br>
 
         <?php echo "<h4>".$MSG_REMOTE_OJ."</h4>"?>
         <input name=remote_oj value='<?php echo htmlentities((string)$row['remote_oj'],ENT_QUOTES,"UTF-8")?>' placeholder='<?php echo $MSG_HELP_LOCAL_EMPTY ?>' >
@@ -136,6 +242,116 @@ include_once("kindeditor.php") ;
 
 <script src="<?php echo $OJ_CDN_URL."/template/bs3/"?>marked.min.js"></script>
 <script>
+  function str_split(str) {
+    return str.split('');
+  }
+  
+  function toggleProblemFields() {
+    var problemType = document.getElementById('problem_type').value;
+    var programmingFields = document.getElementById('programming_fields');
+    var choiceFields = document.getElementById('choice_fields');
+    var answerContainer = document.getElementById('answer_container');
+    var addOptionBtn = document.querySelector('#choice_fields .btn-success');
+    
+    if (problemType == 'programming') {
+      programmingFields.style.display = 'block';
+      choiceFields.style.display = 'none';
+    } else {
+      programmingFields.style.display = 'none';
+      choiceFields.style.display = 'block';
+      
+      // 生成答案选择项
+      answerContainer.innerHTML = '';
+      var options = document.querySelectorAll('#options_container .option_item input');
+      var currentAnswer = '<?php echo $row['answer'] ?>';
+      var currentAnswerArr = str_split(currentAnswer);
+      
+      if (problemType == 'choice_single' || problemType == 'judge') {
+        // 单选或判断题用radio
+        if (problemType == 'judge') {
+          // 判断题只有对/错两个选项
+          document.getElementById('options_container').innerHTML = `
+            <div class="option_item">
+              <label>A: </label>
+              <input type="text" name="option_content[]" class="form-control" style="width:90%; display:inline-block;" value="对" readonly>
+            </div>
+            <div class="option_item">
+              <label>B: </label>
+              <input type="text" name="option_content[]" class="form-control" style="width:90%; display:inline-block;" value="错" readonly>
+            </div>
+          `;
+          options = document.querySelectorAll('#options_container .option_item input');
+          if (addOptionBtn) addOptionBtn.style.display = 'none';
+        } else {
+          if (addOptionBtn) addOptionBtn.style.display = 'block';
+        }
+        
+        for (var i = 0; i < options.length; i++) {
+          var label = String.fromCharCode(65 + i); // A, B, C, D...
+          var checked = (currentAnswer == label) ? 'checked' : '';
+          answerContainer.innerHTML += `
+            <label style="margin-right: 20px;">
+              <input type="radio" name="answer" value="${label}" ${checked}> ${label}
+            </label>
+          `;
+        }
+      } else if (problemType == 'choice_multi') {
+        // 多选题用checkbox
+        if (addOptionBtn) addOptionBtn.style.display = 'block';
+        for (var i = 0; i < options.length; i++) {
+          var label = String.fromCharCode(65 + i); // A, B, C, D...
+          var checked = currentAnswerArr.includes(label) ? 'checked' : '';
+          answerContainer.innerHTML += `
+            <label style="margin-right: 20px;">
+              <input type="checkbox" name="answer[]" value="${label}" ${checked}> ${label}
+            </label>
+          `;
+        }
+      }
+    }
+  }
+  
+  function addOption() {
+    var container = document.getElementById('options_container');
+    var optionCount = container.querySelectorAll('.option_item').length;
+    var label = String.fromCharCode(65 + optionCount); // A, B, C, D...
+    
+    var newOption = document.createElement('div');
+    newOption.className = 'option_item';
+    newOption.innerHTML = `
+      <label>${label}: </label>
+      <input type="text" name="option_content[]" class="form-control" style="width:90%; display:inline-block;" placeholder="选项${label}内容">
+      <button type="button" class="btn btn-danger btn-sm" onclick="removeOption(this)">删除</button>
+    `;
+    
+    container.appendChild(newOption);
+    
+    // 更新答案选项
+    toggleProblemFields();
+  }
+  
+  function removeOption(btn) {
+    var container = document.getElementById('options_container');
+    var optionItems = container.querySelectorAll('.option_item');
+    
+    if (optionItems.length <= 2) {
+      alert('至少需要2个选项');
+      return;
+    }
+    
+    btn.parentElement.remove();
+    
+    // 重新排序标签
+    optionItems = container.querySelectorAll('.option_item');
+    for (var i = 0; i < optionItems.length; i++) {
+      var label = String.fromCharCode(65 + i);
+      optionItems[i].querySelector('label').textContent = label + ': ';
+    }
+    
+    // 更新答案选项
+    toggleProblemFields();
+  }
+  
   function transform(){
         let height=document.body.clientHeight;
         let width=parseInt(document.body.clientWidth*0.6);
@@ -260,6 +476,17 @@ include_once("kindeditor.php") ;
       $remote_oj= $_POST['remote_oj'];
       $remote_id = $_POST['remote_id'];
       $spj = $_POST['spj'];
+      
+      // 添加竞赛来源到source字段
+      if(isset($_POST['contest_source']) && $_POST['contest_source']!=""){
+          $contest_source = $_POST['contest_source'];
+          if($source != "") $source .= " ";
+          $source .= $contest_source;
+      }
+      
+      // 获取难度
+      $level = intval($_POST['level']);
+      if($level < 1 || $level >8) $level = 1;
 
       if (false) {
         $title = stripslashes($title);
@@ -303,15 +530,54 @@ include_once("kindeditor.php") ;
 
       $spj = intval($spj);
 
+      // 处理选择题相关字段
+      $problem_type = isset($_POST['problem_type']) ? $_POST['problem_type'] : 'programming';
+      $options = array();
+      $answer = '';
+      $analysis = '';
+      $score = 0;
+
+      if ($problem_type != 'programming') {
+          // 处理选项
+          if (isset($_POST['option_content']) && is_array($_POST['option_content'])) {
+              foreach ($_POST['option_content'] as $index => $content) {
+                  if (!empty($content)) {
+                      $label = chr(65 + $index);
+                      $options[] = array(
+                          'label' => $label,
+                          'content' => $content
+                      );
+                  }
+              }
+          }
+          
+          // 处理答案
+          if ($problem_type == 'choice_single' || $problem_type == 'judge') {
+              $answer = isset($_POST['answer']) ? $_POST['answer'] : '';
+          } else if ($problem_type == 'choice_multi') {
+              if (isset($_POST['answer']) && is_array($_POST['answer'])) {
+                  sort($_POST['answer']);
+                  $answer = implode('', $_POST['answer']);
+              }
+          }
+          
+          // 处理解析和分值
+          $analysis = isset($_POST['analysis']) ? $_POST['analysis'] : '';
+          $score = isset($_POST['score']) ? intval($_POST['score']) : 0;
+      }
+
+      // 转换选项为JSON
+      $options_json = !empty($options) ? json_encode($options, JSON_UNESCAPED_UNICODE) : null;
+
       // 获取学校和公开设置
       $school_id = isset($_POST['school_id']) && $_POST['school_id'] !== '' ? intval($_POST['school_id']) : null;
       $is_public = isset($_POST['is_public']) ? 1 : 0;
 
-      $sql = "UPDATE `problem` SET `title`=?,`time_limit`=?,`memory_limit`=?, `description`=?,`input`=?,`output`=?,`sample_input`=?,`sample_output`=?,`hint`=?,`source`=?,`spj`=?,remote_oj=?,remote_id=?,`in_date`=NOW(),`school_id`=?,`is_public`=? WHERE `problem_id`=?";
+      $sql = "UPDATE `problem` SET `title`=?,`time_limit`=?,`memory_limit`=?, `description`=?,`input`=?,`output`=?,`sample_input`=?,`sample_output`=?,`hint`=?,`source`=?,`spj`=?,remote_oj=?,remote_id=?,`in_date`=NOW(),`school_id`=?,`is_public`=?,`level`=?,`problem_type`=?,`options`=?,`answer`=?,`analysis`=?,`score`=? WHERE `problem_id`=?";
 
       //echo "SQL: " . $sql . "<br>";
       //echo "Params: remote_oj=[$remote_oj] (" . strlen($remote_oj) . "), remote_id=[$remote_id] (" . strlen($remote_id) . ")<br>"; 
-      @pdo_query($sql,$title,$time_limit,$memory_limit,$description,$input,$output,$sample_input,$sample_output,$hint,$source,$spj,$remote_oj,$remote_id,$school_id,$is_public,$id);
+      @pdo_query($sql,$title,$time_limit,$memory_limit,$description,$input,$output,$sample_input,$sample_output,$hint,$source,$spj,$remote_oj,$remote_id,$school_id,$is_public,$level,$problem_type,$options_json,$answer,$analysis,$score,$id);
   
       echo "Edit OK!<br>";
       echo "<a href='../problem.php?id=$id'>See The Problem!</a>";
