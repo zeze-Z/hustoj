@@ -43,8 +43,8 @@
                   $url!='lostpassword2.php'&&
                   $url!='registerpage.php'
                   ) && !isset($_SESSION[$OJ_NAME.'_'.'user_id'])){
-
-           header("location:".$path_fix."loginpage.php");
+           $redirect = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'index.php';
+           header("location:".$path_fix."loginpage.php?redirect=".urlencode($redirect));
            exit();
         }
 
@@ -54,7 +54,6 @@
             'problemset.php',     // 题目列表
             'problem.php',        // 题目详情（只读）
             'category.php',       // 题目分类
-            'contest.php',        // 比赛列表
             'viewnews.php',       // 新闻详情
             'faqs.php',          // 常见问题
             'registerpage.php',   // 注册页
@@ -67,7 +66,8 @@
         // 游客模式访问限制
         if(isset($OJ_GUEST) && $OJ_GUEST && !isset($_SESSION[$OJ_NAME.'_'.'user_id']) && !in_array($url, $guest_whitelist)) {
             // 游客尝试访问非白名单页面，引导到登录页
-            header("location:".$path_fix."loginpage.php");
+            $redirect = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'index.php';
+            header("location:".$path_fix."loginpage.php?redirect=".urlencode($redirect));
             exit();
         }
 
