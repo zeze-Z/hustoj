@@ -7,11 +7,20 @@
 
 ## 目录结构
 ```
-trunk/web/
-├── admin/           # 管理后台 (menu2.php 是菜单)
-├── include/          # 核心函数库 (school.php)
-├── template/syzoj/   # 前端模板
-└── lang/            # 语言包 (cn.php, en.php)
+# 根目录结构
+├── db/                  # 数据库脚本归档目录（SQL变更必须归档到此，支持幂等）
+│   ├── course_module_init.sql           # 课程模块初始化SQL
+│   ├── V1.1_20260419_choice_and_exam.sql # 选择题+考试模块合并SQL
+│   └── RELEASE_STEPS.md                 # 发布流程与冒烟测试
+└── trunk/web/
+    ├── admin/           # 管理后台 (menu2.php 是菜单)
+    │   ├── exam_del.php  # 新增：试卷软删除功能
+    │   └── exam_result.php # 修改：管理端成绩页，支持编程题自动算分
+    ├── include/          # 核心函数库 (school.php)
+    ├── template/syzoj/   # 前端模板
+    ├── lang/            # 语言包 (cn.php, en.php)
+    ├── exam_do.php      # 修改：答题提交逻辑，支持编程题关联考试
+    └── exam_result.php  # 新增：学生端成绩查询页，支持编程题自动算分
 ```
 
 ## 常用 Git 命令
@@ -48,6 +57,20 @@ $MSG_EDIT = "编辑";
 - users.school_id: 用户所属学校
 - problem.school_id / is_public: 题目归属
 - contest.school_id / is_public: 比赛归属
+
+### SQL 变更归档规范（强制）
+
+**所有涉及 SQL 的变更必须归档到 `db/` 目录下，不得遗漏。**
+
+1. **文件命名**：`V{版本号}_{日期}_{功能描述}.sql`
+   - 示例：`V1.1_20260419_choice_and_exam.sql`
+2. **SQL 必须支持幂等执行**（可重入），同一文件执行多次不报错：
+   - `ADD COLUMN` → 用 `information_schema.COLUMNS` 判断列是否存在，存在则 SKIP
+   - `ADD INDEX / UNIQUE KEY` → 用 `information_schema.STATISTICS` 判断索引是否存在
+   - `MODIFY COLUMN` → 天然幂等，直接执行
+   - `CREATE TABLE` → 使用 `IF NOT EXISTS`
+3. **文件末尾附回滚 SQL**（注释形式），按逆序排列
+4. **更新 `db/RELEASE_STEPS.md`**：同步发布流程和冒烟测试用例
 
 ## 配置文件
 - `include/db_info.inc.php`: 数据库配置
