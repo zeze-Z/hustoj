@@ -14,16 +14,61 @@ foreach ($problems as $p) $total_score += intval($p['score']);
 // 查所有参考学生
 $attendees = pdo_query("SELECT a.*, u.nick FROM exam_attend a LEFT JOIN users u ON a.user_id=u.user_id WHERE a.exam_id=? ORDER BY a.submitted DESC, a.user_id", $eid);
 
+// 获取试卷所有题目
+$problems = pdo_query("SELECT ep.*, p.problem_type FROM exam_problem ep JOIN problem p ON ep.problem_id=p.problem_id WHERE ep.exam_id=? ORDER BY ep.num", $eid);
+$total_score = 0;
+foreach ($problems as $p) $total_score += intval($p['score']);
+
 $results = [];
 foreach ($attendees as $att) {
-    $er_rows = pdo_query("SELECT problem_id, is_correct, score FROM exam_result WHERE exam_id=? AND user_id=?", $eid, $att['user_id']);
-    $er_map = [];
-    $obt = 0;
-    foreach ($er_rows as $er) {
-        $er_map[$er['problem_id']] = $er;
-        $obt += intval($er['score']);
+    $user_id = $att['user_id'];
+    $total_obtained = intval($att['total_score']);
+    $is_calculated = intval($att['score_calculated']);
+
+    // 未计算则动态计算
+    if ($is_calculated == 0) {
+        pdo_query("UPDATE exam_attend SET score_calculated=2 WHERE exam_id=? AND user_id=?", $eid, $user_id);
+        $er_rows = pdo_query("SELECT problem_id, is_correct, score FROM exam_result WHERE exam_id=? AND user_id=?", $eid, $user_id);
+        $er_map = [];
+        foreach ($er_rows as $er) $er_map[$er['problem_id']] = $er;
+
+        $obt = 0;
+        $has_pending_judge = false;
+        foreach ($problems as $p) {
+            $pid = $p['problem_id'];
+            if ($p['problem_type'] == 'programming') {
+                // 编程题查最高分
+                $sol = pdo_query("SELECT result, pass_rate FROM solution WHERE exam_id=? AND user_id=? AND problem_id=? ORDER BY result DESC, pass_rate DESC LIMIT 1", $eid, $user_id, $pid);
+                if (!empty($sol)) {
+                    $res = $sol[0];
+                    if (intval($res['result']) < 4) {
+                        $has_pending_judge = true;
+                    } else if (intval($res['result']) == 4) {
+                        $obt += intval($p['score']);
+                    } else {
+                        $pass_rate = floatval($res['pass_rate']);
+                        $obt += intval($p['score'] * $pass_rate / 100);
+                    }
+                }
+            } else {
+                // 客观题直接读成绩
+                $obt += intval($er_map[$pid]['score'] ?? 0);
+            }
+        }
+        $total_obtained = $obt;
+        // 缓存结果
+        if (!$has_pending_judge) {
+            pdo_query("UPDATE exam_attend SET total_score=?, score_calculated=1 WHERE exam_id=? AND user_id=?", $obt, $eid, $user_id);
+        } else {
+            pdo_query("UPDATE exam_attend SET score_calculated=0 WHERE exam_id=? AND user_id=?", $eid, $user_id);
+        }
     }
-    $results[] = ['att' => $att, 'map' => $er_map, 'obt' => $obt];
+
+    // 获取详情用于展示
+    $er_rows = pdo_query("SELECT problem_id, is_correct, score FROM exam_result WHERE exam_id=? AND user_id=?", $eid, $user_id);
+    $er_map = [];
+    foreach ($er_rows as $er) $er_map[$er['problem_id']] = $er;
+    $results[] = ['att' => $att, 'map' => $er_map, 'obt' => $total_obtained];
 }
 ?>
 <!DOCTYPE html>

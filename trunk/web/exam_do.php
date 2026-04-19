@@ -3,6 +3,12 @@ require_once "include/db_info.inc.php";
 require_once "include/my_func.inc.php";
 $OJ_NAME = isset($OJ_NAME) ? $OJ_NAME : 'AI-OJ';
 
+// 登录检查
+if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
+    header("Location: loginpage.php");
+    exit;
+}
+
 $eid = intval($_POST['eid'] ?? 0);
 if (!$eid) exit("参数错误");
 
@@ -38,8 +44,11 @@ foreach ($problems as $p) {
         $lang = 0; // C++
         $ip = $_SERVER['REMOTE_ADDR'];
         $len = strlen($code);
-        $sql = "INSERT INTO solution(problem_id,user_id,in_date,language,ip,code_length,result) VALUES(?,?,NOW(),?,?,?,0)";
-        pdo_query($sql, $pid, $user_id, $lang, $ip, $len);
+        $sql = "INSERT INTO solution(problem_id,user_id,in_date,language,ip,code_length,result,exam_id) VALUES(?,?,NOW(),?,?,?,0,?)";
+        pdo_query($sql, $pid, $user_id, $lang, $ip, $len, $eid);
+
+        // 提交新代码后重置成绩计算状态，下次查询自动重算
+        pdo_query("UPDATE exam_attend SET score_calculated=0 WHERE exam_id=? AND user_id=?", $eid, $user_id);
         // 更新exam_result（编程题需要等待判题）
         $is_correct = 'N';
         $score = 0;

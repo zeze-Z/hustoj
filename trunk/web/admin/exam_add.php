@@ -69,10 +69,10 @@ if ($eid > 0) {
                 <select name="school_id">
                     <option value="">— 全部学校 —</option>
                     <?php
-                    $schools = pdo_query("SELECT school_id, school_name FROM school ORDER BY school_id");
+                    $schools = pdo_query("SELECT id, name FROM school ORDER BY id");
                     foreach ($schools as $s) {
-                        $sel = ($exam && $exam['school_id'] == $s['school_id']) ? 'selected' : '';
-                        echo "<option value='{$s['school_id']}' $sel>{$s['school_name']}</option>";
+                        $sel = ($exam && $exam['school_id'] == $s['id']) ? 'selected' : '';
+                        echo "<option value='{$s['id']}' $sel>{$s['name']}</option>";
                     }
                     ?>
                 </select>

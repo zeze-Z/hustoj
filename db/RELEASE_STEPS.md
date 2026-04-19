@@ -8,7 +8,9 @@
 
 | 版本 | 日期 | 功能 |
 |------|------|------|
-| V1.0 | — | 初始版本（基础OJ） |
+| V1.0 | 2026-03-17 | 初始版本（基础OJ） |
+| V1.0 | 2026-03-31 | 课件商城模块 |
+| V1.0 | 2026-04-11 | 多学校隔离功能 |
 | V1.1 | 2026-04-19 | 选择题功能 + 考试模块（合并发布） |
 
 ---
@@ -26,19 +28,43 @@
 
 ### Step 1 — 数据库变更
 
-> 一个 SQL 文件包含全部变更，按顺序执行即可
+> 按版本时间顺序执行 SQL 文件
 
 ```bash
+# 1. 基础OJ初始化（首次部署执行）
+mysql -u root -p < db/V1.0_20260317_db_init.sql
+
+# 2. 课件商城模块
+mysql -u root -p jol < db/V1.0_20260331_course_module.sql
+
+# 3. 多学校隔离功能
+mysql -u root -p jol < db/V1.0_20260411_school_mode.sql
+
+# 4. 选择题功能 + 考试模块
 mysql -u root -p jol < db/V1.1_20260419_choice_and_exam.sql
 ```
 
 **验证：**
 ```sql
--- 新增表
+-- 基础表
+SHOW TABLES IN jol LIKE 'problem';
+SHOW TABLES IN jol LIKE 'solution';
+
+-- 课件商城模块
+SHOW TABLES IN jol LIKE 'course%';
+-- 预期输出：course, course_subject, course_order
+
+-- 多学校隔离功能
+SHOW TABLES IN jol LIKE 'school';
+DESCRIBE jol.users school_id;       -- int(11)
+DESCRIBE jol.problem school_id;     -- int(11)
+DESCRIBE jol.problem is_public;     -- tinyint(4)
+
+-- 考试模块
 SHOW TABLES IN jol LIKE 'exam%';
 -- 预期输出：exam, exam_attend, exam_problem, exam_result
 
--- problem 表新字段
+-- 选择题功能
 DESCRIBE jol.problem problem_type;   -- ENUM('programming','choice_single','choice_multi','judge')
 DESCRIBE jol.problem options;        -- longtext
 DESCRIBE jol.problem answer;         -- varchar(500)
@@ -157,5 +183,8 @@ trunk/web/template/syzoj/problem.php # 前端选择题展示
 
 ### 数据库
 ```
-db/V1.1_20260419_choice_and_exam.sql  # 合并SQL：选择题 + 考试模块
+db/V1.0_20260317_db_init.sql          # 基础OJ初始化
+ db/V1.0_20260331_course_module.sql    # 课件商城模块
+ db/V1.0_20260411_school_mode.sql      # 多学校隔离功能
+ db/V1.1_20260419_choice_and_exam.sql  # 合并SQL：选择题 + 考试模块
 ```

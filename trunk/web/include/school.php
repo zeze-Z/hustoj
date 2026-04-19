@@ -149,11 +149,11 @@ function getSchoolSQLFilter($tableAlias = '', $idField = 'school_id', $publicFie
 
     // 未分配学校的用户，只能看公开数据
     if (!$school_id) {
-        return " AND ({$prefix}{$publicField} = 1)";
+        return " AND ({$prefix}{$publicField} = 'Y')";
     }
 
     // 过滤：本校数据 + 公开数据 + 无学校归属的数据（超管添加的题目）
-    return " AND ({$prefix}{$idField} = {$school_id} OR {$prefix}{$publicField} = 1 OR {$prefix}{$idField} IS NULL)";
+    return " AND ({$prefix}{$idField} = {$school_id} OR {$prefix}{$publicField} = 'Y' OR {$prefix}{$idField} IS NULL)";
 }
 
 /**

@@ -1,12 +1,27 @@
 <?php
 require_once "include/db_info.inc.php";
 require_once "include/my_func.inc.php";
+require_once "include/school.php";
+
+// 登录检查
+if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
+    header("Location: loginpage.php");
+    exit;
+}
+
 $eid = intval($_GET['eid'] ?? 0);
 if (!$eid) exit("参数错误");
 
 $exam = pdo_query("SELECT * FROM exam WHERE exam_id=?", $eid);
 if (empty($exam)) exit("试卷不存在");
 $exam = $exam[0];
+
+// 权限检查
+if (!canAccessData($exam['school_id'], $exam['is_public'] == 'Y')) {
+    $view_errors = "您无权访问该试卷";
+    require "template/" . $OJ_TEMPLATE . "/error.php";
+    exit;
+}
 
 $now = date('Y-m-d H:i:s');
 $is_started = $now >= $exam['start_time'];
@@ -133,10 +148,21 @@ $OJ_NAME = isset($OJ_NAME) ? $OJ_NAME : 'AI-OJ';
     function updateTimer() {
         var now = new Date();
         var diff = actualEnd - now;
-        if (diff <= 0) { document.getElementById('timer').textContent = '00:00'; return; }
+        if (diff <= 0) {
+            document.getElementById('timer').textContent = '00:00';
+            document.getElementById('timer-box').className = 'alert-box alert-warning';
+            document.getElementById('timer-box').innerHTML = '⏰ 考试时间到，正在自动交卷...';
+            document.forms['exam-form'].submit();
+            return;
+        }
         var m = Math.floor(diff / 60000);
         var s = Math.floor((diff % 60000) / 1000);
         document.getElementById('timer').textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+
+        // 最后5分钟提醒
+        if (m == 5 && s == 0) {
+            alert('⏰ 考试还有5分钟结束，请尽快完成作答并交卷。');
+        }
     }
     updateTimer();
     setInterval(updateTimer, 1000);

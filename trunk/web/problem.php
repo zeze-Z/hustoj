@@ -12,6 +12,13 @@ require_once('./include/setlang.php');
 if (file_exists('./include/school.php')) {
     require_once('./include/school.php');
 }
+
+// 游客访问题目页面跳转到登录页
+if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id']) || empty($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
+    $redirect = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'index.php';
+    header("Location: loginpage.php?redirect=" . urlencode($redirect));
+    exit(0);
+}
 if (isset($OJ_LANG)) {
     require_once("./lang/$OJ_LANG.php");
 }
