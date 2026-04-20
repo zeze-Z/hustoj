@@ -147,10 +147,23 @@ SET @sql = IF(@col_exists=0,
     'SELECT ''[SKIP] solution.exam_id 已存在'' AS msg');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
+-- 1.5 problem 表扩大 title 字段
+-- -------------------------------------------------------
+-- 选择题题目含代码片段时超过 varchar(200) 限制，改为 TEXT
+-- 幂等：仅当当前类型仍为 VARCHAR 时才修改（TEXT→VARCHAR 无此风险，VARCHAR→TEXT 才需要）
+SET @col_type = (SELECT COLUMN_TYPE FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='problem' AND COLUMN_NAME='title');
+SET @sql = IF(@col_type LIKE 'varchar%' AND @col_type != 'text',
+    'ALTER TABLE problem MODIFY COLUMN title TEXT NOT NULL',
+    'SELECT CONCAT(''[SKIP] problem.title 已是 '', @col_type) AS msg');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
 -- =============================================
 -- 回滚 SQL（如需回滚执行以下语句，按逆序执行）
 -- =============================================
 --
+-- -- 1.5 回滚（谨慎：TEXT 无法直接改回带长度限制的 VARCHAR，需重建表）
+-- ALTER TABLE problem MODIFY COLUMN title VARCHAR(200) NOT NULL;
 -- ALTER TABLE solution DROP COLUMN exam_id;
 -- ALTER TABLE exam_result DROP INDEX uk_exam_user_problem;
 -- DROP TABLE IF EXISTS exam_result;
