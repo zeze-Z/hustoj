@@ -200,6 +200,19 @@ if ($rows === -1 || $rows === false) {
     exit(0);
 }
 
+// 飞书通知：新用户注册
+require_once(dirname(__FILE__)."/include/feishu_notify.php");
+feishu_notify(
+    '新用户注册',
+    "**用户ID**: $user_id\n" .
+    "**昵称**: $nick\n" .
+    "**学校**: $school" . ($school_id ? " (ID:$school_id)" : "") . "\n" .
+    "**邮箱**: $email\n" .
+    "**IP**: $ip\n" .
+    ($defunct === 'Y' ? "**状态**: 待审核" : "**状态**: 自动通过"),
+    'info'
+);
+
 //发送激活邮件
 if (isset($OJ_EMAIL_CONFIRM) && $OJ_EMAIL_CONFIRM) {
     $link = 'http://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['REQUEST_URI']) . "active.php?code=" . $_SESSION[$OJ_NAME . '_' . 'activecode'];

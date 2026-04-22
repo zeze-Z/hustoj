@@ -149,6 +149,9 @@ static $OJ_SaaS_ENABLE=false;
 static $OJ_MENU_NEWS=false;
 static $OJ_MENU_DROPDOWN=false;
 
+// 飞书机器人 Webhook 通知（平台运营消息推送）
+static $FEISHU_WEBHOOK_URL = 'https://open.feishu.cn/open-apis/bot/v2/hook/0177bbdf-b189-4bd0-8589-1cff2b5f16aa';
+
 // 支付宝电脑网站支付配置（需要填写实际值）
 static $ALIPAY_APP_ID = '9021000162658784';           // 支付宝应用ID
 static $ALIPAY_PRIVATE_KEY = 'zfb_sy';       // 商户应用私钥（注意：保留完整的PKCS#8格式，包括-----BEGIN PRIVATE KEY-----）

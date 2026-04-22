@@ -33,6 +33,18 @@ if (isset($_POST['do'])) {
         $msg = $_SESSION[$OJ_NAME.'_user_id']." $MSG_ADD $rightstr [$valuestr] $MSG_PRIVILEGE -> $user_id @  ".date('Y-m-d h:i:s a', time());
         $msg .="\n\nmessage from site: $link";
         if(!empty($user_id)) $rows = pdo_query($sql,$user_id,$rightstr,$valuestr);
+
+        // 飞书通知：权限变更
+        require_once(dirname(__FILE__)."/../include/feishu_notify.php");
+        feishu_notify(
+            '权限变更',
+            "**操作**: 授予权限\n" .
+            "**目标用户**: " . htmlentities($user_id, ENT_QUOTES, 'UTF-8') . "\n" .
+            "**权限**: $rightstr\n" .
+            "**值**: $valuestr\n" .
+            "**操作人**: " . ($_SESSION[$OJ_NAME.'_user_id'] ?? 'system'),
+            'warn'
+        );
         if ($OJ_ADMIN=="root@localhost"){
                 $sql="select email from users where user_id=? ";
                 $OJ_ADMIN=pdo_query($sql,$_SESSION[$OJ_NAME.'_user_id'])[0][0];

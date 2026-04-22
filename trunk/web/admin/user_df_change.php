@@ -23,6 +23,16 @@ if ($row[0]=='N'){
 }else{
         $sql="UPDATE `users` SET `defunct`='N' WHERE `user_id`=?";
         pdo_query($sql,$user_id);
+
+        // 飞书通知：用户审核通过
+        require_once(dirname(__FILE__)."/../include/feishu_notify.php");
+        feishu_notify(
+            '用户审核通过',
+            "**用户ID**: $user_id\n" .
+            "**邮箱**: " . ($row['email'] ?? '') . "\n" .
+            "**操作人**: " . ($_SESSION[$OJ_NAME.'_user_id'] ?? 'system'),
+            'info'
+        );
         if(isset($OJ_SaaS_ENABLE) && $OJ_SaaS_ENABLE && $domain == $DOMAIN ){
                 create_subdomain($user_id,'syzoj',3);
                 $address=$row['email'];
