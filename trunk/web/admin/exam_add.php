@@ -95,7 +95,16 @@ if ($eid > 0) {
     <div class="block header" style="margin-top:20px;"><h3>添加题目</h3></div>
     <div class="attached segment">
         <div class="form-group">
-            <input id="search-kw" placeholder="搜索题目标题或来源（如CSP/GESP）" style="width:250px;">
+            <input id="search-kw" placeholder="搜索题目标题（如A+B）" style="width:200px;">
+            <select id="filter-source" style="width:130px; display:inline;">
+                <option value="">竞赛来源</option>
+                <option value="蓝桥杯">蓝桥杯</option>
+                <option value="CSP-J">CSP-J</option>
+                <option value="CSP-S">CSP-S</option>
+                <option value="GESP">GESP</option>
+                <option value="NOIP">NOIP</option>
+                <option value="其他">其他</option>
+            </select>
             <select id="filter-type" style="width:120px; display:inline;">
                 <option value="">全部题型</option>
                 <option value="programming">编程题</option>
@@ -158,8 +167,9 @@ function searchProblems() {
     var kw = $('#search-kw').val();
     var type = $('#filter-type').val();
     var level = $('#filter-level').val();
+    var source = $('#filter-source').val();
     $('#search-results').html('<i>搜索中...</i>');
-    fetch('exam_api.php?action=search_problems&kw=' + encodeURIComponent(kw) + '&type=' + type + '&level=' + level)
+    fetch('exam_api.php?action=search_problems&kw=' + encodeURIComponent(kw) + '&type=' + type + '&level=' + level + '&source=' + encodeURIComponent(source))
         .then(r => r.json())
         .then(data => {
             if (!data.length) { $('#search-results').html('<i>未找到题目</i>'); return; }

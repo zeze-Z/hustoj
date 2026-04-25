@@ -85,10 +85,11 @@ if(file_exists($solution_file)){
       </div>
 </div>  
 <div class="ui grid">
-  <div class="row" id="submit-buttons"> 
+  <?php if ($row['problem_type'] == 'programming') { ?>
+  <div class="row" id="submit-buttons">
     <div class="column">
       <div class="ui buttons">
-		  
+
           <?php
             if($pr_flag){
               echo "<a id='submit'  class=\"small ui primary button\" href=\"submitpage.php?id=$id\">$MSG_SUBMIT</a>";
@@ -112,18 +113,19 @@ if(file_exists($solution_file)){
           ?>
 
       </div>
-     
+
       <?php
         if ( isset($_SESSION[$OJ_NAME.'_'.'administrator']) || isset($_SESSION[$OJ_NAME.'_'."p".$row['problem_id']])  ) {  //only  the original editor can edit this  problem
-        
+
         require_once("include/set_get_key.php");
       ?>
-      
+
         <div class="ui buttons right floated">
             <a class="small ui button" href="admin/problem_edit.php?id=<?php echo $id?>&getkey=<?php echo $_SESSION[$OJ_NAME.'_'.'getkey']?>"><?php echo $MSG_EDIT.$MSG_PROBLEM?></a>
             <a class="small ui button" href='javascript:phpfm(<?php echo $row['problem_id'];?>)'><?php echo $MSG_TEST_DATA?></a>
         </div>
       <?php }?>
+  <?php } ?>
 			
 
 <?php
@@ -317,6 +319,7 @@ document.addEventListener('keydown', function(e) {
     </div>
   <?php } ?>
   
+     <?php if ($row['problem_type'] == 'programming') { ?>
      <div class="ui buttons">
 
           <?php
@@ -326,7 +329,7 @@ document.addEventListener('keydown', function(e) {
               echo "<a class=\"small ui orange button\" href=\"problemstatus.php?id=$id\">$MSG_STATISTICS</a>";
 	      if($OJ_BBS)echo "<a class=\"small ui red button\" href=\"discuss.php?pid=$id\">$MSG_BBS</a>";
             }else{
-              echo "<a href=\"contest.php?cid=$cid\" class=\"ui orange button\">$MSG_RETURN_CONTEST</a>"; 
+              echo "<a href=\"contest.php?cid=$cid\" class=\"ui orange button\">$MSG_RETURN_CONTEST</a>";
               if($contest_is_over)
                         echo "<a id='submit'  class=\"small ui primary button\" href=\"submitpage.php?id=$id\">$MSG_SUBMIT</a>";
               else
@@ -335,8 +338,9 @@ document.addEventListener('keydown', function(e) {
             }
 	    if(!file_exists($OJ_DATA."/".$id."/solution.name"))   echo "<a class='small ui primary button' href='#' onclick='transform()' role='button'>$MSG_SHOW_OFF</a>";
           ?>
-          
+
       </div>
+      <?php } ?>
 </div>
 <style>
     #dragButton {

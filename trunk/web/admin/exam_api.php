@@ -49,8 +49,17 @@ try {
             $kw = trim($_GET['kw'] ?? '');
             $type = trim($_GET['type'] ?? '');
             $level = trim($_GET['level'] ?? '');
+            $source = trim($_GET['source'] ?? '');
 
-            $cond = "defunct='N' AND is_public='Y'";
+            // 引入学校过滤函数
+            if (file_exists('../include/school.php')) {
+                require_once('../include/school.php');
+                $school_filter = getProblemSchoolFilter();
+            } else {
+                $school_filter = '';
+            }
+
+            $cond = "defunct='N'";
             $params = [];
             if ($kw !== '') {
                 $cond .= " AND (title LIKE ? OR source LIKE ?)";
@@ -59,8 +68,9 @@ try {
             }
             if ($type !== '') { $cond .= " AND problem_type=?"; $params[] = $type; }
             if ($level !== '') { $cond .= " AND level=?"; $params[] = $level; }
+            if ($source !== '') { $cond .= " AND source LIKE ?"; $params[] = "%$source%"; }
 
-            $sql = "SELECT problem_id, title, source, level, problem_type FROM problem WHERE $cond ORDER BY problem_id DESC LIMIT 100";
+            $sql = "SELECT problem_id, title, source, level, problem_type FROM problem WHERE $cond $school_filter ORDER BY problem_id DESC LIMIT 100";
             $all_rows = pdo_query($sql, ...$params);
             $result = $all_rows ?: [];
             break;

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fps version="1.0">
+    <item>
+        <title>GESP2025.12-L1-P1 小杨的爱心快递</title>
+        <time_limit>1</time_limit>
+        <memory_limit>512</memory_limit>
+        <description><![CDATA[
+小杨是"爱心社区"的小志愿者，每周他都会帮助邻居们寄送捐赠给山区小学的文具和书籍。快递公司为了支持公益行动，制定了特殊的运费规则，鼓励大家合理包装：
+
+假设快递的体积为 V，重量为 G。
+
+- 按体积计算：运费按体积计算，公式是 V/2 元。
+- 按重量计算：为了鼓励减轻包裹重量，规则是：
+  - 当重量小于 300 克，即 G &lt; 300 时，运费为 M 元；
+  - 当重量达到或超过 300 克，即 G &gt;= 300 时，运费为 N 元。
+
+最终的运费会取按体积计算和按重量计算这两种方式中价格较低的那一个。
+        ]]></description>
+        <input><![CDATA[
+四行，每行一个一位小数的浮点数，分别代表：
+第1行：快递的体积 V
+第2行：快递的重量 G
+第3行：第一档重量运费 M（G &lt; 300 时适用）
+第4行：第二档重量运费 N（G &gt;= 300 时适用）
+        ]]></input>
+        <output><![CDATA[
+一行一个一位小数，代表实际快递运费。
+        ]]></output>
+        <sample_input>100.4
+300.2
+60.6
+70.5</sample_input>
+        <sample_output>50.2</sample_output>
+        <hint><![CDATA[
+样例1：体积100.4，重量300.2，M=60.6，N=70.5。
+- 按体积：100.4/2=50.2
+- 按重量：G>=300，费用=70.5
+- 取较小值：50.2
+
+样例2（输入99.8/200.9/60.2/70.1）：
+- 按体积：99.8/2=49.9
+- 按重量：G&lt;300，费用=60.2
+- 取较小值：49.9
+
+数据范围：所有浮点数不超过 10^4。
+        ]]></hint>
+        <source>GESP-2025.12 一级 条件判断 浮点数</source>
+        <difficulty>1</difficulty>
+        <test_input>
+<![CDATA[100.4
+300.2
+60.6
+70.5
+99.8
+200.9
+60.2
+70.1
+600.0
+100.0
+80.0
+90.0
+10.0
+400.0
+5.0
+8.0
+200.0
+299.9
+100.0
+120.0
+200.0
+300.0
+100.0
+120.0
+]]>
+        </test_input>
+        <test_output>
+<![CDATA[50.2
+49.9
+80.0
+5.0
+100.0
+100.0
+]]>
+        </test_output>
+    </item>
+
+    <item>
+        <title>GESP2025.12-L1-P2 手机电量显示</title>
+        <time_limit>1</time_limit>
+        <memory_limit>512</memory_limit>
+        <description><![CDATA[
+小杨的手机就像一个聪明的小助手，当电量变化时，它会用不同的方式来提醒我们，假设当前的电量百分比为 P：
+
+- 当电量非常低（不超过 10，即 P &lt;= 10），显示大写字母 R（Red警告色）
+- 当电量有点低（超过 10 但不超过 20，即 10 &lt; P &lt;= 20），显示大写字母 L（Low）
+- 当电量比较充足（超过 20，即 P &gt; 20），直接显示具体数字（如 99 表示还有 99% 电量）
+        ]]></description>
+        <input><![CDATA[
+第一行一个正整数 T，代表数据组数（1 &lt;= T &lt;= 100）。
+对于每组数据，一行包含一个正整数 P，代表手机电量百分比（1 &lt;= P &lt;= 100）。
+        ]]></input>
+        <output><![CDATA[
+对于每组数据，输出一行，代表当前手机显示的电量信息。
+        ]]></output>
+        <sample_input>5
+10
+1
+20
+99
+19</sample_input>
+        <sample_output>R
+R
+L
+99
+L</sample_output>
+        <hint><![CDATA[
+- P=10：满足 P&lt;=10，显示 R
+- P=1：满足 P&lt;=10，显示 R
+- P=20：满足 10&lt;P&lt;=20，显示 L
+- P=99：满足 P&gt;20，显示 99
+- P=19：满足 10&lt;P&lt;=20，显示 L
+        ]]></hint>
+        <source>GESP-2025.12 一级 分支结构 多组输入</source>
+        <difficulty>1</difficulty>
+        <test_input>
+<![CDATA[5
+10
+1
+20
+99
+19
+]]>
+        </test_input>
+        <test_output>
+<![CDATA[R
+R
+L
+99
+L
+]]>
+        </test_output>
+    </item>
+</fps>

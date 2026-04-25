@@ -165,7 +165,7 @@ function import_fps($tempfile) {
     //$test_input = getValue($searchNode,'test_input');
     //$test_output = getValue($searchNode,'test_output');
     $hint = getValue ($searchNode,'hint');
-    $source = getValue ($searchNode,'source');				
+    $source = getValue ($searchNode,'source');
     $spjcode = getValue ($searchNode,'spj');
     $remote_oj= trim((string)getValue ($searchNode,'remote_oj'));
     $remote_id= trim((string)getValue ($searchNode,'remote_id'));

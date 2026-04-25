@@ -144,8 +144,9 @@ if (isset($_SESSION[$OJ_NAME . '_' . 'administrator'])) {  //all problems
  * 统计总页数，获取当前页的问题数据
  */
 pdo_query("SET sort_buffer_size = 1024*1024");   // Out of sort memory, consider increasing server sort buffer size
-// 添加学校过滤条件
+// 添加学校过滤条件，仅显示编程题，非编程题只在竞赛中显示
 $school_filter = getProblemSchoolFilter();
+$filter_sql .= " AND problem_type = 'programming' ";
 $sql = "select `problem_id`,`title`,`source`,`submit`,`accepted`,defunct FROM problem A WHERE $filter_sql $school_filter $order_by $limit_sql ";
 $count_sql = "select count(1) from problem where  $filter_sql $school_filter ";
 //echo htmlentities( $sql);

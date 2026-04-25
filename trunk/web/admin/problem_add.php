@@ -133,7 +133,23 @@ $hint = ($hint);
 $school_id = isset($_POST['school_id']) && $_POST['school_id'] !== '' ? intval($_POST['school_id']) : null;
 $is_public = isset($_POST['is_public']) ? 1 : 0;
 
-//echo "->".$OJ_DATA."<-"; 
+// 标准化来源：支持逗号/空格分隔，自动去重、统一成英文逗号
+function normalize_source($str) {
+    if (empty($str)) return '';
+    // 先把中文逗号、空格都替换成英文逗号
+    $str = str_replace(['，', ' '], ',', $str);
+    // 多个连续逗号合并成一个
+    $str = preg_replace('/,+/', ',', $str);
+    // 去掉首尾逗号
+    $str = trim($str, ',');
+    // 去重
+    $arr = array_unique(explode(',', $str));
+    return implode(',', $arr);
+}
+
+$source = normalize_source($source);
+
+//echo "->".$OJ_DATA."<-";
 $pid = addproblem($title, $time_limit, $memory_limit, $description, $input, $output, $sample_input, $sample_output, $hint, $source, $spj, $OJ_DATA, $school_id, $is_public, $level);
 
 // 更新选择题相关字段

@@ -193,7 +193,7 @@ include_once("kindeditor.php") ;
         </select>
         <br><br>
         <?php echo "<h4>".$MSG_SOURCE."</h4>"?>
-        <textarea name=source style="width:100%;" rows=1><?php echo htmlentities($row['source'],ENT_QUOTES,"UTF-8")?></textarea><br>
+        <textarea name=source style="width:100%;" rows=1 placeholder="多个分类/来源用逗号或空格分隔，比如：蓝桥杯2023 数学 基础题"><?php echo htmlentities($row['source'],ENT_QUOTES,"UTF-8")?></textarea><br>
 
         <?php echo "<h4>难度</h4>"?>
         <select name="level" class="form-control">
@@ -572,6 +572,22 @@ include_once("kindeditor.php") ;
       // 获取学校和公开设置
       $school_id = isset($_POST['school_id']) && $_POST['school_id'] !== '' ? intval($_POST['school_id']) : null;
       $is_public = isset($_POST['is_public']) ? 1 : 0;
+
+      // 标准化来源：支持逗号/空格分隔，自动去重、统一成英文逗号
+      function normalize_source($str) {
+          if (empty($str)) return '';
+          // 先把中文逗号、空格都替换成英文逗号
+          $str = str_replace(['，', ' '], ',', $str);
+          // 多个连续逗号合并成一个
+          $str = preg_replace('/,+/', ',', $str);
+          // 去掉首尾逗号
+          $str = trim($str, ',');
+          // 去重
+          $arr = array_unique(explode(',', $str));
+          return implode(',', $arr);
+      }
+
+      $source = isset($_POST['source']) ? normalize_source(trim($_POST['source'])) : '';
 
       $sql = "UPDATE `problem` SET `title`=?,`time_limit`=?,`memory_limit`=?, `description`=?,`input`=?,`output`=?,`sample_input`=?,`sample_output`=?,`hint`=?,`source`=?,`spj`=?,remote_oj=?,remote_id=?,`in_date`=NOW(),`school_id`=?,`is_public`=?,`level`=?,`problem_type`=?,`options`=?,`answer`=?,`analysis`=?,`score`=? WHERE `problem_id`=?";
 

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fps version="1.0">
+    <item>
+        <title>A+B Problem</title>
+        <time_limit>1</time_limit>
+        <memory_limit>128</memory_limit>
+        <description><![CDATA[
+            输入两个整数a,b，输出它们的和。
+        ]]></description>
+        <input><![CDATA[
+            输入包含两个整数a和b，用空格分隔。
+        ]]></input>
+        <output><![CDATA[
+            输出a+b的结果。
+        ]]></output>
+        <sample_input>1 2</sample_input>
+        <sample_output>3</sample_output>
+        <hint><![CDATA[
+            这是一道基础入门题，考察输入输出和基本运算。
+        ]]></hint>
+        <source>入门 输入输出</source>
+        <difficulty>1</difficulty>
+        <test_input>
+<![CDATA[1 2
+3 4
+-1 5
+]]>
+        </test_input>
+        <test_output>
+<![CDATA[3
+7
+4
+]]>
+        </test_output>
+    </item>
+
+    <item>
+        <title>求圆的面积</title>
+        <time_limit>1</time_limit>
+        <memory_limit>128</memory_limit>
+        <description><![CDATA[
+            输入圆的半径r，计算并输出圆的面积，保留2位小数。π取3.1415926。
+        ]]></description>
+        <input><![CDATA[
+            输入一个浮点数r，表示圆的半径。
+        ]]></input>
+        <output><![CDATA[
+            输出圆的面积，保留2位小数。
+        ]]></output>
+        <sample_input>2</sample_input>
+        <sample_output>12.57</sample_output>
+        <hint><![CDATA[
+            注意浮点数精度问题，输出要符合保留两位小数的要求。
+        ]]></hint>
+        <source>GESP 一级 浮点数</source>
+        <difficulty>1</difficulty>
+        <test_input>
+<![CDATA[2
+3.5
+0
+]]>
+        </test_input>
+        <test_output>
+<![CDATA[12.57
+38.48
+0.00
+]]>
+        </test_output>
+    </item>
+</fps>

@@ -164,7 +164,7 @@
           </select>
           <br><br>
           <?php echo "<h4>".$MSG_SOURCE."</h4>"?>
-          <textarea name=source style="width:100%;" rows=1><?php echo htmlentities($source,ENT_QUOTES,'UTF-8') ?></textarea><br><br>
+          <textarea name=source style="width:100%;" rows=1 placeholder="多个分类/来源用逗号或空格分隔，比如：蓝桥杯2023 数学 基础题"><?php echo htmlentities($source,ENT_QUOTES,'UTF-8') ?></textarea><br><br>
         </p>
         <p align=left>
           <?php echo "<h4>难度</h4>"?>

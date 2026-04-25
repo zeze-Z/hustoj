@@ -124,6 +124,18 @@
       <?php require("../include/set_post_key.php");?>
     </form>
 
+    <hr>
+    <h4>选择题批量导入</h4>
+    - 支持单选/多选/判断题批量导入，CSV格式，无需安装额外工具<br><br>
+    <form class='form-inline' action='problem_import_choice.php' method=post enctype="multipart/form-data">
+      <div class='form-group'>
+        <a class='btn btn-info btn-sm' href='problem_import_choice.php?action=download' target='_blank'>下载导入模板(CSV)</a>
+        <input class='form-control ml-2' type=file name=csv_file accept=".csv">
+        <button class='btn btn-success btn-sm ml-2' type=submit>导入选择题</button>
+      </div>
+      <?php require("../include/set_post_key.php");?>
+    </form>
+
     <?php } ?>
 
     <br><br>
