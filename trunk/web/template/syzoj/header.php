@@ -271,7 +271,136 @@
         };
     }
     
-</script>
+        // 联系我们弹窗函数
+        function openContactModal() {
+            // 显示遮罩层和弹窗
+            $('#contactOverlay').show();
+            $('#contactModal').show();
+
+            // 阻止背景滚动
+            $('body').css('overflow', 'hidden');
+
+            // 重置表单和消息
+            $('#contactForm')[0].reset();
+            $('.ui.error.message').hide();
+            $('.ui.success.message').hide();
+
+            // 重置字符计数
+            $('#titleCount').text('0/50').removeClass('warn full');
+            $('#contentCount').text('0/200').removeClass('warn full');
+
+            // 重置提交按钮状态
+            $('#submitContact').removeClass('loading').prop('disabled', false);
+        }
+
+        // 字符计数更新
+        function updateCharCount(el, max, countId) {
+            var len = el.value.length;
+            var counter = document.getElementById(countId);
+            counter.textContent = len + '/' + max;
+            counter.className = 'contact-char-count';
+            if (len >= max) {
+                counter.classList.add('full');
+            } else if (len >= max * 0.8) {
+                counter.classList.add('warn');
+            }
+        }
+
+        // 关闭弹窗函数
+        function closeContactModal() {
+            $('#contactOverlay').hide();
+            $('#contactModal').hide();
+            $('body').css('overflow', 'auto');
+        }
+
+        // 绑定关闭事件
+        $(document).ready(function() {
+            // 点击遮罩层关闭
+            $('#contactOverlay').on('click', function(e) {
+                if (e.target === this) {
+                    closeContactModal();
+                }
+            });
+
+            // 点击取消按钮关闭
+            $('#contactModal .cancel.button').on('click', function() {
+                closeContactModal();
+            });
+
+            // 点击关闭图标关闭
+            $('#contactModal .close.icon').on('click', function() {
+                closeContactModal();
+            });
+
+            // 阻止弹窗内的点击事件冒泡到遮罩层
+            $('#contactModal').on('click', function(e) {
+                e.stopPropagation();
+            });
+
+            // 提交按钮直接绑定
+            $('#submitContact').on('click', function() {
+                var form = $('#contactForm');
+                var formData = form.serialize();
+
+                // 前端验证
+                var title = $('input[name="title"]').val().trim();
+                var content = $('textarea[name="content"]').val().trim();
+                var email = $('input[name="email"]').val().trim();
+
+                if (title === '' || content === '') {
+                    $('.ui.error.message').html('标题和内容都不能为空').show();
+                    return false;
+                }
+
+                if (title.length > 50) {
+                    $('.ui.error.message').html('标题不能超过50个字符').show();
+                    return false;
+                }
+
+                if (content.length > 200) {
+                    $('.ui.error.message').html('内容不能超过200个字符').show();
+                    return false;
+                }
+
+                if (email !== '' && !/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email)) {
+                    $('.ui.error.message').html('请输入正确的邮箱地址').show();
+                    return false;
+                }
+
+                // 禁用提交按钮，防止重复提交
+                $(this).addClass('loading').prop('disabled', true);
+
+                // AJAX提交
+                $.ajax({
+                    url: '<?php echo $path_fix?>contact.php',
+                    type: 'POST',
+                    data: formData,
+                    dataType: 'json',
+                    success: function(response) {
+                        $('#submitContact').removeClass('loading').prop('disabled', false);
+
+                        if (response.code === 0) {
+                            $('.ui.success.message').html(response.msg).show();
+                            $('.ui.error.message').hide();
+
+                            // 2秒后关闭弹窗
+                            setTimeout(function() {
+                                closeContactModal();
+                            }, 2000);
+                        } else {
+                            $('.ui.error.message').html(response.msg).show();
+                            $('.ui.success.message').hide();
+                        }
+                    },
+                    error: function() {
+                        $('#submitContact').removeClass('loading').prop('disabled', false);
+                        $('.ui.error.message').html('提交失败，请稍后重试').show();
+                        $('.ui.success.message').hide();
+                    }
+                });
+            });
+        });
+    </script>
 </head>
 
 <?php
@@ -357,16 +486,15 @@
 
             <div class="right menu">
                 <?php if(isset($_SESSION[$OJ_NAME.'_'.'user_id'])) { ?>
-                <a href="<?php echo $path_fix?>/userinfo.php?user=<?php echo $_SESSION[$OJ_NAME.'_'.'user_id']?>"
-                    style="color: inherit; ">
                     <div class="ui simple dropdown item">
-                        <?php echo $_SESSION[$OJ_NAME.'_'.'user_id']; 
+                        <?php echo $_SESSION[$OJ_NAME.'_'.'user_id'];
                               if(!empty($_SESSION[$OJ_NAME.'_nick'])) echo "(".$_SESSION[$OJ_NAME.'_nick'].")";
                               if(!empty($_SESSION[$OJ_NAME.'_group_name'])) echo "[".$_SESSION[$OJ_NAME.'_group_name']."]";
-                                      
+
                         ?>
                         <i class="dropdown icon"></i>
                         <div class="menu">
+                                <a class="item" href="<?php echo $path_fix?>/userinfo.php?user=<?php echo $_SESSION[$OJ_NAME.'_'.'user_id']?>"><i class="user icon"></i>个人资料</a>
                                 <a class="item" href="modifypage.php"><i class="edit icon"></i><?php echo $MSG_REG_INFO;?></a>
                                 <a class="item" href="portal.php"><i class="tasks icon"></i><?php echo $MSG_TODO;?></a>
                                 <?php if(isset($_SESSION[$OJ_NAME.'_'.'teacher']) || isset($_SESSION[$OJ_NAME.'_'.'administrator'])){ ?>
@@ -405,10 +533,10 @@ if(isset($_SESSION[$OJ_NAME.'_'.'balloon'])){
         <?php
         }
         ?>
+                            <a class="item" href="javascript:openContactModal()"><i class="comment icon"></i>联系我们</a>
                             <a class="item" href="logout.php"><i class="power icon"></i><?php echo $MSG_LOGOUT;?></a>
                         </div>
                     </div>
-                </a>
                 <?php } else { ?>
 
 
@@ -426,6 +554,113 @@ if(isset($_SESSION[$OJ_NAME.'_'.'balloon'])){
             </div>
         </div>
     </div>
+
+    <!-- 联系我们弹窗 -->
+    <style>
+        #contactOverlay {
+            display: none;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background-color: rgba(0, 0, 0, 0.6) !important;
+            z-index: 100000 !important;
+            pointer-events: auto !important;
+        }
+        #contactModal {
+            display: none;
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            margin: 0 !important;
+            z-index: 100001 !important;
+            pointer-events: auto !important;
+            background: #fff !important;
+            border-radius: 4px !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2) !important;
+            width: 500px !important;
+            max-width: 90% !important;
+        }
+        #contactModal .close.icon {
+            position: absolute !important;
+            top: 12px !important;
+            right: 12px !important;
+            cursor: pointer !important;
+            color: #999 !important;
+            font-size: 18px !important;
+        }
+        #contactModal .header {
+            padding: 16px 20px !important;
+            border-bottom: 1px solid #eee !important;
+            font-size: 18px !important;
+            font-weight: 600 !important;
+            margin: 0 !important;
+        }
+        #contactModal .content {
+            padding: 20px !important;
+        }
+        #contactModal .actions {
+            padding: 16px 20px !important;
+            border-top: 1px solid #eee !important;
+            text-align: right !important;
+        }
+        .contact-field-wrap {
+            position: relative;
+        }
+        .contact-char-count {
+            position: absolute;
+            right: 10px;
+            bottom: 8px;
+            font-size: 12px;
+            color: #999;
+            pointer-events: none;
+        }
+        .contact-char-count.warn { color: #e67e22; }
+        .contact-char-count.full { color: #e74c3c; }
+    </style>
+    <div id="contactOverlay"></div>
+    <div id="contactModal">
+        <i class="close icon">&times;</i>
+        <div class="header">
+            联系我们
+        </div>
+        <div class="content">
+            <form class="ui form" id="contactForm">
+                <?php require_once(dirname(__FILE__)."/../../include/set_post_key.php"); ?>
+                <div class="field">
+                    <div class="contact-field-wrap">
+                        <label>标题</label>
+                        <input type="text" name="title" placeholder="请输入标题" required maxlength="50" oninput="updateCharCount(this, 50, 'titleCount')">
+                        <span class="contact-char-count" id="titleCount">0/50</span>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="contact-field-wrap">
+                        <label>内容</label>
+                        <textarea name="content" placeholder="请输入您想要反馈的内容" required rows="4" maxlength="200" oninput="updateCharCount(this, 200, 'contentCount')"></textarea>
+                        <span class="contact-char-count" id="contentCount">0/200</span>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>邮箱（用于接收回复）</label>
+                    <input type="email" name="email" placeholder="请输入您的邮箱地址">
+                </div>
+                <div class="ui error message"></div>
+                <div class="ui success message"></div>
+            </form>
+        </div>
+        <div class="actions">
+            <div class="ui red cancel button">
+                取消
+            </div>
+            <button type="button" class="ui green button" id="submitContact" style="margin-left: 10px;">
+                提交
+            </button>
+        </div>
+    </div>
+
     <div style="margin-top: 0px; ">
         <div id="main" class="ui main container">
 <?php } ?>
