@@ -67,6 +67,10 @@
           <i class="checkmark icon"></i>
           <?php echo $MSG_ALREADY_ACQUIRED_HINT; ?>
         </div>
+
+        <a href="course_info.php?id=<?php echo $view_course['id']; ?>" class="ui large blue button" style="width: 100%; margin-bottom: 20px;">
+          <i class="eye icon"></i><?php echo $MSG_VIEW_FULL_COURSEWARE; ?>
+        </a>
       <?php endif; ?>
 
       <!-- 获取表单 -->

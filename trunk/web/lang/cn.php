@@ -582,6 +582,12 @@ $MSG_FAILED="失败";
   $MSG_ORDER_NOT_FOUND="订单不存在";
   $MSG_INVALID_REQUEST="无效请求";
 
+  // Course Preview Upgrade
+  $MSG_FULL_PREVIEW_URL="完整版预览链接";
+  $MSG_BUY_TO_VIEW_FULL="购买后查看完整内容";
+  $MSG_DOWNLOAD_SOURCE="下载源文件";
+  $MSG_VIEW_FULL_COURSEWARE="查看完整课件";
+
   // Course Payment
   $MSG_PAYMENT_METHOD="支付方式";
   $MSG_BUY_NOW="立即购买";

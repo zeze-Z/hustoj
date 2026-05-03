@@ -1,6 +1,6 @@
 # OJ 功能发布步骤
 
-## 当前版本：V1.1（2026-04-19）
+## 当前版本：V1.2（2026-05-01）
 
 ---
 
@@ -12,6 +12,7 @@
 | V1.0 | 2026-03-31 | 课件商城模块 |
 | V1.0 | 2026-04-11 | 多学校隔离功能 |
 | V1.1 | 2026-04-19 | 选择题功能 + 考试模块（合并发布） |
+| V1.2 | 2026-05-01 | 课件预览付费改造 |
 
 ---
 
@@ -42,6 +43,9 @@ mysql -u root -p jol < db/V1.0_20260411_school_mode.sql
 
 # 4. 选择题功能 + 考试模块
 mysql -u root -p jol < db/V1.1_20260419_choice_and_exam.sql
+
+# 5. 课件预览付费改造
+mysql -u root -p jol < db/V1.2_20260501_courseware_preview_upgrade.sql
 ```
 
 **验证：**
@@ -75,6 +79,10 @@ DESCRIBE jol.solution exam_id;       -- int(11)
 
 -- exam_result 唯一索引（ON DUPLICATE KEY UPDATE 依赖此索引）
 SHOW INDEX FROM jol.exam_result WHERE Key_name='uk_exam_user_problem';
+
+-- 课件预览付费改造
+DESCRIBE jol.course courseware_full_preview_url;   -- varchar(500)
+DESCRIBE jol.course lesson_plan_full_preview_url;  -- varchar(500)
 ```
 
 ---
@@ -187,4 +195,5 @@ db/V1.0_20260317_db_init.sql          # 基础OJ初始化
  db/V1.0_20260331_course_module.sql    # 课件商城模块
  db/V1.0_20260411_school_mode.sql      # 多学校隔离功能
  db/V1.1_20260419_choice_and_exam.sql  # 合并SQL：选择题 + 考试模块
+ db/V1.2_20260501_courseware_preview_upgrade.sql  # 课件预览付费改造
 ```

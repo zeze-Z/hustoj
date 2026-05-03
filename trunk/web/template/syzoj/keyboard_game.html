@@ -3,588 +3,982 @@
 
 <div class="padding">
 <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "微软雅黑", "幼圆", sans-serif;
-        }
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "微软雅黑", "幼圆", sans-serif;
+    }
 
-        .game-container {
-            background-color: white;
-            border-radius: 25px;
-            padding: 30px;
-            box-shadow: 0 8px 25px rgba(255, 153, 204, 0.3);
-            width: 90%;
-            max-width: 600px;
-            text-align: center;
-            border: 5px solid #ffb6c1;
-            position: relative;
-            margin: 0 auto;
-            margin-top: 30px;
-        }
+    .game-container {
+        background-color: white;
+        border-radius: 25px;
+        padding: 30px;
+        box-shadow: 0 8px 25px rgba(255, 153, 204, 0.3);
+        width: 90%;
+        max-width: 700px;
+        text-align: center;
+        border: 5px solid #ffb6c1;
+        position: relative;
+        margin: 0 auto;
+        margin-top: 30px;
+    }
 
-        .game-container {
-            background-color: white;
-            border-radius: 25px;
-            padding: 30px;
-            box-shadow: 0 8px 25px rgba(255, 153, 204, 0.3);
-            width: 90%;
-            max-width: 600px;
-            text-align: center;
-            border: 5px solid #ffb6c1;
-            position: relative;
-        }
+    .game-container::before {
+        content: "✏️";
+        font-size: 30px;
+        position: absolute;
+        top: -15px;
+        left: -15px;
+        background-color: #fff;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #ffb6c1;
+    }
 
-        .game-container::before {
-            content: "✏️";
-            font-size: 30px;
-            position: absolute;
-            top: -15px;
-            left: -15px;
-            background-color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid #ffb6c1;
-        }
+    .game-container::after {
+        content: "📚";
+        font-size: 30px;
+        position: absolute;
+        bottom: -15px;
+        right: -15px;
+        background-color: #fff;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #ffb6c1;
+    }
 
-        .game-container::after {
-            content: "📚";
-            font-size: 30px;
-            position: absolute;
-            bottom: -15px;
-            right: -15px;
-            background-color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid #ffb6c1;
-        }
+    h1 {
+        color: #ff69b4;
+        margin-bottom: 15px;
+        font-size: 2rem;
+        text-shadow: 2px 2px 4px rgba(255, 105, 180, 0.2);
+    }
 
+    /* 难度选择器 */
+    .difficulty-selector {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .diff-btn {
+        padding: 8px 20px;
+        font-size: 1rem;
+        border: 2px solid #ffb6c1;
+        border-radius: 20px;
+        background-color: white;
+        color: #ff69b4;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: bold;
+    }
+
+    .diff-btn.active {
+        background-color: #ff69b4;
+        color: white;
+    }
+
+    .diff-btn:hover:not(.active) {
+        background-color: #fff0f5;
+    }
+
+    .stats {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .stat-item {
+        background-color: #fff0f5;
+        padding: 10px 18px;
+        border-radius: 20px;
+        min-width: 100px;
+        border: 2px dashed #ffc0cb;
+        font-weight: bold;
+        font-size: 1rem;
+    }
+
+    .combo-display {
+        background: linear-gradient(135deg, #ff9eb1, #ff69b4);
+        color: white;
+        border: none;
+    }
+
+    .combo-display.active {
+        animation: pulse 0.5s ease infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    /* 进度条 */
+    .progress-container {
+        width: 100%;
+        height: 8px;
+        background-color: #f0f0f0;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #ff9eb1, #ff69b4);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+        width: 0%;
+    }
+
+    .word-display {
+        font-size: 2.5rem;
+        margin: 20px 0;
+        padding: 25px;
+        background-color: #f8f9fa;
+        border-radius: 20px;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #98fb98;
+        background-image: linear-gradient(to right, #f0fff4, #fafffa);
+    }
+
+    .word-char {
+        margin-bottom: 12px;
+        display: flex;
+        gap: 5px;
+    }
+
+    .word-char .char {
+        display: inline-block;
+        min-width: 2rem;
+        padding: 5px 10px;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .word-char .char.correct {
+        color: #28a745;
+        background-color: #d4edda;
+        animation: charPop 0.3s ease;
+    }
+
+    .word-char .char.wrong {
+        color: #dc3545;
+        background-color: #f8d7da;
+        animation: shake 0.3s ease;
+    }
+
+    .word-char .char.pending {
+        color: #228b22;
+    }
+
+    .word-char .char.current {
+        color: #ff69b4;
+        border-bottom: 3px solid #ff69b4;
+    }
+
+    @keyframes charPop {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-3px); }
+        75% { transform: translateX(3px); }
+    }
+
+    .word-pinyin {
+        font-size: 1.2rem;
+        color: #ff69b4;
+        letter-spacing: 2px;
+        background-color: #fff0f5;
+        padding: 5px 15px;
+        border-radius: 15px;
+        border: 2px solid #ffc0cb;
+    }
+
+    #input-area {
+        width: 100%;
+        padding: 18px;
+        font-size: 1.5rem;
+        border: 3px solid #ffb6c1;
+        border-radius: 20px;
+        margin-bottom: 15px;
+        text-align: center;
+        background-color: #fff;
+        transition: all 0.3s;
+    }
+
+    #input-area:focus {
+        outline: none;
+        border-color: #ff69b4;
+        box-shadow: 0 0 0 5px rgba(255, 105, 180, 0.1);
+    }
+
+    #input-area.error {
+        border-color: #dc3545;
+        background-color: #fff5f5;
+    }
+
+    /* 输入提示 */
+    .input-hint {
+        font-size: 0.9rem;
+        color: #888;
+        margin-bottom: 15px;
+        min-height: 20px;
+    }
+
+    .control-btn {
+        padding: 12px 35px;
+        font-size: 1.1rem;
+        border: none;
+        border-radius: 20px;
+        background-color: #ff9eb1;
+        color: white;
+        cursor: pointer;
+        margin: 0 8px;
+        transition: all 0.3s;
+        font-weight: bold;
+        box-shadow: 0 4px 8px rgba(255, 158, 177, 0.3);
+    }
+
+    .control-btn:hover:not(:disabled) {
+        background-color: #ff69b4;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(255, 105, 180, 0.4);
+    }
+
+    .control-btn:disabled {
+        background-color: #d3d3d3;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .feedback {
+        height: 30px;
+        font-size: 1.1rem;
+        margin: 10px 0;
+        font-weight: bold;
+    }
+
+    .correct {
+        color: #32cd32;
+    }
+
+    .wrong {
+        color: #ff6347;
+    }
+
+    .game-over {
+        font-size: 1.5rem;
+        color: #ff69b4;
+        margin: 20px 0;
+        font-weight: bold;
+    }
+
+    /* 学习模式提示 */
+    .learn-mode {
+        background-color: #fff3cd;
+        border: 2px solid #ffc107;
+        border-radius: 15px;
+        padding: 15px;
+        margin: 15px 0;
+        display: none;
+    }
+
+    .learn-mode .answer {
+        font-size: 1.5rem;
+        color: #856404;
+        margin: 10px 0;
+    }
+
+    .learn-mode .instruction {
+        font-size: 1rem;
+        color: #666;
+    }
+
+    /* 成就提示 */
+    .achievement {
+        position: fixed;
+        top: 20%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #ffd700, #ffaa00);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 25px;
+        font-size: 1.3rem;
+        font-weight: bold;
+        box-shadow: 0 5px 20px rgba(255, 170, 0, 0.4);
+        z-index: 1000;
+        animation: achievementPop 2s ease forwards;
+        display: none;
+    }
+
+    @keyframes achievementPop {
+        0% { opacity: 0; transform: translateX(-50%) scale(0.5); }
+        20% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+        30% { transform: translateX(-50%) scale(1); }
+        80% { opacity: 1; }
+        100% { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+    }
+
+    @media (max-width: 480px) {
         h1 {
-            color: #ff69b4;
-            margin-bottom: 20px;
-            font-size: 2.2rem;
-            text-shadow: 2px 2px 4px rgba(255, 105, 180, 0.2);
-        }
-
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 25px;
-            font-size: 1.2rem;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .stat-item {
-            background-color: #fff0f5;
-            padding: 12px 20px;
-            border-radius: 20px;
-            min-width: 120px;
-            border: 2px dashed #ffc0cb;
-            font-weight: bold;
-        }
-
-        .word-display {
-            font-size: 2.8rem;
-            margin: 30px 0;
-            padding: 25px;
-            background-color: #f8f9fa;
-            border-radius: 20px;
-            min-height: 140px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid #98fb98;
-            background-image: linear-gradient(to right, #f0fff4, #fafffa);
-        }
-
-        .word-char {
-            margin-bottom: 12px;
-            color: #228b22;
-            text-shadow: 1px 1px 2px rgba(34, 139, 34, 0.2);
-        }
-
-        .word-pinyin {
-            font-size: 1.3rem;
-            color: #ff69b4;
-            letter-spacing: 2px;
-            background-color: #fff0f5;
-            padding: 5px 15px;
-            border-radius: 15px;
-            border: 2px solid #ffc0cb;
-        }
-
-        #input-area {
-            width: 100%;
-            padding: 18px;
             font-size: 1.5rem;
-            border: 3px solid #ffb6c1;
-            border-radius: 20px;
-            margin-bottom: 20px;
-            text-align: center;
-            background-color: #fff;
-            transition: all 0.3s;
         }
-
-        #input-area:focus {
-            outline: none;
-            border-color: #ff69b4;
-            box-shadow: 0 0 0 5px rgba(255, 105, 180, 0.1);
-            transform: translateY(-2px);
+        
+        .word-display {
+            font-size: 2rem;
+            min-height: 100px;
+            padding: 15px;
         }
-
-        .control-btn {
-            padding: 12px 35px;
+        
+        .word-pinyin {
+            font-size: 1rem;
+        }
+        
+        #input-area {
             font-size: 1.2rem;
-            border: none;
-            border-radius: 20px;
-            background-color: #ff9eb1;
-            color: white;
-            cursor: pointer;
-            margin: 0 10px;
-            transition: all 0.3s;
-            font-weight: bold;
-            box-shadow: 0 4px 8px rgba(255, 158, 177, 0.3);
+        }
+        
+        .stat-item {
+            padding: 8px 12px;
+            min-width: 80px;
+            font-size: 0.9rem;
         }
 
-        .control-btn:hover {
-            background-color: #ff69b4;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(255, 105, 180, 0.4);
+        .game-container {
+            padding: 20px;
         }
 
-        .control-btn:disabled {
-            background-color: #d3d3d3;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .feedback {
+        .game-container::before,
+        .game-container::after {
+            width: 35px;
             height: 35px;
-            font-size: 1.2rem;
-            margin: 15px 0;
-            font-weight: bold;
+            font-size: 25px;
         }
+    }
+</style>
 
-        .correct {
-            color: #32cd32;
-            animation: bounce 0.5s ease;
-        }
-
-        .wrong {
-            color: #ff6347;
-        }
-
-        .game-over {
-            font-size: 1.8rem;
-            color: #ff69b4;
-            margin: 20px 0;
-            font-weight: bold;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-        }
-
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 1.8rem;
-            }
-            
-            .word-display {
-                font-size: 2.2rem;
-                min-height: 120px;
-            }
-            
-            .word-pinyin {
-                font-size: 1.1rem;
-            }
-            
-            #input-area {
-                font-size: 1.2rem;
-            }
-            
-            .stat-item {
-                padding: 8px 15px;
-                min-width: 100px;
-            }
-
-            .game-container::before,
-            .game-container::after {
-                width: 35px;
-                height: 35px;
-                font-size: 25px;
-            }
-        }
-    </style>
-    <div class="game-container">
-        <h1>二年级汉字打字小乐园</h1>
-        
-        <div class="stats">
-            <div class="stat-item">⏱️ 时间: <span id="timer">600</span> 秒</div>
-            <div class="stat-item">⭐ 得分: <span id="score">0</span> 分</div>
-            <div class="stat-item">🎯 正确率: <span id="accuracy">100</span>%</div>
-        </div>
-
-        <div class="word-display" id="current-word">
-            <div class="word-char">点击开始游戏</div>
-            <div class="word-pinyin"></div>
-        </div>
-        
-        <input type="text" id="input-area" placeholder="请输入上面的词语" disabled>
-        
-        <div class="feedback" id="feedback"></div>
-        
-        <div>
-            <button class="control-btn" id="start-btn">开始游戏</button>
-            <button class="control-btn" id="reset-btn" disabled>重新开始</button>
-        </div>
-        
-        <div id="game-over-message" class="game-over"></div>
+<div class="game-container">
+    <h1>✏️ 二年级汉字打字小乐园</h1>
+    
+    <!-- 难度选择 -->
+    <div class="difficulty-selector" id="difficulty-selector">
+        <button class="diff-btn active" data-diff="easy">🌟 简单 (2字)</button>
+        <button class="diff-btn" data-diff="medium">⭐ 中等 (3字)</button>
+        <button class="diff-btn" data-diff="hard">💫 困难 (全部)</button>
     </div>
 
-    <script>
-        // 二年级上册语文课本核心词语库（带拼音）
-        const wordList = [
-            { char: "秋天", pinyin: "qiū tiān" },
-            { char: "天气", pinyin: "tiān qì" },
-            { char: "树叶", pinyin: "shù yè" },
-            { char: "天空", pinyin: "tiān kōng" },
-            { char: "田野", pinyin: "tián yě" },
-            { char: "果园", pinyin: "guǒ yuán" },
-            { char: "飞鸟", pinyin: "fēi niǎo" },
-            { char: "小鱼", pinyin: "xiǎo yú" },
-            { char: "花园", pinyin: "huā yuán" },
-            { char: "石桥", pinyin: "shí qiáo" },
-            { char: "队旗", pinyin: "duì qí" },
-            { char: "铜号", pinyin: "tóng hào" },
-            { char: "红领巾", pinyin: "hóng lǐng jīn" },
-            { char: "同学", pinyin: "tóng xué" },
-            { char: "老师", pinyin: "lǎo shī" },
-            { char: "学校", pinyin: "xué xiào" },
-            { char: "月亮", pinyin: "yuè liang" },
-            { char: "阳光", pinyin: "yáng guāng" },
-            { char: "金子", pinyin: "jīn zi" },
-            { char: "高山", pinyin: "gāo shān" },
-            { char: "家乡", pinyin: "jiā xiāng" },
-            { char: "亲人", pinyin: "qīn rén" },
-            { char: "爸爸", pinyin: "bà ba" },
-            { char: "妈妈", pinyin: "mā ma" },
-            { char: "爷爷", pinyin: "yé ye" },
-            { char: "奶奶", pinyin: "nǎi nai" },
-            { char: "哥哥", pinyin: "gē ge" },
-            { char: "姐姐", pinyin: "jiě jie" },
-            { char: "弟弟", pinyin: "dì di" },
-            { char: "妹妹", pinyin: "mèi mei" },
-            { char: "朋友", pinyin: "péng you" },
-            { char: "读书", pinyin: "dú shū" },
-            { char: "写字", pinyin: "xiě zì" },
-            { char: "画画", pinyin: "huà huà" },
-            { char: "唱歌", pinyin: "chàng gē" },
-            { char: "跳舞", pinyin: "tiào wǔ" },
-            { char: "跑步", pinyin: "pǎo bù" },
-            { char: "跳绳", pinyin: "tiào shéng" },
-            { char: "打球", pinyin: "dǎ qiú" },
-            { char: "北京", pinyin: "běi jīng" },
-            { char: "天安门", pinyin: "tiān ān mén" },
-            { char: "广场", pinyin: "guǎng chǎng" },
-            { char: "长城", pinyin: "cháng chéng" },
-            { char: "国旗", pinyin: "guó qí" },
-            { char: "国歌", pinyin: "guó gē" },
-            { char: "雪花", pinyin: "xuě huā" },
-            { char: "冬天", pinyin: "dōng tiān" },
-            { char: "春风", pinyin: "chūn fēng" },
-            { char: "夏雨", pinyin: "xià yǔ" },
-            { char: "秋霜", pinyin: "qiū shuāng" },
-            { char: "冬雪", pinyin: "dōng xuě" },
-            { char: "青草", pinyin: "qīng cǎo" },
-            { char: "红花", pinyin: "hóng huā" },
-            { char: "游鱼", pinyin: "yóu yú" },
-            { char: "书包", pinyin: "shū bāo" },
-            { char: "尺子", pinyin: "chǐ zi" },
-            { char: "铅笔", pinyin: "qiān bǐ" },
-            { char: "橡皮", pinyin: "xiàng pí" },
-            { char: "作业本", pinyin: "zuò yè běn" },
-            { char: "课本", pinyin: "kè běn" },
-            { char: "上课", pinyin: "shàng kè" },
-            { char: "下课", pinyin: "xià kè" },
-            { char: "语文", pinyin: "yǔ wén" },
-            { char: "数学", pinyin: "shù xué" },
-            { char: "音乐", pinyin: "yīn yuè" },
-            { char: "美术", pinyin: "měi shù" },
-            { char: "体育", pinyin: "tǐ yù" },
-            { char: "电脑", pinyin: "diàn nǎo" },
-            { char: "喝水", pinyin: "hē shuǐ" },
-            { char: "吃饭", pinyin: "chī fàn" },
-            { char: "开门", pinyin: "kāi mén" },
-            { char: "关门", pinyin: "guān mén" },
-            { char: "开灯", pinyin: "kāi dēng" },
-            { char: "关灯", pinyin: "guān dēng" },
-            { char: "洗手", pinyin: "xǐ shǒu" },
-            { char: "洗脸", pinyin: "xǐ liǎn" },
-            { char: "刷牙", pinyin: "shuā yá" },
-            { char: "睡觉", pinyin: "shuì jiào" },
-            { char: "早晨", pinyin: "zǎo chen" },
-            { char: "中午", pinyin: "zhōng wǔ" },
-            { char: "晚上", pinyin: "wǎn shang" },
-            { char: "明天", pinyin: "míng tiān" },
-            { char: "昨天", pinyin: "zuó tiān" },
-            { char: "今天", pinyin: "jīn tiān" },
-            { char: "书本", pinyin: "shū běn" },
-            { char: "文具", pinyin: "wén jù" },
-            { char: "上课", pinyin: "shàng kè" },
-            { char: "下课", pinyin: "xià kè" },
-            { char: "操场", pinyin: "cāo chǎng" },
-            { char: "校园", pinyin: "xiào yuán" },
-            { char: "教室", pinyin: "jiào shì" },
-            { char: "黑板", pinyin: "hēi bǎn" },
-            { char: "桌椅", pinyin: "zhuō yǐ" },
-            { char: "粉笔", pinyin: "fěn bǐ" },
-            { char: "文具盒", pinyin: "wén jù hé" },
-            { char: "小刀", pinyin: "xiǎo dāo" },
-            { char: "转笔刀", pinyin: "zhuàn bǐ dāo" },
-            { char: "毛巾", pinyin: "máo jīn" },
-            { char: "香皂", pinyin: "xiāng zào" },
-            { char: "脸盆", pinyin: "liǎn pén" },
-            { char: "梳子", pinyin: "shū zi" },
-            { char: "毛巾", pinyin: "máo jīn" },
-            { char: "牙刷", pinyin: "yá shuā" },
-            { char: "杯子", pinyin: "bēi zi" },
-            { char: "衣服", pinyin: "yī fu" },
-            { char: "裤子", pinyin: "kù zi" },
-            { char: "鞋子", pinyin: "xié zi" },
-            { char: "帽子", pinyin: "mào zi" },
-            { char: "袜子", pinyin: "wà zi" },
-            { char: "手套", pinyin: "shǒu tào" },
-            { char: "围巾", pinyin: "wéi jīn" },
-            { char: "电话", pinyin: "diàn huà" },
-            { char: "电视", pinyin: "diàn shì" },
-            { char: "冰箱", pinyin: "bīng xiāng" },
-            { char: "风扇", pinyin: "fēng shàn" },
-            { char: "空调", pinyin: "kōng tiáo" },
-            { char: "沙发", pinyin: "shā fā" },
-            { char: "桌子", pinyin: "zhuō zi" },
-            { char: "椅子", pinyin: "yǐ zi" },
-            { char: "床", pinyin: "chuáng" },
-            { char: "窗户", pinyin: "chuāng hu" },
-            { char: "门", pinyin: "mén" },
-            { char: "地板", pinyin: "dì bǎn" },
-            { char: "墙壁", pinyin: "qiáng bì" },
-            { char: "楼梯", pinyin: "lóu tī" },
-            { char: "马路", pinyin: "mǎ lù" },
-            { char: "汽车", pinyin: "qì chē" },
-            { char: "自行车", pinyin: "zì xíng chē" },
-            { char: "公交车", pinyin: "gōng jiāo chē" },
-            { char: "火车", pinyin: "huǒ chē" },
-            { char: "飞机", pinyin: "fēi jī" },
-            { char: "轮船", pinyin: "lún chuán" },
-            { char: "小船", pinyin: "xiǎo chuán" },
-            { char: "大树", pinyin: "dà shù" },
-            { char: "小草", pinyin: "xiǎo cǎo" },
-            { char: "花朵", pinyin: "huā duǒ" },
-            { char: "树叶", pinyin: "shù yè" },
-            { char: "果实", pinyin: "guǒ shí" },
-            { char: "种子", pinyin: "zhǒng zi" },
-            { char: "浇水", pinyin: "jiāo shuǐ" },
-            { char: "施肥", pinyin: "shī féi" },
-            { char: "捉虫", pinyin: "zhuō chóng" },
-            { char: "扫地", pinyin: "sǎo dì" },
-            { char: "擦桌子", pinyin: "cā zhuō zi" },
-            { char: "擦黑板", pinyin: "cā hēi bǎn" },
-            { char: "摆椅子", pinyin: "bǎi yǐ zi" },
-            { char: "整理", pinyin: "zhěng lǐ" },
-            { char: "干净", pinyin: "gān jìng" },
-            { char: "整齐", pinyin: "zhěng qí" },
-            { char: "快乐", pinyin: "kuài lè" },
-            { char: "开心", pinyin: "kāi xīn" },
-            { char: "高兴", pinyin: "gāo xìng" },
-            { char: "生气", pinyin: "shēng qì" },
-            { char: "难过", pinyin: "nán guò" },
-            { char: "害怕", pinyin: "hài pà" },
-            { char: "勇敢", pinyin: "yǒng gǎn" },
-            { char: "温柔", pinyin: "wēn róu" },
-            { char: "可爱", pinyin: "kě ài" },
-            { char: "美丽", pinyin: "měi lì" },
-            { char: "明亮", pinyin: "míng liàng" },
-            { char: "热闹", pinyin: "rè nao" },
-            { char: "安静", pinyin: "ān jìng" },
-            { char: "仔细", pinyin: "zǐ xì" },
-            { char: "认真", pinyin: "rèn zhēn" },
-            { char: "马虎", pinyin: "mǎ hu" },
-            { char: "仔细", pinyin: "zǐ xì" },
-            { char: "飞快", pinyin: "fēi kuài" },
-            { char: "慢慢", pinyin: "màn màn" },
-            { char: "轻轻", pinyin: "qīng qīng" },
-            { char: "悄悄", pinyin: "qiāo qiāo" }
-        ];
+    <!-- 统计信息 -->
+    <div class="stats">
+        <div class="stat-item">⏱️ <span id="timer">600</span>秒</div>
+        <div class="stat-item">⭐ <span id="score">0</span>分</div>
+        <div class="stat-item">🎯 <span id="accuracy">100</span>%</div>
+        <div class="stat-item combo-display" id="combo-display">🔥 连击: <span id="combo">0</span></div>
+    </div>
 
-        // 获取DOM元素
-        const startBtn = document.getElementById('start-btn');
-        const resetBtn = document.getElementById('reset-btn');
-        const timerEl = document.getElementById('timer');
-        const scoreEl = document.getElementById('score');
-        const accuracyEl = document.getElementById('accuracy');
-        const wordDisplay = document.getElementById('current-word');
-        const wordChar = wordDisplay.querySelector('.word-char');
-        const wordPinyin = wordDisplay.querySelector('.word-pinyin');
-        const inputArea = document.getElementById('input-area');
-        const feedbackEl = document.getElementById('feedback');
-        const gameOverMessage = document.getElementById('game-over-message');
+    <!-- 进度条 -->
+    <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
 
-        // 游戏状态变量
-        let currentWordIndex = 0;
-        let score = 0;
-        let correctCount = 0;
-        let totalCount = 0;
-        let timer = 600; // 10分钟
-        let timerInterval = null;
-        let gameStarted = false;
+    <!-- 词语显示 -->
+    <div class="word-display" id="current-word">
+        <div class="word-char" id="word-chars"></div>
+        <div class="word-pinyin" id="word-pinyin"></div>
+    </div>
+    
+    <!-- 输入区域 -->
+    <input type="text" id="input-area" placeholder="点击开始游戏" disabled autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    
+    <!-- 输入提示 -->
+    <div class="input-hint" id="input-hint"></div>
 
-        // 随机打乱词语顺序
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
+    <!-- 学习模式（错误后显示） -->
+    <div class="learn-mode" id="learn-mode">
+        <div class="answer">正确答案：<span id="correct-answer"></span></div>
+        <div class="instruction">请再输入一次加深记忆 💪</div>
+    </div>
+    
+    <div class="feedback" id="feedback"></div>
+    
+    <div>
+        <button class="control-btn" id="start-btn">🎮 开始游戏</button>
+        <button class="control-btn" id="pause-btn" disabled>⏸️ 暂停</button>
+        <button class="control-btn" id="reset-btn" disabled>🔄 重来</button>
+    </div>
+    
+    <div id="game-over-message" class="game-over"></div>
+</div>
+
+<!-- 成就提示 -->
+<div class="achievement" id="achievement"></div>
+
+<script>
+    // 二年级上册语文课本核心词语库（带拼音）
+    const wordList = [
+        { char: "秋天", pinyin: "qiū tiān" },
+        { char: "天气", pinyin: "tiān qì" },
+        { char: "树叶", pinyin: "shù yè" },
+        { char: "天空", pinyin: "tiān kōng" },
+        { char: "田野", pinyin: "tián yě" },
+        { char: "果园", pinyin: "guǒ yuán" },
+        { char: "飞鸟", pinyin: "fēi niǎo" },
+        { char: "小鱼", pinyin: "xiǎo yú" },
+        { char: "花园", pinyin: "huā yuán" },
+        { char: "石桥", pinyin: "shí qiáo" },
+        { char: "队旗", pinyin: "duì qí" },
+        { char: "铜号", pinyin: "tóng hào" },
+        { char: "红领巾", pinyin: "hóng lǐng jīn" },
+        { char: "同学", pinyin: "tóng xué" },
+        { char: "老师", pinyin: "lǎo shī" },
+        { char: "学校", pinyin: "xué xiào" },
+        { char: "月亮", pinyin: "yuè liang" },
+        { char: "阳光", pinyin: "yáng guāng" },
+        { char: "金子", pinyin: "jīn zi" },
+        { char: "高山", pinyin: "gāo shān" },
+        { char: "家乡", pinyin: "jiā xiāng" },
+        { char: "亲人", pinyin: "qīn rén" },
+        { char: "爸爸", pinyin: "bà ba" },
+        { char: "妈妈", pinyin: "mā ma" },
+        { char: "爷爷", pinyin: "yé ye" },
+        { char: "奶奶", pinyin: "nǎi nai" },
+        { char: "哥哥", pinyin: "gē ge" },
+        { char: "姐姐", pinyin: "jiě jie" },
+        { char: "弟弟", pinyin: "dì di" },
+        { char: "妹妹", pinyin: "mèi mei" },
+        { char: "朋友", pinyin: "péng you" },
+        { char: "读书", pinyin: "dú shū" },
+        { char: "写字", pinyin: "xiě zì" },
+        { char: "画画", pinyin: "huà huà" },
+        { char: "唱歌", pinyin: "chàng gē" },
+        { char: "跳舞", pinyin: "tiào wǔ" },
+        { char: "跑步", pinyin: "pǎo bù" },
+        { char: "跳绳", pinyin: "tiào shéng" },
+        { char: "打球", pinyin: "dǎ qiú" },
+        { char: "北京", pinyin: "běi jīng" },
+        { char: "天安门", pinyin: "tiān ān mén" },
+        { char: "广场", pinyin: "guǎng chǎng" },
+        { char: "长城", pinyin: "cháng chéng" },
+        { char: "国旗", pinyin: "guó qí" },
+        { char: "国歌", pinyin: "guó gē" },
+        { char: "雪花", pinyin: "xuě huā" },
+        { char: "冬天", pinyin: "dōng tiān" },
+        { char: "春风", pinyin: "chūn fēng" },
+        { char: "夏雨", pinyin: "xià yǔ" },
+        { char: "秋霜", pinyin: "qiū shuāng" },
+        { char: "冬雪", pinyin: "dōng xuě" },
+        { char: "青草", pinyin: "qīng cǎo" },
+        { char: "红花", pinyin: "hóng huā" },
+        { char: "游鱼", pinyin: "yóu yú" },
+        { char: "书包", pinyin: "shū bāo" },
+        { char: "尺子", pinyin: "chǐ zi" },
+        { char: "铅笔", pinyin: "qiān bǐ" },
+        { char: "橡皮", pinyin: "xiàng pí" },
+        { char: "作业本", pinyin: "zuò yè běn" },
+        { char: "课本", pinyin: "kè běn" },
+        { char: "上课", pinyin: "shàng kè" },
+        { char: "下课", pinyin: "xià kè" },
+        { char: "语文", pinyin: "yǔ wén" },
+        { char: "数学", pinyin: "shù xué" },
+        { char: "音乐", pinyin: "yīn yuè" },
+        { char: "美术", pinyin: "měi shù" },
+        { char: "体育", pinyin: "tǐ yù" },
+        { char: "电脑", pinyin: "diàn nǎo" },
+        { char: "喝水", pinyin: "hē shuǐ" },
+        { char: "吃饭", pinyin: "chī fàn" },
+        { char: "开门", pinyin: "kāi mén" },
+        { char: "关门", pinyin: "guān mén" },
+        { char: "开灯", pinyin: "kāi dēng" },
+        { char: "关灯", pinyin: "guān dēng" },
+        { char: "洗手", pinyin: "xǐ shǒu" },
+        { char: "洗脸", pinyin: "xǐ liǎn" },
+        { char: "刷牙", pinyin: "shuā yá" },
+        { char: "睡觉", pinyin: "shuì jiào" },
+        { char: "早晨", pinyin: "zǎo chen" },
+        { char: "中午", pinyin: "zhōng wǔ" },
+        { char: "晚上", pinyin: "wǎn shang" },
+        { char: "明天", pinyin: "míng tiān" },
+        { char: "昨天", pinyin: "zuó tiān" },
+        { char: "今天", pinyin: "jīn tiān" },
+        { char: "书本", pinyin: "shū běn" },
+        { char: "文具", pinyin: "wén jù" },
+        { char: "操场", pinyin: "cāo chǎng" },
+        { char: "校园", pinyin: "xiào yuán" },
+        { char: "教室", pinyin: "jiào shì" },
+        { char: "黑板", pinyin: "hēi bǎn" },
+        { char: "桌椅", pinyin: "zhuō yǐ" },
+        { char: "粉笔", pinyin: "fěn bǐ" },
+        { char: "文具盒", pinyin: "wén jù hé" },
+        { char: "小刀", pinyin: "xiǎo dāo" },
+        { char: "转笔刀", pinyin: "zhuàn bǐ dāo" },
+        { char: "毛巾", pinyin: "máo jīn" },
+        { char: "香皂", pinyin: "xiāng zào" },
+        { char: "脸盆", pinyin: "liǎn pén" },
+        { char: "梳子", pinyin: "shū zi" },
+        { char: "牙刷", pinyin: "yá shuā" },
+        { char: "杯子", pinyin: "bēi zi" },
+        { char: "衣服", pinyin: "yī fu" },
+        { char: "裤子", pinyin: "kù zi" },
+        { char: "鞋子", pinyin: "xié zi" },
+        { char: "帽子", pinyin: "mào zi" },
+        { char: "袜子", pinyin: "wà zi" },
+        { char: "手套", pinyin: "shǒu tào" },
+        { char: "围巾", pinyin: "wéi jīn" },
+        { char: "电话", pinyin: "diàn huà" },
+        { char: "电视", pinyin: "diàn shì" },
+        { char: "冰箱", pinyin: "bīng xiāng" },
+        { char: "风扇", pinyin: "fēng shàn" },
+        { char: "空调", pinyin: "kōng tiáo" },
+        { char: "沙发", pinyin: "shā fā" },
+        { char: "桌子", pinyin: "zhuō zi" },
+        { char: "椅子", pinyin: "yǐ zi" },
+        { char: "床", pinyin: "chuáng" },
+        { char: "窗户", pinyin: "chuāng hu" },
+        { char: "门", pinyin: "mén" },
+        { char: "地板", pinyin: "dì bǎn" },
+        { char: "墙壁", pinyin: "qiáng bì" },
+        { char: "楼梯", pinyin: "lóu tī" },
+        { char: "马路", pinyin: "mǎ lù" },
+        { char: "汽车", pinyin: "qì chē" },
+        { char: "自行车", pinyin: "zì xíng chē" },
+        { char: "公交车", pinyin: "gōng jiāo chē" },
+        { char: "火车", pinyin: "huǒ chē" },
+        { char: "飞机", pinyin: "fēi jī" },
+        { char: "轮船", pinyin: "lún chuán" },
+        { char: "小船", pinyin: "xiǎo chuán" },
+        { char: "大树", pinyin: "dà shù" },
+        { char: "小草", pinyin: "xiǎo cǎo" },
+        { char: "花朵", pinyin: "huā duǒ" },
+        { char: "果实", pinyin: "guǒ shí" },
+        { char: "种子", pinyin: "zhǒng zi" },
+        { char: "浇水", pinyin: "jiāo shuǐ" },
+        { char: "施肥", pinyin: "shī féi" },
+        { char: "捉虫", pinyin: "zhuō chóng" },
+        { char: "扫地", pinyin: "sǎo dì" },
+        { char: "擦桌子", pinyin: "cā zhuō zi" },
+        { char: "擦黑板", pinyin: "cā hēi bǎn" },
+        { char: "摆椅子", pinyin: "bǎi yǐ zi" },
+        { char: "整理", pinyin: "zhěng lǐ" },
+        { char: "干净", pinyin: "gān jìng" },
+        { char: "整齐", pinyin: "zhěng qí" },
+        { char: "快乐", pinyin: "kuài lè" },
+        { char: "开心", pinyin: "kāi xīn" },
+        { char: "高兴", pinyin: "gāo xìng" },
+        { char: "生气", pinyin: "shēng qì" },
+        { char: "难过", pinyin: "nán guò" },
+        { char: "害怕", pinyin: "hài pà" },
+        { char: "勇敢", pinyin: "yǒng gǎn" },
+        { char: "温柔", pinyin: "wēn róu" },
+        { char: "可爱", pinyin: "kě ài" },
+        { char: "美丽", pinyin: "měi lì" },
+        { char: "明亮", pinyin: "míng liàng" },
+        { char: "热闹", pinyin: "rè nao" },
+        { char: "安静", pinyin: "ān jìng" },
+        { char: "仔细", pinyin: "zǐ xì" },
+        { char: "认真", pinyin: "rèn zhēn" },
+        { char: "马虎", pinyin: "mǎ hu" },
+        { char: "飞快", pinyin: "fēi kuài" },
+        { char: "慢慢", pinyin: "màn màn" },
+        { char: "轻轻", pinyin: "qīng qīng" },
+        { char: "悄悄", pinyin: "qiāo qiāo" }
+    ];
+
+    // DOM元素
+    const startBtn = document.getElementById('start-btn');
+    const pauseBtn = document.getElementById('pause-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const timerEl = document.getElementById('timer');
+    const scoreEl = document.getElementById('score');
+    const accuracyEl = document.getElementById('accuracy');
+    const comboEl = document.getElementById('combo');
+    const comboDisplay = document.getElementById('combo-display');
+    const wordCharsEl = document.getElementById('word-chars');
+    const wordPinyinEl = document.getElementById('word-pinyin');
+    const inputArea = document.getElementById('input-area');
+    const inputHint = document.getElementById('input-hint');
+    const feedbackEl = document.getElementById('feedback');
+    const gameOverMessage = document.getElementById('game-over-message');
+    const progressBar = document.getElementById('progress-bar');
+    const learnMode = document.getElementById('learn-mode');
+    const correctAnswerEl = document.getElementById('correct-answer');
+    const achievementEl = document.getElementById('achievement');
+    const diffBtns = document.querySelectorAll('.diff-btn');
+
+    // 游戏状态
+    let currentWordIndex = 0;
+    let filteredWords = [];
+    let score = 0;
+    let correctCount = 0;
+    let totalCount = 0;
+    let timer = 600;
+    let timerInterval = null;
+    let gameStarted = false;
+    let isPaused = false;
+    let combo = 0;
+    let maxCombo = 0;
+    let isLearnMode = false;
+    let currentDifficulty = 'easy';
+    let totalWords = 0;
+
+    // 根据难度筛选词语
+    function filterWordsByDifficulty(difficulty) {
+        switch(difficulty) {
+            case 'easy':
+                return wordList.filter(w => w.char.length === 2);
+            case 'medium':
+                return wordList.filter(w => w.char.length === 3);
+            case 'hard':
+            default:
+                return [...wordList];
+        }
+    }
+
+    // 打乱数组
+    function shuffleArray(array) {
+        const arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    // 显示当前词语
+    function showCurrentWord() {
+        if (currentWordIndex >= filteredWords.length) {
+            endGame();
+            return;
         }
 
-        // 显示当前词语
-        function showCurrentWord() {
-            if (currentWordIndex < wordList.length) {
-                const word = wordList[currentWordIndex];
-                wordChar.textContent = word.char;
-                wordPinyin.textContent = word.pinyin;
+        const word = filteredWords[currentWordIndex];
+        const chars = word.char.split('');
+        
+        // 清空并渲染字符
+        wordCharsEl.innerHTML = '';
+        chars.forEach((char, index) => {
+            const span = document.createElement('span');
+            span.className = 'char pending' + (index === 0 ? ' current' : '');
+            span.textContent = char;
+            span.dataset.index = index;
+            wordCharsEl.appendChild(span);
+        });
+        
+        wordPinyinEl.textContent = word.pinyin;
+        
+        // 更新进度条
+        const progress = (currentWordIndex / totalWords) * 100;
+        progressBar.style.width = progress + '%';
+        
+        // 更新输入提示
+        inputHint.textContent = `请输入: ${word.char}`;
+    }
+
+    // 更新字符状态
+    function updateCharStatus(inputLength) {
+        const word = filteredWords[currentWordIndex];
+        const chars = wordCharsEl.querySelectorAll('.char');
+        const input = inputArea.value;
+        
+        chars.forEach((charEl, index) => {
+            charEl.classList.remove('current', 'correct', 'wrong', 'pending');
+            
+            if (index < input.length) {
+                if (input[index] === word.char[index]) {
+                    charEl.classList.add('correct');
+                } else {
+                    charEl.classList.add('wrong');
+                }
+            } else if (index === input.length) {
+                charEl.classList.add('current');
             } else {
-                endGame();
+                charEl.classList.add('pending');
             }
-        }
+        });
+    }
 
-        // 开始游戏
-        function startGame() {
-            if (!gameStarted) {
-                // 打乱词语顺序
-                shuffleArray(wordList);
-                currentWordIndex = 0;
-                score = 0;
-                correctCount = 0;
-                totalCount = 0;
-                timer = 600;
-                gameStarted = true;
-                gameOverMessage.textContent = '';
-                feedbackEl.textContent = '';
+    // 显示成就
+    function showAchievement(text) {
+        achievementEl.textContent = text;
+        achievementEl.style.display = 'block';
+        setTimeout(() => {
+            achievementEl.style.display = 'none';
+        }, 2000);
+    }
 
-                startBtn.disabled = true;
-                resetBtn.disabled = false;
-                inputArea.disabled = false;
-                inputArea.focus();
-
-                // 显示第一个词语
-                showCurrentWord();
-
-                // 启动计时器
-                timerInterval = setInterval(() => {
-                    timer--;
-                    timerEl.textContent = timer;
-                    if (timer <= 0) {
-                        endGame();
-                    }
-                }, 1000);
+    // 开始游戏
+    function startGame() {
+        if (gameStarted) return;
+        
+        // 筛选并打乱词语
+        filteredWords = shuffleArray(filterWordsByDifficulty(currentDifficulty));
+        totalWords = filteredWords.length;
+        
+        currentWordIndex = 0;
+        score = 0;
+        correctCount = 0;
+        totalCount = 0;
+        timer = 600;
+        combo = 0;
+        maxCombo = 0;
+        gameStarted = true;
+        isPaused = false;
+        isLearnMode = false;
+        
+        gameOverMessage.textContent = '';
+        feedbackEl.textContent = '';
+        learnMode.style.display = 'none';
+        
+        // 更新按钮状态
+        startBtn.disabled = true;
+        pauseBtn.disabled = false;
+        resetBtn.disabled = false;
+        inputArea.disabled = false;
+        inputArea.value = '';
+        inputArea.placeholder = '请输入上面的词语';
+        inputArea.focus();
+        
+        // 禁用难度选择
+        diffBtns.forEach(btn => btn.disabled = true);
+        
+        // 显示第一个词语
+        showCurrentWord();
+        
+        // 启动计时器
+        timerInterval = setInterval(() => {
+            if (!isPaused) {
+                timer--;
+                timerEl.textContent = timer;
+                if (timer <= 0) {
+                    endGame();
+                }
             }
+        }, 1000);
+    }
+
+    // 暂停/继续
+    function togglePause() {
+        isPaused = !isPaused;
+        pauseBtn.textContent = isPaused ? '▶️ 继续' : '⏸️ 暂停';
+        inputArea.disabled = isPaused;
+        
+        if (isPaused) {
+            inputHint.textContent = '游戏已暂停';
+        } else {
+            inputArea.focus();
+            checkInput();
         }
+    }
 
-        // 重置游戏
-        function resetGame() {
-            clearInterval(timerInterval);
-            gameStarted = false;
-            startBtn.disabled = false;
-            resetBtn.disabled = true;
-            inputArea.disabled = true;
-            inputArea.value = '';
-            timer = 600;
-            timerEl.textContent = timer;
-            score = 0;
-            scoreEl.textContent = score;
-            correctCount = 0;
-            totalCount = 0;
-            accuracyEl.textContent = '100';
-            wordChar.textContent = '点击开始游戏';
-            wordPinyin.textContent = '';
-            feedbackEl.textContent = '';
-            gameOverMessage.textContent = '';
-        }
+    // 重置游戏
+    function resetGame() {
+        clearInterval(timerInterval);
+        gameStarted = false;
+        isPaused = false;
+        
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+        pauseBtn.textContent = '⏸️ 暂停';
+        resetBtn.disabled = true;
+        inputArea.disabled = true;
+        inputArea.value = '';
+        inputArea.placeholder = '点击开始游戏';
+        
+        timer = 600;
+        timerEl.textContent = timer;
+        score = 0;
+        scoreEl.textContent = score;
+        correctCount = 0;
+        totalCount = 0;
+        accuracyEl.textContent = '100';
+        combo = 0;
+        comboEl.textContent = combo;
+        comboDisplay.classList.remove('active');
+        
+        wordCharsEl.innerHTML = '<span class="char pending">点击开始游戏</span>';
+        wordPinyinEl.textContent = '';
+        inputHint.textContent = '';
+        feedbackEl.textContent = '';
+        gameOverMessage.textContent = '';
+        learnMode.style.display = 'none';
+        progressBar.style.width = '0%';
+        
+        // 启用难度选择
+        diffBtns.forEach(btn => btn.disabled = false);
+    }
 
-        // 结束游戏
-        function endGame() {
-            clearInterval(timerInterval);
-            gameStarted = false;
-            startBtn.disabled = false;
-            resetBtn.disabled = false;
-            inputArea.disabled = true;
-            inputArea.value = '';
-            gameOverMessage.textContent = '游戏结束！最终得分：' + score + '分';
-        }
+    // 结束游戏
+    function endGame() {
+        clearInterval(timerInterval);
+        gameStarted = false;
+        
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+        resetBtn.disabled = false;
+        inputArea.disabled = true;
+        
+        diffBtns.forEach(btn => btn.disabled = false);
+        
+        const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 100;
+        gameOverMessage.innerHTML = `
+            🎉 游戏结束！<br>
+            最终得分：<strong>${score}</strong> 分<br>
+            正确率：<strong>${accuracy}%</strong><br>
+            最高连击：<strong>${maxCombo}</strong> 次
+        `;
+    }
 
-        // 检查输入
-        function checkInput() {
-            const input = inputArea.value.trim();
-            const currentWord = wordList[currentWordIndex].char;
-
-            if (input === currentWord) {
+    // 检查输入
+    function checkInput() {
+        if (!gameStarted || isPaused) return;
+        
+        const input = inputArea.value;
+        const word = filteredWords[currentWordIndex];
+        
+        // 更新字符状态
+        updateCharStatus(input.length);
+        
+        // 检查是否输入完成
+        if (input.length >= word.char.length) {
+            if (input === word.char) {
                 // 正确
-                correctCount++;
-                totalCount++;
-                score += 10;
-                feedbackEl.textContent = '正确！';
-                feedbackEl.className = 'feedback correct';
-                currentWordIndex++;
-                
-                // 显示下一个词语
-                showCurrentWord();
-                
-                // 清空输入框
-                inputArea.value = '';
-                
-                // 动画效果
-                setTimeout(() => {
-                    feedbackEl.textContent = '';
-                }, 1000);
-            } else if (input.length >= currentWord.length) {
+                handleCorrect();
+            } else {
                 // 错误
-                totalCount++;
-                feedbackEl.textContent = '错误！正确答案是：' + currentWord;
-                feedbackEl.className = 'feedback wrong';
-                
-                // 清空输入框
-                inputArea.value = '';
-                
-                // 动画效果
-                setTimeout(() => {
-                    feedbackEl.textContent = '';
-                }, 2000);
+                handleWrong();
             }
-
-            // 更新分数和正确率
-            scoreEl.textContent = score;
-            const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 100;
-            accuracyEl.textContent = accuracy;
         }
+    }
 
-        // 事件监听
-        startBtn.addEventListener('click', startGame);
-        resetBtn.addEventListener('click', resetGame);
-        inputArea.addEventListener('input', checkInput);
-    </script>
+    // 处理正确答案
+    function handleCorrect() {
+        correctCount++;
+        totalCount++;
+        combo++;
+        if (combo > maxCombo) maxCombo = combo;
+        
+        // 计算得分（基础10分 + 连击奖励）
+        let points = 10;
+        if (combo >= 10) {
+            points = 20;
+            showAchievement('🔥 连击达人！+20分');
+        } else if (combo >= 5) {
+            points = 15;
+        }
+        score += points;
+        
+        // 更新UI
+        feedbackEl.textContent = '✅ 正确！' + (combo >= 5 ? ` 连击${combo}次！+${points}分` : '');
+        feedbackEl.className = 'feedback correct';
+        comboEl.textContent = combo;
+        comboDisplay.classList.toggle('active', combo >= 3);
+        
+        // 清空输入
+        inputArea.value = '';
+        inputArea.classList.remove('error');
+        learnMode.style.display = 'none';
+        isLearnMode = false;
+        
+        // 下一个词
+        currentWordIndex++;
+        
+        // 短暂延迟后显示下一个词
+        setTimeout(() => {
+            feedbackEl.textContent = '';
+            showCurrentWord();
+        }, 300);
+        
+        // 更新统计
+        updateStats();
+    }
+
+    // 处理错误答案
+    function handleWrong() {
+        totalCount++;
+        combo = 0;
+        
+        const word = filteredWords[currentWordIndex];
+        
+        feedbackEl.textContent = '❌ 再试一次';
+        feedbackEl.className = 'feedback wrong';
+        comboEl.textContent = combo;
+        comboDisplay.classList.remove('active');
+        
+        // 显示学习模式
+        if (!isLearnMode) {
+            isLearnMode = true;
+            learnMode.style.display = 'block';
+            correctAnswerEl.textContent = word.char;
+            inputArea.classList.add('error');
+        }
+        
+        // 清空输入，让用户重新输入
+        inputArea.value = '';
+        
+        updateStats();
+    }
+
+    // 更新统计
+    function updateStats() {
+        scoreEl.textContent = score;
+        const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 100;
+        accuracyEl.textContent = accuracy;
+    }
+
+    // 难度选择
+    diffBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (gameStarted) return;
+            
+            diffBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentDifficulty = btn.dataset.diff;
+        });
+    });
+
+    // 事件监听
+    startBtn.addEventListener('click', startGame);
+    pauseBtn.addEventListener('click', togglePause);
+    resetBtn.addEventListener('click', resetGame);
+    inputArea.addEventListener('input', checkInput);
+
+    // 键盘快捷键
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (gameStarted && !isPaused) {
+                togglePause();
+            }
+        }
+        if (e.key === 'Enter' && !gameStarted) {
+            startGame();
+        }
+    });
+
+    // 初始化显示
+    wordCharsEl.innerHTML = '<span class="char pending">点击开始游戏</span>';
+    wordPinyinEl.textContent = '';
+</script>
 </div>
 <?php include("template/$OJ_TEMPLATE/footer.php");?>

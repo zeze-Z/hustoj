@@ -23,6 +23,8 @@ if (isset($_POST['do'])) {
     $status = isset($_POST['status']) ? 1 : 0;
     $courseware_preview_url = trim($_POST['courseware_preview_url']);
     $lesson_plan_preview_url = trim($_POST['lesson_plan_preview_url']);
+    $courseware_full_preview_url = trim($_POST['courseware_full_preview_url']);
+    $lesson_plan_full_preview_url = trim($_POST['lesson_plan_full_preview_url']);
     $courseware_link = trim($_POST['courseware_link']);
     $courseware_code = trim($_POST['courseware_code']);
     $lesson_plan_link = trim($_POST['lesson_plan_link']);
@@ -75,6 +77,26 @@ if (isset($_POST['do'])) {
         exit();
     }
 
+    if (!empty($courseware_full_preview_url) && !filter_var($courseware_full_preview_url, FILTER_VALIDATE_URL)) {
+        echo "<script>alert('$MSG_COURSEWARE $MSG_FULL_PREVIEW_URL is invalid'); history.go(-1);</script>";
+        exit();
+    }
+
+    if (!empty($courseware_full_preview_url) && !validate_preview_domain($courseware_full_preview_url)) {
+        echo "<script>alert('$MSG_COURSEWARE $MSG_FULL_PREVIEW_URL only allows kdocs.cn domain'); history.go(-1);</script>";
+        exit();
+    }
+
+    if (!empty($lesson_plan_full_preview_url) && !filter_var($lesson_plan_full_preview_url, FILTER_VALIDATE_URL)) {
+        echo "<script>alert('$MSG_LESSON_PLAN $MSG_FULL_PREVIEW_URL is invalid'); history.go(-1);</script>";
+        exit();
+    }
+
+    if (!empty($lesson_plan_full_preview_url) && !validate_preview_domain($lesson_plan_full_preview_url)) {
+        echo "<script>alert('$MSG_LESSON_PLAN $MSG_FULL_PREVIEW_URL only allows kdocs.cn domain'); history.go(-1);</script>";
+        exit();
+    }
+
     if (!empty($courseware_link) && !filter_var($courseware_link, FILTER_VALIDATE_URL)) {
         echo "<script>alert('$MSG_COURSEWARE download link is invalid'); history.go(-1);</script>";
         exit();
@@ -85,10 +107,10 @@ if (isset($_POST['do'])) {
         exit();
     }
 
-    $sql = "INSERT INTO `course` (`title`, `subject_id`, `tags`, `lesson_count`, `description`, `price`, `status`, `courseware_preview_url`, `lesson_plan_preview_url`, `courseware_link`, `courseware_code`, `lesson_plan_link`, `lesson_plan_code`, `link_expire_date`, `sort_order`, `created_at`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+    $sql = "INSERT INTO `course` (`title`, `subject_id`, `tags`, `lesson_count`, `description`, `price`, `status`, `courseware_preview_url`, `lesson_plan_preview_url`, `courseware_full_preview_url`, `lesson_plan_full_preview_url`, `courseware_link`, `courseware_code`, `lesson_plan_link`, `lesson_plan_code`, `link_expire_date`, `sort_order`, `created_at`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
 
     try {
-        pdo_query($sql, $title, $subject_id, $tags, $lesson_count, $description, $price, $status, $courseware_preview_url, $lesson_plan_preview_url, $courseware_link, $courseware_code, $lesson_plan_link, $lesson_plan_code, $link_expire_date, $sort_order);
+        pdo_query($sql, $title, $subject_id, $tags, $lesson_count, $description, $price, $status, $courseware_preview_url, $lesson_plan_preview_url, $courseware_full_preview_url, $lesson_plan_full_preview_url, $courseware_link, $courseware_code, $lesson_plan_link, $lesson_plan_code, $link_expire_date, $sort_order);
         echo "<script>alert('$MSG_ADD $MSG_SUCCESS'); window.location.href='course_list.php';</script>";
     } catch (Exception $e) {
         echo "<script>alert('$MSG_ADD $MSG_FAILED: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "'); history.go(-1);</script>";
@@ -182,6 +204,22 @@ $subject_list = pdo_query($sql);
             <label class="col-sm-2 control-label"><?php echo $MSG_LESSON_PLAN ?> <?php echo $MSG_PREVIEW_URL ?></label>
             <div class="col-sm-6">
                 <input type="url" name="lesson_plan_preview_url" class="form-control" placeholder="金山文档URL" maxlength="500">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label"><?php echo $MSG_COURSEWARE ?> <?php echo $MSG_FULL_PREVIEW_URL ?></label>
+            <div class="col-sm-6">
+                <input type="url" name="courseware_full_preview_url" class="form-control" placeholder="金山文档完整版URL" maxlength="500">
+                <small class="text-muted">付费后用户可见的完整版课件预览链接</small>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label"><?php echo $MSG_LESSON_PLAN ?> <?php echo $MSG_FULL_PREVIEW_URL ?></label>
+            <div class="col-sm-6">
+                <input type="url" name="lesson_plan_full_preview_url" class="form-control" placeholder="金山文档完整版URL" maxlength="500">
+                <small class="text-muted">付费后用户可见的完整版教案预览链接</small>
             </div>
         </div>
 

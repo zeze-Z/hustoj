@@ -1,0 +1,754 @@
+<?php $show_title="气球打字 - $OJ_NAME"; ?>
+<?php include("template/$OJ_TEMPLATE/header.php");?>
+
+<div class="padding">
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "微软雅黑", "幼圆", sans-serif;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #2196f3, #64b5f6, #bbdefb);
+            min-height: 100vh;
+        }
+
+        .game-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.3);
+            width: 90%;
+            max-width: 800px;
+            text-align: center;
+            border: 5px solid #2196f3;
+            position: relative;
+            margin: 0 auto;
+            margin-top: 30px;
+        }
+
+        .game-container::before {
+            content: "🎈";
+            font-size: 30px;
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            background-color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #2196f3;
+        }
+
+        .game-container::after {
+            content: "⌨️";
+            font-size: 30px;
+            position: absolute;
+            bottom: -15px;
+            right: -15px;
+            background-color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #2196f3;
+        }
+
+        h1 {
+            color: #1976d2;
+            margin-bottom: 20px;
+            font-size: 2.2rem;
+            text-shadow: 2px 2px 4px rgba(33, 150, 243, 0.2);
+        }
+
+        .difficulty-selector {
+            margin-bottom: 25px;
+        }
+
+        .diff-btn {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: 2px solid #2196f3;
+            border-radius: 20px;
+            background-color: white;
+            color: #1976d2;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .diff-btn.active {
+            background-color: #2196f3;
+            color: white;
+        }
+
+        .diff-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(33, 150, 243, 0.2);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            font-size: 1.2rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat-item {
+            background-color: #e3f2fd;
+            padding: 12px 20px;
+            border-radius: 20px;
+            min-width: 120px;
+            border: 2px dashed #2196f3;
+            font-weight: bold;
+            color: #1976d2;
+        }
+
+        .game-area {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(to bottom, #87ceeb 0%, #e0f6ff 100%);
+            border-radius: 20px;
+            border: 3px solid #2196f3;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            cursor: none;
+        }
+
+        .balloon {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: float linear;
+            transition: transform 0.2s ease;
+        }
+
+        .balloon-body {
+            min-width: 60px;
+            height: 70px;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.3rem;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            position: relative;
+            padding: 0 12px;
+        }
+
+        .balloon-body::after {
+            content: "";
+            position: absolute;
+            bottom: -8px;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+        }
+
+        .balloon-string {
+            width: 2px;
+            height: 30px;
+            background-color: #666;
+            margin-top: 2px;
+        }
+
+        /* Balloon colors */
+        .balloon-red .balloon-body { background-color: #ef5350; }
+        .balloon-red .balloon-body::after { border-top: 10px solid #ef5350; }
+        .balloon-blue .balloon-body { background-color: #42a5f5; }
+        .balloon-blue .balloon-body::after { border-top: 10px solid #42a5f5; }
+        .balloon-green .balloon-body { background-color: #66bb6a; }
+        .balloon-green .balloon-body::after { border-top: 10px solid #66bb6a; }
+        .balloon-yellow .balloon-body { background-color: #ffa726; }
+        .balloon-yellow .balloon-body::after { border-top: 10px solid #ffa726; }
+        .balloon-purple .balloon-body { background-color: #ab47bc; }
+        .balloon-purple .balloon-body::after { border-top: 10px solid #ab47bc; }
+        .balloon-pink .balloon-body { background-color: #ec407a; }
+        .balloon-pink .balloon-body::after { border-top: 10px solid #ec407a; }
+
+        @keyframes float {
+            from { transform: translateY(0); }
+            to { transform: translateY(-400px); }
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.8; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .balloon.pop {
+            animation: pop 0.3s ease-out forwards;
+        }
+
+        .explosion {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            pointer-events: none;
+            animation: explode 0.5s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        #input-area {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.5rem;
+            border: 3px solid #2196f3;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            background-color: #fff;
+            transition: all 0.3s;
+        }
+
+        #input-area:focus {
+            outline: none;
+            border-color: #1976d2;
+            box-shadow: 0 0 0 5px rgba(33, 150, 243, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .control-btn {
+            padding: 12px 35px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 20px;
+            background-color: #2196f3;
+            color: white;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+        }
+
+        .control-btn:hover {
+            background-color: #1976d2;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(33, 150, 243, 0.4);
+        }
+
+        .control-btn:disabled {
+            background-color: #d3d3d3;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .feedback {
+            height: 35px;
+            font-size: 1.2rem;
+            margin: 15px 0;
+            font-weight: bold;
+            color: #ef5350;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid #ef5350;
+            text-align: center;
+            z-index: 100;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translate(-50%, -100px); opacity: 0; }
+            to { transform: translate(-50%, -50%); opacity: 1; }
+        }
+
+        .game-over h2 {
+            color: #ef5350;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .game-over .final-score {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #1976d2;
+            font-weight: bold;
+        }
+
+        .hearts {
+            color: #ef5350;
+            font-size: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .game-area {
+                height: 300px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            #input-area {
+                font-size: 1.2rem;
+            }
+            
+            .stat-item {
+                padding: 8px 15px;
+                min-width: 100px;
+                font-size: 1rem;
+            }
+
+            .diff-btn {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+                margin: 3px;
+            }
+
+            .game-container::before,
+            .game-container::after {
+                width: 35px;
+                height: 35px;
+                font-size: 25px;
+            }
+
+            .control-btn {
+                padding: 10px 25px;
+                font-size: 1rem;
+                margin: 5px;
+            }
+
+            .balloon-body {
+                min-width: 50px;
+                height: 60px;
+                font-size: 1rem;
+                padding: 0 8px;
+            }
+        }
+    </style>
+    <div class="game-container">
+        <h1>🎈 气球打字游戏 ⌨️</h1>
+        
+        <div class="difficulty-selector">
+            <button class="diff-btn active" data-mode="easy">简单 (字母)</button>
+            <button class="diff-btn" data-mode="normal">普通 (单词)</button>
+            <button class="diff-btn" data-mode="hard">困难 (多单词)</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">🏆 得分: <span id="score">0</span></div>
+            <div class="stat-item">❤️ 生命: <span id="lives" class="hearts">❤️❤️❤️</span></div>
+            <div class="stat-item">🔥 连击: <span id="combo">0</span></div>
+        </div>
+
+        <div class="game-area" id="game-area">
+            <div id="game-over" class="game-over" style="display: none;">
+                <h2>游戏结束！</h2>
+                <div class="final-score">最终得分: <span id="final-score">0</span></div>
+                <button class="control-btn" id="restart-btn">再来一局</button>
+            </div>
+        </div>
+        
+        <input type="text" id="input-area" placeholder="输入气球上的字母/单词/短语，按回车提交" autocomplete="off">
+        
+        <div class="feedback" id="feedback"></div>
+        
+        <div>
+            <button class="control-btn" id="start-btn">开始游戏</button>
+            <button class="control-btn" id="pause-btn">暂停</button>
+        </div>
+    </div>
+
+    <script>
+        // 单词库
+        const wordList = ['cat', 'dog', 'sun', 'red', 'run', 'hot', 'big', 'fun', 'top', 'cup', 'hat', 'pen', 'box', 'sit', 'win', 'fly', 'sky', 'map', 'car', 'bus', 'key', 'ice', 'egg', 'fan', 'bed', 'day', 'old', 'new', 'boy', 'girl', 'fish', 'book', 'play', 'star', 'hand', 'tree', 'bird', 'cake', 'ball', 'rain', 'home', 'snow', 'apple', 'green', 'happy', 'water', 'light', 'music', 'dance', 'smile', 'color', 'plant'];
+        const phraseList = ['big cat', 'red sun', 'hot dog', 'blue sky', 'old tree', 'new book', 'fun game', 'top hat', 'ice cream', 'green leaf', 'happy dog', 'cold water', 'warm day', 'dark night', 'fast car', 'small fish', 'tall tree', 'long road', 'nice bird', 'white snow', 'rain bow', 'gold star', 'pink cake', 'black cat', 'brown bear', 'red apple', 'sweet home', 'good boy', 'nice girl', 'loud music'];
+        const balloonColors = ['balloon-red', 'balloon-blue', 'balloon-green', 'balloon-yellow', 'balloon-purple', 'balloon-pink'];
+
+        // 获取DOM元素
+        const diffBtns = document.querySelectorAll('.diff-btn');
+        const scoreEl = document.getElementById('score');
+        const livesEl = document.getElementById('lives');
+        const comboEl = document.getElementById('combo');
+        const gameArea = document.getElementById('game-area');
+        const inputArea = document.getElementById('input-area');
+        const startBtn = document.getElementById('start-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const feedbackEl = document.getElementById('feedback');
+        const gameOverEl = document.getElementById('game-over');
+        const finalScoreEl = document.getElementById('final-score');
+
+        // 游戏状态变量
+        let gameMode = 'easy';
+        let score = 0;
+        let lives = 3;
+        let combo = 0;
+        let gameRunning = false;
+        let gamePaused = false;
+        let balloons = [];
+        let spawnInterval = null;
+        let animationFrame = null;
+        let currentDifficulty = {
+            spawnRate: 2000,
+            floatDuration: 8000,
+            maxBalloons: 1,
+            wordType: 'letter'
+        };
+
+        // 初始化游戏
+        function initGame() {
+            score = 0;
+            lives = 3;
+            combo = 0;
+            gameRunning = false;
+            gamePaused = false;
+            
+            updateStats();
+            clearBalloons();
+            inputArea.value = '';
+            feedbackEl.textContent = '';
+            gameOverEl.style.display = 'none';
+            inputArea.disabled = true;
+            pauseBtn.disabled = true;
+            startBtn.disabled = false;
+        }
+
+        // 更新统计显示
+        function updateStats() {
+            scoreEl.textContent = score;
+            livesEl.textContent = '❤️'.repeat(lives);
+            comboEl.textContent = combo;
+        }
+
+        // 清空所有气球
+        function clearBalloons() {
+            balloons.forEach(balloon => {
+                if (balloon.element && balloon.element.parentNode) {
+                    balloon.element.remove();
+                }
+            });
+            balloons = [];
+        }
+
+        // 生成随机字母或单词
+        function generateText() {
+            if (currentDifficulty.wordType === 'letter') {
+                return String.fromCharCode(97 + Math.floor(Math.random() * 26));
+            } else if (currentDifficulty.wordType === 'word') {
+                // 3-5个字母的单词
+                const words = wordList.filter(word => word.length >= 3 && word.length <= 5);
+                return words[Math.floor(Math.random() * words.length)];
+            } else {
+                // 多词短语
+                return phraseList[Math.floor(Math.random() * phraseList.length)];
+            }
+        }
+
+        // 生成随机颜色
+        function getRandomColor() {
+            return balloonColors[Math.floor(Math.random() * balloonColors.length)];
+        }
+
+        // 创建气球
+        function createBalloon() {
+            if (!gameRunning || gamePaused || balloons.length >= currentDifficulty.maxBalloons) return;
+
+            const text = generateText();
+            const color = getRandomColor();
+            
+            // 创建气球元素
+            const balloonEl = document.createElement('div');
+            balloonEl.className = `balloon ${color}`;
+            
+            const balloonBody = document.createElement('div');
+            balloonBody.className = 'balloon-body';
+            balloonBody.textContent = text;
+            
+            const string = document.createElement('div');
+            string.className = 'balloon-string';
+            
+            balloonEl.appendChild(balloonBody);
+            balloonEl.appendChild(string);
+            
+            // 随机水平位置
+            const maxLeft = gameArea.clientWidth - 70;
+            const left = Math.random() * maxLeft;
+            balloonEl.style.left = `${left}px`;
+            balloonEl.style.bottom = '-100px';
+            
+            // 设置动画
+            balloonEl.style.animationDuration = `${currentDifficulty.floatDuration / 1000}s`;
+            
+            gameArea.appendChild(balloonEl);
+            
+            // 添加到气球数组
+            const balloon = {
+                element: balloonEl,
+                text: text,
+                position: -100,
+                speed: 400 / (currentDifficulty.floatDuration / 1000) / 60 // 像素/帧
+            };
+            
+            balloons.push(balloon);
+        }
+
+        // 爆炸动画
+        function createExplosion(x, y) {
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion';
+            explosion.style.left = `${x - 50}px`;
+            explosion.style.top = `${y - 50}px`;
+            explosion.innerHTML = '💥';
+            explosion.style.fontSize = '50px';
+            gameArea.appendChild(explosion);
+            
+            setTimeout(() => {
+                explosion.remove();
+            }, 500);
+        }
+
+        // 击破气球
+        function popBalloon(balloon, index) {
+            balloon.element.classList.add('pop');
+            
+            // 爆炸效果
+            const rect = balloon.element.getBoundingClientRect();
+            const gameRect = gameArea.getBoundingClientRect();
+            createExplosion(rect.left - gameRect.left + 30, rect.top - gameRect.top + 35);
+            
+            // 更新得分
+            combo++;
+            const baseScore = 10;
+            const comboBonus = Math.floor(combo / 5) * 5;
+            score += baseScore + comboBonus;
+            
+            updateStats();
+            feedbackEl.textContent = `+${baseScore + comboBonus}分！连击×${combo} 🔥`;
+            feedbackEl.style.color = '#66bb6a';
+            
+            // 移除气球
+            setTimeout(() => {
+                if (balloon.element.parentNode) {
+                    balloon.element.remove();
+                }
+                balloons.splice(index, 1);
+            }, 300);
+        }
+
+        // 气球到达顶部
+        function balloonMissed(balloon, index) {
+            lives--;
+            combo = 0;
+            
+            updateStats();
+            feedbackEl.textContent = '气球飞走了 😢';
+            feedbackEl.style.color = '#ef5350';
+            
+            // 移除气球
+            if (balloon.element.parentNode) {
+                balloon.element.remove();
+            }
+            balloons.splice(index, 1);
+            
+            // 检查游戏结束
+            if (lives <= 0) {
+                endGame();
+            }
+        }
+
+        // 游戏主循环
+        function gameLoop() {
+            if (!gameRunning || gamePaused) {
+                animationFrame = requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            // 更新所有气球位置
+            for (let i = balloons.length - 1; i >= 0; i--) {
+                const balloon = balloons[i];
+                balloon.position += balloon.speed;
+                balloon.element.style.bottom = `${balloon.position}px`;
+                
+                // 检查是否到达顶部
+                if (balloon.position > 400) {
+                    balloonMissed(balloon, i);
+                }
+            }
+
+            animationFrame = requestAnimationFrame(gameLoop);
+        }
+
+        // 开始游戏
+        function startGame() {
+            if (gameRunning) return;
+            
+            gameRunning = true;
+            gamePaused = false;
+            inputArea.disabled = false;
+            pauseBtn.disabled = false;
+            startBtn.disabled = true;
+            inputArea.focus();
+            
+            // 开始生成气球
+            spawnInterval = setInterval(createBalloon, currentDifficulty.spawnRate);
+            
+            // 开始游戏循环
+            gameLoop();
+        }
+
+        // 暂停游戏
+        function togglePause() {
+            if (!gameRunning) return;
+            
+            gamePaused = !gamePaused;
+            pauseBtn.textContent = gamePaused ? '继续' : '暂停';
+            
+            if (gamePaused) {
+                feedbackEl.textContent = '游戏已暂停 ⏸️';
+            } else {
+                feedbackEl.textContent = '';
+                inputArea.focus();
+            }
+        }
+
+        // 结束游戏
+        function endGame() {
+            gameRunning = false;
+            
+            clearInterval(spawnInterval);
+            cancelAnimationFrame(animationFrame);
+            
+            inputArea.disabled = true;
+            pauseBtn.disabled = true;
+            
+            finalScoreEl.textContent = score;
+            gameOverEl.style.display = 'block';
+        }
+
+        // 切换难度
+        function changeDifficulty(e) {
+            if (gameRunning) {
+                if (!confirm('切换难度将重新开始游戏，确定吗？')) {
+                    return;
+                }
+                initGame();
+            }
+
+            // 移除所有active类
+            diffBtns.forEach(btn => btn.classList.remove('active'));
+            
+            // 添加当前active类
+            const btn = e.target;
+            btn.classList.add('active');
+            
+            gameMode = btn.dataset.mode;
+            
+            // 设置难度参数
+            switch (gameMode) {
+                case 'easy':
+                    currentDifficulty = {
+                        spawnRate: 2200,
+                        floatDuration: 10000,
+                        maxBalloons: 1,
+                        wordType: 'letter'
+                    };
+                    break;
+                case 'normal':
+                    currentDifficulty = {
+                        spawnRate: 2800,
+                        floatDuration: 9000,
+                        maxBalloons: 2,
+                        wordType: 'word'
+                    };
+                    break;
+                case 'hard':
+                    currentDifficulty = {
+                        spawnRate: 3000,
+                        floatDuration: 10000,
+                        maxBalloons: 2,
+                        wordType: 'phrase'
+                    };
+                    break;
+            }
+        }
+
+        // 处理输入
+        function handleInput(e) {
+            if (!gameRunning || gamePaused) return;
+            
+            const input = inputArea.value.trim().toLowerCase();
+            if (!input) return;
+            
+            // 查找匹配的气球
+            for (let i = 0; i < balloons.length; i++) {
+                if (balloons[i].text.toLowerCase() === input) {
+                    popBalloon(balloons[i], i);
+                    inputArea.value = '';
+                    return;
+                }
+            }
+            
+            // 没有匹配 - 只在有实际输入内容时才算打错
+            // 部分匹配不算错，让用户继续输入
+            const hasPartialMatch = balloons.some(b => b.text.toLowerCase().startsWith(input));
+            if (!hasPartialMatch && input.length > 1) {
+                combo = 0;
+                updateStats();
+                feedbackEl.textContent = '打错啦 ❌';
+                feedbackEl.style.color = '#ef5350';
+                inputArea.value = '';
+            }
+        }
+
+        // 事件监听
+        diffBtns.forEach(btn => btn.addEventListener('click', changeDifficulty));
+        startBtn.addEventListener('click', startGame);
+        pauseBtn.addEventListener('click', togglePause);
+        restartBtn.addEventListener('click', initGame);
+        inputArea.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleInput();
+            }
+        });
+        // 实时匹配：每次输入都检查
+        inputArea.addEventListener('input', () => {
+            if (!gameRunning || gamePaused) return;
+            const input = inputArea.value.trim().toLowerCase();
+            if (!input) return;
+            // 完全匹配则击破
+            for (let i = 0; i < balloons.length; i++) {
+                if (balloons[i].text.toLowerCase() === input) {
+                    popBalloon(balloons[i], i);
+                    inputArea.value = '';
+                    return;
+                }
+            }
+        });
+
+        // 初始化游戏
+        initGame();
+    </script>
+</div>
+<?php include("template/$OJ_TEMPLATE/footer.php");?>

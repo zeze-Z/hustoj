@@ -1,0 +1,494 @@
+<?php $show_title="数学闯关 - $OJ_NAME"; ?>
+<?php include("template/$OJ_TEMPLATE/header.php");?>
+
+<div class="padding">
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "微软雅黑", "幼圆", sans-serif;
+        }
+
+        .game-container {
+            background-color: white;
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(156, 39, 176, 0.3);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            border: 5px solid #9c27b0;
+            position: relative;
+            margin: 0 auto;
+            margin-top: 30px;
+        }
+
+        .game-container::before {
+            content: "🧮";
+            font-size: 30px;
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            background-color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #9c27b0;
+        }
+
+        .game-container::after {
+            content: "🏆";
+            font-size: 30px;
+            position: absolute;
+            bottom: -15px;
+            right: -15px;
+            background-color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #9c27b0;
+        }
+
+        h1 {
+            color: #7b1fa2;
+            margin-bottom: 20px;
+            font-size: 2.2rem;
+            text-shadow: 2px 2px 4px rgba(156, 39, 176, 0.2);
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .difficulty-easy {
+            background-color: #e1bee7;
+            color: #7b1fa2;
+        }
+
+        .difficulty-normal {
+            background-color: #ba68c8;
+            color: white;
+        }
+
+        .difficulty-hard {
+            background-color: #8e24aa;
+            color: white;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat-item {
+            background-color: #f3e5f5;
+            padding: 12px 20px;
+            border-radius: 20px;
+            min-width: 120px;
+            border: 2px dashed #9c27b0;
+            font-weight: bold;
+            color: #7b1fa2;
+        }
+
+        .question-display {
+            font-size: 3rem;
+            margin: 30px 0;
+            padding: 25px;
+            background-color: #f8f9fa;
+            border-radius: 20px;
+            border: 3px solid #ce93d8;
+            background-image: linear-gradient(to right, #f3e5f5, #faf5ff);
+            color: #6a1b9a;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        #input-area {
+            width: 100%;
+            padding: 18px;
+            font-size: 2rem;
+            border: 3px solid #9c27b0;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            background-color: #fff;
+            transition: all 0.3s;
+        }
+
+        #input-area:focus {
+            outline: none;
+            border-color: #7b1fa2;
+            box-shadow: 0 0 0 5px rgba(156, 39, 176, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .control-btn {
+            padding: 12px 35px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 20px;
+            background-color: #9c27b0;
+            color: white;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(156, 39, 176, 0.3);
+        }
+
+        .control-btn:hover {
+            background-color: #7b1fa2;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(156, 39, 176, 0.4);
+        }
+
+        .control-btn:disabled {
+            background-color: #d3d3d3;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .feedback {
+            height: 35px;
+            font-size: 1.5rem;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        .correct {
+            color: #4caf50;
+            animation: bounce 0.5s ease;
+        }
+
+        .wrong {
+            color: #f44336;
+            animation: shake 0.5s ease;
+        }
+
+        .game-result {
+            font-size: 1.8rem;
+            margin: 20px 0;
+            font-weight: bold;
+            padding: 20px;
+            border-radius: 15px;
+        }
+
+        .game-win {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            animation: celebration 1s ease infinite;
+        }
+
+        .game-lose {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        @keyframes celebration {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-5deg) scale(1.05); }
+            75% { transform: rotate(5deg) scale(1.05); }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .question-display {
+                font-size: 2rem;
+                padding: 20px;
+            }
+            
+            #input-area {
+                font-size: 1.5rem;
+            }
+            
+            .stat-item {
+                padding: 8px 15px;
+                min-width: 100px;
+                font-size: 0.9rem;
+            }
+
+            .game-container::before,
+            .game-container::after {
+                width: 35px;
+                height: 35px;
+                font-size: 25px;
+            }
+
+            .control-btn {
+                padding: 10px 25px;
+                font-size: 1rem;
+                margin: 5px;
+            }
+
+            .game-result {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+    <div class="game-container">
+        <h1>🧮 数学闯关 🏆</h1>
+        
+        <div class="difficulty-badge" id="difficulty-badge">简单难度</div>
+
+        <div class="stats">
+            <div class="stat-item">🏅 关卡: <span id="level">1</span></div>
+            <div class="stat-item">💯 得分: <span id="score">0</span></div>
+            <div class="stat-item">📝 剩余: <span id="remaining">5</span></div>
+            <div class="stat-item">🔥 连击: <span id="combo">0</span></div>
+        </div>
+
+        <div class="question-display" id="question">
+            3 + 5 = ?
+        </div>
+        
+        <input type="number" id="input-area" placeholder="请输入答案">
+        
+        <div class="feedback" id="feedback"></div>
+        
+        <div>
+            <button class="control-btn" id="submit-btn">提交答案</button>
+            <button class="control-btn" id="reset-btn">重新开始</button>
+        </div>
+        
+        <div id="game-result" class="game-result"></div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const difficultyBadgeEl = document.getElementById('difficulty-badge');
+        const levelEl = document.getElementById('level');
+        const scoreEl = document.getElementById('score');
+        const remainingEl = document.getElementById('remaining');
+        const comboEl = document.getElementById('combo');
+        const questionEl = document.getElementById('question');
+        const inputArea = document.getElementById('input-area');
+        const submitBtn = document.getElementById('submit-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const feedbackEl = document.getElementById('feedback');
+        const gameResultEl = document.getElementById('game-result');
+
+        // 游戏状态变量
+        let level = 1;
+        let score = 0;
+        let remaining = 5;
+        let combo = 0;
+        let correctCount = 0;
+        let currentAnswer = 0;
+        let gameOver = false;
+
+        // 难度配置
+        const difficultyConfig = {
+            1: { name: '简单难度', className: 'difficulty-easy', ops: ['+', '-'], maxNum: 99, minResult: 0 },
+            2: { name: '普通难度', className: 'difficulty-normal', ops: ['+', '-', '*'], maxNum: 99, minResult: null },
+            3: { name: '困难难度', className: 'difficulty-hard', ops: ['+', '-', '*', '/'], maxNum: 999, minResult: null }
+        };
+
+        // 获取当前难度
+        function getCurrentDifficulty() {
+            if (level <= 3) return difficultyConfig[1];
+            if (level <= 6) return difficultyConfig[2];
+            return difficultyConfig[3];
+        }
+
+        // 生成随机题目
+        function generateQuestion() {
+            const difficulty = getCurrentDifficulty();
+            const ops = difficulty.ops;
+            const op = ops[Math.floor(Math.random() * ops.length)];
+            const maxNum = difficulty.maxNum;
+
+            let a, b, answer;
+
+            switch (op) {
+                case '+':
+                    a = Math.floor(Math.random() * maxNum) + 1;
+                    b = Math.floor(Math.random() * maxNum) + 1;
+                    answer = a + b;
+                    break;
+                case '-':
+                    a = Math.floor(Math.random() * maxNum) + 1;
+                    b = Math.floor(Math.random() * maxNum) + 1;
+                    if (difficulty.minResult === 0 && a < b) {
+                        [a, b] = [b, a];
+                    }
+                    answer = a - b;
+                    break;
+                case '*':
+                    a = Math.floor(Math.random() * maxNum) + 1;
+                    b = Math.floor(Math.random() * 30) + 1; // 乘法控制数字不要太大
+                    answer = a * b;
+                    break;
+                case '/':
+                    // 除法确保整除
+                    b = Math.floor(Math.random() * 50) + 1;
+                    const multiplier = Math.floor(Math.random() * (maxNum / b)) + 1;
+                    a = b * multiplier;
+                    answer = multiplier;
+                    break;
+            }
+
+            currentAnswer = answer;
+            questionEl.textContent = `${a} ${op} ${b} = ?`;
+        }
+
+        // 更新UI显示
+        function updateUI() {
+            const difficulty = getCurrentDifficulty();
+            difficultyBadgeEl.textContent = difficulty.name;
+            difficultyBadgeEl.className = 'difficulty-badge ' + difficulty.className;
+            
+            levelEl.textContent = level;
+            scoreEl.textContent = score;
+            remainingEl.textContent = remaining;
+            comboEl.textContent = combo;
+        }
+
+        // 初始化游戏
+        function initGame() {
+            level = 1;
+            score = 0;
+            remaining = 5;
+            combo = 0;
+            correctCount = 0;
+            gameOver = false;
+            
+            generateQuestion();
+            updateUI();
+            
+            inputArea.value = '';
+            feedbackEl.textContent = '';
+            feedbackEl.className = 'feedback';
+            gameResultEl.textContent = '';
+            gameResultEl.className = 'game-result';
+            inputArea.disabled = false;
+            submitBtn.disabled = false;
+            inputArea.focus();
+        }
+
+        // 处理下一关
+        function nextLevel() {
+            level++;
+            remaining = 5;
+            correctCount = 0;
+            gameResultEl.textContent = `🎉 恭喜通过第${level-1}关！进入第${level}关，难度提升！`;
+            gameResultEl.className = 'game-result game-win';
+            generateQuestion();
+            updateUI();
+            
+            // 3秒后清除提示
+            setTimeout(() => {
+                gameResultEl.textContent = '';
+                gameResultEl.className = 'game-result';
+            }, 3000);
+        }
+
+        // 处理答题
+        function handleSubmit() {
+            if (gameOver) return;
+            
+            const userAnswer = parseInt(inputArea.value.trim());
+            
+            // 验证输入
+            if (isNaN(userAnswer)) {
+                feedbackEl.textContent = '请输入有效的数字！';
+                feedbackEl.className = 'feedback wrong';
+                inputArea.value = '';
+                inputArea.focus();
+                return;
+            }
+
+            if (userAnswer === currentAnswer) {
+                // 答对了
+                feedbackEl.textContent = '✅ 回答正确！';
+                feedbackEl.className = 'feedback correct';
+                correctCount++;
+                combo++;
+                
+                // 计算得分：基础10分 + 连击加分
+                let addScore = 10 + Math.floor(combo / 3) * 5;
+                score += addScore;
+            } else {
+                // 答错了
+                feedbackEl.textContent = `❌ 回答错误，正确答案是 ${currentAnswer}`;
+                feedbackEl.className = 'feedback wrong';
+                combo = 0;
+                score = Math.max(0, score - 5); // 得分不低于0
+            }
+
+            remaining--;
+            updateUI();
+
+            // 检查本关是否结束
+            if (remaining === 0) {
+                if (correctCount >= 4) {
+                    // 闯关成功
+                    setTimeout(() => {
+                        nextLevel();
+                    }, 1500);
+                } else {
+                    // 闯关失败
+                    gameOver = true;
+                    inputArea.disabled = true;
+                    submitBtn.disabled = true;
+                    gameResultEl.textContent = `😔 闯关失败！本关答对${correctCount}题，总得分${score}，继续加油哦！`;
+                    gameResultEl.className = 'game-result game-lose';
+                }
+            } else {
+                // 继续下一题
+                setTimeout(() => {
+                    generateQuestion();
+                    inputArea.value = '';
+                    feedbackEl.textContent = '';
+                    feedbackEl.className = 'feedback';
+                    inputArea.focus();
+                }, 1500);
+            }
+        }
+
+        // 事件监听
+        submitBtn.addEventListener('click', handleSubmit);
+        resetBtn.addEventListener('click', initGame);
+        
+        // 回车键提交
+        inputArea.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleSubmit();
+            }
+        });
+
+        // 初始化游戏
+        initGame();
+    </script>
+</div>
+<?php include("template/$OJ_TEMPLATE/footer.php");?>

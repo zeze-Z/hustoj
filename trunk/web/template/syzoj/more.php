@@ -110,9 +110,9 @@
     <h1 class="page-title">更多功能</h1>
     <p class="page-subtitle">探索平台提供的丰富功能与工具</p>
 
-    <!-- AI训练分类 -->
+    <!-- AI训练 -->
     <div class="section">
-        <h2 class="section-title">AI训练</h2>
+        <h2 class="section-title">🤖 AI训练</h2>
         <div class="cards-grid">
             <a href="AI_training.php?type=image" class="card">
                 <div class="card-icon">
@@ -130,6 +130,8 @@
                 <div class="card-desc">训练AI模型识别各种手势动作</div>
             </a>
 
+            <!-- 三方API已下线，暂时隐藏：语音分类、图像识别、手势识别 -->
+            <!--
             <a href="AI_training.php?type=audio" class="card">
                 <div class="card-icon">
                     <i class="microphone icon"></i>
@@ -153,12 +155,13 @@
                 <div class="card-title">手势识别</div>
                 <div class="card-desc">实时识别手势动作，体验交互乐趣</div>
             </a>
+            -->
         </div>
     </div>
 
     <!-- AI体验 -->
     <div class="section">
-        <h2 class="section-title">AI体验</h2>
+        <h2 class="section-title">✨ AI体验</h2>
         <div class="cards-grid">
             <a href="javascript:openAIExperience()" class="card">
                 <div class="card-icon">
@@ -170,24 +173,76 @@
         </div>
     </div>
 
-    <!-- 趣味工具 -->
+    <!-- 打字练习 -->
     <div class="section">
-        <h2 class="section-title">趣味工具</h2>
+        <h2 class="section-title">⌨️ 打字练习</h2>
         <div class="cards-grid">
             <a href="keyboard_game.php" class="card">
                 <div class="card-icon">
                     <i class="keyboard icon"></i>
                 </div>
                 <div class="card-title">打字游戏</div>
-                <div class="card-desc">在游戏中提升打字速度与准确率</div>
+                <div class="card-desc">在游戏中提升打字速度与准确率（适合3-6年级）</div>
             </a>
 
-            <a href="scratch.php" class="card">
+            <a href="balloon_typing.php" class="card">
+                <div class="card-icon">
+                    <i class="keyboard icon"></i>
+                </div>
+                <div class="card-title">气球打字</div>
+                <div class="card-desc">打字击破上升的气球，练习键盘输入（适合3-6年级）</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- 益智游戏 -->
+    <div class="section">
+        <h2 class="section-title">🧩 益智游戏</h2>
+        <div class="cards-grid">
+            <a href="guess_number.php" class="card">
+                <div class="card-icon">
+                    <i class="question circle icon"></i>
+                </div>
+                <div class="card-title">猜数字</div>
+                <div class="card-desc">动动脑筋，猜出隐藏的神秘数字（适合1-3年级）</div>
+            </a>
+
+            <a href="memory_game.php" class="card">
+                <div class="card-icon">
+                    <i class="th large icon"></i>
+                </div>
+                <div class="card-title">卡片配对</div>
+                <div class="card-desc">翻开卡片，找出相同的图案配对（适合1-3年级）</div>
+            </a>
+
+            <a href="math_game.php" class="card">
+                <div class="card-icon">
+                    <i class="calculator icon"></i>
+                </div>
+                <div class="card-title">数学闯关</div>
+                <div class="card-desc">挑战数学题，闯过一关又一关（适合2-4年级）</div>
+            </a>
+
+            <a href="minesweeper.php" class="card">
+                <div class="card-icon">
+                    <i class="bomb icon"></i>
+                </div>
+                <div class="card-title">扫雷</div>
+                <div class="card-desc">经典扫雷，找出所有隐藏的地雷（适合4-6年级）</div>
+            </a>
+        </div>
+    </div>
+
+    <!-- 编程学习 -->
+    <div class="section">
+        <h2 class="section-title">💻 编程学习</h2>
+        <div class="cards-grid">
+            <a href="coding_game.php" class="card">
                 <div class="card-icon">
                     <i class="code icon"></i>
                 </div>
-                <div class="card-title">Scratch案例</div>
-                <div class="card-desc">丰富的Scratch编程案例学习</div>
+                <div class="card-title">编程启蒙</div>
+                <div class="card-desc">拖拽积木学习编程，控制小猫走迷宫（适合3-6年级）</div>
             </a>
 
             <a href="https://turbowarp.org/editor" target="_blank" class="card">
@@ -195,8 +250,19 @@
                     <i class="pencil alternate icon"></i>
                 </div>
                 <div class="card-title">Scratch在线编程</div>
-                <div class="card-desc">在线Scratch编辑器，轻松创作作品</div>
+                <div class="card-desc">在线Scratch编辑器，轻松创作作品（适合3-6年级）</div>
             </a>
+
+            <!-- Scratch案例暂未上线，暂时隐藏 -->
+            <!--
+            <a href="scratch.php" class="card">
+                <div class="card-icon">
+                    <i class="code icon"></i>
+                </div>
+                <div class="card-title">Scratch案例</div>
+                <div class="card-desc">丰富的Scratch编程案例学习</div>
+            </a>
+            -->
         </div>
     </div>
 </div>

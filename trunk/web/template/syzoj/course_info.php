@@ -96,20 +96,20 @@
 
   <!-- 预览区域 -->
   <?php
-    $courseware_url = validatePreviewUrl($view_course['courseware_preview_url']);
-    $lesson_plan_url = validatePreviewUrl($view_course['lesson_plan_preview_url']);
-    $has_preview = !empty($courseware_url) || !empty($lesson_plan_url);
+    $has_preview = !empty($view_courseware_url) || !empty($view_lesson_plan_url);
+    // 未购买且存在完整版时显示购买遮罩
+    $show_purchase_banner = !$view_is_purchased && ($view_has_full_courseware || $view_has_full_lesson_plan);
   ?>
   <?php if ($has_preview): ?>
   <div class="ui segment" style="border-radius: 12px; margin-top: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 0;">
     <div class="ui top attached tabular menu" style="border-radius: 12px 12px 0 0; margin-bottom: 0;">
-      <a class="item <?php echo !empty($courseware_url) ? 'active' : ''; ?>"
+      <a class="item <?php echo !empty($view_courseware_url) ? 'active' : ''; ?>"
          data-tab="courseware"
          onclick="switchPreview('courseware');">
         <i class="file alternate outline icon"></i>
         <?php echo $MSG_COURSEWARE; ?>
       </a>
-      <a class="item <?php echo empty($courseware_url) && !empty($lesson_plan_url) ? 'active' : ''; ?>"
+      <a class="item <?php echo empty($view_courseware_url) && !empty($view_lesson_plan_url) ? 'active' : ''; ?>"
          data-tab="lesson_plan"
          onclick="switchPreview('lesson_plan');">
         <i class="book outline icon"></i>
@@ -117,11 +117,11 @@
       </a>
     </div>
 
-    <div class="ui bottom attached tab segment active" style="border-radius: 0 0 12px 12px; min-height: 400px; padding: 0;">
+    <div class="ui bottom attached tab segment active" style="border-radius: 0 0 12px 12px; min-height: 400px; padding: 0; position: relative;">
       <!-- 课件预览 -->
-      <div id="preview-courseware" class="ui tab <?php echo !empty($courseware_url) ? 'active' : ''; ?>" style="display: <?php echo !empty($courseware_url) ? 'block' : 'none'; ?>;">
-        <?php if (!empty($courseware_url)): ?>
-          <iframe src="<?php echo $courseware_url; ?>"
+      <div id="preview-courseware" class="ui tab <?php echo !empty($view_courseware_url) ? 'active' : ''; ?>" style="display: <?php echo !empty($view_courseware_url) ? 'block' : 'none'; ?>;">
+        <?php if (!empty($view_courseware_url)): ?>
+          <iframe src="<?php echo $view_courseware_url; ?>"
                   style="width: 100%; height: 500px; border: none;"
                   sandbox="allow-scripts allow-same-origin allow-popups">
           </iframe>
@@ -134,9 +134,9 @@
       </div>
 
       <!-- 教案预览 -->
-      <div id="preview-lesson_plan" class="ui tab <?php echo empty($courseware_url) && !empty($lesson_plan_url) ? 'active' : ''; ?>" style="display: <?php echo empty($courseware_url) && !empty($lesson_plan_url) ? 'block' : 'none'; ?>;">
-        <?php if (!empty($lesson_plan_url)): ?>
-          <iframe src="<?php echo $lesson_plan_url; ?>"
+      <div id="preview-lesson_plan" class="ui tab <?php echo empty($view_courseware_url) && !empty($view_lesson_plan_url) ? 'active' : ''; ?>" style="display: <?php echo empty($view_courseware_url) && !empty($view_lesson_plan_url) ? 'block' : 'none'; ?>;">
+        <?php if (!empty($view_lesson_plan_url)): ?>
+          <iframe src="<?php echo $view_lesson_plan_url; ?>"
                   style="width: 100%; height: 500px; border: none;"
                   sandbox="allow-scripts allow-same-origin allow-popups">
           </iframe>
@@ -147,8 +147,34 @@
           </div>
         <?php endif; ?>
       </div>
+
+      <!-- 购买提示遮罩 -->
+      <?php if ($show_purchase_banner): ?>
+      <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 120px; background: linear-gradient(to bottom, transparent, white 40%); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 20px; z-index: 10;">
+        <div style="text-align: center;">
+          <p style="color: #667eea; font-weight: 600; margin-bottom: 10px;"><?php echo $MSG_BUY_TO_VIEW_FULL; ?></p>
+          <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
+            <a href="loginpage.php" class="ui primary button"><i class="user icon"></i><?php echo $MSG_LOGIN; ?></a>
+          <?php elseif ($is_free): ?>
+            <a href="course_get.php?id=<?php echo $view_course['id']; ?>" class="ui green button"><i class="gift icon"></i><?php echo $MSG_FREE_GET; ?></a>
+          <?php else: ?>
+            <a href="course_get.php?id=<?php echo $view_course['id']; ?>" class="ui primary button"><i class="shopping cart icon"></i><?php echo $MSG_BUY_NOW; ?></a>
+          <?php endif; ?>
+        </div>
+      </div>
+      <?php endif; ?>
     </div>
   </div>
+
+  <!-- 已购买用户的下载源文件入口 -->
+  <?php if ($view_is_purchased && (!empty($view_course['courseware_link']) || !empty($view_course['lesson_plan_link']))): ?>
+  <div class="ui segment" style="border-radius: 12px; margin-top: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center; padding: 20px;">
+    <a href="course_get.php?id=<?php echo $view_course['id']; ?>" class="ui large positive button">
+      <i class="download icon"></i><?php echo $MSG_DOWNLOAD_SOURCE; ?>
+    </a>
+  </div>
+  <?php endif; ?>
+
   <?php endif; ?>
 
 </div>

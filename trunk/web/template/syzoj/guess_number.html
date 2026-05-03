@@ -1,0 +1,412 @@
+<?php $show_title="猜数字游戏 - $OJ_NAME"; ?>
+<?php include("template/$OJ_TEMPLATE/header.php");?>
+
+<div class="padding">
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "微软雅黑", "幼圆", sans-serif;
+        }
+
+        .game-container {
+            background-color: white;
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.3);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            border: 5px solid #4ecdc4;
+            position: relative;
+            margin: 0 auto;
+            margin-top: 30px;
+        }
+
+        .game-container::before {
+            content: "🎮";
+            font-size: 30px;
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            background-color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #4ecdc4;
+        }
+
+        .game-container::after {
+            content: "🎯";
+            font-size: 30px;
+            position: absolute;
+            bottom: -15px;
+            right: -15px;
+            background-color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #4ecdc4;
+        }
+
+        h1 {
+            color: #26a69a;
+            margin-bottom: 20px;
+            font-size: 2.2rem;
+            text-shadow: 2px 2px 4px rgba(78, 205, 196, 0.2);
+        }
+
+        .difficulty-selector {
+            margin-bottom: 25px;
+        }
+
+        .diff-btn {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: 2px solid #4ecdc4;
+            border-radius: 20px;
+            background-color: white;
+            color: #26a69a;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .diff-btn.active {
+            background-color: #4ecdc4;
+            color: white;
+        }
+
+        .diff-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(78, 205, 196, 0.2);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            font-size: 1.2rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat-item {
+            background-color: #f0fdfa;
+            padding: 12px 20px;
+            border-radius: 20px;
+            min-width: 120px;
+            border: 2px dashed #4ecdc4;
+            font-weight: bold;
+            color: #26a69a;
+        }
+
+        .range-display {
+            font-size: 1.5rem;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 20px;
+            border: 3px solid #81d4fa;
+            background-image: linear-gradient(to right, #f0f9ff, #f5fcff);
+            color: #0288d1;
+            font-weight: bold;
+        }
+
+        #input-area {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.5rem;
+            border: 3px solid #4ecdc4;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            background-color: #fff;
+            transition: all 0.3s;
+        }
+
+        #input-area:focus {
+            outline: none;
+            border-color: #26a69a;
+            box-shadow: 0 0 0 5px rgba(78, 205, 196, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .control-btn {
+            padding: 12px 35px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 20px;
+            background-color: #4ecdc4;
+            color: white;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(78, 205, 196, 0.3);
+        }
+
+        .control-btn:hover {
+            background-color: #26a69a;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(78, 205, 196, 0.4);
+        }
+
+        .control-btn:disabled {
+            background-color: #d3d3d3;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .feedback {
+            height: 35px;
+            font-size: 1.5rem;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        .too-high {
+            color: #ef5350;
+            animation: shake 0.5s ease;
+        }
+
+        .too-low {
+            color: #ffa726;
+            animation: shake 0.5s ease;
+        }
+
+        .correct {
+            color: #66bb6a;
+            animation: bounce 0.5s ease;
+        }
+
+        .game-win {
+            font-size: 2rem;
+            color: #4ecdc4;
+            margin: 20px 0;
+            font-weight: bold;
+            animation: celebration 1s ease infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        @keyframes celebration {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-5deg) scale(1.05); }
+            75% { transform: rotate(5deg) scale(1.05); }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .range-display {
+                font-size: 1.2rem;
+            }
+            
+            #input-area {
+                font-size: 1.2rem;
+            }
+            
+            .stat-item {
+                padding: 8px 15px;
+                min-width: 100px;
+                font-size: 1rem;
+            }
+
+            .diff-btn {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+                margin: 3px;
+            }
+
+            .game-container::before,
+            .game-container::after {
+                width: 35px;
+                height: 35px;
+                font-size: 25px;
+            }
+
+            .control-btn {
+                padding: 10px 25px;
+                font-size: 1rem;
+                margin: 5px;
+            }
+        }
+    </style>
+    <div class="game-container">
+        <h1>🎮 猜数字游戏 🎯</h1>
+        
+        <div class="difficulty-selector">
+            <button class="diff-btn active" data-min="1" data-max="50">简单 (1-50)</button>
+            <button class="diff-btn" data-min="1" data-max="100">普通 (1-100)</button>
+            <button class="diff-btn" data-min="1" data-max="500">困难 (1-500)</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">🔢 猜测次数: <span id="guess-count">0</span></div>
+            <div class="stat-item">🎯 当前范围: <span id="current-range">1-100</span></div>
+        </div>
+
+        <div class="range-display" id="range-hint">
+            请猜一个1到100之间的数字
+        </div>
+        
+        <input type="number" id="input-area" placeholder="请输入你猜的数字" min="1" max="100">
+        
+        <div class="feedback" id="feedback"></div>
+        
+        <div>
+            <button class="control-btn" id="guess-btn">猜一下</button>
+            <button class="control-btn" id="reset-btn">重新开始</button>
+        </div>
+        
+        <div id="game-win-message" class="game-win"></div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const diffBtns = document.querySelectorAll('.diff-btn');
+        const guessCountEl = document.getElementById('guess-count');
+        const currentRangeEl = document.getElementById('current-range');
+        const rangeHintEl = document.getElementById('range-hint');
+        const inputArea = document.getElementById('input-area');
+        const guessBtn = document.getElementById('guess-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const feedbackEl = document.getElementById('feedback');
+        const gameWinMessage = document.getElementById('game-win-message');
+
+        // 游戏状态变量
+        let minNum = 1;
+        let maxNum = 100;
+        let targetNum = 0;
+        let guessCount = 0;
+        let gameWon = false;
+
+        // 初始化游戏
+        function initGame() {
+            // 生成随机数字
+            targetNum = Math.floor(Math.random() * (maxNum - minNum + 1)) + minNum;
+            guessCount = 0;
+            gameWon = false;
+            
+            // 更新UI
+            guessCountEl.textContent = guessCount;
+            currentRangeEl.textContent = `${minNum}-${maxNum}`;
+            rangeHintEl.textContent = `请猜一个${minNum}到${maxNum}之间的数字`;
+            inputArea.value = '';
+            inputArea.min = minNum;
+            inputArea.max = maxNum;
+            feedbackEl.textContent = '';
+            feedbackEl.className = 'feedback';
+            gameWinMessage.textContent = '';
+            inputArea.disabled = false;
+            guessBtn.disabled = false;
+            inputArea.focus();
+        }
+
+        // 切换难度
+        function changeDifficulty(e) {
+            if (gameWon || guessCount > 0) {
+                if (!confirm('切换难度将重新开始游戏，确定吗？')) {
+                    return;
+                }
+            }
+
+            // 移除所有active类
+            diffBtns.forEach(btn => btn.classList.remove('active'));
+            
+            // 添加当前active类
+            const btn = e.target;
+            btn.classList.add('active');
+            
+            // 更新范围
+            minNum = parseInt(btn.dataset.min);
+            maxNum = parseInt(btn.dataset.max);
+            
+            // 重新初始化游戏
+            initGame();
+        }
+
+        // 处理猜测
+        function handleGuess() {
+            if (gameWon) return;
+            
+            const guess = parseInt(inputArea.value.trim());
+            
+            // 验证输入
+            if (isNaN(guess) || guess < minNum || guess > maxNum) {
+                feedbackEl.textContent = `请输入${minNum}到${maxNum}之间的有效数字！`;
+                feedbackEl.className = 'feedback too-high';
+                inputArea.value = '';
+                inputArea.focus();
+                return;
+            }
+
+            guessCount++;
+            guessCountEl.textContent = guessCount;
+
+            if (guess > targetNum) {
+                // 太大了
+                feedbackEl.textContent = '太大了 ⬆️';
+                feedbackEl.className = 'feedback too-high';
+                maxNum = guess - 1;
+            } else if (guess < targetNum) {
+                // 太小了
+                feedbackEl.textContent = '太小了 ⬇️';
+                feedbackEl.className = 'feedback too-low';
+                minNum = guess + 1;
+            } else {
+                // 猜对了
+                feedbackEl.textContent = '恭喜你！猜对了 🎉';
+                feedbackEl.className = 'feedback correct';
+                gameWon = true;
+                gameWinMessage.textContent = `太棒了！你用了${guessCount}次就猜对了！`;
+                inputArea.disabled = true;
+                guessBtn.disabled = true;
+                return;
+            }
+
+            // 更新范围显示
+            currentRangeEl.textContent = `${minNum}-${maxNum}`;
+            rangeHintEl.textContent = `答案在${minNum}到${maxNum}之间`;
+            inputArea.value = '';
+            inputArea.focus();
+        }
+
+        // 事件监听
+        diffBtns.forEach(btn => btn.addEventListener('click', changeDifficulty));
+        guessBtn.addEventListener('click', handleGuess);
+        resetBtn.addEventListener('click', initGame);
+        
+        // 回车键提交
+        inputArea.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleGuess();
+            }
+        });
+
+        // 初始化游戏
+        initGame();
+    </script>
+</div>
+<?php include("template/$OJ_TEMPLATE/footer.php");?>

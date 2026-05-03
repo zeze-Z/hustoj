@@ -35,7 +35,7 @@ $course = $result[0];
 function validatePreviewUrl($url) {
     if (empty($url)) return '';
     // 只允许 kdocs.cn 域名
-    if (preg_match('/^https?:\/\/[^/]*kdocs\.cn\//', $url)) {
+    if (preg_match('#^https?://[^/]*kdocs\.cn/#', $url)) {
         return htmlspecialchars($url, ENT_QUOTES, 'UTF-8');
     }
     return '';
@@ -49,6 +49,23 @@ if (isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
     $order_result = pdo_query($order_sql, $user_id, $course_id);
     $is_purchased = !empty($order_result);
 }
+
+// 根据购买状态决定传给模板的预览URL（核心安全逻辑：未购买用户HTML中不含完整版URL）
+if ($is_purchased && !empty($course['courseware_full_preview_url'])) {
+    $view_courseware_url = validatePreviewUrl($course['courseware_full_preview_url']);
+} else {
+    $view_courseware_url = validatePreviewUrl($course['courseware_preview_url']);
+}
+
+if ($is_purchased && !empty($course['lesson_plan_full_preview_url'])) {
+    $view_lesson_plan_url = validatePreviewUrl($course['lesson_plan_full_preview_url']);
+} else {
+    $view_lesson_plan_url = validatePreviewUrl($course['lesson_plan_preview_url']);
+}
+
+// 是否存在完整版预览（用于控制购买提示遮罩）
+$view_has_full_courseware = !empty($course['courseware_full_preview_url']);
+$view_has_full_lesson_plan = !empty($course['lesson_plan_full_preview_url']);
 
 // 模板变量
 $view_course = $course;
