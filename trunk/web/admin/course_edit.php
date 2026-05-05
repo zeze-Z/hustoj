@@ -133,7 +133,7 @@ if (isset($_POST['do'])) {
 
     try {
         pdo_query($sql, $title, $subject_id, $tags, $lesson_count, $description, $preview_price, $source_price, $status, $courseware_preview_url, $lesson_plan_preview_url, $courseware_full_preview_url, $lesson_plan_full_preview_url, $courseware_link, $lesson_plan_link, $link_expire_date, $sort_order, $course_id);
-        echo "<script>alert('$MSG_EDIT $MSG_SUCCESS'); window.location.href='list.php';</script>";
+        echo "<script>alert('$MSG_EDIT $MSG_SUCCESS'); window.location.href='course_list.php';</script>";
     } catch (Exception $e) {
         echo "<script>alert('$MSG_EDIT $MSG_FAILED: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "'); history.go(-1);</script>";
     }
