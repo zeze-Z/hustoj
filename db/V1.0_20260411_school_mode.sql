@@ -28,28 +28,56 @@ INSERT IGNORE INTO `school` (`id`, `name`, `code`, `status`) VALUES
 ALTER TABLE `users` MODIFY COLUMN `school` varchar(100) NOT NULL DEFAULT '' COMMENT '学校名称(冗余)';
 
 -- 新增 school_id（幂等）
-ALTER TABLE `users` ADD COLUMN IF NOT EXISTS `school_id` int DEFAULT NULL COMMENT '所属学校ID' AFTER `school`;
+SELECT COUNT(*) INTO @cnt FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='users' AND COLUMN_NAME='school_id';
+SET @sql = IF(@cnt=0, 'ALTER TABLE `users` ADD COLUMN `school_id` int DEFAULT NULL COMMENT ''所属学校ID'' AFTER `school`', 'DO 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- 添加索引（幂等）
-ALTER TABLE `users` ADD INDEX IF NOT EXISTS `idx_school_id` (`school_id`);
+SELECT COUNT(*) INTO @cnt FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='users' AND INDEX_NAME='idx_school_id';
+SET @sql = IF(@cnt=0, 'ALTER TABLE `users` ADD KEY `idx_school_id` (`school_id`)', 'DO 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- 4. 迁移现有用户到成都东辰（幂等：仅更新school_id为NULL的记录）
 UPDATE `users` SET `school_id` = 1, `school` = '成都东辰' WHERE `school_id` IS NULL;
 
 -- 5. 题目表扩展
-ALTER TABLE `problem` ADD COLUMN IF NOT EXISTS `school_id` int DEFAULT NULL COMMENT '创建学校ID' AFTER `source`;
-ALTER TABLE `problem` ADD COLUMN IF NOT EXISTS `is_public` tinyint NOT NULL DEFAULT '0' COMMENT '是否公开:0否,1是' AFTER `school_id`;
-ALTER TABLE `problem` ADD INDEX IF NOT EXISTS `idx_school_id` (`school_id`);
+SELECT COUNT(*) INTO @cnt FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='problem' AND COLUMN_NAME='school_id';
+SET @sql = IF(@cnt=0, 'ALTER TABLE `problem` ADD COLUMN `school_id` int DEFAULT NULL COMMENT ''创建学校ID'' AFTER `source`', 'DO 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SELECT COUNT(*) INTO @cnt FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='problem' AND COLUMN_NAME='is_public';
+SET @sql = IF(@cnt=0, 'ALTER TABLE `problem` ADD COLUMN `is_public` tinyint NOT NULL DEFAULT ''0'' COMMENT ''是否公开:0否,1是'' AFTER `school_id`', 'DO 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SELECT COUNT(*) INTO @cnt FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='problem' AND INDEX_NAME='idx_school_id';
+SET @sql = IF(@cnt=0, 'ALTER TABLE `problem` ADD KEY `idx_school_id` (`school_id`)', 'DO 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- 6. 比赛表扩展
-ALTER TABLE `contest` ADD COLUMN IF NOT EXISTS `school_id` int DEFAULT NULL COMMENT '创建学校ID' AFTER `user_id`;
-ALTER TABLE `contest` ADD COLUMN IF NOT EXISTS `is_public` tinyint NOT NULL DEFAULT '0' COMMENT '是否公开:0否,1是' AFTER `school_id`;
-ALTER TABLE `contest` ADD INDEX IF NOT EXISTS `idx_school_id` (`school_id`);
+SELECT COUNT(*) INTO @cnt FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='contest' AND COLUMN_NAME='school_id';
+SET @sql = IF(@cnt=0, 'ALTER TABLE `contest` ADD COLUMN `school_id` int DEFAULT NULL COMMENT ''创建学校ID'' AFTER `user_id`', 'DO 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SELECT COUNT(*) INTO @cnt FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='contest' AND COLUMN_NAME='is_public';
+SET @sql = IF(@cnt=0, 'ALTER TABLE `contest` ADD COLUMN `is_public` tinyint NOT NULL DEFAULT ''0'' COMMENT ''是否公开:0否,1是'' AFTER `school_id`', 'DO 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SELECT COUNT(*) INTO @cnt FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='contest' AND INDEX_NAME='idx_school_id';
+SET @sql = IF(@cnt=0, 'ALTER TABLE `contest` ADD KEY `idx_school_id` (`school_id`)', 'DO 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- 7. 新闻表扩展
-ALTER TABLE `news` ADD COLUMN IF NOT EXISTS `school_id` int DEFAULT NULL COMMENT '创建学校ID' AFTER `defunct`;
-ALTER TABLE `news` ADD COLUMN IF NOT EXISTS `is_public` tinyint NOT NULL DEFAULT '0' COMMENT '是否公开:0否,1是' AFTER `school_id`;
-ALTER TABLE `news` ADD INDEX IF NOT EXISTS `idx_school_id` (`school_id`);
+SELECT COUNT(*) INTO @cnt FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='news' AND COLUMN_NAME='school_id';
+SET @sql = IF(@cnt=0, 'ALTER TABLE `news` ADD COLUMN `school_id` int DEFAULT NULL COMMENT ''创建学校ID'' AFTER `defunct`', 'DO 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SELECT COUNT(*) INTO @cnt FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='news' AND COLUMN_NAME='is_public';
+SET @sql = IF(@cnt=0, 'ALTER TABLE `news` ADD COLUMN `is_public` tinyint NOT NULL DEFAULT ''0'' COMMENT ''是否公开:0否,1是'' AFTER `school_id`', 'DO 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SELECT COUNT(*) INTO @cnt FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='news' AND INDEX_NAME='idx_school_id';
+SET @sql = IF(@cnt=0, 'ALTER TABLE `news` ADD KEY `idx_school_id` (`school_id`)', 'DO 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- 8. 现有题目/比赛/新闻默认归属成都东辰并公开（幂等：仅更新school_id为NULL的记录）
 UPDATE `problem` SET `school_id` = 1, `is_public` = 1 WHERE `school_id` IS NULL;
@@ -59,6 +87,10 @@ UPDATE `news` SET `school_id` = 1, `is_public` = 1 WHERE `school_id` IS NULL;
 -- 9. 写入版本记录（幂等：使用INSERT IGNORE）
 INSERT IGNORE INTO `news` (`user_id`, `title`, `content`, `time`, `importance`, `menu`, `defunct`) VALUES 
 ('system', '系统升级', '已启用多学校隔离功能', NOW(), 0, 0, 'N');
+
+-- 清理会话变量
+SET @cnt = NULL;
+SET @sql = NULL;
 
 SELECT '多学校隔离功能升级完成!' AS result;
 
@@ -76,10 +108,10 @@ SELECT '多学校隔离功能升级完成!' AS result;
 -- UPDATE `users` SET `school_id` = NULL, `school` = '' WHERE `school_id` = 1;
 --
 -- -- 3. 删除各表新增字段和索引
--- ALTER TABLE `news` DROP INDEX IF EXISTS `idx_school_id`, DROP COLUMN IF EXISTS `is_public`, DROP COLUMN IF EXISTS `school_id`;
--- ALTER TABLE `contest` DROP INDEX IF EXISTS `idx_school_id`, DROP COLUMN IF EXISTS `is_public`, DROP COLUMN IF EXISTS `school_id`;
--- ALTER TABLE `problem` DROP INDEX IF EXISTS `idx_school_id`, DROP COLUMN IF EXISTS `is_public`, DROP COLUMN IF EXISTS `school_id`;
--- ALTER TABLE `users` DROP INDEX IF EXISTS `idx_school_id`, DROP COLUMN IF EXISTS `school_id`;
+-- ALTER TABLE `news` DROP KEY `idx_school_id`, DROP COLUMN `is_public`, DROP COLUMN `school_id`;
+-- ALTER TABLE `contest` DROP KEY `idx_school_id`, DROP COLUMN `is_public`, DROP COLUMN `school_id`;
+-- ALTER TABLE `problem` DROP KEY `idx_school_id`, DROP COLUMN `is_public`, DROP COLUMN `school_id`;
+-- ALTER TABLE `users` DROP KEY `idx_school_id`, DROP COLUMN `school_id`;
 --
 -- -- 4. 恢复 users.school 字段长度
 -- ALTER TABLE `users` MODIFY COLUMN `school` varchar(20) NOT NULL DEFAULT '';

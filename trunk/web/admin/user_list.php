@@ -63,7 +63,8 @@ if(isset($_GET['keyword']) && $_GET['keyword']!=""){
 </form>
 </center>
 
-<div style="overflow-x:auto; width:100%; margin:0 auto; display:block;">
+<center>
+  <div style="overflow-x:auto;">
   <table width=100% border=1 style="text-align:center;" class="ui striped aligned table">
 <thead>
     <tr>
@@ -122,7 +123,8 @@ if(isset($_GET['keyword']) && $_GET['keyword']!=""){
       echo "</tr>";
     } ?>
   </table>
-</div>
+  </div>
+</center>
 
 <?php
 if(!(isset($_GET['keyword']) && $_GET['keyword']!=""))

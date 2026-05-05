@@ -134,12 +134,19 @@ function execute_sql_file($pdo, $file_path) {
     }
     
     try {
-        // 按分号分割SQL语句（忽略字符串中的分号）
-        $statements = preg_split('/;\s*(?=(?:[^"]*"[^"]*")*[^"]*$)/', $sql);
+        // 先移除所有单行注释（-- 开头的注释）
+        $sql = preg_replace('/--.*$/m', '', $sql);
+        // 移除多行注释（/* ... */）
+        $sql = preg_replace('/\/\*.*?\*\//s', '', $sql);
+        // 移除空行
+        $sql = preg_replace('/^\s*$/m', '', $sql);
+        
+        // 按分号分割SQL语句
+        $statements = explode(';', $sql);
         
         foreach ($statements as $stmt) {
             $stmt = trim($stmt);
-            if ($stmt !== '' && strpos($stmt, '--') !== 0) {
+            if ($stmt !== '') {
                 $pdo->exec($stmt);
             }
         }
