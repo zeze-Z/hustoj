@@ -36,6 +36,11 @@
           <?php echo htmlspecialchars($view_course['title'], ENT_QUOTES, 'UTF-8'); ?>
           <div class="sub header">
             <?php echo htmlspecialchars($view_course['subject_name'], ENT_QUOTES, 'UTF-8'); ?>
+            <?php if (!empty($view_license_name)): ?>
+              <span class="ui label" style="margin-left: 10px; <?php if ($view_license_type == 1): ?>background: #667eea; color: white;<?php elseif ($view_license_type == 2): ?>background: #52c41a; color: white;<?php else: ?>background: #f59e0b; color: white;<?php endif; ?>">
+                <?php echo $view_license_name; ?>
+              </span>
+            <?php endif; ?>
           </div>
         </div>
       </h2>
@@ -47,14 +52,13 @@
             <span style="color: #666;"><i class="clock icon"></i> <?php echo $MSG_LESSON_COUNT; ?>: <?php echo intval($view_course['lesson_count']); ?></span>
           </div>
           <div>
-            <?php $price = floatval($view_course['price']); $is_free = $price == 0; ?>
-            <?php if ($is_free): ?>
+            <?php if ($view_amount == 0): ?>
               <span class="ui green label" style="font-size: 1.1em;">
                 <?php echo $MSG_FREE; ?>
               </span>
             <?php else: ?>
               <span class="ui red label" style="font-size: 1.1em;">
-                ¥<?php echo number_format($price, 2); ?>
+                ¥<?php echo number_format($view_amount, 2); ?>
               </span>
             <?php endif; ?>
           </div>
@@ -77,6 +81,10 @@
       <form class="ui form" method="POST" action="course_get.php">
         <?php require_once("./include/set_post_key.php"); ?>
         <input type="hidden" name="course_id" value="<?php echo $view_course['id']; ?>">
+        <input type="hidden" name="license_type" value="<?php echo $view_license_type; ?>">
+        <?php if ($view_is_upgrade): ?>
+        <input type="hidden" name="upgrade" value="1">
+        <?php endif; ?>
 
         <div class="field" style="margin-bottom: 20px;">
           <label style="font-weight: 600; color: #333;">
@@ -95,7 +103,7 @@
         <?php if (!$view_is_paid): ?>
           <button type="submit" class="ui large green button" style="width: 100%;">
             <i class="gift icon"></i>
-            <?php echo $MSG_CONFIRM_GET; ?>
+            确认获取<?php echo str_replace("(升级)", "", $view_license_name); ?>
           </button>
         <?php else: ?>
           <!-- 付费课程：支付方式选择 -->
@@ -116,8 +124,8 @@
           </div>
 
           <button type="submit" class="ui large primary button" style="width: 100%;">
-            <i class="shopping cart icon"></i>
-            <?php echo $MSG_BUY_NOW; ?>
+            <i class="<?php echo $view_is_upgrade ? 'arrow up' : 'shopping cart'; ?> icon"></i>
+            <?php echo $view_is_upgrade ? '立即支付升级费用' : '立即购买' . $view_license_name; ?>
           </button>
         <?php endif; ?>
       </form>

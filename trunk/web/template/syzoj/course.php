@@ -53,8 +53,10 @@
     <div class="ui four column stackable grid" style="margin-bottom: 20px;">
       <?php foreach ($view_courses as $course):
         $is_purchased = isset($view_purchased[$course['id']]);
-        $price = floatval($course['price']);
-        $is_free = $price == 0;
+        $preview_price = floatval($course['preview_price']);
+        $source_price = floatval($course['source_price']);
+        $min_price = min($preview_price, $source_price);
+        $is_free = $preview_price == 0 && $source_price == 0;
       ?>
         <div class="column">
           <div class="ui card" style="height: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s; border-radius: 12px; overflow: hidden;"
@@ -105,8 +107,10 @@
                 <span style="margin: 0 8px; color: #ddd;">|</span>
                 <?php if ($is_free): ?>
                   <span style="color: #52c41a; font-weight: 600;"><?php echo $MSG_FREE; ?></span>
+                <?php elseif ($preview_price > 0 && $source_price > 0): ?>
+                  <span style="color: #ff6b6b; font-weight: 600;">¥<?php echo number_format($min_price, 2); ?>起</span>
                 <?php else: ?>
-                  <span style="color: #ff6b6b; font-weight: 600;">¥<?php echo number_format($price, 2); ?></span>
+                  <span style="color: #ff6b6b; font-weight: 600;">¥<?php echo number_format(max($preview_price, $source_price), 2); ?></span>
                 <?php endif; ?>
               </div>
 

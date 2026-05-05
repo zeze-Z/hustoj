@@ -62,7 +62,8 @@ try {
                 <td>ID</td>
                 <td><?php echo $MSG_COURSE_TITLE ?></td>
                 <td><?php echo $MSG_COURSE_SUBJECT ?></td>
-                <td><?php echo $MSG_PRICE ?></td>
+                <td>预览版价格</td>
+                <td>原文件版价格</td>
                 <td><?php echo $MSG_LINK_EXPIRE_DATE ?></td>
                 <td><?php echo $MSG_STATUS ?></td>
                 <td><?php echo $MSG_OPERATOR ?></td>
@@ -74,7 +75,8 @@ try {
                 <td><?php echo $row['id'] ?></td>
                 <td><?php echo htmlentities($row['title'], ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?php echo htmlentities($row['subject_name'], ENT_QUOTES, 'UTF-8') ?></td>
-                <td><?php echo $row['price'] ?></td>
+                <td><?php echo $row['preview_price'] ?></td>
+                <td><?php echo $row['source_price'] ?></td>
                 <td><?php echo $row['link_expire_date'] ?></td>
                 <td>
                     <?php if ($row['status'] == 1) { ?>
@@ -84,7 +86,7 @@ try {
                     <?php } ?>
                 </td>
                 <td>
-                    <a href="edit.php?id=<?php echo $row['id'] ?>"><?php echo $MSG_EDIT ?></a>
+                    <a href="course_edit.php?id=<?php echo $row['id'] ?>"><?php echo $MSG_EDIT ?></a>
                     <?php if ($row['status'] == 1) { ?>
                         | <a href="#" onclick="changeStatus(<?php echo $row['id'] ?>, 0, '<?php echo $MSG_RESERVED ?>')"><?php echo $MSG_RESERVED ?></a>
                     <?php } else { ?>

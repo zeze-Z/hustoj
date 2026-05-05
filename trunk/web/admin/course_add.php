@@ -19,6 +19,7 @@ if (isset($_POST['do'])) {
     $tags = trim($_POST['tags']);
     $lesson_count = intval($_POST['lesson_count']);
     $description = trim($_POST['description']);
+    $preview_price = floatval($_POST['preview_price']);
     $source_price = floatval($_POST['source_price']);
     $status = isset($_POST['status']) ? 1 : 0;
     $courseware_preview_url = trim($_POST['courseware_preview_url']);
@@ -41,8 +42,19 @@ if (isset($_POST['do'])) {
         exit();
     }
 
+    if ($preview_price < 0) {
+        echo "<script>alert('预览版价格 must be >= 0'); history.go(-1);</script>";
+        exit();
+    }
+
     if ($source_price < 0) {
-        echo "<script>alert('$MSG_PRICE must be >= 0'); history.go(-1);</script>";
+        echo "<script>alert('原文件价格 must be >= 0'); history.go(-1);</script>";
+        exit();
+    }
+
+    // 强制校验：原文件价格必须 >= 预览版价格
+    if ($source_price < $preview_price) {
+        echo "<script>alert('原文件价格必须大于等于预览版价格'); history.go(-1);</script>";
         exit();
     }
 
@@ -105,10 +117,10 @@ if (isset($_POST['do'])) {
         exit();
     }
 
-    $sql = "INSERT INTO `course` (`title`, `subject_id`, `tags`, `lesson_count`, `description`, `source_price`, `status`, `courseware_preview_url`, `lesson_plan_preview_url`, `courseware_full_preview_url`, `lesson_plan_full_preview_url`, `courseware_link`, `lesson_plan_link`, `link_expire_date`, `sort_order`, `created_at`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+    $sql = "INSERT INTO `course` (`title`, `subject_id`, `tags`, `lesson_count`, `description`, `preview_price`, `source_price`, `status`, `courseware_preview_url`, `lesson_plan_preview_url`, `courseware_full_preview_url`, `lesson_plan_full_preview_url`, `courseware_link`, `lesson_plan_link`, `link_expire_date`, `sort_order`, `created_at`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
 
     try {
-        pdo_query($sql, $title, $subject_id, $tags, $lesson_count, $description, $source_price, $status, $courseware_preview_url, $lesson_plan_preview_url, $courseware_full_preview_url, $lesson_plan_full_preview_url, $courseware_link, $lesson_plan_link, $link_expire_date, $sort_order);
+        pdo_query($sql, $title, $subject_id, $tags, $lesson_count, $description, $preview_price, $source_price, $status, $courseware_preview_url, $lesson_plan_preview_url, $courseware_full_preview_url, $lesson_plan_full_preview_url, $courseware_link, $lesson_plan_link, $link_expire_date, $sort_order);
         echo "<script>alert('$MSG_ADD $MSG_SUCCESS'); window.location.href='course_list.php';</script>";
     } catch (Exception $e) {
         echo "<script>alert('$MSG_ADD $MSG_FAILED: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "'); history.go(-1);</script>";
@@ -172,10 +184,18 @@ $subject_list = pdo_query($sql);
         </div>
 
         <div class="form-group">
+            <label class="col-sm-2 control-label">预览版价格（元）</label>
+            <div class="col-sm-6">
+                <input type="number" name="preview_price" class="form-control" value="0" min="0" step="0.01">
+                <small class="text-muted">0表示免费，购买后可查看完整在线预览内容</small>
+            </div>
+        </div>
+
+        <div class="form-group">
             <label class="col-sm-2 control-label">原文件价格（元）</label>
             <div class="col-sm-6">
                 <input type="number" name="source_price" class="form-control" value="0" min="0" step="0.01">
-                <small class="text-muted">0表示免费</small>
+                <small class="text-muted">0表示免费，购买后可下载可编辑原文件</small>
             </div>
         </div>
 
