@@ -381,8 +381,8 @@
       <div style="font-size: 1.1em;">
         <i class="qq icon" style="color: #12b7f5;"></i>
         咨询客服QQ：
-        <a href="tencent://message/?uin=326234108" style="color: #12b7f5; font-weight: 600;">
-          326234108
+        <a href="tencent://message/?uin=2326077585" style="color: #12b7f5; font-weight: 600;">
+          2326077585
         </a>
       </div>
     </div>

@@ -150,7 +150,7 @@ $subject_list = pdo_query($sql);
 <center><h3><?php echo $view_title ?></h3></center>
 
 <div class="padding">
-    <form action="edit.php?id=<?php echo $course_id ?>" method="post" class="form-horizontal">
+    <form action="course_edit.php?id=<?php echo $course_id ?>" method="post" class="form-horizontal">
         <?php require_once("../include/set_post_key.php"); ?>
 
         <div class="form-group">
@@ -297,7 +297,7 @@ $subject_list = pdo_query($sql);
                 <button type="submit" name="do" value="true" class="btn btn-primary">
                     <i class="glyphicon glyphicon-ok"></i> <?php echo $MSG_SUBMIT ?>
                 </button>
-                <a href="list.php" class="btn btn-default">
+                <a href="course_list.php" class="btn btn-default">
                     <i class="glyphicon glyphicon-arrow-left"></i> <?php echo $MSG_BACK ?>
                 </a>
             </div>
