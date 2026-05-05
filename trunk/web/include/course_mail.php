@@ -95,7 +95,6 @@ function send_course_mail($to_email, $course_data, $valid_days = 365) {
                 <div class="link-url">
                     <a href="{$course_data['courseware_link']}" target="_blank">{$course_data['courseware_link']}</a>
                 </div>
-                <div style="margin-top: 10px;">提取码：<span class="code">{$course_data['courseware_code']}</span></div>
             </div>
 
             <!-- 教案下载链接 -->
@@ -104,7 +103,6 @@ function send_course_mail($to_email, $course_data, $valid_days = 365) {
                 <div class="link-url">
                     <a href="{$course_data['lesson_plan_link']}" target="_blank">{$course_data['lesson_plan_link']}</a>
                 </div>
-                <div style="margin-top: 10px;">提取码：<span class="code">{$course_data['lesson_plan_code']}</span></div>
             </div>
 
             <div class="warning">

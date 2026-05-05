@@ -131,8 +131,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            animation: float linear;
-            transition: transform 0.2s ease;
+            will-change: transform;
         }
 
         .balloon-body {
@@ -180,11 +179,6 @@
         .balloon-purple .balloon-body::after { border-top: 10px solid #ab47bc; }
         .balloon-pink .balloon-body { background-color: #ec407a; }
         .balloon-pink .balloon-body::after { border-top: 10px solid #ec407a; }
-
-        @keyframes float {
-            from { transform: translateY(0); }
-            to { transform: translateY(-400px); }
-        }
 
         @keyframes pop {
             0% { transform: scale(1); opacity: 1; }
@@ -495,10 +489,9 @@
             const maxLeft = gameArea.clientWidth - 70;
             const left = Math.random() * maxLeft;
             balloonEl.style.left = `${left}px`;
-            balloonEl.style.bottom = '-100px';
+            balloonEl.style.bottom = '0px';
             
-            // 设置动画
-            balloonEl.style.animationDuration = `${currentDifficulty.floatDuration / 1000}s`;
+
             
             gameArea.appendChild(balloonEl);
             
@@ -588,7 +581,7 @@
             for (let i = balloons.length - 1; i >= 0; i--) {
                 const balloon = balloons[i];
                 balloon.position += balloon.speed;
-                balloon.element.style.bottom = `${balloon.position}px`;
+                balloon.element.style.transform = `translateY(${-balloon.position}px)`;
                 
                 // 检查是否到达顶部
                 if (balloon.position > 400) {

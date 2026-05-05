@@ -1,0 +1,681 @@
+<?php $show_title="时钟认读 - $OJ_NAME"; ?>
+<?php include("template/$OJ_TEMPLATE/header.php");?>
+
+<style>
+:root {
+    --primary-color: #ff7a00;
+    --secondary-color: #ffb700;
+    --background-color: #fff8e6;
+    --text-color: #333333;
+    --success-color: #4caf50;
+    --error-color: #f44336;
+    --clock-face: #ffffff;
+    --hour-hand: #333333;
+    --minute-hand: #ff7a00;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--background-color);
+    font-family: 'Arial', sans-serif;
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.game-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+}
+
+.game-header {
+    margin-bottom: 20px;
+}
+
+.game-title {
+    color: var(--primary-color);
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.game-stats {
+    display: flex;
+    justify-content: space-around;
+    background-color: white;
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.stat-item {
+    flex: 1;
+    min-width: 100px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #666;
+    display: block;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.difficulty-selector {
+    margin-bottom: 20px;
+}
+
+.difficulty-btn {
+    padding: 10px 20px;
+    margin: 0 5px;
+    border: 2px solid var(--primary-color);
+    background-color: white;
+    color: var(--primary-color);
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    will-change: transform;
+}
+
+.difficulty-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.difficulty-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 122, 0, 0.3);
+}
+
+.clock-container {
+    margin: 30px auto;
+    width: 300px;
+    height: 300px;
+    position: relative;
+}
+
+#clock-canvas {
+    width: 100%;
+    height: 100%;
+    background-color: var(--clock-face);
+    border-radius: 50%;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1), 0 0 0 8px var(--primary-color);
+    will-change: transform;
+}
+
+.options-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin: 30px 0;
+}
+
+.option-btn {
+    padding: 20px;
+    background-color: white;
+    border: 3px solid var(--secondary-color);
+    border-radius: 15px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    will-change: transform;
+}
+
+.option-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(255, 183, 0, 0.3);
+}
+
+.option-btn.correct {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    color: white;
+}
+
+.option-btn.incorrect {
+    background-color: var(--error-color);
+    border-color: var(--error-color);
+    color: white;
+}
+
+.game-controls {
+    margin-top: 20px;
+}
+
+.control-btn {
+    padding: 12px 30px;
+    margin: 0 10px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    will-change: transform;
+}
+
+.control-btn:hover {
+    background-color: #e66f00;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 122, 0, 0.4);
+}
+
+.control-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.feedback {
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.feedback.show {
+    opacity: 1;
+}
+
+.feedback.correct {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: var(--success-color);
+    border: 2px solid var(--success-color);
+}
+
+.feedback.incorrect {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: var(--error-color);
+    border: 2px solid var(--error-color);
+}
+
+.timer-bar {
+    width: 100%;
+    height: 10px;
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.timer-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success-color), var(--secondary-color), var(--error-color));
+    width: 100%;
+    will-change: width;
+}
+
+@media (max-width: 600px) {
+    .game-title {
+        font-size: 2rem;
+    }
+    
+    .clock-container {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .options-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .option-btn {
+        padding: 15px;
+        font-size: 1.1rem;
+    }
+}
+</style>
+
+<div class="game-container">
+    <div class="game-header">
+        <h1 class="game-title">⏰ 时钟认读小游戏</h1>
+        <p>小朋友，看看时钟上的时间，选择正确的答案吧！</p>
+    </div>
+
+    <div class="timer-bar">
+        <div class="timer-fill" id="timer-fill"></div>
+    </div>
+
+    <div class="game-stats">
+        <div class="stat-item">
+            <span class="stat-label">得分</span>
+            <span class="stat-value" id="score">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">关卡</span>
+            <span class="stat-value" id="level">1</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">正确率</span>
+            <span class="stat-value" id="accuracy">0%</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">剩余时间</span>
+            <span class="stat-value" id="time-left">60</span>
+        </div>
+    </div>
+
+    <div class="difficulty-selector">
+        <button class="difficulty-btn active" data-difficulty="easy">简单（整点）</button>
+        <button class="difficulty-btn" data-difficulty="medium">普通（半点）</button>
+        <button class="difficulty-btn" data-difficulty="hard">困难（任意时间）</button>
+    </div>
+
+    <div class="clock-container">
+        <canvas id="clock-canvas" width="300" height="300"></canvas>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="options-container" id="options-container"></div>
+
+    <div class="game-controls">
+        <button class="control-btn" id="start-btn">开始游戏</button>
+        <button class="control-btn" id="reset-btn">重新开始</button>
+    </div>
+</div>
+
+<script>
+class ClockReadingGame {
+    constructor() {
+        this.canvas = document.getElementById('clock-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.centerX = this.canvas.width / 2;
+        this.centerY = this.canvas.height / 2;
+        this.radius = Math.min(this.centerX, this.centerY) - 10;
+
+        this.difficulty = 'easy';
+        this.score = 0;
+        this.level = 1;
+        this.totalQuestions = 0;
+        this.correctAnswers = 0;
+        this.timeLeft = 60;
+        this.gameRunning = false;
+        this.currentHour = 0;
+        this.currentMinute = 0;
+        
+        this.lastTime = 0;
+        this.animationId = null;
+        this.timerAccumulator = 0;
+
+        this.initializeEventListeners();
+        this.drawClock(3, 0);
+    }
+
+    initializeEventListeners() {
+        document.getElementById('start-btn').addEventListener('click', () => this.startGame());
+        document.getElementById('reset-btn').addEventListener('click', () => this.resetGame());
+        
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                this.difficulty = e.target.dataset.difficulty;
+                if (!this.gameRunning) {
+                    this.generateNewQuestion();
+                }
+            });
+        });
+    }
+
+    startGame() {
+        if (this.gameRunning) return;
+        
+        this.gameRunning = true;
+        this.score = 0;
+        this.level = 1;
+        this.totalQuestions = 0;
+        this.correctAnswers = 0;
+        this.timeLeft = 60;
+        this.lastTime = performance.now();
+        this.timerAccumulator = 0;
+        
+        this.updateStats();
+        this.generateNewQuestion();
+        this.gameLoop();
+        
+        document.getElementById('start-btn').disabled = true;
+    }
+
+    resetGame() {
+        this.gameRunning = false;
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
+        
+        this.score = 0;
+        this.level = 1;
+        this.totalQuestions = 0;
+        this.correctAnswers = 0;
+        this.timeLeft = 60;
+        
+        document.getElementById('timer-fill').style.width = '100%';
+        this.updateStats();
+        this.drawClock(3, 0);
+        document.getElementById('options-container').innerHTML = '';
+        document.getElementById('feedback').classList.remove('show');
+        document.getElementById('start-btn').disabled = false;
+    }
+
+    gameLoop(timestamp = performance.now()) {
+        if (!this.gameRunning) return;
+        
+        const dt = (timestamp - this.lastTime) / 1000;
+        this.lastTime = timestamp;
+        
+        this.timerAccumulator += dt;
+        if (this.timerAccumulator >= 1) {
+            this.timerAccumulator -= 1;
+            this.timeLeft--;
+            
+            const percentage = Math.max(0, (this.timeLeft / 60) * 100);
+            document.getElementById('timer-fill').style.width = percentage + '%';
+            document.getElementById('time-left').textContent = this.timeLeft;
+
+            if (this.timeLeft <= 0) {
+                this.endGame();
+                return;
+            }
+        }
+
+        this.animationId = requestAnimationFrame((t) => this.gameLoop(t));
+    }
+
+    endGame() {
+        this.gameRunning = false;
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
+        
+        const accuracy = this.totalQuestions > 0 ? Math.round((this.correctAnswers / this.totalQuestions) * 100) : 0;
+        
+        let message = `游戏结束！\n\n`;
+        message += `最终得分: ${this.score}\n`;
+        message += `回答正确: ${this.correctAnswers}/${this.totalQuestions}\n`;
+        message += `正确率: ${accuracy}%\n`;
+        message += `达到关卡: ${this.level}`;
+        
+        alert(message);
+        document.getElementById('start-btn').disabled = false;
+    }
+
+    generateNewQuestion() {
+        this.totalQuestions++;
+        
+        let hour, minute;
+        
+        switch (this.difficulty) {
+            case 'easy':
+                hour = Math.floor(Math.random() * 12) + 1;
+                minute = 0;
+                break;
+            case 'medium':
+                hour = Math.floor(Math.random() * 12) + 1;
+                minute = Math.random() > 0.5 ? 0 : 30;
+                break;
+            case 'hard':
+                hour = Math.floor(Math.random() * 12) + 1;
+                minute = Math.floor(Math.random() * 12) * 5;
+                break;
+        }
+
+        this.currentHour = hour;
+        this.currentMinute = minute;
+
+        this.drawClock(hour, minute);
+        this.generateOptions(hour, minute);
+    }
+
+    generateOptions(correctHour, correctMinute) {
+        const options = [];
+        const correctTime = this.formatTime(correctHour, correctMinute);
+        options.push(correctTime);
+
+        while (options.length < 4) {
+            let hour, minute;
+            if (this.difficulty === 'easy') {
+                hour = Math.floor(Math.random() * 12) + 1;
+                minute = 0;
+            } else if (this.difficulty === 'medium') {
+                hour = Math.floor(Math.random() * 12) + 1;
+                minute = Math.random() > 0.5 ? 0 : 30;
+            } else {
+                hour = Math.floor(Math.random() * 12) + 1;
+                minute = Math.floor(Math.random() * 12) * 5;
+            }
+            
+            const time = this.formatTime(hour, minute);
+            if (!options.includes(time)) {
+                options.push(time);
+            }
+        }
+
+        options.sort(() => Math.random() - 0.5);
+
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+
+        options.forEach(option => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.textContent = option;
+            btn.addEventListener('click', () => this.checkAnswer(option, btn));
+            container.appendChild(btn);
+        });
+    }
+
+    formatTime(hour, minute) {
+        const h = hour < 10 ? `0${hour}` : hour;
+        const m = minute < 10 ? `0${minute}` : minute;
+        return `${h}:${m}`;
+    }
+
+    checkAnswer(selectedOption, selectedBtn) {
+        if (!this.gameRunning) return;
+
+        const correctTime = this.formatTime(this.currentHour, this.currentMinute);
+        const isCorrect = selectedOption === correctTime;
+
+        const feedback = document.getElementById('feedback');
+        feedback.className = 'feedback';
+
+        if (isCorrect) {
+            this.correctAnswers++;
+            this.score += 10 * this.level;
+            feedback.textContent = '🎉 答对了！真棒！';
+            feedback.classList.add('correct', 'show');
+            selectedBtn.classList.add('correct');
+
+            this.animatePulse(selectedBtn);
+
+            if (this.correctAnswers % 5 === 0) {
+                this.level++;
+                setTimeout(() => {
+                    alert(`恭喜你升到 ${this.level} 级！继续加油！`);
+                }, 700);
+            }
+        } else {
+            feedback.textContent = `❌ 答错了，正确答案是 ${correctTime}`;
+            feedback.classList.add('incorrect', 'show');
+            selectedBtn.classList.add('incorrect');
+
+            this.animateShake(selectedBtn);
+
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                if (btn.textContent === correctTime) {
+                    btn.classList.add('correct');
+                    this.animatePulse(btn);
+                }
+            });
+        }
+
+        this.updateStats();
+
+        setTimeout(() => {
+            feedback.classList.remove('show');
+            this.generateNewQuestion();
+        }, 2000);
+    }
+
+    animatePulse(element) {
+        let start = performance.now();
+        const duration = 600;
+
+        function pulse(timestamp) {
+            const elapsed = timestamp - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const scale = 1 + 0.05 * Math.sin(progress * Math.PI);
+            
+            element.style.transform = `scale(${scale})`;
+            
+            if (progress < 1) {
+                requestAnimationFrame(pulse);
+            } else {
+                element.style.transform = '';
+            }
+        }
+
+        requestAnimationFrame(pulse);
+    }
+
+    animateShake(element) {
+        let start = performance.now();
+        const duration = 400;
+
+        function shake(timestamp) {
+            const elapsed = timestamp - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const offset = 5 * Math.sin(progress * 4 * Math.PI);
+            
+            element.style.transform = `translateX(${offset}px)`;
+            
+            if (progress < 1) {
+                requestAnimationFrame(shake);
+            } else {
+                element.style.transform = '';
+            }
+        }
+
+        requestAnimationFrame(shake);
+    }
+
+    updateStats() {
+        document.getElementById('score').textContent = this.score;
+        document.getElementById('level').textContent = this.level;
+        const accuracy = this.totalQuestions > 0 ? Math.round((this.correctAnswers / this.totalQuestions) * 100) : 0;
+        document.getElementById('accuracy').textContent = accuracy + '%';
+    }
+
+    drawClock(hour, minute) {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.drawClockFace();
+        this.drawNumbers();
+        this.drawHands(hour, minute);
+        this.drawCenterDot();
+    }
+
+    drawClockFace() {
+        this.ctx.beginPath();
+        this.ctx.arc(this.centerX, this.centerY, this.radius, 0, 2 * Math.PI);
+        this.ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--clock-face').trim();
+        this.ctx.fill();
+        this.ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+        this.ctx.lineWidth = 8;
+        this.ctx.stroke();
+    }
+
+    drawNumbers() {
+        this.ctx.font = 'bold 24px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim();
+
+        for (let num = 1; num <= 12; num++) {
+            const angle = (num * Math.PI) / 6;
+            const x = this.centerX + (this.radius - 35) * Math.sin(angle);
+            const y = this.centerY - (this.radius - 35) * Math.cos(angle);
+            this.ctx.fillText(num.toString(), x, y);
+        }
+
+        for (let i = 0; i < 60; i++) {
+            const angle = (i * Math.PI) / 30;
+            const length = i % 5 === 0 ? 15 : 8;
+            const width = i % 5 === 0 ? 3 : 1;
+            
+            this.ctx.beginPath();
+            this.ctx.lineWidth = width;
+            this.ctx.strokeStyle = '#666';
+            
+            const x1 = this.centerX + (this.radius - 15) * Math.sin(angle);
+            const y1 = this.centerY - (this.radius - 15) * Math.cos(angle);
+            const x2 = this.centerX + (this.radius - 15 - length) * Math.sin(angle);
+            const y2 = this.centerY - (this.radius - 15 - length) * Math.cos(angle);
+            
+            this.ctx.moveTo(x1, y1);
+            this.ctx.lineTo(x2, y2);
+            this.ctx.stroke();
+        }
+    }
+
+    drawHands(hour, minute) {
+        const hourAngle = (hour % 12) * 30 + minute * 0.5;
+        const minuteAngle = minute * 6;
+
+        this.drawHand(hourAngle, this.radius * 0.5, 6, getComputedStyle(document.documentElement).getPropertyValue('--hour-hand').trim());
+        this.drawHand(minuteAngle, this.radius * 0.7, 4, getComputedStyle(document.documentElement).getPropertyValue('--minute-hand').trim());
+    }
+
+    drawHand(angle, length, width, color) {
+        this.ctx.save();
+        this.ctx.translate(this.centerX, this.centerY);
+        this.ctx.rotate((angle * Math.PI) / 180);
+        this.ctx.beginPath();
+        this.ctx.lineWidth = width;
+        this.ctx.lineCap = 'round';
+        this.ctx.strokeStyle = color;
+        this.ctx.moveTo(0, 10);
+        this.ctx.lineTo(0, -length);
+        this.ctx.stroke();
+        this.ctx.restore();
+    }
+
+    drawCenterDot() {
+        this.ctx.beginPath();
+        this.ctx.arc(this.centerX, this.centerY, 6, 0, 2 * Math.PI);
+        this.ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+        this.ctx.fill();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    new ClockReadingGame();
+});
+</script>
+
+<?php require("footer.php"); ?>

@@ -41,35 +41,45 @@ function validatePreviewUrl($url) {
     return '';
 }
 
-// 获取用户是否已购买课程
-$is_purchased = false;
+// 权限判断（多权限体系）
+$has_preview_license = false; // 预览版权限：能看完整预览
+$has_source_license = false;  // 原文件权限：能下载原文件
+$is_free = floatval($course['price']) == 0;
+
 if (isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
     $user_id = $_SESSION[$OJ_NAME . '_' . 'user_id'];
-    $order_sql = "SELECT id FROM course_order WHERE user_id = ? AND course_id = ? AND pay_status = 1";
+    
+    // 查询用户该课程的所有已支付权限
+    $order_sql = "SELECT license_type FROM course_order WHERE user_id = ? AND course_id = ? AND pay_status = 1";
     $order_result = pdo_query($order_sql, $user_id, $course_id);
-    $is_purchased = !empty($order_result);
+    
+    foreach ($order_result as $order) {
+        $type = intval($order['license_type']);
+        if ($type == 1 || $type == 3) $has_preview_license = true;
+        if ($type == 2 || $type == 3) $has_source_license = true;
+    }
 }
 
-// 根据购买状态决定传给模板的预览URL（核心安全逻辑：未购买用户HTML中不含完整版URL）
-if ($is_purchased && !empty($course['courseware_full_preview_url'])) {
+// 根据权限返回对应预览URL
+if ($has_preview_license && !empty($course['courseware_full_preview_url'])) {
     $view_courseware_url = validatePreviewUrl($course['courseware_full_preview_url']);
 } else {
     $view_courseware_url = validatePreviewUrl($course['courseware_preview_url']);
 }
 
-if ($is_purchased && !empty($course['lesson_plan_full_preview_url'])) {
+if ($has_preview_license && !empty($course['lesson_plan_full_preview_url'])) {
     $view_lesson_plan_url = validatePreviewUrl($course['lesson_plan_full_preview_url']);
 } else {
     $view_lesson_plan_url = validatePreviewUrl($course['lesson_plan_preview_url']);
 }
 
-// 是否存在完整版预览（用于控制购买提示遮罩）
-$view_has_full_courseware = !empty($course['courseware_full_preview_url']);
-$view_has_full_lesson_plan = !empty($course['lesson_plan_full_preview_url']);
-
 // 模板变量
 $view_course = $course;
-$view_is_purchased = $is_purchased;
+$view_has_preview_license = $has_preview_license;
+$view_has_source_license = $has_source_license;
+$view_is_purchased = $has_preview_license || $has_source_license; // 兼容旧逻辑
+$view_has_full_courseware = !empty($course['courseware_full_preview_url']);
+$view_has_full_lesson_plan = !empty($course['lesson_plan_full_preview_url']);
 $page_title = "$MSG_COURSE: " . htmlspecialchars($course['title'], ENT_QUOTES, 'UTF-8') . " - $OJ_NAME";
 
 require("template/" . $OJ_TEMPLATE . "/course_info.php");

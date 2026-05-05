@@ -123,9 +123,7 @@ try {
         $course_data = array(
             'title' => $course['title'],
             'courseware_link' => $course['courseware_link'],
-            'courseware_code' => $course['courseware_code'],
-            'lesson_plan_link' => $course['lesson_plan_link'],
-            'lesson_plan_code' => $course['lesson_plan_code']
+            'lesson_plan_link' => $course['lesson_plan_link']
         );
 
         if (send_course_mail($order['email'], $course_data)) {

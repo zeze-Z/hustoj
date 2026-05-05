@@ -47,9 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $course_data = array(
                     'title' => $order['title'],
                     'courseware_link' => $order['courseware_link'],
-                    'courseware_code' => $order['courseware_code'],
-                    'lesson_plan_link' => $order['lesson_plan_link'],
-                    'lesson_plan_code' => $order['lesson_plan_code']
+                    'lesson_plan_link' => $order['lesson_plan_link']
                 );
 
                 if (send_course_mail($email, $course_data)) {

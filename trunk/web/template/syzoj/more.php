@@ -34,6 +34,26 @@
     margin-bottom: 25px;
     padding-bottom: 10px;
     border-bottom: 2px solid #667eea;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.auth-tag {
+    font-size: 0.85rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: normal;
+}
+
+.tag-public {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.tag-private {
+    background-color: #fef3c7;
+    color: #92400e;
 }
 
 .cards-grid {
@@ -112,7 +132,7 @@
 
     <!-- AI训练 -->
     <div class="section">
-        <h2 class="section-title">🤖 AI训练</h2>
+        <h2 class="section-title">🤖 AI训练 <span class="auth-tag tag-private">需要登录</span></h2>
         <div class="cards-grid">
             <a href="AI_training.php?type=image" class="card">
                 <div class="card-icon">
@@ -161,7 +181,7 @@
 
     <!-- AI体验 -->
     <div class="section">
-        <h2 class="section-title">✨ AI体验</h2>
+        <h2 class="section-title">✨ AI体验 <span class="auth-tag tag-public">无需登录</span></h2>
         <div class="cards-grid">
             <a href="javascript:openAIExperience()" class="card">
                 <div class="card-icon">
@@ -173,9 +193,103 @@
         </div>
     </div>
 
+    <!-- 低年级专区（1-3年级） -->
+    <div class="section">
+        <h2 class="section-title">🎒 低年级专区（1-3年级） <span class="auth-tag tag-public">无需登录</span></h2>
+        <div class="cards-grid">
+            <a href="color_match.php" class="card">
+                <div class="card-icon">
+                    <i class="palette icon"></i>
+                </div>
+                <div class="card-title">颜色匹配</div>
+                <div class="card-desc">认识颜色，点击正确的颜色名称（适合1-2年级）</div>
+            </a>
+
+            <a href="clock_reading.php" class="card">
+                <div class="card-icon">
+                    <i class="clock icon"></i>
+                </div>
+                <div class="card-title">时钟认读</div>
+                <div class="card-desc">学习看时钟，认识整点和半点（适合1-2年级）</div>
+            </a>
+
+            <a href="guess_number.php" class="card">
+                <div class="card-icon">
+                    <i class="question circle icon"></i>
+                </div>
+                <div class="card-title">猜数字</div>
+                <div class="card-desc">动动脑筋，猜出隐藏的神秘数字（适合1-3年级）</div>
+            </a>
+
+            <a href="memory_game.php" class="card">
+                <div class="card-icon">
+                    <i class="th large icon"></i>
+                </div>
+                <div class="card-title">卡片配对</div>
+                <div class="card-desc">翻开卡片，找出相同的图案配对（适合1-3年级）</div>
+            </a>
+
+            <a href="sequence_memory.php" class="card">
+                <div class="card-icon">
+                    <i class="brain icon"></i>
+                </div>
+                <div class="card-title">序列记忆</div>
+                <div class="card-desc">记住颜色顺序并重复，挑战你的记忆力（适合1-4年级）</div>
+            </a>
+
+            <a href="math_game.php" class="card">
+                <div class="card-icon">
+                    <i class="calculator icon"></i>
+                </div>
+                <div class="card-title">数学闯关</div>
+                <div class="card-desc">挑战数学题，闯过一关又一关（适合2-4年级）</div>
+            </a>
+
+
+        </div>
+    </div>
+
+    <!-- 高年级专区（4-6年级） -->
+    <div class="section">
+        <h2 class="section-title">📚 高年级专区（4-6年级） <span class="auth-tag tag-private">需要登录</span></h2>
+        <div class="cards-grid">
+            <a href="snake.php" class="card">
+                <div class="card-icon">
+                    <i class="gamepad icon"></i>
+                </div>
+                <div class="card-title">贪吃蛇</div>
+                <div class="card-desc">控制小蛇吃食物变长，不要撞墙（适合3-6年级）</div>
+            </a>
+
+            <a href="number_puzzle.php" class="card">
+                <div class="card-icon">
+                    <i class="sort numeric down icon"></i>
+                </div>
+                <div class="card-title">数字华容道</div>
+                <div class="card-desc">滑动数字块，按1-15顺序排列（适合3-6年级）</div>
+            </a>
+
+            <a href="idiom_chain.php" class="card">
+                <div class="card-icon">
+                    <i class="book icon"></i>
+                </div>
+                <div class="card-title">成语接龙</div>
+                <div class="card-desc">60秒限时挑战，成语知识大比拼（适合3-6年级）</div>
+            </a>
+
+            <a href="minesweeper.php" class="card">
+                <div class="card-icon">
+                    <i class="bomb icon"></i>
+                </div>
+                <div class="card-title">扫雷</div>
+                <div class="card-desc">经典扫雷，找出所有隐藏的地雷（适合4-6年级）</div>
+            </a>
+        </div>
+    </div>
+
     <!-- 打字练习 -->
     <div class="section">
-        <h2 class="section-title">⌨️ 打字练习</h2>
+        <h2 class="section-title">⌨️ 打字练习 <span class="auth-tag tag-private">需要登录</span></h2>
         <div class="cards-grid">
             <a href="keyboard_game.php" class="card">
                 <div class="card-icon">
@@ -195,47 +309,9 @@
         </div>
     </div>
 
-    <!-- 益智游戏 -->
-    <div class="section">
-        <h2 class="section-title">🧩 益智游戏</h2>
-        <div class="cards-grid">
-            <a href="guess_number.php" class="card">
-                <div class="card-icon">
-                    <i class="question circle icon"></i>
-                </div>
-                <div class="card-title">猜数字</div>
-                <div class="card-desc">动动脑筋，猜出隐藏的神秘数字（适合1-3年级）</div>
-            </a>
-
-            <a href="memory_game.php" class="card">
-                <div class="card-icon">
-                    <i class="th large icon"></i>
-                </div>
-                <div class="card-title">卡片配对</div>
-                <div class="card-desc">翻开卡片，找出相同的图案配对（适合1-3年级）</div>
-            </a>
-
-            <a href="math_game.php" class="card">
-                <div class="card-icon">
-                    <i class="calculator icon"></i>
-                </div>
-                <div class="card-title">数学闯关</div>
-                <div class="card-desc">挑战数学题，闯过一关又一关（适合2-4年级）</div>
-            </a>
-
-            <a href="minesweeper.php" class="card">
-                <div class="card-icon">
-                    <i class="bomb icon"></i>
-                </div>
-                <div class="card-title">扫雷</div>
-                <div class="card-desc">经典扫雷，找出所有隐藏的地雷（适合4-6年级）</div>
-            </a>
-        </div>
-    </div>
-
     <!-- 编程学习 -->
     <div class="section">
-        <h2 class="section-title">💻 编程学习</h2>
+        <h2 class="section-title">💻 编程学习 <span class="auth-tag tag-private">需要登录</span></h2>
         <div class="cards-grid">
             <a href="coding_game.php" class="card">
                 <div class="card-icon">

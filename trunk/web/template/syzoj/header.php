@@ -60,7 +60,17 @@
             'loginpage.php',      // 登录页
             'lostpassword.php',    // 找回密码
             'lostpassword2.php',  // 找回密码第二步
-            'more.php'            // 更多功能页
+            'more.php',           // 更多功能页
+            // ========== 无需登录功能 ==========
+            // 低年级专区（1-3年级）
+            'color_match.php',
+            'clock_reading.php',
+            'guess_number.php',
+            'memory_game.php',
+            'sequence_memory.php',
+            'math_game.php',
+            // AI体验
+            'AI_experience.php'
         ];
 
         // 游客模式访问限制

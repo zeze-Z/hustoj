@@ -19,16 +19,14 @@ if (isset($_POST['do'])) {
     $tags = trim($_POST['tags']);
     $lesson_count = intval($_POST['lesson_count']);
     $description = trim($_POST['description']);
-    $price = floatval($_POST['price']);
+    $source_price = floatval($_POST['source_price']);
     $status = isset($_POST['status']) ? 1 : 0;
     $courseware_preview_url = trim($_POST['courseware_preview_url']);
     $lesson_plan_preview_url = trim($_POST['lesson_plan_preview_url']);
     $courseware_full_preview_url = trim($_POST['courseware_full_preview_url']);
     $lesson_plan_full_preview_url = trim($_POST['lesson_plan_full_preview_url']);
     $courseware_link = trim($_POST['courseware_link']);
-    $courseware_code = trim($_POST['courseware_code']);
     $lesson_plan_link = trim($_POST['lesson_plan_link']);
-    $lesson_plan_code = trim($_POST['lesson_plan_code']);
     $link_expire_date = trim($_POST['link_expire_date']);
     $sort_order = intval($_POST['sort_order']);
 
@@ -43,7 +41,7 @@ if (isset($_POST['do'])) {
         exit();
     }
 
-    if ($price < 0) {
+    if ($source_price < 0) {
         echo "<script>alert('$MSG_PRICE must be >= 0'); history.go(-1);</script>";
         exit();
     }
@@ -98,19 +96,19 @@ if (isset($_POST['do'])) {
     }
 
     if (!empty($courseware_link) && !filter_var($courseware_link, FILTER_VALIDATE_URL)) {
-        echo "<script>alert('$MSG_COURSEWARE download link is invalid'); history.go(-1);</script>";
+        echo "<script>alert('$MSG_COURSEWARE 原文件链接 is invalid'); history.go(-1);</script>";
         exit();
     }
 
     if (!empty($lesson_plan_link) && !filter_var($lesson_plan_link, FILTER_VALIDATE_URL)) {
-        echo "<script>alert('$MSG_LESSON_PLAN download link is invalid'); history.go(-1);</script>";
+        echo "<script>alert('$MSG_LESSON_PLAN 原文件链接 is invalid'); history.go(-1);</script>";
         exit();
     }
 
-    $sql = "INSERT INTO `course` (`title`, `subject_id`, `tags`, `lesson_count`, `description`, `price`, `status`, `courseware_preview_url`, `lesson_plan_preview_url`, `courseware_full_preview_url`, `lesson_plan_full_preview_url`, `courseware_link`, `courseware_code`, `lesson_plan_link`, `lesson_plan_code`, `link_expire_date`, `sort_order`, `created_at`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+    $sql = "INSERT INTO `course` (`title`, `subject_id`, `tags`, `lesson_count`, `description`, `source_price`, `status`, `courseware_preview_url`, `lesson_plan_preview_url`, `courseware_full_preview_url`, `lesson_plan_full_preview_url`, `courseware_link`, `lesson_plan_link`, `link_expire_date`, `sort_order`, `created_at`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
 
     try {
-        pdo_query($sql, $title, $subject_id, $tags, $lesson_count, $description, $price, $status, $courseware_preview_url, $lesson_plan_preview_url, $courseware_full_preview_url, $lesson_plan_full_preview_url, $courseware_link, $courseware_code, $lesson_plan_link, $lesson_plan_code, $link_expire_date, $sort_order);
+        pdo_query($sql, $title, $subject_id, $tags, $lesson_count, $description, $source_price, $status, $courseware_preview_url, $lesson_plan_preview_url, $courseware_full_preview_url, $lesson_plan_full_preview_url, $courseware_link, $lesson_plan_link, $link_expire_date, $sort_order);
         echo "<script>alert('$MSG_ADD $MSG_SUCCESS'); window.location.href='course_list.php';</script>";
     } catch (Exception $e) {
         echo "<script>alert('$MSG_ADD $MSG_FAILED: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "'); history.go(-1);</script>";
@@ -174,10 +172,10 @@ $subject_list = pdo_query($sql);
         </div>
 
         <div class="form-group">
-            <label class="col-sm-2 control-label"><?php echo $MSG_PRICE ?></label>
+            <label class="col-sm-2 control-label">原文件价格（元）</label>
             <div class="col-sm-6">
-                <input type="number" name="price" class="form-control" value="0" min="0" step="0.01">
-                <small class="text-muted"><?php echo "0" . " " . $MSG_FREE ?></small>
+                <input type="number" name="source_price" class="form-control" value="0" min="0" step="0.01">
+                <small class="text-muted">0表示免费</small>
             </div>
         </div>
 
@@ -197,6 +195,7 @@ $subject_list = pdo_query($sql);
             <label class="col-sm-2 control-label"><?php echo $MSG_COURSEWARE ?> <?php echo $MSG_PREVIEW_URL ?></label>
             <div class="col-sm-6">
                 <input type="url" name="courseware_preview_url" class="form-control" placeholder="金山文档URL" maxlength="500">
+                <small class="text-muted">未购买用户可见的免费预览链接</small>
             </div>
         </div>
 
@@ -204,6 +203,7 @@ $subject_list = pdo_query($sql);
             <label class="col-sm-2 control-label"><?php echo $MSG_LESSON_PLAN ?> <?php echo $MSG_PREVIEW_URL ?></label>
             <div class="col-sm-6">
                 <input type="url" name="lesson_plan_preview_url" class="form-control" placeholder="金山文档URL" maxlength="500">
+                <small class="text-muted">未购买用户可见的免费预览链接</small>
             </div>
         </div>
 
@@ -211,7 +211,7 @@ $subject_list = pdo_query($sql);
             <label class="col-sm-2 control-label"><?php echo $MSG_COURSEWARE ?> <?php echo $MSG_FULL_PREVIEW_URL ?></label>
             <div class="col-sm-6">
                 <input type="url" name="courseware_full_preview_url" class="form-control" placeholder="金山文档完整版URL" maxlength="500">
-                <small class="text-muted">付费后用户可见的完整版课件预览链接</small>
+                <small class="text-muted">购买预览版后用户可见的完整版课件预览链接</small>
             </div>
         </div>
 
@@ -219,35 +219,23 @@ $subject_list = pdo_query($sql);
             <label class="col-sm-2 control-label"><?php echo $MSG_LESSON_PLAN ?> <?php echo $MSG_FULL_PREVIEW_URL ?></label>
             <div class="col-sm-6">
                 <input type="url" name="lesson_plan_full_preview_url" class="form-control" placeholder="金山文档完整版URL" maxlength="500">
-                <small class="text-muted">付费后用户可见的完整版教案预览链接</small>
+                <small class="text-muted">购买预览版后用户可见的完整版教案预览链接</small>
             </div>
         </div>
 
         <div class="form-group">
-            <label class="col-sm-2 control-label"><?php echo $MSG_COURSEWARE ?> <?php echo $MSG_DOWNLOAD_LINK ?></label>
+            <label class="col-sm-2 control-label"><?php echo $MSG_COURSEWARE ?> 原文件链接</label>
             <div class="col-sm-6">
-                <input type="url" name="courseware_link" class="form-control" placeholder="百度网盘URL" maxlength="500">
+                <input type="url" name="courseware_link" class="form-control" placeholder="百度网盘/下载链接" maxlength="500">
+                <small class="text-muted">购买原文件权限后用户可见的下载链接</small>
             </div>
         </div>
 
         <div class="form-group">
-            <label class="col-sm-2 control-label"><?php echo $MSG_COURSEWARE ?> <?php echo $MSG_ACCESS_CODE ?></label>
+            <label class="col-sm-2 control-label"><?php echo $MSG_LESSON_PLAN ?> 原文件链接</label>
             <div class="col-sm-6">
-                <input type="text" name="courseware_code" class="form-control" maxlength="50">
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-2 control-label"><?php echo $MSG_LESSON_PLAN ?> <?php echo $MSG_DOWNLOAD_LINK ?></label>
-            <div class="col-sm-6">
-                <input type="url" name="lesson_plan_link" class="form-control" placeholder="百度网盘URL" maxlength="500">
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-2 control-label"><?php echo $MSG_LESSON_PLAN ?> <?php echo $MSG_ACCESS_CODE ?></label>
-            <div class="col-sm-6">
-                <input type="text" name="lesson_plan_code" class="form-control" maxlength="50">
+                <input type="url" name="lesson_plan_link" class="form-control" placeholder="百度网盘/下载链接" maxlength="500">
+                <small class="text-muted">购买原文件权限后用户可见的下载链接</small>
             </div>
         </div>
 

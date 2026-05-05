@@ -1,0 +1,936 @@
+<?php $show_title="成语接龙 - $OJ_NAME"; ?>
+<?php include("template/$OJ_TEMPLATE/header.php");?>
+
+<style>
+:root {
+    --primary-color: #1e3a5f;
+    --secondary-color: #c9a84c;
+    --accent-color: #e8c547;
+    --bg-color: #faf8f0;
+    --card-bg: #ffffff;
+    --text-color: #2c3e50;
+    --border-color: #e0d8c0;
+    --success-color: #27ae60;
+    --error-color: #e74c3c;
+}
+
+body {
+    background-color: var(--bg-color);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.game-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.game-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.game-header h1 {
+    color: var(--primary-color);
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+}
+
+.game-header .subtitle {
+    color: var(--secondary-color);
+    font-size: 1rem;
+    letter-spacing: 2px;
+}
+
+.stats-bar {
+    display: flex;
+    justify-content: space-around;
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid var(--border-color);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 2px;
+}
+
+.current-idiom-area {
+    background: linear-gradient(135deg, var(--primary-color), #2c5f8a);
+    border-radius: 16px;
+    padding: 2rem 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+}
+
+.current-idiom-area .label {
+    color: rgba(255,255,255,0.7);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.current-idiom {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--accent-color);
+    letter-spacing: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.current-pinyin {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.8);
+    letter-spacing: 2px;
+}
+
+.current-meaning {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.6);
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+.chain-display {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    max-height: 120px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+}
+
+.chain-display .chain-label {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 0.5rem;
+}
+
+.chain-item {
+    display: inline-block;
+    background: linear-gradient(135deg, #f0e6d0, #e8d8b8);
+    color: var(--primary-color);
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin: 3px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.chain-arrow {
+    color: var(--secondary-color);
+    margin: 0 2px;
+    font-weight: 700;
+}
+
+.input-area {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid var(--border-color);
+}
+
+.input-hint {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.8rem;
+    text-align: center;
+}
+
+.input-hint .highlight-char {
+    color: var(--error-color);
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.input-row {
+    display: flex;
+    gap: 0.8rem;
+}
+
+.input-row input {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    font-size: 1.2rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.2s;
+    text-align: center;
+    letter-spacing: 4px;
+    font-weight: 500;
+}
+
+.input-row input:focus {
+    border-color: var(--primary-color);
+}
+
+.input-row button {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, var(--primary-color), #2c5f8a);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+}
+
+.input-row button:hover {
+    opacity: 0.9;
+}
+
+.input-row button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.feedback {
+    text-align: center;
+    min-height: 1.5rem;
+    margin-top: 0.8rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.feedback.success {
+    color: var(--success-color);
+}
+
+.feedback.error {
+    color: var(--error-color);
+}
+
+.start-area {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.start-area button {
+    padding: 1rem 3rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, var(--primary-color), #2c5f8a);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.start-area button:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+.result-area {
+    text-align: center;
+    padding: 2rem;
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid var(--border-color);
+}
+
+.result-area h2 {
+    color: var(--primary-color);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.result-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.result-stat {
+    text-align: center;
+}
+
+.result-stat .value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--secondary-color);
+}
+
+.result-stat .label {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.result-area button {
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, var(--primary-color), #2c5f8a);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 0.5rem;
+}
+
+.timer-warning {
+    animation: pulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+    from { color: var(--error-color); }
+    to { color: #ff6b6b; }
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Scrollbar styling */
+.chain-display::-webkit-scrollbar {
+    width: 4px;
+}
+
+.chain-display::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chain-display::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 2px;
+}
+
+@media (max-width: 480px) {
+    .current-idiom {
+        font-size: 2.2rem;
+        letter-spacing: 4px;
+    }
+    .game-header h1 {
+        font-size: 1.6rem;
+    }
+    .input-row {
+        flex-direction: column;
+    }
+}
+</style>
+
+<div class="game-container">
+    <div class="game-header">
+        <h1>🏮 成语接龙</h1>
+        <div class="subtitle">传统文化 · 寓教于乐</div>
+    </div>
+
+    <!-- 开始界面 -->
+    <div id="startScreen" class="start-area">
+        <p style="color:#666;margin-bottom:1.5rem;font-size:1.05rem;">
+            根据上一个成语的最后一个字，<br>接出以该字（同音即可）开头的成语！
+        </p>
+        <p style="color:#999;font-size:0.9rem;margin-bottom:1.5rem;">⏱ 60秒限时挑战</p>
+        <button id="startBtn" onclick="startGame()">开始游戏</button>
+    </div>
+
+    <!-- 游戏界面 -->
+    <div id="gameScreen" class="hidden">
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="scoreDisplay">0</div>
+                <div class="stat-label">得分</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="chainDisplay">0</div>
+                <div class="stat-label">接龙数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="timerDisplay">60</div>
+                <div class="stat-label">剩余秒数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="bestDisplay">0</div>
+                <div class="stat-label">最佳记录</div>
+            </div>
+        </div>
+
+        <div class="current-idiom-area">
+            <div class="label">当前成语</div>
+            <div class="current-idiom" id="currentIdiom">一心一意</div>
+            <div class="current-pinyin" id="currentPinyin">yī xīn yī yì</div>
+            <div class="current-meaning" id="currentMeaning">心思、意念专一</div>
+        </div>
+
+        <div class="chain-display">
+            <div class="chain-label">接龙记录</div>
+            <div id="chainList"></div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-hint">
+                请输入以"<span class="highlight-char" id="targetChar">意</span>"开头（或同音）的成语
+            </div>
+            <div class="input-row">
+                <input type="text" id="idiomInput" placeholder="输入成语..." maxlength="8" autocomplete="off">
+                <button id="submitBtn" onclick="submitIdiom()">接龙</button>
+            </div>
+            <div class="feedback" id="feedback"></div>
+        </div>
+    </div>
+
+    <!-- 结算界面 -->
+    <div id="resultScreen" class="hidden">
+        <div class="result-area">
+            <h2>🏆 时间到！</h2>
+            <div class="result-stats">
+                <div class="result-stat">
+                    <div class="value" id="finalScore">0</div>
+                    <div class="label">总得分</div>
+                </div>
+                <div class="result-stat">
+                    <div class="value" id="finalChain">0</div>
+                    <div class="label">接龙数</div>
+                </div>
+                <div class="result-stat">
+                    <div class="value" id="finalBest">0</div>
+                    <div class="label">最佳记录</div>
+                </div>
+            </div>
+            <button onclick="startGame()">再来一局</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// === 成语库（150+常用成语，含拼音和释义）===
+const IDIOM_DB = [
+    {idiom:"一心一意",pinyin:"yī xīn yī yì",meaning:"心思、意念专一"},
+    {idiom:"一马当先",pinyin:"yī mǎ dāng xiān",meaning:"比喻走在前列，带头"},
+    {idiom:"一鸣惊人",pinyin:"yī míng jīng rén",meaning:"比喻平时没表现，一下子做出惊人的成绩"},
+    {idiom:"一举两得",pinyin:"yī jǔ liǎng dé",meaning:"做一件事得到两方面的好处"},
+    {idiom:"一帆风顺",pinyin:"yī fān fēng shùn",meaning:"比喻非常顺利"},
+    {idiom:"一目了然",pinyin:"yī mù liǎo rán",meaning:"一眼就看清楚"},
+    {idiom:"一言为定",pinyin:"yī yán wéi dìng",meaning:"一句话说定了，不再更改"},
+    {idiom:"一刀两断",pinyin:"yī dāo liǎng duàn",meaning:"比喻坚决断绝关系"},
+    {idiom:"一诺千金",pinyin:"yī nuò qiān jīn",meaning:"形容说话算数，信用极高"},
+    {idiom:"一鼓作气",pinyin:"yī gǔ zuò qì",meaning:"比喻趁劲头大的时候一下子完成"},
+    {idiom:"人山人海",pinyin:"rén shān rén hǎi",meaning:"形容人聚集得非常多"},
+    {idiom:"人定胜天",pinyin:"rén dìng shèng tiān",meaning:"人力可以战胜自然"},
+    {idiom:"人才辈出",pinyin:"rén cái bèi chū",meaning:"人才一批一批连续出现"},
+    {idiom:"人云亦云",pinyin:"rén yún yì yún",meaning:"别人说什么自己跟着说什么"},
+    {idiom:"心花怒放",pinyin:"xīn huā nù fàng",meaning:"心里高兴得像花儿盛开"},
+    {idiom:"心想事成",pinyin:"xīn xiǎng shì chéng",meaning:"心中所想都能成功"},
+    {idiom:"心旷神怡",pinyin:"xīn kuàng shén yí",meaning:"心情开阔，精神愉快"},
+    {idiom:"心灵手巧",pinyin:"xīn líng shǒu qiǎo",meaning:"心思灵敏，手艺精巧"},
+    {idiom:"意气风发",pinyin:"yì qì fēng fā",meaning:"形容精神振奋，气概豪迈"},
+    {idiom:"意味深长",pinyin:"yì wèi shēn cháng",meaning:"意思含蓄深远"},
+    {idiom:"意外之喜",pinyin:"yì wài zhī xǐ",meaning:"意料之外的喜事"},
+    {idiom:"马到成功",pinyin:"mǎ dào chéng gōng",meaning:"形容事情顺利，一开始就成功"},
+    {idiom:"马不停蹄",pinyin:"mǎ bù tíng tí",meaning:"比喻一刻不停地前进"},
+    {idiom:"先入为主",pinyin:"xiān rù wéi zhǔ",meaning:"先接受的观念成为主导"},
+    {idiom:"先见之明",pinyin:"xiān jiàn zhī míng",meaning:"事先看清问题的眼力"},
+    {idiom:"惊天动地",pinyin:"jīng tiān dòng dì",meaning:"形容声势浩大"},
+    {idiom:"惊弓之鸟",pinyin:"jīng gōng zhī niǎo",meaning:"比喻受过惊吓遇事胆怯"},
+    {idiom:"惊涛骇浪",pinyin:"jīng tāo hài làng",meaning:"汹涌的波涛，比喻险恶的处境"},
+    {idiom:"举世闻名",pinyin:"jǔ shì wén míng",meaning:"全世界都知道"},
+    {idiom:"举一反三",pinyin:"jǔ yī fǎn sān",meaning:"从一件事情类推而知其他"},
+    {idiom:"得心应手",pinyin:"dé xīn yìng shǒu",meaning:"心里怎么想手就能怎么做"},
+    {idiom:"得不偿失",pinyin:"dé bù cháng shī",meaning:"所得的利益抵偿不了损失"},
+    {idiom:"得意洋洋",pinyin:"dé yì yáng yáng",meaning:"称心如意，十分满足"},
+    {idiom:"帆风顺水",pinyin:"fān fēng shùn shuǐ",meaning:"比喻非常顺利"},
+    {idiom:"风调雨顺",pinyin:"fēng tiáo yǔ shùn",meaning:"风雨适时，年成好"},
+    {idiom:"风和日丽",pinyin:"fēng hé rì lì",meaning:"天气晴朗暖和"},
+    {idiom:"风平浪静",pinyin:"fēng píng làng jìng",meaning:"比喻平静无事"},
+    {idiom:"风起云涌",pinyin:"fēng qǐ yún yǒng",meaning:"比喻事物迅速发展"},
+    {idiom:"顺风顺水",pinyin:"shùn fēng shùn shuǐ",meaning:"比喻运气好，做事顺利"},
+    {idiom:"顺水推舟",pinyin:"shùn shuǐ tuī zhōu",meaning:"比喻顺应情势办事"},
+    {idiom:"顺理成章",pinyin:"shùn lǐ chéng zhāng",meaning:"某种情况合乎情理，自然产生结果"},
+    {idiom:"目不转睛",pinyin:"mù bù zhuǎn jīng",meaning:"凝神注视，眼珠不转"},
+    {idiom:"目瞪口呆",pinyin:"mù dèng kǒu dāi",meaning:"形容因吃惊或害怕而发愣"},
+    {idiom:"了如指掌",pinyin:"liǎo rú zhǐ zhǎng",meaning:"比喻对事情了解得很清楚"},
+    {idiom:"言而有信",pinyin:"yán ér yǒu xìn",meaning:"说话算数，有信用"},
+    {idiom:"言传身教",pinyin:"yán chuán shēn jiào",meaning:"一面言语教导，一面行动示范"},
+    {idiom:"言简意赅",pinyin:"yán jiǎn yì gāi",meaning:"言语简明而意思完备"},
+    {idiom:"刀光剑影",pinyin:"dāo guāng jiàn yǐng",meaning:"形容激烈搏斗的场面"},
+    {idiom:"两全其美",pinyin:"liǎng quán qí měi",meaning:"做一件事顾全双方都满意"},
+    {idiom:"两败俱伤",pinyin:"liǎng bài jù shāng",meaning:"双方都受损失"},
+    {idiom:"断章取义",pinyin:"duàn zhāng qǔ yì",meaning:"不顾全篇文章，只截取其中一段的意思"},
+    {idiom:"诺诺连声",pinyin:"nuò nuò lián shēng",meaning:"连声答应，表示顺从"},
+    {idiom:"千金一诺",pinyin:"qiān jīn yī nuò",meaning:"形容诺言可靠"},
+    {idiom:"千方百计",pinyin:"qiān fāng bǎi jì",meaning:"想尽一切办法"},
+    {idiom:"千军万马",pinyin:"qiān jūn wàn mǎ",meaning:"形容雄壮的队伍或浩大的声势"},
+    {idiom:"千变万化",pinyin:"qiān biàn wàn huà",meaning:"形容变化极多"},
+    {idiom:"鼓足干劲",pinyin:"gǔ zú gàn jìn",meaning:"鼓起十足的干劲"},
+    {idiom:"作茧自缚",pinyin:"zuò jiǎn zì fù",meaning:"比喻做了某事结果害了自己"},
+    {idiom:"气壮山河",pinyin:"qì zhuàng shān hé",meaning:"形容气概豪迈"},
+    {idiom:"气吞山河",pinyin:"qì tūn shān hé",meaning:"形容气势极大"},
+    {idiom:"发奋图强",pinyin:"fā fèn tú qiáng",meaning:"下定决心，努力谋求强盛"},
+    {idiom:"发愤忘食",pinyin:"fā fèn wàng shí",meaning:"努力学习或工作，连吃饭都忘了"},
+    {idiom:"动人心魄",pinyin:"dòng rén xīn pò",meaning:"形容感动人，引人入胜"},
+    {idiom:"地大物博",pinyin:"dì dà wù bó",meaning:"疆土辽阔，物产丰富"},
+    {idiom:"地利人和",pinyin:"dì lì rén hé",meaning:"地理条件好，人心齐"},
+    {idiom:"成家立业",pinyin:"chéng jiā lì yè",meaning:"建立了家庭，创立了事业"},
+    {idiom:"成竹在胸",pinyin:"chéng zhú zài xiōng",meaning:"比喻做事之前心里已有主意"},
+    {idiom:"功成名就",pinyin:"gōng chéng míng jiù",meaning:"功绩建立了，名声也有了"},
+    {idiom:"功德无量",pinyin:"gōng dé wú liàng",meaning:"功劳极大"},
+    {idiom:"手舞足蹈",pinyin:"shǒu wǔ zú dǎo",meaning:"高兴得双舞乱跳"},
+    {idiom:"手到擒来",pinyin:"shǒu dào qín lái",meaning:"比喻做事容易，不费力气"},
+    {idiom:"手不释卷",pinyin:"shǒu bù shì juàn",meaning:"手不离书，形容勤学"},
+    {idiom:"放虎归山",pinyin:"fàng hǔ guī shān",meaning:"比喻把敌人放走留下后患"},
+    {idiom:"花好月圆",pinyin:"huā hǎo yuè yuán",meaning:"比喻美好圆满"},
+    {idiom:"花团锦簇",pinyin:"huā tuán jǐn cù",meaning:"形容五彩缤纷，繁华美丽"},
+    {idiom:"怒发冲冠",pinyin:"nù fà chōng guān",meaning:"愤怒得头发直竖"},
+    {idiom:"斗志昂扬",pinyin:"dòu zhì áng yáng",meaning:"战斗意志高昂"},
+    {idiom:"放言高论",pinyin:"fàng yán gāo lùn",meaning:"毫无顾忌地大发议论"},
+    {idiom:"神气十足",pinyin:"shén qì shí zú",meaning:"形容十分得意"},
+    {idiom:"神通广大",pinyin:"shén tōng guǎng dà",meaning:"形容本领大，办法多"},
+    {idiom:"神采飞扬",pinyin:"shén cǎi fēi yáng",meaning:"形容精神焕发"},
+    {idiom:"怡然自得",pinyin:"yí rán zì dé",meaning:"高兴而满足的样子"},
+    {idiom:"巧夺天工",pinyin:"qiǎo duó tiān gōng",meaning:"精巧的人工胜过天然"},
+    {idiom:"巧言令色",pinyin:"qiǎo yán lìng sè",meaning:"用花言巧语和谄媚的色相讨好"},
+    {idiom:"闻鸡起舞",pinyin:"wén jī qǐ wǔ",meaning:"比喻志士及时奋发"},
+    {idiom:"闻名遐迩",pinyin:"wén míng xiá ěr",meaning:"远近都知道"},
+    {idiom:"明察秋毫",pinyin:"míng chá qiū háo",meaning:"比喻目光敏锐，看得极细"},
+    {idiom:"明知故犯",pinyin:"míng zhī gù fàn",meaning:"明明知道不对却故意去做"},
+    {idiom:"反败为胜",pinyin:"fǎn bài wéi shèng",meaning:"扭转败局转为胜利"},
+    {idiom:"三心二意",pinyin:"sān xīn èr yì",meaning:"形容犹豫不决"},
+    {idiom:"三顾茅庐",pinyin:"sān gù máo lú",meaning:"比喻诚心诚意地邀请"},
+    {idiom:"水到渠成",pinyin:"shuǐ dào qú chéng",meaning:"条件成熟事情自然成功"},
+    {idiom:"水深火热",pinyin:"shuǐ shēn huǒ rè",meaning:"形容生活极端痛苦"},
+    {idiom:"水落石出",pinyin:"shuǐ luò shí chū",meaning:"比喻真相大白"},
+    {idiom:"推陈出新",pinyin:"tuī chén chū xīn",meaning:"去掉旧事物，创造新事物"},
+    {idiom:"推心置腹",pinyin:"tuī xīn zhì fù",meaning:"比喻真心待人"},
+    {idiom:"舟车劳顿",pinyin:"zhōu chē láo dùn",meaning:"旅途劳累"},
+    {idiom:"章法有度",pinyin:"zhāng fǎ yǒu dù",meaning:"做事有条理、有规矩"},
+    {idiom:"掌上明珠",pinyin:"zhǎng shàng míng zhū",meaning:"比喻极受疼爱的人"},
+    {idiom:"信口开河",pinyin:"xìn kǒu kāi hé",meaning:"随口乱说"},
+    {idiom:"信以为真",pinyin:"xìn yǐ wéi zhēn",meaning:"把假的当成了真的"},
+    {idiom:"教导有方",pinyin:"jiào dǎo yǒu fāng",meaning:"教育引导得法"},
+    {idiom:"教学相长",pinyin:"jiào xué xiāng zhǎng",meaning:"教与学互相促进"},
+    {idiom:"简明扼要",pinyin:"jiǎn míng è yào",meaning:"简单明白，抓住要点"},
+    {idiom:"赅博渊深",pinyin:"gāi bó yuān shēn",meaning:"学识渊博精深"},
+    {idiom:"取长补短",pinyin:"qǔ cháng bǔ duǎn",meaning:"吸取长处弥补短处"},
+    {idiom:"义不容辞",pinyin:"yì bù róng cí",meaning:"道义上不允许推辞"},
+    {idiom:"义正辞严",pinyin:"yì zhèng cí yán",meaning:"理由正当充分，措辞严正"},
+    {idiom:"影影绰绰",pinyin:"yǐng yǐng chuò chuò",meaning:"形容不真切、模糊"},
+    {idiom:"剑拔弩张",pinyin:"jiàn bá nǔ zhāng",meaning:"形容形势紧张，一触即发"},
+    {idiom:"美不胜收",pinyin:"měi bù shèng shōu",meaning:"美好的东西太多，看不过来"},
+    {idiom:"美中不足",pinyin:"měi zhōng bù zú",meaning:"虽然很好但还有缺陷"},
+    {idiom:"伤天害理",pinyin:"shāng tiān hài lǐ",meaning:"形容做事残忍，灭绝人性"},
+    {idiom:"强词夺理",pinyin:"qiǎng cí duó lǐ",meaning:"本来没有理硬说成有理"},
+    {idiom:"强弩之末",pinyin:"qiǎng nǔ zhī mò",meaning:"比喻力量已经耗尽"},
+    {idiom:"缚鸡之力",pinyin:"fù jī zhī lì",meaning:"比喻体力很弱"},
+    {idiom:"计日程功",pinyin:"jì rì chéng gōng",meaning:"可以数着日子计算进度"},
+    {idiom:"计上心来",pinyin:"jì shàng xīn lái",meaning:"心里想出了计策"},
+    {idiom:"马首是瞻",pinyin:"mǎ shǒu shì zhān",meaning:"比喻服从指挥"},
+    {idiom:"变化莫测",pinyin:"biàn huà mò cè",meaning:"变化多端，难以预测"},
+    {idiom:"化险为夷",pinyin:"huà xiǎn wéi yí",meaning:"把危险化为平安"},
+    {idiom:"博古通今",pinyin:"bó gǔ tōng jīn",meaning:"通晓古今，知识渊博"},
+    {idiom:"博学多才",pinyin:"bó xué duō cái",meaning:"学问广博，有多方面才能"},
+    {idiom:"和风细雨",pinyin:"hé fēng xì yǔ",meaning:"方式和缓，不粗暴"},
+    {idiom:"和颜悦色",pinyin:"hé yán yuè sè",meaning:"脸色和善，态度亲切"},
+    {idiom:"日积月累",pinyin:"rì jī yuè lěi",meaning:"长时间地积累"},
+    {idiom:"日新月异",pinyin:"rì xīn yuè yì",meaning:"发展进步很快"},
+    {idiom:"丽日当空",pinyin:"lì rì dāng kōng",meaning:"明亮的太阳挂在天上"},
+    {idiom:"海底捞月",pinyin:"hǎi dǐ lāo yuè",meaning:"比喻白费力气"},
+    {idiom:"海阔天空",pinyin:"hǎi kuò tiān kōng",meaning:"形容空间广阔或想象无拘束"},
+    {idiom:"浪子回头",pinyin:"làng zǐ huí tóu",meaning:"做了坏事的人改过自新"},
+    {idiom:"浪涛翻滚",pinyin:"làng tāo fān gǔn",meaning:"波浪猛烈翻腾"},
+    {idiom:"静观其变",pinyin:"jìng guān qí biàn",meaning:"冷静地观察事情的变化"},
+    {idiom:"睛如秋水",pinyin:"jīng rú qiū shuǐ",meaning:"眼睛像秋天的水一样清澈"},
+    {idiom:"呆若木鸡",pinyin:"dāi ruò mù jī",meaning:"形容因恐惧或惊讶而发愣"},
+    {idiom:"鸟语花香",pinyin:"niǎo yǔ huā xiāng",meaning:"鸟鸣悦耳，花香扑鼻"},
+    {idiom:"鸟尽弓藏",pinyin:"niǎo jìn gōng cáng",meaning:"比喻事情成功后把出力的人抛弃"},
+    {idiom:"鸡飞狗跳",pinyin:"jī fēi gǒu tiào",meaning:"形容混乱不堪"},
+    {idiom:"鸡犬不宁",pinyin:"jī quǎn bù níng",meaning:"形容搅扰得很厉害"},
+    {idiom:"舞文弄墨",pinyin:"wǔ wén nòng mò",meaning:"玩弄文字技巧"},
+    {idiom:"舞刀弄枪",pinyin:"wǔ dāo nòng qiāng",meaning:"耍弄刀枪"},
+    {idiom:"拔苗助长",pinyin:"bá miáo zhù zhǎng",meaning:"比喻违反规律急于求成"},
+    {idiom:"张灯结彩",pinyin:"zhāng dēng jié cǎi",meaning:"挂起灯笼，结上彩带"},
+    {idiom:"张口结舌",pinyin:"zhāng kǒu jié shé",meaning:"形容理屈词穷说不出话"},
+    {idiom:"足智多谋",pinyin:"zú zhì duō móu",meaning:"富有智慧，善于谋划"},
+    {idiom:"蹈常袭故",pinyin:"dǎo cháng xí gù",meaning:"按老规矩办事"},
+    {idiom:"来日方长",pinyin:"lái rì fāng cháng",meaning:"未来的日子还很长"},
+    {idiom:"来龙去脉",pinyin:"lái lóng qù mài",meaning:"事情的始末或来历"},
+    {idiom:"擒贼擒王",pinyin:"qín zéi qín wáng",meaning:"比喻做事要抓关键"},
+    {idiom:"卷土重来",pinyin:"juǎn tǔ chóng lái",meaning:"比喻失败后重新恢复势力"},
+    {idiom:"自力更生",pinyin:"zì lì gēng shēng",meaning:"依靠自己的力量把事情办起来"},
+    {idiom:"自相矛盾",pinyin:"zì xiāng máo dùn",meaning:"自己的言行前后抵触"},
+    {idiom:"缚手缚脚",pinyin:"fù shǒu fù jiǎo",meaning:"束缚太多，放不开手脚"},
+    {idiom:"力不从心",pinyin:"lì bù cóng xīn",meaning:"心里想做但力量不够"},
+    {idiom:"更上一层楼",pinyin:"gèng shàng yī céng lóu",meaning:"再提高一步"},
+    {idiom:"生龙活虎",pinyin:"shēng lóng huó hǔ",meaning:"形容活泼有朝气"},
+    {idiom:"生机勃勃",pinyin:"shēng jī bó bó",meaning:"生命力旺盛"},
+    {idiom:"胸怀大志",pinyin:"xiōng huái dà zhì",meaning:"心中有着远大的志向"},
+    {idiom:"胸有成竹",pinyin:"xiōng yǒu chéng zhú",meaning:"比喻做事之前已有主意"},
+    {idiom:"长年累月",pinyin:"cháng nián lěi yuè",meaning:"形容经历的时间很长"},
+    {idiom:"长治久安",pinyin:"cháng zhì jiǔ ān",meaning:"国家长期安定"},
+    {idiom:"出人头地",pinyin:"chū rén tóu dì",meaning:"超出一般人，高人一等"},
+    {idiom:"出水芙蓉",pinyin:"chū shuǐ fú róng",meaning:"比喻诗文清新"},
+    {idiom:"新陈代�",pinyin:"xīn chén dài xiè",meaning:"新事物代替旧事物"},
+    {idiom:"新婚燕尔",pinyin:"xīn hūn yàn ěr",meaning:"新婚快乐"},
+    {idiom:"方兴未艾",pinyin:"fāng xīng wèi ài",meaning:"事物正在发展，没有停止"},
+    {idiom:"方寸之地",pinyin:"fāng cùn zhī dì",meaning:"很小的地方"},
+    {idiom:"才高八斗",pinyin:"cái gāo bā dǒu",meaning:"形容才学很高"},
+    {idiom:"才疏学浅",pinyin:"cái shū xué qiǎn",meaning:"才能不高，学问不深"},
+    {idiom:"辈出英雄",pinyin:"bèi chū yīng xióng",meaning:"英雄一代接一代出现"},
+    {idiom:"出类拔萃",pinyin:"chū lèi bá cuì",meaning:"超出同类之上"},
+    {idiom:"天长地久",pinyin:"tiān cháng dì jiǔ",meaning:"形容时间很长"},
+    {idiom:"天翻地覆",pinyin:"tiān fān dì fù",meaning:"形容变化极大"},
+    {idiom:"天经地义",pinyin:"tiān jīng dì yì",meaning:"非常正确不容置疑的道理"},
+    {idiom:"胜券在握",pinyin:"shèng quàn zài wò",meaning:"有胜利的把握"},
+    {idiom:"胜友如云",pinyin:"shèng yǒu rú yún",meaning:"好朋友很多"},
+    {idiom:"云开见日",pinyin:"yún kāi jiàn rì",meaning:"比喻重见光明"},
+    {idiom:"云蒸霞蔚",pinyin:"yún zhēng xiá wèi",meaning:"形容景物灿烂绚丽"},
+    {idiom:"亦步亦趋",pinyin:"yì bù yì qū",meaning:"比喻没有主见"},
+    {idiom:"云消雾散",pinyin:"yún xiāo wù sàn",meaning:"比喻事情消散"},
+    {idiom:"勇往直前",pinyin:"yǒng wǎng zhí qián",meaning:"勇敢地一直向前进"},
+    {idiom:"勇冠三军",pinyin:"yǒng guàn sān jūn",meaning:"勇敢为全军之首"},
+    {idiom:"前仆后继",pinyin:"qián pū hòu jì",meaning:"前面的人倒下，后面的人跟上"},
+    {idiom:"前途无量",pinyin:"qián tú wú liàng",meaning:"未来的前途很大"},
+    {idiom:"前车之鉴",pinyin:"qián chē zhī jiàn",meaning:"比喻前人的失败可以作为教训"},
+    {idiom:"继往开来",pinyin:"jì wǎng kāi lái",meaning:"继承前人事业，开辟未来道路"},
+    {idiom:"量力而行",pinyin:"liàng lì ér xíng",meaning:"衡量自己的能力去做"},
+    {idiom:"量入为出",pinyin:"liàng rù wéi chū",meaning:"根据收入确定支出"},
+    {idiom:"鉴貌辨色",pinyin:"jiàn mào biàn sè",meaning:"观察别人的脸色来行事"},
+    {idiom:"见义勇为",pinyin:"jiàn yì yǒng wéi",meaning:"看到正义的事就勇敢去做"},
+    {idiom:"见多识广",pinyin:"jiàn duō shí guǎng",meaning:"见过得多，知道得广"},
+    {idiom:"见微知著",pinyin:"jiàn wēi zhī zhù",meaning:"看到微小的苗头就知道明显的发展"},
+    {idiom:"义薄云天",pinyin:"yì bó yún tiān",meaning:"形容极有义气"},
+    {idiom:"辞严义正",pinyin:"cí yán yì zhèng",meaning:"言辞严正，道理正当"},
+    {idiom:"广开言路",pinyin:"guǎng kāi yán lù",meaning:"广泛听取意见"},
+    {idiom:"广结良缘",pinyin:"guǎng jié liáng yuán",meaning:"广泛结交好人缘"},
+    {idiom:"色厉内荏",pinyin:"sè lì nèi rěn",meaning:"外表强硬内心虚弱"},
+    {idiom:"色彩缤纷",pinyin:"sè cǎi bīn fēn",meaning:"颜色丰富好看"},
+    {idiom:"苦尽甘来",pinyin:"kǔ jìn gān lái",meaning:"苦难结束，幸福到来"},
+    {idiom:"苦口婆心",pinyin:"kǔ kǒu pó xīn",meaning:"善意地反复劝告"},
+    {idiom:"金碧辉煌",pinyin:"jīn bì huī huáng",meaning:"形容建筑物华丽"},
+    {idiom:"金榜题名",pinyin:"jīn bǎng tí míng",meaning:"指考试被录取"},
+    {idiom:"火中取栗",pinyin:"huǒ zhōng qǔ lì",meaning:"比喻为别人冒险"},
+    {idiom:"热火朝天",pinyin:"rè huǒ cháo tiān",meaning:"形容气氛热烈"},
+    {idiom:"热泪盈眶",pinyin:"rè lèi yíng kuàng",meaning:"激动的泪水充满眼眶"},
+    {idiom:"洛阳纸贵",pinyin:"luò yáng zhǐ guì",meaning:"比喻著作广泛流传"},
+    {idiom:"落落大方",pinyin:"luò luò dà fāng",meaning:"举止自然，不拘谨"},
+    {idiom:"累教不改",pinyin:"lěi jiào bù gǎi",meaning:"多次教育仍不改正"},
+    {idiom:"月明星稀",pinyin:"yuè míng xīng xī",meaning:"月亮明亮时星星显得稀少"},
+    {idiom:"月下老人",pinyin:"yuè xià lǎo rén",meaning:"指媒人"},
+    {idiom:"珠联璧合",pinyin:"zhū lián bì hé",meaning:"美好的事物结合在一起"},
+    {idiom:"珠圆玉润",pinyin:"zhū yuán yù rùn",meaning:"歌声或文字优美流畅"},
+    {idiom:"合情合理",pinyin:"hé qíng hé lǐ",meaning:"符合情理"},
+    {idiom:"合二为一",pinyin:"hé èr wéi yī",meaning:"把两个合为一个"},
+    {idiom:"一唱一和",pinyin:"yī chàng yī hè",meaning:"比喻互相配合"},
+    {idiom:"和气生财",pinyin:"hé qì shēng cái",meaning:"和善能带来财运"},
+    {idiom:"和衷共济",pinyin:"hé zhōng gòng jì",meaning:"同心协力，共渡难关"},
+    {idiom:"更更更更",pinyin:"gèng gèng gèng gèng",meaning:"（占位，系统忽略）"},
+];
+
+// === 构建索引 ===
+const idiomMap = {}; // idiom -> object
+const charIndex = {}; // first character -> [idiom objects]
+const pinyinIndex = {}; // first pinyin syllable -> [idiom objects]
+
+IDIOM_DB.forEach(item => {
+    idiomMap[item.idiom] = item;
+    const firstChar = item.idiom[0];
+    if (!charIndex[firstChar]) charIndex[firstChar] = [];
+    charIndex[firstChar].push(item);
+
+    // Extract first pinyin syllable
+    const firstPinyin = item.pinyin.split(' ')[0].replace(/[0-9]/g, '');
+    if (!pinyinIndex[firstPinyin]) pinyinIndex[firstPinyin] = [];
+    pinyinIndex[firstPinyin].push(item);
+});
+
+// Extract last pinyin syllable for matching
+function getLastPinyin(idiom) {
+    const item = idiomMap[idiom];
+    if (!item) return '';
+    const syllables = item.pinyin.split(' ');
+    return syllables[syllables.length - 1].replace(/[0-9]/g, '');
+}
+
+function getFirstPinyin(idiom) {
+    const item = idiomMap[idiom];
+    if (!item) return '';
+    return item.pinyin.split(' ')[0].replace(/[0-9]/g, '');
+}
+
+// Find idioms that can follow the current one
+function findNextIdioms(currentIdiom) {
+    const lastChar = currentIdiom[currentIdiom.length - 1];
+    const lastPinyin = getLastPinyin(currentIdiom);
+
+    let matches = [];
+
+    // Match by character first
+    if (charIndex[lastChar]) {
+        charIndex[lastChar].forEach(item => {
+            if (item.idiom !== currentIdiom && !usedIdioms.has(item.idiom)) {
+                matches.push(item);
+            }
+        });
+    }
+
+    // Match by pinyin (same sound, different character)
+    if (pinyinIndex[lastPinyin]) {
+        pinyinIndex[lastPinyin].forEach(item => {
+            if (item.idiom !== currentIdiom && !usedIdioms.has(item.idiom) && !matches.find(m => m.idiom === item.idiom)) {
+                matches.push(item);
+            }
+        });
+    }
+
+    return matches;
+}
+
+// === Game State ===
+let currentIdiom = null;
+let usedIdioms = new Set();
+let score = 0;
+let chainCount = 0;
+let timeLeft = 60;
+let timerInterval = null;
+let isPlaying = false;
+let bestScore = parseInt(localStorage.getItem('idiom_chain_best') || '0');
+
+// === UI Elements ===
+const startScreen = document.getElementById('startScreen');
+const gameScreen = document.getElementById('gameScreen');
+const resultScreen = document.getElementById('resultScreen');
+const startBtn = document.getElementById('startBtn');
+const submitBtn = document.getElementById('submitBtn');
+const idiomInput = document.getElementById('idiomInput');
+const currentIdiomEl = document.getElementById('currentIdiom');
+const currentPinyinEl = document.getElementById('currentPinyin');
+const currentMeaningEl = document.getElementById('currentMeaning');
+const targetCharEl = document.getElementById('targetChar');
+const scoreDisplay = document.getElementById('scoreDisplay');
+const chainDisplay = document.getElementById('chainDisplay');
+const timerDisplay = document.getElementById('timerDisplay');
+const bestDisplay = document.getElementById('bestDisplay');
+const feedbackEl = document.getElementById('feedback');
+const chainList = document.getElementById('chainList');
+
+// Initialize best score display
+bestDisplay.textContent = bestScore;
+
+// === Game Functions ===
+function startGame() {
+    // Reset state
+    usedIdioms = new Set();
+    score = 0;
+    chainCount = 0;
+    timeLeft = 60;
+    isPlaying = true;
+
+    // Pick a random starting idiom
+    const startIdx = Math.floor(Math.random() * IDIOM_DB.length);
+    currentIdiom = IDIOM_DB[startIdx].idiom;
+    usedIdioms.add(currentIdiom);
+
+    // Update UI
+    updateCurrentIdiomDisplay();
+    scoreDisplay.textContent = '0';
+    chainDisplay.textContent = '0';
+    timerDisplay.textContent = '60';
+    bestDisplay.textContent = bestScore;
+    chainList.innerHTML = '';
+    feedbackEl.textContent = '';
+    feedbackEl.className = 'feedback';
+    idiomInput.value = '';
+
+    // Show game screen
+    startScreen.classList.add('hidden');
+    resultScreen.classList.add('hidden');
+    gameScreen.classList.remove('hidden');
+
+    // Start timer
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(updateTimer, 1000);
+
+    // Focus input
+    idiomInput.focus();
+}
+
+function updateTimer() {
+    timeLeft--;
+    timerDisplay.textContent = timeLeft;
+
+    if (timeLeft <= 10) {
+        timerDisplay.classList.add('timer-warning');
+    }
+
+    if (timeLeft <= 0) {
+        endGame();
+    }
+}
+
+function updateCurrentIdiomDisplay() {
+    const item = idiomMap[currentIdiom];
+    if (item) {
+        currentIdiomEl.textContent = item.idiom;
+        currentPinyinEl.textContent = item.pinyin;
+        currentMeaningEl.textContent = item.meaning;
+    }
+    const lastChar = currentIdiom[currentIdiom.length - 1];
+    targetCharEl.textContent = lastChar;
+}
+
+function submitIdiom() {
+    if (!isPlaying) return;
+
+    const input = idiomInput.value.trim();
+    feedbackEl.className = 'feedback';
+
+    // Validate input
+    if (!input) {
+        feedbackEl.textContent = '请输入一个成语！';
+        feedbackEl.classList.add('error');
+        return;
+    }
+
+    if (input.length < 3) {
+        feedbackEl.textContent = '成语至少3个字哦～';
+        feedbackEl.classList.add('error');
+        return;
+    }
+
+    // Check if idiom is in database
+    if (!idiomMap[input]) {
+        feedbackEl.textContent = '😅 库里没有这个成语，换一个试试？';
+        feedbackEl.classList.add('error');
+        return;
+    }
+
+    // Check if already used
+    if (usedIdioms.has(input)) {
+        feedbackEl.textContent = '这个成语已经用过了！';
+        feedbackEl.classList.add('error');
+        return;
+    }
+
+    // Check if first character/pinyin matches
+    const lastChar = currentIdiom[currentIdiom.length - 1];
+    const lastPinyin = getLastPinyin(currentIdiom);
+    const inputFirstChar = input[0];
+    const inputFirstPinyin = getFirstPinyin(input);
+
+    const charMatch = inputFirstChar === lastChar;
+    const pinyinMatch = inputFirstPinyin === lastPinyin;
+
+    if (!charMatch && !pinyinMatch) {
+        feedbackEl.textContent = `需要以"${lastChar}"（或同音字）开头的成语哦！`;
+        feedbackEl.classList.add('error');
+        return;
+    }
+
+    // Success!
+    usedIdioms.add(input);
+    chainCount++;
+    score += charMatch ? 10 : 8; // 同字加10分，同音加8分
+
+    // Add to chain display
+    const chainItem = document.createElement('span');
+    chainItem.className = 'chain-item';
+    chainItem.textContent = input;
+    if (chainList.children.length > 0) {
+        const arrow = document.createElement('span');
+        arrow.className = 'chain-arrow';
+        arrow.textContent = '→';
+        chainList.appendChild(arrow);
+    }
+    chainList.appendChild(chainItem);
+    chainList.scrollTop = chainList.scrollHeight;
+
+    // Update score display
+    scoreDisplay.textContent = score;
+    chainDisplay.textContent = chainCount;
+
+    feedbackEl.textContent = charMatch ? '✅ 完美接龙！+10分' : '✅ 同音接龙！+8分';
+    feedbackEl.classList.add('success');
+
+    // Update current idiom
+    currentIdiom = input;
+    updateCurrentIdiomDisplay();
+
+    // Check if there are any possible next idioms
+    const nextOptions = findNextIdioms(currentIdiom);
+    if (nextOptions.length === 0) {
+        feedbackEl.textContent = '🎉 太厉害了！没有更多可接的成语了！';
+        endGame();
+        return;
+    }
+
+    // Clear input
+    idiomInput.value = '';
+    idiomInput.focus();
+
+    // Clear feedback after delay
+    setTimeout(() => {
+        if (feedbackEl.classList.contains('success')) {
+            feedbackEl.textContent = '';
+        }
+    }, 1500);
+}
+
+function endGame() {
+    isPlaying = false;
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+
+    // Update best score
+    if (score > bestScore) {
+        bestScore = score;
+        localStorage.setItem('idiom_chain_best', bestScore.toString());
+    }
+
+    // Show result
+    document.getElementById('finalScore').textContent = score;
+    document.getElementById('finalChain').textContent = chainCount;
+    document.getElementById('finalBest').textContent = bestScore;
+
+    gameScreen.classList.add('hidden');
+    resultScreen.classList.remove('hidden');
+}
+
+// === Event Listeners ===
+idiomInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && isPlaying) {
+        submitIdiom();
+    }
+});
+
+// IME handling for Chinese input
+let isComposing = false;
+idiomInput.addEventListener('compositionstart', function() {
+    isComposing = true;
+});
+idiomInput.addEventListener('compositionend', function() {
+    isComposing = false;
+});
+idiomInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && isComposing) {
+        e.preventDefault();
+    }
+});
+</script>
+
+<?php require("footer.php"); ?>

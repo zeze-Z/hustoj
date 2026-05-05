@@ -21,7 +21,7 @@
 	$MSG_TODO="待完成的任务";
 
 	//course module
-	$MSG_COURSE="课程";
+	$MSG_COURSE="课件";
 	$MSG_COURSE_LIST="课程列表";
 	$MSG_COURSE_SUBJECT="学科";
 	$MSG_COURSE_TITLE="课程标题";
