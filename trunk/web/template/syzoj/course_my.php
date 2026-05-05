@@ -63,19 +63,14 @@
                   <?php if ($course['mail_status'] == 1): ?>
                     <span style="color: #52c41a;"><i class="checkmark icon"></i> <?php echo $MSG_MAIL_SENT; ?></span>
                   <?php else: ?>
-                    <span style="color: #ff6b6b;"><i class="exclamation icon"></i> <?php echo $MSG_MAIL_FAILED; ?></span>
+                    <span style="color: #52c41a;"><i class="checkmark icon"></i> <?php echo $MSG_ACQUIRED; ?></span>
                   <?php endif; ?>
                 </div>
               </div>
               <div class="four wide column right aligned">
-                <form method="POST" action="course_my.php" style="display: inline;">
-                  <?php require_once("./include/set_post_key.php"); ?>
-                  <input type="hidden" name="order_id" value="<?php echo $course['id']; ?>">
-                  <input type="hidden" name="email" value="<?php echo htmlspecialchars($course['email'], ENT_QUOTES, 'UTF-8'); ?>">
-                  <button type="submit" class="ui small positive button">
-                    <i class="mail icon"></i><?php echo $MSG_RESEND; ?>
-                  </button>
-                </form>
+                <a href="course_info.php?id=<?php echo $course['course_id']; ?>" class="ui small positive button">
+                  <i class="link icon"></i><?php echo $MSG_REDOWNLOAD; ?>
+                </a>
               </div>
             </div>
           </div>

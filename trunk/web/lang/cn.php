@@ -40,7 +40,7 @@
 	$MSG_ALL="全部";
 	$MSG_ACQUIRED="已获取";
 	$MSG_NOT_ACQUIRED="未获取";
-	$MSG_REDOWNLOAD="重新获取下载链接";
+	$MSG_REDOWNLOAD="查看课件链接";
 	$MSG_FREE_GET="免费获取";
 	$MSG_BUY_NOW="立即购买";
 	$MSG_BACK="返回";

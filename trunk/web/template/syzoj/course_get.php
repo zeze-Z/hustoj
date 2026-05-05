@@ -18,17 +18,38 @@
     </div>
   <?php endif; ?>
 
-  <!-- 成功消息 -->
-  <?php if (!empty($view_success)): ?>
+  <!-- 成功消息 + 自动跳转 -->
+  <?php if (!empty($view_success) && !empty($view_redirect_url)): ?>
     <div class="ui success message" style="border-radius: 12px;">
       <i class="close icon"></i>
       <div class="header"><?php echo $MSG_SUCCESS; ?></div>
       <p><?php echo $view_success; ?></p>
+      <p style="margin-top: 10px; color: #666;">
+        <i class="spinner loading icon"></i>
+        <span id="countdown">3</span> 秒后自动跳转...
+      </p>
+      <a href="<?php echo $view_redirect_url; ?>" class="ui large blue button" style="width: 100%; margin-top: 15px;">
+        <i class="arrow right icon"></i> 立即查看课程
+      </a>
     </div>
+
+    <script>
+      var countdown = 3;
+      var redirectUrl = '<?php echo $view_redirect_url; ?>';
+      var timer = setInterval(function() {
+        countdown--;
+        var el = document.getElementById('countdown');
+        if (el) el.textContent = countdown;
+        if (countdown <= 0) {
+          clearInterval(timer);
+          window.location.href = redirectUrl;
+        }
+      }, 1000);
+    </script>
   <?php endif; ?>
 
   <!-- 课程获取表单 -->
-  <?php if (!empty($view_course) && empty($view_error)): ?>
+  <?php if (!empty($view_course) && empty($view_error) && empty($view_success)): ?>
     <div class="ui segment" style="border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
       <h2 class="ui header" style="margin-bottom: 20px; color: #333;">
         <i class="shopping cart icon"></i>
@@ -79,25 +100,12 @@
 
       <!-- 获取表单 -->
       <form class="ui form" method="POST" action="course_get.php">
-        <?php require_once("./include/set_post_key.php"); ?>
+        <input type="hidden" name="postkey" value="<?php echo isset($_SESSION[$OJ_NAME.'_'.'postkey']) ? $_SESSION[$OJ_NAME.'_'.'postkey'] : ''; ?>">
         <input type="hidden" name="course_id" value="<?php echo $view_course['id']; ?>">
         <input type="hidden" name="license_type" value="<?php echo $view_license_type; ?>">
         <?php if ($view_is_upgrade): ?>
         <input type="hidden" name="upgrade" value="1">
         <?php endif; ?>
-
-        <div class="field" style="margin-bottom: 20px;">
-          <label style="font-weight: 600; color: #333;">
-            <i class="mail icon"></i> <?php echo $MSG_RECEIVER_EMAIL; ?>
-          </label>
-          <input type="email" name="email" id="email"
-                 value="<?php echo htmlspecialchars($_SESSION[$OJ_NAME . '_' . 'email'], ENT_QUOTES, 'UTF-8'); ?>"
-                 placeholder="<?php echo $MSG_EMAIL_PLACEHOLDER; ?>"
-                 required>
-          <div class="ui pointing blue label">
-            <?php echo $MSG_EMAIL_TIP; ?>
-          </div>
-        </div>
 
         <!-- 免费课程：显示确认获取按钮 -->
         <?php if (!$view_is_paid): ?>

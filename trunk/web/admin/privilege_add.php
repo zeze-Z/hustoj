@@ -29,7 +29,7 @@ if (isset($_POST['do'])) {
 		$rightstr = "s$rightstr";
 
 	$sql = "insert into `privilege`(user_id,rightstr,valuestr,defunct) values(?,?,?,'N')";
-	$link= 'http://'.$_SERVER['HTTP_HOST'].dirname($_SERVER['REQUEST_URI']);
+	$link= 'http://'.$_SERVER['HTTP_HOST'].'/';
         $msg = $_SESSION[$OJ_NAME.'_user_id']." $MSG_ADD $rightstr [$valuestr] $MSG_PRIVILEGE -> $user_id @  ".date('Y-m-d h:i:s a', time());
         $msg .="\n\nmessage from site: $link";
         if(!empty($user_id)) $rows = pdo_query($sql,$user_id,$rightstr,$valuestr);
@@ -45,6 +45,80 @@ if (isset($_POST['do'])) {
             "**操作人**: " . ($_SESSION[$OJ_NAME.'_user_id'] ?? 'system'),
             'warn'
         );
+
+        // 教师权限开通：发送邮件通知用户
+        if ($rightstr === 'teacher' && !empty($user_id)) {
+            // 查询用户邮箱
+            $user_email_sql = "SELECT email, nick FROM users WHERE user_id = ?";
+            $user_email_result = pdo_query($user_email_sql, $user_id);
+            
+            if (!empty($user_email_result) && !empty($user_email_result[0]['email'])) {
+                $user_email = $user_email_result[0]['email'];
+                $user_nick = !empty($user_email_result[0]['nick']) ? $user_email_result[0]['nick'] : $user_id;
+                
+                // 构建HTML邮件内容
+                $mail_html = "
+                <div style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f5f5f5; padding: 20px;'>
+                    <div style='background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>
+                        <!-- 头部 -->
+                        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;'>
+                            <h1 style='color: white; margin: 0; font-size: 24px;'>🎉 恭喜！您已获得教师权限</h1>
+                        </div>
+                        
+                        <!-- 内容区 -->
+                        <div style='padding: 30px;'>
+                            <p style='font-size: 16px; color: #333; line-height: 1.8;'>亲爱的 <strong>$user_nick</strong> 老师：</p>
+                            
+                            <p style='font-size: 16px; color: #333; line-height: 1.8;'>
+                                您的 <strong>教师权限</strong> 已由管理员开通，现在您可以使用以下功能：
+                            </p>
+                            
+                            <!-- 功能列表 -->
+                            <div style='background: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 4px;'>
+                                <h3 style='color: #667eea; margin-top: 0;'>✨ 您的专属权益</h3>
+                                <ul style='color: #555; line-height: 2; margin: 0; padding-left: 20px;'>
+                                    <li>大量免费课件获取</li>
+                                    <li>大量免费教案获取</li>
+                                    <li>参与课件共创并获取分成</li>
+                                </ul>
+                            </div>
+                            
+                            <!-- 收益说明 -->
+                            <div style='background: #f0fff4; border-left: 4px solid #52c41a; padding: 20px; margin: 20px 0; border-radius: 4px;'>
+                                <h3 style='color: #52c41a; margin-top: 0;'>💰 收益分成说明</h3>
+                                <p style='color: #555; line-height: 1.8; margin: 0;'>
+                                    您将优质课件上架到平台后，其他教师购买课件时，您将获得一定比例的收益分成。
+                                    具体规则请咨询客服QQ。
+                                </p>
+                            </div>
+                            
+                            <!-- 操作引导 -->
+                            <div style='text-align: center; margin: 30px 0;'>
+                                <a href='".$link."' style='display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600;'>
+                                    🚀 立即前往平台
+                                </a>
+                            </div>
+                            
+                            <p style='color: #999; font-size: 14px; line-height: 1.8; margin-top: 30px;'>
+                                如有任何疑问，请联系客服QQ：2326077585
+                            </p>
+                        </div>
+                        
+                        <!-- 底部 -->
+                        <div style='background: #f5f5f5; padding: 15px; text-align: center; border-top: 1px solid #e0e0e0;'>
+                            <p style='color: #999; font-size: 12px; margin: 0;'>
+                                此邮件由 $OJ_NAME 平台自动发送，请勿直接回复。<br>
+                                © $OJ_NAME 版权所有
+                            </p>
+                        </div>
+                    </div>
+                </div>";
+                
+                // 发送HTML邮件
+                email($user_email, "【$OJ_NAME】教师权限已开通", "您的教师权限已开通，登录平台后可使用课件相关功能。", $mail_html);
+            }
+        }
+
         if ($OJ_ADMIN=="root@localhost"){
                 $sql="select email from users where user_id=? ";
                 $OJ_ADMIN=pdo_query($sql,$_SESSION[$OJ_NAME.'_user_id'])[0][0];

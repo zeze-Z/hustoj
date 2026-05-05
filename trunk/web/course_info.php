@@ -82,6 +82,12 @@ if ($has_preview_license && !empty($course['lesson_plan_full_preview_url'])) {
     $view_lesson_plan_url = validatePreviewUrl($course['lesson_plan_preview_url']);
 }
 
+// 腾讯文档链接（用于按钮直接打开）
+$view_courseware_full_preview_url = validatePreviewUrl($course['courseware_full_preview_url']);
+$view_lesson_plan_full_preview_url = validatePreviewUrl($course['lesson_plan_full_preview_url']);
+$view_courseware_link = validatePreviewUrl($course['courseware_link']);
+$view_lesson_plan_link = validatePreviewUrl($course['lesson_plan_link']);
+
 // 模板变量
 $view_course = $course;
 $view_has_preview_license = $has_preview_license;
@@ -93,6 +99,7 @@ $view_has_full_lesson_plan = !empty($course['lesson_plan_full_preview_url']);
 $view_preview_price = $preview_price;
 $view_source_price = $source_price;
 $view_upgrade_price = $source_price - $preview_price; // 升级补差价金额
+$view_is_free = $is_free;
 $page_title = "$MSG_COURSE: " . htmlspecialchars($course['title'], ENT_QUOTES, 'UTF-8') . " - $OJ_NAME";
 
 require("template/" . $OJ_TEMPLATE . "/course_info.php");

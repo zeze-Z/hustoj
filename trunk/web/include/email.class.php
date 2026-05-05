@@ -33,6 +33,11 @@ function email($address,$mailtitle,$mailcontent,$html=""){
 		   // $mail->addReplyTo('info@example.com', 'Information');
 		   // $mail->addCC('cc@example.com');
 		   // $mail->addBCC('bcc@example.com');
+		    
+		    // Encoding
+		    $mail->CharSet = 'UTF-8';
+		    $mail->Encoding = 'base64';
+		    
 		    //Attachments
 		    //$mail->addAttachment('/var/tmp/file.tar.gz');         //Add attachments
 		    //$mail->addAttachment('/tmp/image.jpg', 'new.jpg');    //Optional name

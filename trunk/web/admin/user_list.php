@@ -16,7 +16,7 @@ if(isset($OJ_LANG)){
 <title>User List</title>
 <hr>
 <center><h3><?php echo $MSG_USER."-".$MSG_LIST?></h3></center>
-<div class='' style="overflow:auto">
+<div>
 <?php
 // 学校管理员只能看本校用户
 $school_filter = getUserSchoolFilter();
@@ -63,7 +63,7 @@ if(isset($_GET['keyword']) && $_GET['keyword']!=""){
 </form>
 </center>
 
-<center>
+<div style="overflow-x:auto; width:100%; margin:0 auto; display:block;">
   <table width=100% border=1 style="text-align:center;" class="ui striped aligned table">
 <thead>
     <tr>
@@ -122,7 +122,7 @@ if(isset($_GET['keyword']) && $_GET['keyword']!=""){
       echo "</tr>";
     } ?>
   </table>
-</center>
+</div>
 
 <?php
 if(!(isset($_GET['keyword']) && $_GET['keyword']!=""))
