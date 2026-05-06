@@ -77,10 +77,13 @@ if (isset($_POST['do'])) {
                             <div style='background: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 4px;'>
                                 <h3 style='color: #667eea; margin-top: 0;'>✨ 您的专属权益</h3>
                                 <ul style='color: #555; line-height: 2; margin: 0; padding-left: 20px;'>
-                                    <li>大量免费课件获取</li>
-                                    <li>大量免费教案获取</li>
-                                    <li>参与课件共创并获取分成</li>
+                                    <li>免费获取海量优质课件与教案</li>
+                                    <li>参与课件共创，获取收益分成</li>
+                                    <li>创建并管理您班级的学生账号</li>
+                                    <li>实时查看学生的答题情况与学习进度</li>
+                                    <li>定制您学校的专属题库</li>
                                 </ul>
+                                <p style='color: #888; font-size: 13px; margin-top: 12px;'>注：创建学生账号、定制题库需联系客服开通</p>
                             </div>
                             
                             <!-- 收益说明 -->
@@ -115,7 +118,8 @@ if (isset($_POST['do'])) {
                 </div>";
                 
                 // 发送HTML邮件
-                email($user_email, "【$OJ_NAME】教师权限已开通", "您的教师权限已开通，登录平台后可使用课件相关功能。", $mail_html);
+                $mail_subject = $OJ_NAME . ' - 教师权限已开通';
+                email($user_email, $mail_subject, "您的教师权限已开通，登录平台后可使用课件相关功能。", $mail_html);
             }
         }
 
