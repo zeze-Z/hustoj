@@ -197,39 +197,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $redirect_url = 'course_info.php?id=' . $course_id;
         }
 
-        // 免费课程：创建两种权限记录
+        // 免费课程：创建单条权限记录（简化版：只需一条记录）
         if ($is_free_course && !$is_upgrade) {
-            // 检查是否已获取过预览版权限
-            $check_preview_sql = "SELECT id FROM course_order WHERE user_id = ? AND course_id = ? AND license_type = 1 AND pay_status = 1";
-            $check_preview_result = pdo_query($check_preview_sql, $user_id, $course_id);
+            // 检查是否已获取过任意权限
+            $check_sql = "SELECT id FROM course_order WHERE user_id = ? AND course_id = ? AND pay_status = 1";
+            $check_result = pdo_query($check_sql, $user_id, $course_id);
 
-            // 检查是否已获取过原文件版权限
-            $check_source_sql = "SELECT id FROM course_order WHERE user_id = ? AND course_id = ? AND license_type = 2 AND pay_status = 1";
-            $check_source_result = pdo_query($check_source_sql, $user_id, $course_id);
-
-            if (!empty($check_preview_result) && !empty($check_source_result)) {
+            if (!empty($check_result)) {
                 set_success_and_redirect($course_id, $MSG_GET_SUCCESS);
             } else {
                 $order_no = 'CO' . time() . rand(1000, 9999);
 
-                // 创建预览版权限记录
-                if (empty($check_preview_result)) {
-                    pdo_query(
-                        "INSERT INTO course_order (order_no, user_id, course_id, license_type, amount, pay_status, pay_time, pay_channel, mail_status)
-                         VALUES (?, ?, ?, 1, 0, 1, NOW(), 'free', 0)",
-                        $order_no, $user_id, $course_id
-                    );
-                }
-
-                // 创建原文件版权限记录
-                if (empty($check_source_result)) {
-                    $order_no2 = 'CO' . time() . rand(1000, 9999);
-                    pdo_query(
-                        "INSERT INTO course_order (order_no, user_id, course_id, license_type, amount, pay_status, pay_time, pay_channel, mail_status)
-                         VALUES (?, ?, ?, 2, 0, 1, NOW(), 'free', 0)",
-                        $order_no2, $user_id, $course_id
-                    );
-                }
+                // 创建一条原文件版权限记录
+                pdo_query(
+                    "INSERT INTO course_order (order_no, user_id, course_id, license_type, amount, pay_status, pay_time, pay_channel, mail_status)
+                     VALUES (?, ?, ?, 2, 0, 1, NOW(), 'free', 0)",
+                    $order_no, $user_id, $course_id
+                );
 
                 // 发送飞书通知
                 send_order_feishu_notify($course, $user_id, $order_no, 2, 0, 'free', false, $preview_price, $source_price);
