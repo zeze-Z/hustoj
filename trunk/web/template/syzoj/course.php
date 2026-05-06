@@ -47,7 +47,7 @@
   <?php if (empty($view_courses)): ?>
     <div style="text-align: center; padding: 60px 20px; color: #999;">
       <i class="book icon" style="font-size: 4em; margin-bottom: 15px; display: block;"></i>
-      <p>暂无课程</p>
+      <p>海量优质课件正在赶来</p>
     </div>
   <?php else: ?>
     <div class="ui four column stackable grid" style="margin-bottom: 20px;">
