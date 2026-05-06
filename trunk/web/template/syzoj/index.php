@@ -117,20 +117,20 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
             mt_srand($seed);
             $offset = mt_rand(0, max(0, $total_problems - 1));
 
-            // 获取当日题目，优先选择有一定AC数的题目
+            // 获取当日题目，用日期种子取对应偏移量的题目
             $daily_problem_result = mysql_query_cache("select p.problem_id, p.title, p.accepted, p.submit, p.source
                 from problem p
                 where p.defunct='N' and p.problem_id>0
-                order by p.accepted desc
-                limit 1");
+                order by p.problem_id
+                limit 1 offset " . intval($offset));
 
             if (empty($daily_problem_result)) {
-                // 如果偏移量获取失败，直接获取一个热门题目
+                // 如果偏移量获取失败，直接获取偏移量对应的题目
                 $daily_problem_result = mysql_query_cache("select p.problem_id, p.title, p.accepted, p.submit, p.source
                     from problem p
                     where p.defunct='N' and p.problem_id>0
-                    order by p.accepted desc
-                    limit 1");
+                    order by p.problem_id
+                    limit 1 offset " . intval($offset));
             }
 
             if (!empty($daily_problem_result)) {
