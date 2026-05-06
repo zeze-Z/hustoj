@@ -8,18 +8,9 @@ ALTER TABLE course ADD COLUMN `source_price` decimal(10,2) NOT NULL DEFAULT 0.00
 -- 2. 订单表新增权限类型字段
 ALTER TABLE course_order ADD COLUMN `license_type` tinyint(4) NOT NULL DEFAULT 1 COMMENT '权限类型：1=仅预览版 2=仅原文件 3=完整版(预览+原文件)' AFTER `course_id`;
 
--- 3. 修改唯一键（如果旧索引存在则先删除，再添加新索引）
-SET @has_old = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='course_order' AND INDEX_NAME='uk_user_course');
-SET @has_new = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='course_order' AND INDEX_NAME='uk_user_course_license');
-
-SET @sql = IF(@has_old>0 AND @has_new=0, 'ALTER TABLE course_order DROP INDEX `uk_user_course`, ADD UNIQUE KEY `uk_user_course_license` (`user_id`, `course_id`, `license_type`)',
-    IF(@has_new=0, 'ALTER TABLE course_order ADD UNIQUE KEY `uk_user_course_license` (`user_id`, `course_id`, `license_type`)', 'DO 1'));
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-SET @sql = NULL;
-SET @has_old = NULL;
-SET @has_new = NULL;
+-- 3. 修改唯一键（先删旧索引，再加新索引）
+ALTER TABLE course_order DROP INDEX `uk_user_course`;
+ALTER TABLE course_order ADD UNIQUE KEY `uk_user_course_license` (`user_id`, `course_id`, `license_type`);
 
 -- 4. 历史数据兼容：原有订单默认设为完整版(3)
 UPDATE course_order SET license_type = 3 WHERE pay_status = 1;
