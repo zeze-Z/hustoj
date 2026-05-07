@@ -53,7 +53,6 @@
             <option value="choice_multi">多选题</option>
             <option value="judge">判断题</option>
           </select>
-          <br><br>
         </p>
         
         <div id="programming_fields">
@@ -61,7 +60,7 @@
             <?php echo $MSG_Time_Limit?>
             <input class="input input-mini" type=number min="0.001" max="300" step="0.001" name=time_limit size=20 value=1> sec
             <?php echo $MSG_Memory_Limit?>
-            <input class="input input-mini" type=number min="1" max="2048" step="1" name=memory_limit size=20 value=128> MiB<br><br>
+            <input class="input input-mini" type=number min="1" max="2048" step="1" name=memory_limit size=20 value=128> MiB
           </p>
         </div>
         
@@ -91,21 +90,17 @@
             </div>
           </div>
           <button type="button" class="btn btn-success btn-sm" onclick="addOption()">添加选项</button>
-          <br><br>
           
           <h4>正确答案</h4>
           <div id="answer_container">
             <!-- 单选/判断题用radio，多选用checkbox，动态生成 -->
           </div>
-          <br><br>
           
           <h4>分值</h4>
           <input type="number" name="score" class="form-control" min="1" max="100" value="10">
-          <br><br>
           
           <h4>答案解析</h4>
           <textarea name="analysis" class="kindeditor" rows=5 cols=80></textarea>
-          <br><br>
         </div>
         <p align=left>
           <?php echo "<h4>".$MSG_Description."(<64kB)</h4>"?>
@@ -322,19 +317,24 @@
   }
   
   function transform(){
-        let height=document.body.clientHeight;
-        let width=parseInt(document.body.clientWidth*0.6);
-        let width2=parseInt(document.body.clientWidth*0.4);
-	if(width<500) width2=300;
+        let totalHeight=window.innerHeight;
+        let totalWidth=window.innerWidth;
+        let editorWidth=parseInt(totalWidth*0.45);
+        let previewWidth=totalWidth-editorWidth-30;
+        let panelTop=120;
+        let panelHeight=totalHeight-panelTop-30;
+	if(previewWidth<500) {editorWidth=350; previewWidth=totalWidth-380;}
         let submitURL="../problem.php?id=1000";
-        console.log(width);
+        console.log("editorWidth:"+editorWidth+" previewWidth:"+previewWidth+" height:"+panelHeight);
         let main=$("#main");
         let problem=main.html();
                 main.removeClass("container");
-                main.css("width",width2);
+                main.css("width",editorWidth);
                 main.css("margin-left","10px");
-                main.parent().append("<div id='preview' class='container' style='opacity:0.95;position:fixed;z-index:1000;top:49px;right:-"+width2+"px'></div>");
-                $("#preview").html("<iframe id='previewFrame' src='"+submitURL+"&spa' width='"+width+"px' height='"+height+"px' ></iframe>");
+                main.css("max-height",panelHeight+"px");
+                main.css("overflow-y","auto");
+                main.parent().append("<div id='preview' class='container' style='opacity:0.95;position:fixed;z-index:1000;top:"+panelTop+"px;left:"+(editorWidth+15)+"px;width:"+previewWidth+"px;height:"+panelHeight+"px;overflow-y:auto;border:1px solid #ddd;border-radius:4px;background:#fff;'></div>");
+                $("#preview").html("<iframe id='previewFrame' src='"+submitURL+"&spa' width='100%' height='"+panelHeight+"px' style='border:none;'></iframe>");
         $("#submit").remove();
         setTimeout('hide()',1500);	
 	$("input").keyup(sync);

@@ -1,6 +1,6 @@
 # OJ 功能发布步骤
 
-## 当前版本：V1.2（2026-05-01）
+## 当前版本：V1.5（2026-05-07）
 
 ---
 
@@ -14,6 +14,7 @@
 | V1.1 | 2026-04-19 | 选择题功能 + 考试模块（合并发布） |
 | V1.2 | 2026-05-01 | 课件预览付费改造 |
 | V1.3 | 2026-05-05 | 删除提取码字段（百度网盘→金山文档） |
+| V1.4 | 2026-05-07 | 题目增加level字段（难度等级1-5） |
 
 ---
 
@@ -47,6 +48,9 @@ mysql -u root -p jol < db/V1.1_20260419_choice_and_exam.sql
 
 # 5. 课件预览付费改造
 mysql -u root -p jol < db/V1.2_20260501_courseware_preview_upgrade.sql
+
+# 6. 题目难度等级
+mysql -u root -p jol < db/V1.5_20260507_add_problem_level.sql
 ```
 
 **验证：**
@@ -84,6 +88,9 @@ SHOW INDEX FROM jol.exam_result WHERE Key_name='uk_exam_user_problem';
 -- 课件预览付费改造
 DESCRIBE jol.course courseware_full_preview_url;   -- varchar(500)
 DESCRIBE jol.course lesson_plan_full_preview_url;  -- varchar(500)
+
+-- 题目难度等级
+DESCRIBE jol.problem level;     -- int(11), Default: 1, Comment: 难度等级(1-5)
 ```
 
 ---
@@ -197,4 +204,5 @@ db/V1.0_20260317_db_init.sql          # 基础OJ初始化
  db/V1.0_20260411_school_mode.sql      # 多学校隔离功能
  db/V1.1_20260419_choice_and_exam.sql  # 合并SQL：选择题 + 考试模块
  db/V1.2_20260501_courseware_preview_upgrade.sql  # 课件预览付费改造
+db/V1.5_20260507_add_problem_level.sql       # 题目难度等级 level
 ```

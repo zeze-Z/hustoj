@@ -91,11 +91,8 @@ if(isset($_GET['keyword']) && $_GET['keyword']!=""){
         if($row['nick']=="") $row['nick']="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
         echo "<td><span fd='nick' user_id='".$row['user_id']."'>".$row['nick']."</span></td>";
         echo "<td><a href='user_list.php?keyword=".htmlentities(urlencode($row['ip']))."' >".$row['ip']."</td>";
-        if($OJ_SaaS_ENABLE && $domain == $DOMAIN){
-                echo "<td><a href='http://".$row['user_id'].".$DOMAIN' target=_blank >".$row['email']."&nbsp;</a></td>";
-        }else{
-                echo "<td>".$row['email']." </td>";
-        }
+        if($row['email']=="") $row['email']="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+        echo "<td><span fd='email' user_id='".$row['user_id']."'>".$row['email']."</span></td>";
         if($row['school']=="") $row['school']="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
         echo "<td><span fd='school' user_id='".$row['user_id']."'>".$row['school']."</span></td>";
         if($row['group_name']=="") $row['group_name']="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
@@ -181,6 +178,26 @@ function admin_mod(){
                                 $.post("ajax.php",sp.find("form").serialize()).done(function(){
                                         console.log("new school"+newschool);
                                         sp.html(newschool);
+                                });
+
+                        });
+                });
+        });
+
+        $("span[fd=email]").each(function(){
+                let sp=$(this);
+                let user_id=$(this).attr('user_id');
+                $(this).dblclick(function(){
+                        let email=sp.text();
+                        sp.html("<form onsubmit='return false;'><input type=hidden name='m' value='user_update_email'><input type='hidden' name='user_id' value='"+user_id+"'><input type='text' name='email' value='"+email+"' selected='true' class='input-large' size=20 ></form>");
+                        let ipt=sp.find("input[name=email]");
+                        ipt.focus();
+                        ipt[0].select();
+                        sp.find("input").change(function(){
+                                let newemail=sp.find("input[name=email]").val();
+                                $.post("ajax.php",sp.find("form").serialize()).done(function(){
+                                        console.log("new email:"+newemail);
+                                        sp.html(newemail);
                                 });
 
                         });

@@ -68,6 +68,12 @@ if($_SERVER['REQUEST_METHOD']=="POST"){
 		$sql= "update solution set nick=? where user_id=?";
                 pdo_query($sql,$nick,$user_id);
         }
+	if($m=="user_update_email"  && ( isset($_SESSION[$OJ_NAME.'_administrator']) )){
+                $user_id=$_POST['user_id'];
+                $email=$_POST['email'];
+                $sql="update users set email=? where user_id=?";
+                echo pdo_query($sql,$email,$user_id);
+	}
 	/*
         if($m=="user_update_expiry_date"  && ( isset($_SESSION[$OJ_NAME.'_administrator']) )){
                 $user_id=$_POST['user_id'];
