@@ -92,7 +92,7 @@
             <!-- 免费课程：显示免费获取按钮 -->
             <a href="course_get.php?id=<?php echo $view_course['id']; ?>"
                class="ui large green button">
-              <i class="gift icon"></i>限时免费获取
+              <i class="gift icon"></i>限时免费获取完整预览版
             </a>
           <?php else: ?>
             <!-- 未购买任何权限：显示两个购买按钮 -->

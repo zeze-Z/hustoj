@@ -115,22 +115,58 @@
                 // IP 频率限制（仅主页面请求）
                 $guest_ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
                 $rate_limit_key = 'oj_rate_' . md5($guest_ip);
+                $rate_limit_threshold = 60; // 统一使用60次/分钟的阈值
                 try {
-                    // 复用Memcached连接
-                    static $memcache = null;
-                    if ($memcache === null) {
-                        $memcache = new Memcached();
-                        $memcache->addServer('127.0.0.1', 11211);
-                    }
-                    $count = $memcache->get($rate_limit_key);
-                    if ($count === false) {
-                        $memcache->set($rate_limit_key, 1, 60);
-                    } elseif ($count > 60) {
-                        http_response_code(429);
-                        echo '<html><body><h1>429 Too Many Requests</h1><p>访问过于频繁，请稍后再试。</p></body></html>';
-                        exit;
-                    } else {
-                        $memcache->increment($rate_limit_key);
+                    // 优先使用全局的 memcache 连接（来自 memcache.php）
+                    global $memcache;
+                    if ($memcache) {
+                        $count = $memcache->get($rate_limit_key);
+                        if ($count === false) {
+                            // Memcache格式：set($key, $value, $flag, $expiration)
+                            $memcache->set($rate_limit_key, 1, MEMCACHE_COMPRESSED, 60);
+                        } elseif ($count > $rate_limit_threshold) {
+                            http_response_code(429);
+                            echo '<html><body><h1>429 Too Many Requests</h1><p>访问过于频繁，请稍后再试。</p></body></html>';
+                            exit;
+                        } else {
+                            $memcache->increment($rate_limit_key);
+                        }
+                    } elseif (class_exists('Memcached')) {
+                        // 复用Memcached连接
+                        static $memcached = null;
+                        if ($memcached === null) {
+                            $memcached = new Memcached();
+                            $memcached->addServer('127.0.0.1', 11211);
+                        }
+                        $count = $memcached->get($rate_limit_key);
+                        if ($count === false) {
+                            // Memcached格式：set($key, $value, $expiration)
+                            $memcached->set($rate_limit_key, 1, 60);
+                        } elseif ($count > $rate_limit_threshold) {
+                            http_response_code(429);
+                            echo '<html><body><h1>429 Too Many Requests</h1><p>访问过于频繁，请稍后再试。</p></body></html>';
+                            exit;
+                        } else {
+                            $memcached->increment($rate_limit_key);
+                        }
+                    } elseif (class_exists('Memcache')) {
+                        // 复用Memcache连接
+                        static $mc = null;
+                        if ($mc === null) {
+                            $mc = new Memcache();
+                            $mc->connect('127.0.0.1', 11211);
+                        }
+                        $count = $mc->get($rate_limit_key);
+                        if ($count === false) {
+                            // Memcache格式：set($key, $value, $flag, $expiration)
+                            $mc->set($rate_limit_key, 1, MEMCACHE_COMPRESSED, 60);
+                        } elseif ($count > $rate_limit_threshold) {
+                            http_response_code(429);
+                            echo '<html><body><h1>429 Too Many Requests</h1><p>访问过于频繁，请稍后再试。</p></body></html>';
+                            exit;
+                        } else {
+                            $mc->increment($rate_limit_key);
+                        }
                     }
                 } catch (Exception $e) {}
             }

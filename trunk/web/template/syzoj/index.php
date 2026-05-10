@@ -350,6 +350,18 @@ if(isset($pages) && $pages>1 ){
                         ?>
 <?php
 /* 本月之星  */
+function mask_text($text) {
+    if (empty($text)) return $text;
+    $len = mb_strlen($text, 'UTF-8');
+    if ($len <= 2) {
+        return mb_substr($text, 0, 1, 'UTF-8') . '*';
+    } elseif ($len <= 4) {
+        return mb_substr($text, 0, 1, 'UTF-8') . '**' . mb_substr($text, -1, 1, 'UTF-8');
+    } else {
+        return mb_substr($text, 0, 2, 'UTF-8') . '****' . mb_substr($text, -2, 2, 'UTF-8');
+    }
+}
+
 $month_id=mysql_query_cache("select solution_id from solution where  in_date<date_add(curdate(),interval -1 month) order by solution_id desc limit 1;");
 if(!empty( $month_id) && isset($month_id[0][0]) ) $month_id=$month_id[0][0];else $month_id=0;
 $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_id)) ac from solution where solution_id>$month_id and problem_id>0  $not_in_noip_contests and user_id not in (".$OJ_RANK_HIDDEN.")  and result=4 group by user_id,nick order by ac desc limit 10");
@@ -368,11 +380,24 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                     <tbody>
         <?php
                             foreach ( $view_month_rank as $row ) {
-                                    echo "<tr>".
-                                            "<td><a target='_blank' href='userinfo.php?user=".htmlentities($row[0],ENT_QUOTES,"UTF-8")."' style='color: #333;'>⭐".htmlentities($row[0],ENT_QUOTES,"UTF-8")."⭐</a></td>".
-                                            "<td>".($row[1])."</td>".
-                                            "<td style='color: #667eea; font-weight: 600;'>".($row[2])."</td>".
-                                            "</tr>";
+                                $user_id = htmlentities($row[0],ENT_QUOTES,"UTF-8");
+                                $nick = htmlentities($row[1],ENT_QUOTES,"UTF-8");
+                                
+                                if (!$is_logged_in) {
+                                    $display_user_id = mask_text($user_id);
+                                    $display_nick = mask_text($nick);
+                                    $user_link = 'javascript:void(0);';
+                                } else {
+                                    $display_user_id = $user_id;
+                                    $display_nick = $nick;
+                                    $user_link = 'userinfo.php?user=' . $user_id;
+                                }
+                                
+                                echo "<tr>".
+                                        "<td><a target='_blank' href='{$user_link}' style='color: #333;'>⭐{$display_user_id}⭐</a></td>".
+                                        "<td>{$display_nick}</td>".
+                                        "<td style='color: #667eea; font-weight: 600;'>".htmlentities($row[2],ENT_QUOTES,"UTF-8")."</td>".
+                                        "</tr>";
                             }
         ?>
                     </tbody>
