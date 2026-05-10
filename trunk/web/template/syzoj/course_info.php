@@ -359,6 +359,26 @@
                   当前拥有预览版权限，可查看课件完整内容
                 <?php endif; ?>
               </div>
+            <?php elseif ($view_is_free): ?>
+              <!-- 免费课程：直接显示查看按钮 -->
+              <div style="margin-bottom: 10px;">
+                <?php if (!empty($view_courseware_full_preview_url)): ?>
+                <a href="<?php echo htmlspecialchars($view_courseware_full_preview_url, ENT_QUOTES, 'UTF-8'); ?>"
+                   target="_blank" rel="noopener noreferrer" class="ui primary button" style="width: 100%;">
+                  <i class="eye icon"></i> 查看完整内容
+                </a>
+                <?php endif; ?>
+              </div>
+              <?php if (!empty($view_course['courseware_link'])): ?>
+              <a href="<?php echo htmlspecialchars($view_course['courseware_link'], ENT_QUOTES, 'UTF-8'); ?>"
+                 target="_blank" rel="noopener noreferrer" class="ui positive button" style="width: 100%;">
+                <i class="download icon"></i> 下载原文件
+              </a>
+              <?php endif; ?>
+              <!-- 提示文案 -->
+              <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #eaeaea; text-align: center; font-size: 12px; color: #888;">
+                本课件限时免费，点击上方按钮即可查看和下载
+              </div>
             <?php else: ?>
               <!-- 未购买任何权限：展示预览和购买按钮 -->
               <div class="ui two buttons" style="margin-bottom: 10px;">
@@ -477,6 +497,26 @@
                 <?php else: ?>
                   当前拥有预览版权限，可查看教案完整内容
                 <?php endif; ?>
+              </div>
+            <?php elseif ($view_is_free): ?>
+              <!-- 免费课程：直接显示查看按钮 -->
+              <div style="margin-bottom: 10px;">
+                <?php if (!empty($view_lesson_plan_full_preview_url)): ?>
+                <a href="<?php echo htmlspecialchars($view_lesson_plan_full_preview_url, ENT_QUOTES, 'UTF-8'); ?>"
+                   target="_blank" rel="noopener noreferrer" class="ui primary button" style="width: 100%;">
+                  <i class="eye icon"></i> 查看完整内容
+                </a>
+                <?php endif; ?>
+              </div>
+              <?php if (!empty($view_course['lesson_plan_link'])): ?>
+              <a href="<?php echo htmlspecialchars($view_course['lesson_plan_link'], ENT_QUOTES, 'UTF-8'); ?>"
+                 target="_blank" rel="noopener noreferrer" class="ui positive button" style="width: 100%;">
+                <i class="download icon"></i> 下载原文件
+              </a>
+              <?php endif; ?>
+              <!-- 提示文案 -->
+              <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #eaeaea; text-align: center; font-size: 12px; color: #888;">
+                本教案限时免费，点击上方按钮即可查看和下载
               </div>
             <?php else: ?>
               <!-- 未购买任何权限：展示预览和购买按钮 -->
