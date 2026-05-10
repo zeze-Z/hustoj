@@ -49,6 +49,12 @@ $preview_price = floatval($course['preview_price']);
 $source_price = floatval($course['source_price']);
 $is_free = ($preview_price == 0 && $source_price == 0);
 
+// 管理员自动拥有所有课件的全部权限
+if (isset($_SESSION['administrator'])) {
+    $has_preview_license = true;
+    $has_source_license = true;
+}
+
 if (isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
     $user_id = $_SESSION[$OJ_NAME . '_' . 'user_id'];
 
