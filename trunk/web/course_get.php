@@ -208,15 +208,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             } else {
                 $order_no = 'CO' . time() . rand(1000, 9999);
 
-                // 创建一条原文件版权限记录
+                // 创建一条预览版权限记录（免费课程只给预览版权限，以后可以升级到原文件版）
                 pdo_query(
                     "INSERT INTO course_order (order_no, user_id, course_id, license_type, amount, pay_status, pay_time, pay_channel, mail_status)
-                     VALUES (?, ?, ?, 2, 0, 1, NOW(), 'free', 0)",
+                     VALUES (?, ?, ?, 1, 0, 1, NOW(), 'free', 0)",
                     $order_no, $user_id, $course_id
                 );
 
                 // 发送飞书通知
-                send_order_feishu_notify($course, $user_id, $order_no, 2, 0, 'free', false, $preview_price, $source_price);
+                send_order_feishu_notify($course, $user_id, $order_no, 1, 0, 'free', false, $preview_price, $source_price);
 
                 set_success_and_redirect($course_id, $MSG_GET_SUCCESS);
             }

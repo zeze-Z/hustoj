@@ -1,0 +1,1313 @@
+<?php $show_title="AI猜猜画 - $OJ_NAME"; ?>
+<?php include("template/$OJ_TEMPLATE/header.php");?>
+
+<div class="padding">
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "微软雅黑", "幼圆", sans-serif;
+    }
+
+    .game-wrapper {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: white;
+        border-radius: 25px;
+        padding: 25px;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        border: 5px solid #667eea;
+        position: relative;
+        margin-top: 20px;
+    }
+
+    .game-wrapper::before {
+        content: "🤖";
+        font-size: 30px;
+        position: absolute;
+        top: -15px;
+        left: -15px;
+        background-color: #fff;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #667eea;
+    }
+
+    .game-wrapper::after {
+        content: "🎨";
+        font-size: 30px;
+        position: absolute;
+        bottom: -15px;
+        right: -15px;
+        background-color: #fff;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #667eea;
+    }
+
+    h1 {
+        text-align: center;
+        color: #667eea;
+        margin-bottom: 20px;
+        font-size: 2.2rem;
+        text-shadow: 2px 2px 4px rgba(102, 126, 234, 0.2);
+    }
+
+    .level-banner {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .game-content {
+        display: grid;
+        grid-template-columns: 280px 1fr 300px;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .panel {
+        background-color: #f8f9fa;
+        border-radius: 15px;
+        padding: 20px;
+        border: 3px solid #667eea;
+    }
+
+    .panel-title {
+        font-size: 1.3rem;
+        color: #667eea;
+        margin-bottom: 15px;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .task-info {
+        background: linear-gradient(135deg, #e8f0fe, #f3e8ff);
+        border: 2px solid #667eea;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .task-label {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 8px;
+    }
+
+    .task-shape {
+        font-size: 1.8rem;
+        color: #667eea;
+        font-weight: bold;
+        text-align: center;
+        margin: 10px 0;
+    }
+
+    .task-hint {
+        font-size: 0.95rem;
+        color: #666;
+        line-height: 1.6;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed #ccc;
+    }
+
+    .score-display {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 15px;
+    }
+
+    .score-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 8px 0;
+        font-size: 1rem;
+    }
+
+    .score-label {
+        color: #666;
+    }
+
+    .score-value {
+        font-weight: bold;
+        color: #667eea;
+        font-size: 1.2rem;
+    }
+
+    .level-progress {
+        margin-top: 15px;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 20px;
+        background-color: #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        transition: width 0.5s ease;
+        border-radius: 10px;
+    }
+
+    .canvas-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #drawing-canvas {
+        border: 3px solid #667eea;
+        border-radius: 15px;
+        background-color: white;
+        cursor: crosshair;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .canvas-tools {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        justify-content: center;
+    }
+
+    .tool-btn {
+        padding: 10px 20px;
+        font-size: 1rem;
+        border: 2px solid #667eea;
+        border-radius: 10px;
+        background-color: white;
+        color: #667eea;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: bold;
+    }
+
+    .tool-btn:hover {
+        background-color: #667eea;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .tool-btn.primary {
+        background-color: #667eea;
+        color: white;
+    }
+
+    .tool-btn.primary:hover {
+        background-color: #5568d8;
+    }
+
+    .tool-btn:disabled {
+        background-color: #d3d3d3;
+        border-color: #999;
+        color: #666;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .ai-thinking {
+        background: white;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border: 2px solid #667eea;
+    }
+
+    .ai-status {
+        font-size: 1.1rem;
+        color: #667eea;
+        text-align: center;
+        margin-bottom: 10px;
+        font-weight: bold;
+    }
+
+    .ai-status.thinking::after {
+        content: '';
+        animation: dots 1.5s infinite;
+    }
+
+    @keyframes dots {
+        0%, 20% { content: '.'; }
+        40% { content: '..'; }
+        60%, 100% { content: '...'; }
+    }
+
+    .guess-list {
+        list-style: none;
+    }
+
+    .guess-item {
+        margin: 12px 0;
+    }
+
+    .guess-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+
+    .guess-shape {
+        font-weight: bold;
+        color: #333;
+        font-size: 1.05rem;
+    }
+
+    .guess-percent {
+        font-weight: bold;
+        color: #667eea;
+    }
+
+    .guess-bar {
+        width: 100%;
+        height: 18px;
+        background-color: #e0e0e0;
+        border-radius: 9px;
+        overflow: hidden;
+    }
+
+    .guess-bar-fill {
+        height: 100%;
+        border-radius: 9px;
+        transition: width 0.5s ease;
+    }
+
+    .guess-bar-fill.rank1 {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+    }
+
+    .guess-bar-fill.rank2 {
+        background: linear-gradient(135deg, #8bc34a, #689f38);
+    }
+
+    .guess-bar-fill.rank3 {
+        background: linear-gradient(135deg, #ff9800, #f57c00);
+    }
+
+    .knowledge-card {
+        background: linear-gradient(135deg, #fff9e6, #fff3cc);
+        border: 2px solid #ffc107;
+        border-radius: 12px;
+        padding: 15px;
+        margin-top: 15px;
+    }
+
+    .knowledge-title {
+        font-size: 1.1rem;
+        color: #f57c00;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .knowledge-content {
+        font-size: 0.9rem;
+        color: #666;
+        line-height: 1.7;
+    }
+
+    .feedback {
+        text-align: center;
+        height: 40px;
+        font-size: 1.3rem;
+        margin: 15px 0;
+        font-weight: bold;
+    }
+
+    .success {
+        color: #4caf50;
+        animation: bounce 0.5s ease;
+    }
+
+    .error {
+        color: #f44336;
+        animation: shake 0.5s ease;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+    }
+
+    @keyframes celebration {
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(-3deg); }
+        75% { transform: rotate(3deg); }
+    }
+
+    .celebration {
+        animation: celebration 0.5s ease-in-out 3;
+    }
+
+    .level-selector {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .level-btn {
+        padding: 10px 20px;
+        font-size: 1rem;
+        border: 2px solid #667eea;
+        border-radius: 20px;
+        background-color: white;
+        color: #667eea;
+        cursor: pointer;
+        margin: 0 5px;
+        transition: all 0.3s;
+        font-weight: bold;
+    }
+
+    .level-btn.active {
+        background-color: #667eea;
+        color: white;
+    }
+
+    .level-btn.completed::after {
+        content: '✓';
+        position: relative;
+        margin-left: 5px;
+        color: #4caf50;
+    }
+
+    .level-btn:hover:not(.active) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+    }
+
+    .shape-example {
+        text-align: center;
+        margin: 10px 0;
+        font-size: 4rem;
+    }
+
+    @media (max-width: 1024px) {
+        .game-content {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .canvas-panel {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .game-content {
+            grid-template-columns: 1fr;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+        }
+
+        .level-btn {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            margin: 3px;
+        }
+
+        .tool-btn {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+
+        .game-wrapper::before,
+        .game-wrapper::after {
+            width: 35px;
+            height: 35px;
+            font-size: 25px;
+        }
+    }
+</style>
+
+<div class="game-wrapper">
+    <h1>🤖 AI猜猜画 - 认识人工智能</h1>
+
+    <div style="background:linear-gradient(135deg,#e8f0fe,#f3e8ff);border:2px solid #667eea;border-radius:12px;padding:12px 18px;margin-bottom:18px;font-size:0.95rem;color:#333;line-height:1.7;">
+        <span style="font-weight:bold;font-size:1.05rem;">📖 玩法说明：</span>
+        根据左侧任务提示，在画布上画出指定图形！AI会实时分析你的画作并猜测是什么。
+        <br>• 画得越标准，AI猜的越准
+        <br>• 看看AI是如何"看懂"你的画的
+        <br>• 完成后点击<b>🤖 让AI来猜</b>查看识别结果
+    </div>
+
+    <div class="level-banner" id="level-banner">
+        🎯 第1关：画一个圆形 → 试试看，AI能认出来吗？
+    </div>
+
+    <div class="level-selector" id="level-selector">
+        <button class="level-btn active" data-level="0">第1关</button>
+        <button class="level-btn" data-level="1">第2关</button>
+        <button class="level-btn" data-level="2">第3关</button>
+        <button class="level-btn" data-level="3">第4关</button>
+        <button class="level-btn" data-level="4">第5关</button>
+    </div>
+
+    <div class="game-content">
+        <div class="panel">
+            <div class="panel-title">📋 任务</div>
+            
+            <div class="task-info">
+                <div class="task-label">请画出：</div>
+                <div class="task-shape" id="task-shape">圆形</div>
+                <div class="shape-example" id="shape-example">⭕</div>
+                <div class="task-hint" id="task-hint">
+                    💡 提示：画一个圆圆的封闭图形
+                </div>
+            </div>
+
+            <div class="score-display">
+                <div class="score-item">
+                    <span class="score-label">当前得分</span>
+                    <span class="score-value" id="current-score">0</span>
+                </div>
+                <div class="score-item">
+                    <span class="score-label">最高得分</span>
+                    <span class="score-value" id="best-score">0</span>
+                </div>
+                <div class="level-progress">
+                    <div class="score-item">
+                        <span class="score-label">关卡进度</span>
+                        <span class="score-value" id="level-text">1/5</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill" style="width: 20%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel canvas-panel">
+            <div class="panel-title">🎨 画布</div>
+            <div class="canvas-container">
+                <canvas id="drawing-canvas" width="500" height="400"></canvas>
+                <div class="canvas-tools">
+                    <button class="tool-btn" id="clear-btn">🗑️ 清空画布</button>
+                    <button class="tool-btn" id="undo-btn">↩️ 撤销</button>
+                    <button class="tool-btn primary" id="guess-btn">🤖 让AI来猜</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">🤖 AI识别结果</div>
+            
+            <div class="ai-thinking">
+                <div class="ai-status" id="ai-status">等待绘画...</div>
+                <ul class="guess-list" id="guess-list">
+                    <li class="guess-item">
+                        <div class="guess-header">
+                            <span class="guess-shape">-</span>
+                            <span class="guess-percent">-</span>
+                        </div>
+                        <div class="guess-bar">
+                            <div class="guess-bar-fill rank1" style="width: 0%"></div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="knowledge-card">
+                <div class="knowledge-title">💡 AI小知识</div>
+                <div class="knowledge-content" id="knowledge-content">
+                    AI通过分析你画出的线条特征来识别图形，就像人类通过观察来辨认物体一样！
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+</div>
+
+<script>
+    const levels = [
+        {
+            id: 1,
+            name: "画圆形",
+            shape: "圆形",
+            emoji: "⭕",
+            hint: "画一个圆圆的封闭图形，首尾相连",
+            targetShape: "圆形",
+            knowledge: "AI识别圆形的方法：检测线条的弯曲程度和是否形成封闭区域。圆形没有角，曲线平滑，这是它最重要的特征！"
+        },
+        {
+            id: 2,
+            name: "画三角形",
+            shape: "三角形",
+            emoji: "🔺",
+            hint: "画三条直线，首尾相连形成封闭图形",
+            targetShape: "三角形",
+            knowledge: "三角形有3个角和3条边。AI会检测拐点（方向变化点）的数量，大约3个拐点就可能是三角形！"
+        },
+        {
+            id: 3,
+            name: "画正方形",
+            shape: "正方形/长方形",
+            emoji: "⬜",
+            hint: "画四条直线，形成四个直角",
+            targetShape: "正方形",
+            knowledge: "正方形和长方形都有4个角。AI还会计算长宽比，接近1:1的是正方形，长宽差异大的是长方形！"
+        },
+        {
+            id: 4,
+            name: "画五角星",
+            shape: "五角星",
+            emoji: "⭐",
+            hint: "画五条交叉的直线，形成五个角",
+            targetShape: "五角星",
+            knowledge: "五角星的特点是线条会交叉！AI通过检测交叉点数量来判断，五角星通常有5-10个交叉点。"
+        },
+        {
+            id: 5,
+            name: "画房子",
+            shape: "房子（三角形+正方形）",
+            emoji: "🏠",
+            hint: "先画一个正方形做墙，再在上面画一个三角形做屋顶",
+            targetShape: "房子",
+            knowledge: "复杂的图形可以分解成简单图形的组合！这就是AI的模式识别能力：把复杂问题拆解成简单部分。"
+        }
+    ];
+
+    const knowledgeBase = {
+        '圆形': "你画了一个圆形！AI通过检测曲线的弯曲程度和封闭区域来识别圆形。真正的AI（如神经网络）会学习成千上万个圆形样本来提高识别准确率。",
+        '三角形': "三角形有3个角！AI通过统计拐点数量来判断。机器学习中的'特征提取'就是这个原理——找出区分不同图形的关键特征。",
+        '正方形': "四条边，四个角！AI还会分析长宽比例。在计算机视觉中，这叫'几何特征分析'，是AI识别物体的基础方法之一。",
+        '五角星': "交叉线条是五角星的特征！AI通过检测线条交点来识别。深度学习中的'卷积神经网络'能自动学习这些特征，比人工规则更强大。",
+        '房子': "房子是组合图形！AI先识别出三角形和正方形，再组合判断。这就是AI的'模式识别'能力——把复杂事物分解成已知模式。"
+    };
+
+    let currentLevel = 0;
+    let score = 0;
+    let bestScore = parseInt(localStorage.getItem('ai_drawing_best_score') || '0');
+    let completedLevels = JSON.parse(localStorage.getItem('ai_drawing_completed') || '[]');
+    let strokes = [];
+    let currentStroke = [];
+    let isDrawing = false;
+
+    const canvas = document.getElementById('drawing-canvas');
+    const ctx = canvas.getContext('2d');
+    const levelBannerEl = document.getElementById('level-banner');
+    const taskShapeEl = document.getElementById('task-shape');
+    const shapeExampleEl = document.getElementById('shape-example');
+    const taskHintEl = document.getElementById('task-hint');
+    const aiStatusEl = document.getElementById('ai-status');
+    const guessListEl = document.getElementById('guess-list');
+    const knowledgeContentEl = document.getElementById('knowledge-content');
+    const feedbackEl = document.getElementById('feedback');
+    const currentScoreEl = document.getElementById('current-score');
+    const bestScoreEl = document.getElementById('best-score');
+    const levelTextEl = document.getElementById('level-text');
+    const progressFillEl = document.getElementById('progress-fill');
+    const levelBtns = document.querySelectorAll('.level-btn');
+
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    function initGame(levelId = 0) {
+        currentLevel = levelId;
+        const level = levels[currentLevel];
+        
+        updateLevelSelector();
+        levelBannerEl.innerHTML = `🎯 第${level.id}关：${level.name} → ${level.hint}`;
+        taskShapeEl.textContent = level.shape;
+        shapeExampleEl.textContent = level.emoji;
+        taskHintEl.innerHTML = '💡 ' + level.hint;
+        knowledgeContentEl.textContent = level.knowledge;
+        
+        clearCanvas();
+        strokes = [];
+        isDrawing = false;
+        
+        score = 0;
+        updateScoreDisplay();
+        updateProgress();
+        
+        resetAIDisplay();
+        feedbackEl.textContent = '';
+        feedbackEl.className = 'feedback';
+    }
+
+    function updateLevelSelector() {
+        levelBtns.forEach((btn, idx) => {
+            btn.classList.toggle('active', idx === currentLevel);
+            btn.classList.toggle('completed', completedLevels.includes(idx));
+        });
+    }
+
+    function updateScoreDisplay() {
+        currentScoreEl.textContent = score;
+        bestScoreEl.textContent = bestScore;
+    }
+
+    function updateProgress() {
+        levelTextEl.textContent = `${currentLevel + 1}/5`;
+        progressFillEl.style.width = `${((currentLevel + 1) / 5) * 100}%`;
+    }
+
+    function resetAIDisplay() {
+        aiStatusEl.textContent = '等待绘画...';
+        aiStatusEl.className = 'ai-status';
+        guessListEl.innerHTML = `
+            <li class="guess-item">
+                <div class="guess-header">
+                    <span class="guess-shape">-</span>
+                    <span class="guess-percent">-</span>
+                </div>
+                <div class="guess-bar">
+                    <div class="guess-bar-fill rank1" style="width: 0%"></div>
+                </div>
+            </li>
+        `;
+    }
+
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function redrawCanvas() {
+        clearCanvas();
+        strokes.forEach(stroke => {
+            if (stroke.length < 2) return;
+            ctx.beginPath();
+            ctx.strokeStyle = stroke.color || '#333';
+            ctx.lineWidth = stroke.width || 3;
+            ctx.moveTo(stroke[0].x, stroke[0].y);
+            for (let i = 1; i < stroke.length; i++) {
+                ctx.lineTo(stroke[i].x, stroke[i].y);
+            }
+            ctx.stroke();
+        });
+    }
+
+    function getCanvasPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        
+        let clientX, clientY;
+        if (e.touches) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+        
+        return {
+            x: (clientX - rect.left) * scaleX,
+            y: (clientY - rect.top) * scaleY
+        };
+    }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+    
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); });
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
+    canvas.addEventListener('touchend', (e) => { e.preventDefault(); stopDrawing(e); });
+
+    function startDrawing(e) {
+        isDrawing = true;
+        const pos = getCanvasPos(e);
+        currentStroke = [pos];
+        
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+    }
+
+    function draw(e) {
+        if (!isDrawing) return;
+        const pos = getCanvasPos(e);
+        currentStroke.push(pos);
+        
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+    }
+
+    function stopDrawing() {
+        if (!isDrawing) return;
+        isDrawing = false;
+        
+        if (currentStroke.length > 1) {
+            strokes.push([...currentStroke]);
+        }
+        currentStroke = [];
+    }
+
+    function douglasPeucker(points, epsilon) {
+        if (points.length <= 2) return points;
+        
+        let dmax = 0;
+        let index = 0;
+        
+        for (let i = 1; i < points.length - 1; i++) {
+            const d = perpendicularDistance(points[i], points[0], points[points.length - 1]);
+            if (d > dmax) {
+                index = i;
+                dmax = d;
+            }
+        }
+        
+        if (dmax > epsilon) {
+            const left = douglasPeucker(points.slice(0, index + 1), epsilon);
+            const right = douglasPeucker(points.slice(index), epsilon);
+            return left.slice(0, -1).concat(right);
+        } else {
+            return [points[0], points[points.length - 1]];
+        }
+    }
+
+    function perpendicularDistance(point, lineStart, lineEnd) {
+        const A = point.x - lineStart.x;
+        const B = point.y - lineStart.y;
+        const C = lineEnd.x - lineStart.x;
+        const D = lineEnd.y - lineStart.y;
+        
+        const dot = A * C + B * D;
+        const lenSq = C * C + D * D;
+        let param = -1;
+        
+        if (lenSq !== 0) param = dot / lenSq;
+        
+        let xx, yy;
+        
+        if (param < 0) {
+            xx = lineStart.x;
+            yy = lineStart.y;
+        } else if (param > 1) {
+            xx = lineEnd.x;
+            yy = lineEnd.y;
+        } else {
+            xx = lineStart.x + param * C;
+            yy = lineStart.y + param * D;
+        }
+        
+        const dx = point.x - xx;
+        const dy = point.y - yy;
+        
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function getAllPoints() {
+        const allPoints = [];
+        strokes.forEach(stroke => {
+            allPoints.push(...stroke);
+        });
+        return allPoints;
+    }
+
+    function getBoundingBox(points) {
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        points.forEach(p => {
+            minX = Math.min(minX, p.x);
+            maxX = Math.max(maxX, p.x);
+            minY = Math.min(minY, p.y);
+            maxY = Math.max(maxY, p.y);
+        });
+        return { minX, maxX, minY, maxY, width: maxX - minX, height: maxY - minY };
+    }
+
+    function isClosed(points, threshold) {
+        if (points.length < 10) return false;
+        const start = points[0];
+        const end = points[points.length - 1];
+        const distance = Math.sqrt(Math.pow(start.x - end.x, 2) + Math.pow(start.y - end.y, 2));
+        const bbox = getBoundingBox(points);
+        const size = Math.max(bbox.width, bbox.height);
+        return distance < size * threshold;
+    }
+
+    function countCorners(points) {
+        if (points.length < 5) return 0;
+        let corners = 0;
+        const step = Math.max(1, Math.floor(points.length / 20));
+        
+        for (let i = step; i < points.length - step; i += step) {
+            const prev = points[i - step];
+            const curr = points[i];
+            const next = points[i + step];
+            
+            const v1 = { x: prev.x - curr.x, y: prev.y - curr.y };
+            const v2 = { x: next.x - curr.x, y: next.y - curr.y };
+            
+            const dot = v1.x * v2.x + v1.y * v2.y;
+            const mag1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
+            const mag2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+            
+            if (mag1 > 0 && mag2 > 0) {
+                const cos = Math.max(-1, Math.min(1, dot / (mag1 * mag2)));
+                const angle = Math.acos(cos) * 180 / Math.PI;
+                
+                if (angle > 20 && angle < 155) {
+                    corners++;
+                }
+            }
+        }
+        return corners;
+    }
+
+    function calculateRoundness(points) {
+        if (points.length < 10) return 0;
+        
+        const bbox = getBoundingBox(points);
+        const centerX = (bbox.minX + bbox.maxX) / 2;
+        const centerY = (bbox.minY + bbox.maxY) / 2;
+        
+        let sumDist = 0;
+        points.forEach(p => {
+            const dx = p.x - centerX;
+            const dy = p.y - centerY;
+            sumDist += Math.sqrt(dx * dx + dy * dy);
+        });
+        const avgDist = sumDist / points.length;
+        
+        let variance = 0;
+        points.forEach(p => {
+            const dx = p.x - centerX;
+            const dy = p.y - centerY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            variance += Math.pow(dist - avgDist, 2);
+        });
+        variance /= points.length;
+        const stdDev = Math.sqrt(variance);
+        
+        const coefficient = stdDev / avgDist;
+        const roundness = Math.max(0, Math.min(100, 100 * (1 - coefficient * 3)));
+        
+        return roundness;
+    }
+
+    function calculateAspectRatio(points) {
+        const bbox = getBoundingBox(points);
+        if (bbox.width === 0 || bbox.height === 0) return 1;
+        return Math.max(bbox.width, bbox.height) / Math.min(bbox.width, bbox.height);
+    }
+
+    function countIntersections() {
+        let count = 0;
+        
+        // 检测不同笔画之间的交叉
+        for (let i = 0; i < strokes.length; i++) {
+            for (let j = i + 1; j < strokes.length; j++) {
+                count += countStrokeIntersections(strokes[i], strokes[j]);
+            }
+        }
+        
+        // 检测同一笔画内部的交叉（五角星是关键！）
+        strokes.forEach(stroke => {
+            count += countSelfIntersections(stroke);
+        });
+        
+        return count;
+    }
+
+    function countSelfIntersections(stroke) {
+        let count = 0;
+        const step = Math.max(1, Math.floor(stroke.length / 15));
+        
+        // 同一笔画中，跳过相邻的线段以避免重复检测
+        for (let i = 0; i < stroke.length - step; i += step) {
+            for (let j = i + step * 3; j < stroke.length - step; j += step) {
+                if (lineIntersects(
+                    stroke[i], stroke[i + step], 
+                    stroke[j], stroke[j + step]
+                )) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    function countStrokeIntersections(stroke1, stroke2) {
+        let count = 0;
+        const step1 = Math.max(1, Math.floor(stroke1.length / 10));
+        const step2 = Math.max(1, Math.floor(stroke2.length / 10));
+        
+        for (let i = 0; i < stroke1.length - 1; i += step1) {
+            for (let j = 0; j < stroke2.length - 1; j += step2) {
+                if (lineIntersects(stroke1[i], stroke1[i + 1], stroke2[j], stroke2[j + 1])) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
+    function calculateRadiusFluctuation(points) {
+        if (points.length < 10) return 0;
+        
+        const bbox = getBoundingBox(points);
+        const centerX = (bbox.minX + bbox.maxX) / 2;
+        const centerY = (bbox.minY + bbox.maxY) / 2;
+        
+        const distances = [];
+        const sampleStep = Math.max(1, Math.floor(points.length / 50));
+        
+        for (let i = 0; i < points.length; i += sampleStep) {
+            const dx = points[i].x - centerX;
+            const dy = points[i].y - centerY;
+            distances.push(Math.sqrt(dx * dx + dy * dy));
+        }
+        
+        if (distances.length < 5) return 0;
+        
+        let localMax = 0, localMin = 0;
+        for (let i = 2; i < distances.length - 2; i++) {
+            if (distances[i] > distances[i - 1] && 
+                distances[i] > distances[i + 1] &&
+                distances[i] > distances[i - 2] && 
+                distances[i] > distances[i + 2]) {
+                localMax++;
+            }
+            if (distances[i] < distances[i - 1] && 
+                distances[i] < distances[i + 1] &&
+                distances[i] < distances[i - 2] && 
+                distances[i] < distances[i + 2]) {
+                localMin++;
+            }
+        }
+        
+        // 五角星大约有5-10个明显的半径波动
+        return (localMax + localMin);
+    }
+
+    function lineIntersects(p1, p2, p3, p4) {
+        const d1 = direction(p3, p4, p1);
+        const d2 = direction(p3, p4, p2);
+        const d3 = direction(p1, p2, p3);
+        const d4 = direction(p1, p2, p4);
+        
+        if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && 
+            ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))) {
+            return true;
+        }
+        return false;
+    }
+
+    function direction(pi, pj, pk) {
+        return (pk.x - pi.x) * (pj.y - pi.y) - (pk.y - pi.y) * (pj.x - pi.x);
+    }
+
+    function calculateSymmetry(points) {
+        const bbox = getBoundingBox(points);
+        const centerX = (bbox.minX + bbox.maxX) / 2;
+        const centerY = (bbox.minY + bbox.maxY) / 2;
+        
+        let leftCount = 0, rightCount = 0, topCount = 0, bottomCount = 0;
+        points.forEach(p => {
+            if (p.x < centerX) leftCount++;
+            else rightCount++;
+            if (p.y < centerY) topCount++;
+            else bottomCount++;
+        });
+        
+        const symmetryX = 1 - Math.abs(leftCount - rightCount) / points.length;
+        const symmetryY = 1 - Math.abs(topCount - bottomCount) / points.length;
+        
+        return (symmetryX + symmetryY) / 2;
+    }
+
+    function calculateFillRatio(points) {
+        const bbox = getBoundingBox(points);
+        const area = bbox.width * bbox.height;
+        if (area === 0) return 0;
+        return Math.min(1, points.length / area);
+    }
+
+    function analyzeShape() {
+        const allPoints = getAllPoints();
+        if (allPoints.length === 0) return null;
+        
+        let simplifiedPoints = [];
+        strokes.forEach(stroke => {
+            if (stroke.length > 5) {
+                const simplified = douglasPeucker(stroke, 5);
+                simplifiedPoints = simplifiedPoints.concat(simplified);
+            } else {
+                simplifiedPoints = simplifiedPoints.concat(stroke);
+            }
+        });
+        
+        const isClosedShape = strokes.some(s => isClosed(s, 0.35));
+        const cornerCount = countCorners(simplifiedPoints);
+        const roundness = calculateRoundness(allPoints);
+        const aspectRatio = calculateAspectRatio(allPoints);
+        const intersectionCount = countIntersections();
+        const symmetry = calculateSymmetry(allPoints);
+        const fillRatio = calculateFillRatio(allPoints);
+        const radiusFluctuation = calculateRadiusFluctuation(allPoints);
+        
+        return {
+            strokeCount: strokes.length,
+            cornerCount,
+            roundness,
+            aspectRatio,
+            isClosed: isClosedShape ? 1 : 0,
+            intersectionCount,
+            symmetry,
+            fillRatio,
+            totalPoints: allPoints.length,
+            radiusFluctuation
+        };
+    }
+
+    function calculateCircleScore(features) {
+        let score = 0;
+        
+        if (features.roundness > 60) score += 40;
+        else if (features.roundness > 40) score += 20;
+        else if (features.roundness > 20) score += 10;
+        
+        if (features.cornerCount <= 2) score += 25;
+        else if (features.cornerCount <= 4) score += 15;
+        else if (features.cornerCount <= 6) score += 5;
+        
+        if (features.isClosed) score += 15;
+        
+        if (features.symmetry > 0.6) score += 10;
+        else if (features.symmetry > 0.4) score += 5;
+        
+        if (features.aspectRatio < 1.6) score += 10;
+        else if (features.aspectRatio < 2.0) score += 5;
+        
+        return Math.min(100, score);
+    }
+
+    function calculateTriangleScore(features) {
+        let score = 0;
+        
+        if (features.cornerCount >= 2 && features.cornerCount <= 5) score += 35;
+        else if (features.cornerCount >= 1 && features.cornerCount <= 7) score += 20;
+        
+        if (features.roundness < 50) score += 20;
+        else if (features.roundness < 65) score += 10;
+        
+        if (features.isClosed) score += 20;
+        
+        if (features.aspectRatio < 2.5) score += 15;
+        
+        if (features.intersectionCount <= 2) score += 10;
+        
+        return Math.min(100, score);
+    }
+
+    function calculateSquareScore(features) {
+        let score = 0;
+        
+        if (features.cornerCount >= 3 && features.cornerCount <= 6) score += 35;
+        else if (features.cornerCount >= 2 && features.cornerCount <= 8) score += 20;
+        
+        if (features.roundness < 45) score += 20;
+        else if (features.roundness < 60) score += 10;
+        
+        if (features.isClosed) score += 15;
+        
+        if (features.aspectRatio >= 1.0 && features.aspectRatio < 1.8) score += 20;
+        else if (features.aspectRatio < 2.5) score += 10;
+        
+        if (features.intersectionCount <= 2) score += 10;
+        
+        return Math.min(100, score);
+    }
+
+    function calculateStarScore(features) {
+        let score = 0;
+        
+        // 交叉点是关键！五角星至少有3-5个交叉
+        if (features.intersectionCount >= 5) score += 45;
+        else if (features.intersectionCount >= 3) score += 35;
+        else if (features.intersectionCount >= 1) score += 20;
+        
+        // 半径波动检测：五角星有5个峰和谷，波动在4-10之间
+        if (features.radiusFluctuation >= 6) score += 30;
+        else if (features.radiusFluctuation >= 4) score += 20;
+        else if (features.radiusFluctuation >= 2) score += 10;
+        
+        // 拐点数：五角星有5-10个明显拐点
+        if (features.cornerCount >= 6) score += 15;
+        else if (features.cornerCount >= 4) score += 10;
+        
+        // 五角星通常一笔画成
+        if (features.strokeCount <= 2) score += 10;
+        
+        return Math.min(100, score);
+    }
+
+    function calculateHouseScore(features) {
+        let score = 0;
+        
+        if (features.strokeCount >= 2 && features.strokeCount <= 6) score += 30;
+        else if (features.strokeCount >= 1 && features.strokeCount <= 10) score += 15;
+        
+        if (features.cornerCount >= 4 && features.cornerCount <= 10) score += 30;
+        else if (features.cornerCount >= 2 && features.cornerCount <= 15) score += 15;
+        
+        if (features.intersectionCount <= 4) score += 20;
+        
+        if (features.roundness < 55) score += 20;
+        
+        return Math.min(100, score);
+    }
+
+    function aiGuess(features) {
+        const scores = [
+            { name: "圆形", confidence: calculateCircleScore(features) },
+            { name: "三角形", confidence: calculateTriangleScore(features) },
+            { name: "正方形", confidence: calculateSquareScore(features) },
+            { name: "五角星", confidence: calculateStarScore(features) },
+            { name: "房子", confidence: calculateHouseScore(features) }
+        ];
+        
+        scores.sort((a, b) => b.confidence - a.confidence);
+        return scores;
+    }
+
+    function displayGuessResults(results) {
+        aiStatusEl.textContent = 'AI分析完成！';
+        aiStatusEl.className = 'ai-status';
+        
+        guessListEl.innerHTML = '';
+        results.slice(0, 3).forEach((result, index) => {
+            const li = document.createElement('li');
+            li.className = 'guess-item';
+            
+            const rankClass = `rank${index + 1}`;
+            const isTarget = result.name === levels[currentLevel].targetShape;
+            const emoji = isTarget ? '✅' : '❌';
+            
+            li.innerHTML = `
+                <div class="guess-header">
+                    <span class="guess-shape">${emoji} ${result.name}</span>
+                    <span class="guess-percent">${result.confidence}%</span>
+                </div>
+                <div class="guess-bar">
+                    <div class="guess-bar-fill ${rankClass}" style="width: ${result.confidence}%"></div>
+                </div>
+            `;
+            
+            guessListEl.appendChild(li);
+        });
+        
+        const topGuess = results[0];
+        const targetShape = levels[currentLevel].targetShape;
+        
+        if (topGuess.name === targetShape && topGuess.confidence >= 45) {
+            score = topGuess.confidence;
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('ai_drawing_best_score', bestScore.toString());
+            }
+            if (!completedLevels.includes(currentLevel)) {
+                completedLevels.push(currentLevel);
+                localStorage.setItem('ai_drawing_completed', JSON.stringify(completedLevels));
+            }
+            
+            updateScoreDisplay();
+            updateLevelSelector();
+            
+            feedbackEl.textContent = `🎉 AI猜对了！得分：${score}`;
+            feedbackEl.className = 'feedback success celebration';
+            
+            knowledgeContentEl.textContent = knowledgeBase[targetShape] || levels[currentLevel].knowledge;
+        } else if (topGuess.confidence < 25) {
+            feedbackEl.textContent = '❓ AI没认出来，请画得更标准一些';
+            feedbackEl.className = 'feedback error';
+        } else {
+            feedbackEl.textContent = `❌ AI猜成了"${topGuess.name}"，再试试画标准些`;
+            feedbackEl.className = 'feedback error';
+        }
+    }
+
+    document.getElementById('clear-btn').addEventListener('click', () => {
+        clearCanvas();
+        strokes = [];
+        resetAIDisplay();
+        feedbackEl.textContent = '';
+        feedbackEl.className = 'feedback';
+    });
+
+    document.getElementById('undo-btn').addEventListener('click', () => {
+        if (strokes.length > 0) {
+            strokes.pop();
+            redrawCanvas();
+            resetAIDisplay();
+            feedbackEl.textContent = '';
+            feedbackEl.className = 'feedback';
+        }
+    });
+
+    document.getElementById('guess-btn').addEventListener('click', () => {
+        if (strokes.length === 0) {
+            feedbackEl.textContent = '请先在画布上画一些内容';
+            feedbackEl.className = 'feedback error';
+            return;
+        }
+        
+        aiStatusEl.textContent = 'AI正在分析';
+        aiStatusEl.className = 'ai-status thinking';
+        feedbackEl.textContent = '';
+        feedbackEl.className = 'feedback';
+        
+        setTimeout(() => {
+            const features = analyzeShape();
+            
+            if (!features) {
+                aiStatusEl.textContent = '无法识别，请重新绘画';
+                aiStatusEl.className = 'ai-status';
+                return;
+            }
+            
+            const results = aiGuess(features);
+            displayGuessResults(results);
+        }, 800);
+    });
+
+    levelBtns.forEach((btn, idx) => {
+        btn.addEventListener('click', () => {
+            if (strokes.length > 0 && !confirm('切换关卡将清空画布，确定吗？')) {
+                return;
+            }
+            initGame(idx);
+        });
+    });
+
+    document.getElementById('best-score').textContent = bestScore;
+
+    initGame(0);
+</script>
+</div>
+<?php include("template/$OJ_TEMPLATE/footer.php");?>

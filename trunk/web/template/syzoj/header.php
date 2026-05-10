@@ -52,9 +52,8 @@
         $guest_whitelist = [
             'index.php',          // 首页
             'problemset.php',     // 题目列表
-            'problem.php',        // 题目详情（只读）
+            'contest.php',        // 竞赛列表（不含竞赛详情）
             'category.php',       // 题目分类
-            'viewnews.php',       // 新闻详情
             'faqs.php',          // 常见问题
             'registerpage.php',   // 注册页
             'loginpage.php',      // 登录页
@@ -70,15 +69,109 @@
             'sequence_memory.php',
             'math_game.php',
             // AI体验
-            'AI_experience.php'
+            'AI_experience.php',
+            'ai_drawing_game.php',
+            'course.php',           // 课件列表
         ];
 
         // 游客模式访问限制
+
+        
         if(isset($OJ_GUEST) && $OJ_GUEST && !isset($_SESSION[$OJ_NAME.'_'.'user_id']) && !in_array($url, $guest_whitelist)) {
             // 游客尝试访问非白名单页面，引导到登录页
             $redirect = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'index.php';
             header("location:".$path_fix."loginpage.php?redirect=".urlencode($redirect));
             exit();
+        }
+
+        // 游客访问竞赛详情限制：允许访问竞赛列表，但不能访问竞赛详情（带cid参数）
+        if($url == 'contest.php' && isset($_GET['cid']) && isset($OJ_GUEST) && $OJ_GUEST && !isset($_SESSION[$OJ_NAME.'_'.'user_id'])) {
+            $redirect = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'contest.php';
+            header("location:".$path_fix."loginpage.php?redirect=".urlencode($redirect));
+            exit();
+        }
+
+        // ========== Phase3 安全防护（游客） ==========
+        if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])) {
+            // 静态资源和AJAX接口不计入限频
+            $skip_rate_limit = false;
+            $skip_extensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg', '.woff', '.woff2', '.ttf', '.eot'];
+            foreach ($skip_extensions as $ext) {
+                if (stripos($_SERVER['REQUEST_URI'], $ext) !== false) {
+                    $skip_rate_limit = true;
+                    break;
+                }
+            }
+            // AJAX请求不计入限频
+            if (!$skip_rate_limit && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                $skip_rate_limit = true;
+            }
+            // API接口不计入限频
+            if (!$skip_rate_limit && stripos($_SERVER['REQUEST_URI'], '/api/') !== false) {
+                $skip_rate_limit = true;
+            }
+
+            if (!$skip_rate_limit) {
+                // IP 频率限制（仅主页面请求）
+                $guest_ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+                $rate_limit_key = 'oj_rate_' . md5($guest_ip);
+                try {
+                    // 复用Memcached连接
+                    static $memcache = null;
+                    if ($memcache === null) {
+                        $memcache = new Memcached();
+                        $memcache->addServer('127.0.0.1', 11211);
+                    }
+                    $count = $memcache->get($rate_limit_key);
+                    if ($count === false) {
+                        $memcache->set($rate_limit_key, 1, 60);
+                    } elseif ($count > 60) {
+                        http_response_code(429);
+                        echo '<html><body><h1>429 Too Many Requests</h1><p>访问过于频繁，请稍后再试。</p></body></html>';
+                        exit;
+                    } else {
+                        $memcache->increment($rate_limit_key);
+                    }
+                } catch (Exception $e) {}
+            }
+
+            // 爬虫检测
+            $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+            $bad_ua_patterns = ['python-requests', 'curl/', 'wget/', 'scrapy', 'httpclient', 'java/', 'node-fetch'];
+            foreach ($bad_ua_patterns as $pattern) {
+                if (stripos($ua, $pattern) !== false) {
+                    http_response_code(403);
+                    echo '<html><body><h1>403 Forbidden</h1><p>疑似自动化访问，请使用浏览器访问。</p></body></html>';
+                    exit;
+                }
+            }
+
+            // 访问日志（仅记录可疑访问）
+            if (!$skip_rate_limit && isset($count) && $count > 30) {
+                $log_dir = '/home/judge/logs/guest_access';
+                if (!is_dir($log_dir)) { @mkdir($log_dir, 0755, true); }
+                $log_file = $log_dir . '/' . date('Y-m-d') . '.log';
+                $log_entry = sprintf("[%s] IP=%s UA=%s PATH=%s COUNT=%d\n", date('H:i:s'), $guest_ip, substr($ua, 0, 100), $_SERVER['REQUEST_URI'] ?? '/', $count);
+                @file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX);
+            }
+
+            // 日志清理（每天只执行一次）
+            if (!$skip_rate_limit && isset($count)) {
+                $clean_flag = '/home/judge/logs/guest_access/.last_clean';
+                if (!file_exists($clean_flag) || filemtime($clean_flag) < strtotime('-7 days')) {
+                    $log_dir = '/home/judge/logs/guest_access';
+                    if (is_dir($log_dir)) {
+                        $files = glob($log_dir . '/*.log');
+                        $now = time();
+                        foreach ($files as $file) {
+                            if ($now - filemtime($file) > 7 * 86400) {
+                                @unlink($file);
+                            }
+                        }
+                    }
+                    @touch($clean_flag);
+                }
+            }
         }
 
         if($OJ_ONLINE){
@@ -424,7 +517,6 @@
                 <?php echo $domain==$DOMAIN?$OJ_NAME:ucwords($OJ_NAME)."'s OJ"?>
             </a>
             
-          <?php if(isset($_SESSION[$OJ_NAME.'_'.'user_id'])) { ?>
             <?php
             if(isset($OJ_AI_HTML)&&$OJ_AI_HTML && !isset($OJ_ON_SITE_CONTEST_ID) ) echo $OJ_AI_HTML;
             else echo '<a class="desktop-only item" href="index.php" style="font-weight: 500;">'.$MSG_HOME.'</a>';
@@ -442,8 +534,10 @@
             <a class="item <?php if ($url=="problemset.php") echo "active";?>" href="<?php echo $path_fix?>problemset.php" style="font-weight: 500;"><?php echo $MSG_PROBLEMS?></a>
             <a class="item <?php if ($url=="category.php") echo "active";?>" href="<?php echo $path_fix?>category.php" style="font-weight: 500;"><?php echo $MSG_SOURCE?></a>
             <a class="item <?php if ($url=="contest.php") echo "active";?>" href="<?php echo $path_fix?>contest.php<?php if(isset($_SESSION[$OJ_NAME."_user_id"])) echo "?my" ?>" style="font-weight: 500;"><?php echo $MSG_CONTEST?></a>
+<?php if(isset($_SESSION[$OJ_NAME.'_'.'user_id'])) { ?>
             <a class="item <?php if ($url=="status.php") echo "active";?>" href="<?php echo $path_fix?>status.php" style="font-weight: 500;"><?php echo $MSG_STATUS?></a>
             <a class="item <?php if ($url=="ranklist.php") echo "active";?>" href="<?php echo $path_fix?>ranklist.php" style="font-weight: 500;"><?php echo $MSG_RANKLIST?></a>
+<?php } ?>
 <?php if(isset($OJ_RECENT_CONTEST)&&$OJ_RECENT_CONTEST){    ?>
             <a class="item <?php if ($url=="recent-contest.php") echo "active";?>" href="<?php echo $path_fix?>recent-contest.php" style="font-weight: 500;"><?php echo $MSG_RECENT_CONTEST?></a>
 <?php } ?>
@@ -451,12 +545,8 @@
             <?php if (isset($OJ_BBS)&& $OJ_BBS){ ?>
                 <a class='item' href="discuss.php" style="font-weight: 500;"><?php echo $MSG_BBS?></a>
             <?php } ?>
-            <!-- 课件功能 -->
-            <?php if(isset($_SESSION[$OJ_NAME.'_'.'teacher']) || isset($_SESSION[$OJ_NAME.'_'.'administrator'])){ ?>
+            <!-- 课件功能：对所有用户开放 -->
             <a class="item <?php if ($url=="course.php") echo "active";?>" href="<?php echo $path_fix?>course.php" style="font-weight: 500;">课件</a>
-            <?php } else { ?>
-            <a class="item" href="https://docs.qq.com/doc/DUkRMQUpYemRZYkti#" target="_blank" style="font-weight: 500;">课件</a>
-            <?php } ?>
             
             <!-- 更多功能 -->
             <a class="item <?php if ($url=="more.php") echo "active";?>" href="<?php echo $path_fix?>more.php" style="font-weight: 500;">更多</a>
@@ -467,9 +557,11 @@
                             <a id="" class="item" href="<?php echo $path_fix?>contest.php" ><i class="arrow left icon"></i><span class="desktop-only"><?php echo $MSG_CONTEST.$MSG_LIST?></span></a>
             <?php    }      ?>
             <a id="" class="item active" href="<?php echo $path_fix?>contest.php?cid=<?php echo $cid?>" ><i class="list icon"></i><span class="desktop-only"><?php echo $MSG_PROBLEMS.$MSG_LIST?></span></a>
+<?php if(isset($_SESSION[$OJ_NAME.'_'.'user_id'])) { ?>
             <a id="" class="item active" href="<?php echo $path_fix?>status.php?cid=<?php echo $cid?>" ><i class="tasks icon"></i><span class="desktop-only"><?php echo $MSG_STATUS.$MSG_LIST?></span></a>
             <a id="" class="item active" href="<?php echo $path_fix?>contestrank.php?cid=<?php echo $cid?>" ><i class="numbered list icon"></i><span class="desktop-only"><?php echo $MSG_RANKLIST?></span></a>
             <a id="" class="item active" href="<?php echo $path_fix?>contestrank-oi.php?cid=<?php echo $cid?>" ><i class="child icon"></i><span class="desktop-only">OI-<?php echo $MSG_RANKLIST?></span></a>
+<?php } ?>
             <?php if (isset($OJ_BBS)&& $OJ_BBS){ ?>
                   <a class='item active' href="discuss.php?cid=<?php echo $cid?>"><i class="clipboard icon"></i> <span class="desktop-only"><?php echo $MSG_BBS?></span></a>
              <?php } ?>
@@ -491,7 +583,6 @@
                 ?>
                         </div>
             </div>
-            <?php } ?>
             <?php } ?>
 
             <div class="right menu">

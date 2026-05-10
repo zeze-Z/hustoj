@@ -45,8 +45,17 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                     <?php } ?>
                 </div>
             </div>
-            <!-- 轮播项 2: 海量题库 -->
-            <div class="carousel-slide" data-index="1" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); z-index: 1; pointer-events: none;">
+            <!-- 轮播项 2: 趣味游戏 -->
+            <div class="carousel-slide" data-index="1" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%); z-index: 1; pointer-events: none;">
+                <div style="text-align: center; color: white; padding: 40px;">
+                    <i class="gamepad icon" style="font-size: 5em; margin-bottom: 20px;"></i>
+                    <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">趣味游戏</h2>
+                    <p style="font-size: 1.1em; opacity: 0.95; margin: 0 0 20px 0;">寓教于乐，在游戏中提升编程思维</p>
+                    <a href="more.php" class="ui button inverted">开始体验</a>
+                </div>
+            </div>
+            <!-- 轮播项 3: 海量题库 -->
+            <div class="carousel-slide" data-index="3" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); z-index: 1; pointer-events: none;">
                 <div style="text-align: center; color: white; padding: 40px;">
                     <i class="code icon" style="font-size: 5em; margin-bottom: 20px;"></i>
                     <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">海量题库</h2>
@@ -61,15 +70,6 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                     <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">秒级判题</h2>
                     <p style="font-size: 1.1em; opacity: 0.95; margin: 0 0 20px 0;">高速判题系统，实时反馈评测结果</p>
                     <a href="status.php" class="ui button inverted">查看状态</a>
-                </div>
-            </div>
-            <!-- 轮播项 4: 学习路径 -->
-            <div class="carousel-slide" data-index="3" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); z-index: 1; pointer-events: none;">
-                <div style="text-align: center; color: white; padding: 40px;">
-                    <i class="graduation cap icon" style="font-size: 5em; margin-bottom: 20px;"></i>
-                    <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">学习路径</h2>
-                    <p style="font-size: 1.1em; opacity: 0.95; margin: 0 0 20px 0;">科学分阶设计，助力循序渐进学习编程</p>
-                    <a href="category.php" class="ui button inverted">浏览分类</a>
                 </div>
             </div>
             <!-- 轮播项 5: 竞赛活动 -->

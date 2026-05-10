@@ -21,41 +21,6 @@
 
         $sid=md5($sid);
         $cache_file = "cache/cache_$sid.html";
-        // ========== Phase3 安全防护（游客限频，在缓存判断前）==========
-        if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])) {
-            $guest_ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-            $rate_limit_key = 'oj_rate_' . md5($guest_ip);
-            $OJ_MEMCACHE_ENABLED = (isset($OJ_MEMCACHE) && $OJ_MEMCACHE);
-            
-            if ($OJ_MEMCACHE_ENABLED) {
-                try {
-                    $mem = new Memcached;
-                    $mem->addServer($OJ_MEMSERVER, $OJ_MEMPORT);
-                    $count = $mem->get($rate_limit_key);
-                    if ($count === false) {
-                        $mem->set($rate_limit_key, 1, 60);
-                    } elseif ($count > 15) {
-                        http_response_code(429);
-                        echo '<html><body><h1>429 Too Many Requests</h1><p>访问过于频繁，请稍后再试。</p></body></html>';
-                        exit;
-                    } else {
-                        $mem->increment($rate_limit_key);
-                    }
-                } catch (Exception $e) {}
-            }
-            
-            // 爬虫检测
-            $ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
-            $bad_ua_patterns = ['python-requests', 'curl/', 'wget/', 'scrapy', 'httpclient', 'java/', 'node-fetch'];
-            foreach ($bad_ua_patterns as $pattern) {
-                if (stripos($ua, $pattern) !== false) {
-                    http_response_code(403);
-                    echo '<html><body><h1>403 Forbidden</h1><p>疑似自动化访问，请使用浏览器访问。</p></body></html>';
-                    exit;
-                }
-            }
-        }
-        
         if($OJ_MEMCACHE||$OJ_APCU_OK ){
                     $success = false;
                     if( $OJ_APCU_OK ){

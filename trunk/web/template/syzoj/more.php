@@ -190,6 +190,14 @@
                 <div class="card-title">AI进阶</div>
                 <div class="card-desc">体验前沿大语言模型的强大能力</div>
             </a>
+
+            <a href="ai_drawing_game.php" class="card">
+                <div class="card-icon">
+                    <i class="paint brush icon"></i>
+                </div>
+                <div class="card-title">AI猜猜画</div>
+                <div class="card-desc">画图让AI识别，认识人工智能（适合1-6年级）</div>
+            </a>
         </div>
     </div>
 

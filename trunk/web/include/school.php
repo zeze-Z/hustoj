@@ -147,9 +147,14 @@ function getSchoolSQLFilter($tableAlias = '', $idField = 'school_id', $publicFie
     $prefix = $tableAlias ? $tableAlias . '.' : '';
     $school_id = getCurrentUserSchoolId();
 
-    // 未分配学校的用户，只能看公开数据
+    // 游客（未登录）：只能看公开数据（兼容 'Y' 和 1 两种值）
+    if (!$school_id && getCurrentUserRole() === 'guest') {
+        return " AND ({$prefix}{$publicField} = 'Y' OR {$prefix}{$publicField} = 1)";
+    }
+
+    // 已登录但未分配学校的用户，只能看公开数据 + 无学校归属的数据（超管添加的通用题目）
     if (!$school_id) {
-        return " AND ({$prefix}{$publicField} = 'Y')";
+        return " AND ({$prefix}{$publicField} = 'Y' OR {$prefix}{$publicField} = 1 OR {$prefix}{$idField} IS NULL)";
     }
 
     // 过滤：本校数据 + 公开数据 + 无学校归属的数据（超管添加的题目）
