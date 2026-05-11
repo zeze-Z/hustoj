@@ -21,14 +21,14 @@
                     <div class="inline fields">
                         <div class="field">
                             <div class="ui radio checkbox">
-                                <input type="radio" name="role" value="teacher" checked>
-                                <label>我是一名教师</label>
+                                <input type="radio" name="role" value="teacher" id="role_teacher" checked>
+                                <label for="role_teacher">我是一名教师</label>
                             </div>
                         </div>
                         <div class="field">
                             <div class="ui radio checkbox">
-                                <input type="radio" name="role" value="student">
-                                <label>我是一名学生</label>
+                                <input type="radio" name="role" value="student" id="role_student">
+                                <label for="role_student">我是一名学生</label>
                             </div>
                         </div>
                     </div>
@@ -84,4 +84,10 @@
                 <button name="submit" type="reset" class="ui button"><?php echo $MSG_RESET; ?></button>
             </form>
 </div>
+<script>
+$(document).ready(function(){
+    // 初始化单选按钮
+    $('.ui.radio.checkbox').checkbox();
+});
+</script>
 <?php include("template/$OJ_TEMPLATE/footer.php");?>

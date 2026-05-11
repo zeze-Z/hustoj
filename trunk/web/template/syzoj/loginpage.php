@@ -51,7 +51,7 @@ if (window.top !== window.self) {
 
       <div class="ui message">
         <!-- <a href="registerpage.php"><?php echo $MSG_REGISTER ?></a> -->
-        <a>忘记密码、成为学校教师账号等问题。<br>请咨询客服QQ：2326077585</a>
+        <a>忘记密码，请联系客服QQ重置：2326077585</a>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
         <!-- <a href="lostpassword.php"><?php echo $MSG_LOST_PASSWORD ?></a> -->
