@@ -16,6 +16,12 @@ $user_id = trim($_POST['user_id']);
 $len = mb_strlen($user_id);
 $email = trim($_POST['email']);
 
+// 获取角色参数，默认为student
+$role = isset($_POST['role']) ? trim($_POST['role']) : 'student';
+if (!in_array($role, ['teacher', 'student'])) {
+    $role = 'student';
+}
+
 // 处理学校：优先使用下拉选择的学校ID
 $school_id = isset($_POST['school_id']) ? intval($_POST['school_id']) : 0;
 $school = "";
@@ -132,6 +138,17 @@ if ($rows_cnt == 1) {
     exit(0);
 }
 
+// 检查邮箱是否已存在（邮箱唯一性校验）
+$sql = "SELECT `user_id` FROM `users` WHERE `users`.`email` = ?";
+$result = pdo_query($sql, $email);
+$rows_cnt = count($result);
+if ($rows_cnt == 1) {
+    print "<script language='javascript'>\n";
+    print "alert('该邮箱已注册，请直接登录！\\n');\n";
+    print "window.location.href='loginpage.php';\n</script>";
+    exit(0);
+}
+
 // 检查特殊用户ID是否冲突
 if ($domain == $DOMAIN && $OJ_NAME == $user_id) {
     print "<script language='javascript'>\n";
@@ -186,11 +203,11 @@ else
 if (isset($OJ_REG_NEED_CONFIRM) && $OJ_REG_NEED_CONFIRM) $defunct = "Y";
 else $defunct = "N";
 
-// 插入新用户到数据库（包含 school_id）
+// 插入新用户到数据库（包含 school_id 和 role）
 $sql = "INSERT INTO `users`("
-        . "`user_id`,`email`,`ip`,`accesstime`,`password`,`reg_time`,`nick`,`school`,`school_id`,`group_name`,`defunct`,activecode)"
-        . "VALUES(?,?,?,NOW(),?,NOW(),?,?,?,?,?,?)";
-$rows = pdo_query($sql, $user_id, $email, $ip, $password, $nick, $school, $school_id, getMappedSpecial($user_id), $defunct, $_SESSION[$OJ_NAME . '_' . 'activecode']);
+        . "`user_id`,`email`,`ip`,`accesstime`,`password`,`reg_time`,`nick`,`school`,`school_id`,`role`,`group_name`,`defunct`,activecode)"
+        . "VALUES(?,?,?,NOW(),?,NOW(),?,?,?,?,?,?,?)";
+$rows = pdo_query($sql, $user_id, $email, $ip, $password, $nick, $school, $school_id, $role, getMappedSpecial($user_id), $defunct, $_SESSION[$OJ_NAME . '_' . 'activecode']);
 
 // 检查数据库插入是否成功
 if ($rows === -1 || $rows === false) {
@@ -200,24 +217,114 @@ if ($rows === -1 || $rows === false) {
     exit(0);
 }
 
-// 飞书通知：新用户注册
+// 飞书通知：区分教师/学生
 require_once(dirname(__FILE__)."/include/feishu_notify.php");
-feishu_notify(
-    '新用户注册',
-    "**用户ID**: $user_id\n" .
-    "**昵称**: $nick\n" .
-    "**学校**: $school" . ($school_id ? " (ID:$school_id)" : "") . "\n" .
-    "**邮箱**: $email\n" .
-    "**IP**: $ip\n" .
-    ($defunct === 'Y' ? "**状态**: 待审核" : "**状态**: 自动通过"),
-    'info'
-);
+if ($role === 'teacher') {
+    feishu_notify(
+        '🔔 教师入驻',
+        "**用户ID**: $user_id\n" .
+        "**昵称**: $nick\n" .
+        "**学校**: $school" . ($school_id ? " (ID:$school_id)" : "") . "\n" .
+        "**邮箱**: $email\n" .
+        "**IP**: $ip\n" .
+        "**时间**: " . date('Y-m-d H:i') . "\n\n" .
+        "[建议] → 24h 内主动联系，确认教师入驻意向",
+        'warn'
+    );
+} else {
+    feishu_notify(
+        '新用户注册（学生）',
+        "**用户ID**: $user_id\n" .
+        "**昵称**: $nick\n" .
+        "**学校**: $school" . ($school_id ? " (ID:$school_id)" : "") . "\n" .
+        "**邮箱**: $email\n" .
+        "**IP**: $ip\n" .
+        "**时间**: " . date('Y-m-d H:i'),
+        'info'
+    );
+}
 
 //发送激活邮件
 if (isset($OJ_EMAIL_CONFIRM) && $OJ_EMAIL_CONFIRM) {
     $link = 'http://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['REQUEST_URI']) . "active.php?code=" . $_SESSION[$OJ_NAME . '_' . 'activecode'];
-    email($email, "$MSG_ACTIVE_YOUR_ACCOUNT",
-            "$MSG_CLICK_COPY $MSG_ACTIVE_YOUR_ACCOUNT $user_id :\n " . $link);
+    
+    if ($role === 'teacher') {
+        // 教师激活邮件
+        $mail_subject = "$OJ_NAME" . "教师账号激活 — 开启智能化教学管理";
+        $mail_text = "亲爱的老师，您好！\n\n" .
+            "恭喜您完成注册，欢迎加入$OJ_NAME教学平台！\n\n" .
+            "您的专属功能：\n" .
+            "📚 课件中心 — 上传、管理、销售您的教学课件\n" .
+            "📝 作业系统 — 在线布置编程作业，自动评测学生代码\n" .
+            "📊 学生管理 — 查看学生学习进度和作业提交情况\n" .
+            "🎮 趣味编程 — 游戏化教学工具，提升学生学习兴趣\n" .
+            "💰 收益中心 — 课件销售数据透明，收益即时提现\n\n" .
+            "⚠️ 重要提示：\n" .
+            "目前课件上传功能需由管理员审核后开放。\n" .
+            "激活账号后，请联系客服 QQ：2326077585 申请教师权限。\n\n" .
+            "请点击以下链接激活账号：\n" . $link . "\n\n" .
+            "激活后即可登录，如有任何问题，欢迎联系我们。\n\n" .
+            "$OJ_NAME" . "教学平台";
+        
+        // HTML邮件内容
+        $mail_html = "<div style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f5f5f5; padding: 20px;'>
+            <div style='background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>
+                <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;'>
+                    <h1 style='color: white; margin: 0; font-size: 24px;'>$OJ_NAME教师账号激活</h1>
+                </div>
+                <div style='padding: 30px;'>
+                    <p style='font-size: 16px; color: #333; line-height: 1.8;'>亲爱的 <strong>$nick</strong> 老师：</p>
+                    <p style='font-size: 16px; color: #333; line-height: 1.8;'>恭喜您完成注册，欢迎加入$OJ_NAME教学平台！</p>
+                    <div style='background: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 4px;'>
+                        <h3 style='color: #667eea; margin-top: 0;'>您的专属功能</h3>
+                        <ul style='color: #555; line-height: 2; margin: 0; padding-left: 20px;'>
+                            <li>📚 课件中心 — 上传、管理、销售您的教学课件</li>
+                            <li>📝 作业系统 — 在线布置编程作业，自动评测学生代码</li>
+                            <li>📊 学生管理 — 查看学生学习进度和作业提交情况</li>
+                            <li>🎮 趣味编程 — 游戏化教学工具，提升学生学习兴趣</li>
+                            <li>💰 收益中心 — 课件销售数据透明，收益即时提现</li>
+                        </ul>
+                    </div>
+                    <div style='background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin: 20px 0; border-radius: 4px;'>
+                        <h3 style='color: #856404; margin-top: 0;'>重要提示</h3>
+                        <p style='color: #856404; line-height: 1.8; margin: 0;'>
+                            目前课件上传功能需由管理员审核后开放。<br>
+                            激活账号后，请联系客服 QQ：2326077585 申请教师权限。
+                        </p>
+                    </div>
+                    <div style='text-align: center; margin: 30px 0;'>
+                        <a href='$link' style='display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600;'>
+                            点击激活账号
+                        </a>
+                    </div>
+                    <p style='color: #999; font-size: 14px; line-height: 1.8; margin-top: 30px;'>
+                        激活后即可登录，如有任何问题，欢迎联系我们。
+                    </p>
+                </div>
+                <div style='background: #f5f5f5; padding: 15px; text-align: center; border-top: 1px solid #e0e0e0;'>
+                    <p style='color: #999; font-size: 12px; margin: 0;'>
+                        此邮件由$OJ_NAME平台自动发送，请勿直接回复。<br>
+                        © $OJ_NAME版权所有
+                    </p>
+                </div>
+            </div>
+        </div>";
+        
+        email($email, $mail_subject, $mail_text, $mail_html);
+    } else {
+        // 学生激活邮件
+        $mail_subject = "$OJ_NAME账号激活 — 开始你的编程学习之旅";
+        $mail_text = "欢迎加入$OJ_NAME！\n\n" .
+            "点击以下链接激活账号：\n" . $link . "\n\n" .
+            "平台提供：\n" .
+            "• 在线评测系统\n" .
+            "• 丰富编程题库\n" .
+            "• 趣味编程游戏\n" .
+            "• 各类编程竞赛\n\n" .
+            "$OJ_NAME教学平台";
+        
+        email($email, $mail_subject, $mail_text);
+    }
 
     print "<script language='javascript'>\n";
     print "alert('注册成功！请前往邮箱激活账号');\n";

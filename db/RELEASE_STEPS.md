@@ -1,6 +1,6 @@
 # OJ 功能发布步骤
 
-## 当前版本：V1.5（2026-05-07）
+## 当前版本：V1.6（2026-05-11）
 
 ---
 
@@ -15,6 +15,7 @@
 | V1.2 | 2026-05-01 | 课件预览付费改造 |
 | V1.3 | 2026-05-05 | 删除提取码字段（百度网盘→金山文档） |
 | V1.4 | 2026-05-07 | 题目增加level字段（难度等级1-5） |
+| V1.6 | 2026-05-11 | 注册功能优化：用户角色选择、邮箱唯一性校验、教师/学生区分通知 |
 
 ---
 
@@ -47,10 +48,13 @@ mysql -u root -p jol < db/V1.0_20260411_school_mode.sql
 mysql -u root -p jol < db/V1.1_20260419_choice_and_exam.sql
 
 # 5. 课件预览付费改造
-mysql -u root -p jol < db/V1.2_20260501_courseware_preview_upgrade.sql
+mysql -u root -p jol < db/V1.2_2026-05-01_courseware_preview_upgrade.sql
 
 # 6. 题目难度等级
-mysql -u root -p jol < db/V1.5_20260507_add_problem_level.sql
+mysql -u root -p jol < db/V1.5_2026-05-07_add_problem_level.sql
+
+# 7. 注册功能优化
+mysql -u root -p jol < db/V1.6_2026-05-11_register_role.sql
 ```
 
 **验证：**
@@ -91,6 +95,9 @@ DESCRIBE jol.course lesson_plan_full_preview_url;  -- varchar(500)
 
 -- 题目难度等级
 DESCRIBE jol.problem level;     -- int(11), Default: 1, Comment: 难度等级(1-5)
+
+-- 注册功能优化
+DESCRIBE jol.users role;         -- varchar(20), Default: student, Comment: 用户角色：teacher/student
 ```
 
 ---
