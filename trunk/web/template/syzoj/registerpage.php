@@ -35,7 +35,7 @@
                 </div>
                 <div class="field">
                     <label for="username"><?php echo $MSG_USER_ID?>*</label>
-                    <input name="user_id" class="form-control" placeholder="学生注册请用学号，老师注册请用手机号" type="text" required>
+                    <input name="user_id" class="form-control" placeholder="教师请用自己手机号，学生请用家长手机号" type="text" required>
                 </div>
                 <div class="field">
                     <label for="username"><?php echo $MSG_NICK?>*</label>
@@ -71,7 +71,7 @@
                 </div>
                 <div class="field">
                     <label for="email"><?php echo $MSG_EMAIL?>*</label>
-                    <input name="email" placeholder="请填写真实邮箱，用于接收账号激活通知" type="text" required>
+                    <input name="email" placeholder="请填写真实邮箱，用于接收账号激活通知" type="email" required>
                 </div>
                 <?php if($OJ_VCODE){?>
                   <div class="field">

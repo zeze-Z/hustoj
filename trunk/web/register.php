@@ -114,6 +114,12 @@ if ($len > 100) {
     $err_cnt++;
 }
 
+// 验证邮箱格式
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $err_str = $err_str . "邮箱格式不正确！\\n";
+    $err_cnt++;
+}
+
 // 如果存在错误信息，则显示错误并返回
 if ($err_cnt > 0) {
     print "<script language='javascript'>\n";
