@@ -319,17 +319,55 @@ if (isset($OJ_EMAIL_CONFIRM) && $OJ_EMAIL_CONFIRM) {
         email($email, $mail_subject, $mail_text, $mail_html);
     } else {
         // 学生激活邮件
-        $mail_subject = "$OJ_NAME账号激活 — 开始你的编程学习之旅";
-        $mail_text = "欢迎加入$OJ_NAME！\n\n" .
-            "点击以下链接激活账号：\n" . $link . "\n\n" .
-            "平台提供：\n" .
-            "• 在线评测系统\n" .
-            "• 丰富编程题库\n" .
-            "• 趣味编程游戏\n" .
-            "• 各类编程竞赛\n\n" .
-            "$OJ_NAME教学平台";
+        $mail_subject = "$OJ_NAME" . "账号激活 — 开始你的编程学习之旅";
+        $mail_text = "亲爱的同学，您好！\n\n" .
+            "欢迎加入$OJ_NAME教学平台！\n\n" .
+            "平台特色：\n" .
+            "🎮 趣味编程 — 边玩边学，轻松入门编程\n" .
+            "📚 海量题库 — 从基础到进阶，满足不同学习需求\n" .
+            "⚡ 在线评测 — 提交代码即时获得反馈\n" .
+            "🏆 竞赛活动 — 参与各类编程竞赛，提升技能\n\n" .
+            "请点击以下链接激活账号：\n" . $link . "\n\n" .
+            "激活后即可登录，开启你的编程之旅！\n\n" .
+            "$OJ_NAME" . "教学平台";
         
-        email($email, $mail_subject, $mail_text);
+        // HTML邮件内容
+        $mail_html = "<div style='font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f5f5f5; padding: 20px;'>
+            <div style='background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>
+                <div style='background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); padding: 30px; text-align: center;'>
+                    <h1 style='color: white; margin: 0; font-size: 24px;'>$OJ_NAME账号激活</h1>
+                </div>
+                <div style='padding: 30px;'>
+                    <p style='font-size: 16px; color: #333; line-height: 1.8;'>亲爱的 <strong>$nick</strong> 同学：</p>
+                    <p style='font-size: 16px; color: #333; line-height: 1.8;'>欢迎加入$OJ_NAME教学平台！</p>
+                    <div style='background: #f0fff4; border-left: 4px solid #38ef7d; padding: 20px; margin: 20px 0; border-radius: 4px;'>
+                        <h3 style='color: #11998e; margin-top: 0;'>平台特色</h3>
+                        <ul style='color: #555; line-height: 2; margin: 0; padding-left: 20px;'>
+                            <li>🎮 趣味编程 — 边玩边学，轻松入门编程</li>
+                            <li>📚 海量题库 — 从基础到进阶，满足不同学习需求</li>
+                            <li>⚡ 在线评测 — 提交代码即时获得反馈</li>
+                            <li>🏆 竞赛活动 — 参与各类编程竞赛，提升技能</li>
+                        </ul>
+                    </div>
+                    <div style='text-align: center; margin: 30px 0;'>
+                        <a href='$link' style='display: inline-block; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600;'>
+                            点击激活账号
+                        </a>
+                    </div>
+                    <p style='color: #999; font-size: 14px; line-height: 1.8; margin-top: 30px;'>
+                        激活后即可登录，开启你的编程之旅！如有任何问题，欢迎联系我们。
+                    </p>
+                </div>
+                <div style='background: #f5f5f5; padding: 15px; text-align: center; border-top: 1px solid #e0e0e0;'>
+                    <p style='color: #999; font-size: 12px; margin: 0;'>
+                        此邮件由$OJ_NAME平台自动发送，请勿直接回复。<br>
+                        © $OJ_NAME版权所有
+                    </p>
+                </div>
+            </div>
+        </div>";
+        
+        email($email, $mail_subject, $mail_text, $mail_html);
     }
 
     print "<script language='javascript'>\n";
