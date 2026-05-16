@@ -16,6 +16,7 @@
 | V1.3 | 2026-05-05 | 删除提取码字段（百度网盘→金山文档） |
 | V1.4 | 2026-05-07 | 题目增加level字段（难度等级1-5） |
 | V1.6 | 2026-05-11 | 注册功能优化：用户角色选择、邮箱唯一性校验、教师/学生区分通知 |
+| V1.7 | 2026-05-12 | 成都TOP50中小学数据入库 |
 
 ---
 
@@ -55,6 +56,9 @@ mysql -u root -p jol < db/V1.5_2026-05-07_add_problem_level.sql
 
 # 7. 注册功能优化
 mysql -u root -p jol < db/V1.6_2026-05-11_register_role.sql
+
+# 8. 成都TOP50中小学数据入库
+mysql -u root -p jol < db/V1.7_20260512_add_chengdu_schools.sql
 ```
 
 **验证：**
@@ -98,6 +102,9 @@ DESCRIBE jol.problem level;     -- int(11), Default: 1, Comment: 难度等级(1-
 
 -- 注册功能优化
 DESCRIBE jol.users role;         -- varchar(20), Default: student, Comment: 用户角色：teacher/student
+
+-- 成都TOP50中小学数据入库
+SELECT COUNT(*) FROM jol.school WHERE code LIKE 'chengdu_%';  -- 预期：56（原有6条+新增50条）
 ```
 
 ---

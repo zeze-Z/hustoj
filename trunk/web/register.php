@@ -4,6 +4,7 @@ if (isset($OJ_REGISTER) && !$OJ_REGISTER) exit(0);
 require_once("./include/my_func.inc.php");
 require_once('./include/setlang.php');
 require_once("./include/email.class.php");     // 新版本的邮件发送信息请填写到db_info.inc.php
+require_once(dirname(__FILE__)."/include/feishu_notify.php");
 if (isset($OJ_CSRF) && $OJ_CSRF) require_once("./include/csrf_check.php");
 
 // 初始化错误信息和计数器
@@ -191,7 +192,8 @@ if (isset($OJ_REG_SPEED) && $OJ_REG_SPEED > 0) {
     if ($count > $OJ_REG_SPEED) {
         // 如果数量大于$OJ_REG_SPEED ，则表示该IP地址在最近1小时内已经注册过$OJ_REG_SPEED个账户
         $warning = "$ip 正在快速注册大量新账号，请确认是否存在攻击行为。若能确认是攻击行为，可以用sudo iptables -A INPUT -s  $ip  -j DROP 命令 封禁IP。";
-        if ($OJ_ADMIN != "root@localhost") email($OJ_ADMIN, "系统警告,疑似攻击!", $warning . "\n from $domain");   //只有设置好的才发送邮件
+        // if ($OJ_ADMIN != "root@localhost") email($OJ_ADMIN, "系统警告,疑似攻击!", $warning . "\n from $domain");   //只有设置好的才发送邮件
+        feishu_notify('系统警告,疑似攻击!', $warning . "\n from $domain", 'warn');
         print "<script language='javascript'>\n";
         print "alert('您的IP地址或Email已经注册过" . $OJ_REG_SPEED . "个账户，请稍后再试。\\n');\n";
         print "history.go(-1);\n</script>";

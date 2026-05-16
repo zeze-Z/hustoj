@@ -5,6 +5,7 @@ $OJ_VCODE = false;
 require_once "include/my_func.inc.php";
 require_once "include/email.class.php";
 require_once "include/base64.php";
+require_once(dirname(__FILE__)."/include/feishu_notify.php");
 
 // 处理选择题提交
 if (isset($_POST['problem_type']) && in_array($_POST['problem_type'], ['choice_single', 'choice_multi', 'judge'])) {
@@ -496,9 +497,21 @@ if (~$OJ_LANGMASK & (1 << $language)) {
             $time = rand(100, 2000);
             $sql = "update solution set memory=?,time=?,judger='poisoner' where solution_id=?";
             pdo_query($sql, $memory, $time, $insert_id);
-            if ($OJ_ADMIN != "root@localhost") {
-                email($OJ_ADMIN, $MSG_SYS_WARN, "$DOMAIN $MSG_USER $user_id $MSG_IS_ROBOT");
-            }
+            // 机器人检测飞书通知
+            $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'unknown';
+            feishu_notify(
+                $MSG_SYS_WARN,
+                "**告警类型**: 机器人检测\n" .
+                "**域名**: $DOMAIN\n" .
+                "**用户ID**: $user_id\n" .
+                "**题目ID**: $id\n" .
+                "**提交ID**: $insert_id\n" .
+                "**IP地址**: $ip\n" .
+                "**User Agent**: $UA\n" .
+                "**检测时间**: " . strftime("%Y-%m-%d %X", time()) . "\n" .
+                "**警告信息**: $MSG_IS_ROBOT",
+                'warn'
+            );
         }
         /*   //prepare system ready for even worse robots
         $now = strftime("%Y-%m-%d %X", time()-$OJ_SUBMIT_COOLDOWN_TIME * 6 );
