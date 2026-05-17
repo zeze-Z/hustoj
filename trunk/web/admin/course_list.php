@@ -62,8 +62,8 @@ try {
                 <td>ID</td>
                 <td><?php echo $MSG_COURSE_TITLE ?></td>
                 <td><?php echo $MSG_COURSE_SUBJECT ?></td>
-                <td>预览版价格</td>
-                <td>原文件版价格</td>
+                <td>完整预览版价格（积分）</td>
+                <td>原文件版价格（积分）</td>
                 <td><?php echo $MSG_LINK_EXPIRE_DATE ?></td>
                 <td><?php echo $MSG_STATUS ?></td>
                 <td><?php echo $MSG_OPERATOR ?></td>
@@ -75,8 +75,8 @@ try {
                 <td><?php echo $row['id'] ?></td>
                 <td><?php echo htmlentities($row['title'], ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?php echo htmlentities($row['subject_name'], ENT_QUOTES, 'UTF-8') ?></td>
-                <td><?php echo $row['preview_price'] ?></td>
-                <td><?php echo $row['source_price'] ?></td>
+                <td><?php echo intval($row['preview_price']) ?> 积分</td>
+                <td><?php echo intval($row['source_price']) ?> 积分</td>
                 <td><?php echo $row['link_expire_date'] ?></td>
                 <td>
                     <?php if ($row['status'] == 1) { ?>
@@ -104,15 +104,15 @@ try {
 echo "<div style='display:inline;'>";
 echo "<nav class='center'>";
 echo "<ul class='pagination pagination-sm'>";
-echo "<li class='page-item'><a href='list.php?page=" . (strval(1)) . "'>&lt;&lt;</a></li>";
-echo "<li class='page-item'><a href='list.php?page=" . ($page == 1 ? strval(1) : strval($page - 1)) . "'>&lt;</a></li>";
+echo "<li class='page-item'><a href='course_list.php?page=" . (strval(1)) . "'>&lt;&lt;</a></li>";
+echo "<li class='page-item'><a href='course_list.php?page=" . ($page == 1 ? strval(1) : strval($page - 1)) . "'>&lt;</a></li>";
 
 for ($i = $spage; $i <= $epage; $i++) {
-    echo "<li class='" . ($page == $i ? "active " : "") . "page-item'><a title='go to page' href='list.php?page=$i'>$i</a></li>";
+    echo "<li class='" . ($page == $i ? "active " : "") . "page-item'><a title='go to page' href='course_list.php?page=$i'>$i</a></li>";
 }
 
-echo "<li class='page-item'><a href='list.php?page=" . ($page == $pages ? strval($page) : strval($page + 1)) . "'>&gt;</a></li>";
-echo "<li class='page-item'><a href='list.php?page=" . (strval($pages)) . "'>&gt;&gt;</a></li>";
+echo "<li class='page-item'><a href='course_list.php?page=" . ($page == $pages ? strval($page) : strval($page + 1)) . "'>&gt;</a></li>";
+echo "<li class='page-item'><a href='course_list.php?page=" . (strval($pages)) . "'>&gt;&gt;</a></li>";
 echo "</ul>";
 echo "</nav>";
 echo "</div>";

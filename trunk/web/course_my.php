@@ -27,8 +27,8 @@ $count_result = pdo_query($count_sql, $user_id);
 $total = $count_result[0]['total'];
 $total_pages = $total > 0 ? ceil($total / $per_page) : 0;
 
-// 查询已获取课程列表
-$sql = "SELECT co.*, c.title, c.price
+// 查询已获取课程列表（积分支付改造后：不再使用 c.price，统一展示 co.amount/license_type/pay_channel）
+$sql = "SELECT co.*, c.title
         FROM course_order co
         INNER JOIN course c ON co.course_id = c.id
         WHERE co.user_id = ? AND co.pay_status = 1

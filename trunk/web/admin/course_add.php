@@ -19,8 +19,21 @@ if (isset($_POST['do'])) {
     $tags = trim($_POST['tags']);
     $lesson_count = intval($_POST['lesson_count']);
     $description = trim($_POST['description']);
-    $preview_price = floatval($_POST['preview_price']);
-    $source_price = floatval($_POST['source_price']);
+    // 价格以积分为单位（1积分=1元），仅接受非负整数，拒绝小数
+    $preview_price_raw = trim((string)$_POST['preview_price']);
+    $source_price_raw = trim((string)$_POST['source_price']);
+    if ($preview_price_raw === '') { $preview_price_raw = '0'; }
+    if ($source_price_raw === '') { $source_price_raw = '0'; }
+    if (!preg_match('/^\d+$/', $preview_price_raw)) {
+        echo "<script>alert('完整预览版价格必须为非负整数（积分），不接受小数'); history.go(-1);</script>";
+        exit();
+    }
+    if (!preg_match('/^\d+$/', $source_price_raw)) {
+        echo "<script>alert('原文件版价格必须为非负整数（积分），不接受小数'); history.go(-1);</script>";
+        exit();
+    }
+    $preview_price = intval($preview_price_raw);
+    $source_price = intval($source_price_raw);
     $status = isset($_POST['status']) ? 1 : 0;
     $courseware_preview_url = trim($_POST['courseware_preview_url']);
     $lesson_plan_preview_url = trim($_POST['lesson_plan_preview_url']);
@@ -43,18 +56,18 @@ if (isset($_POST['do'])) {
     }
 
     if ($preview_price < 0) {
-        echo "<script>alert('预览版价格 must be >= 0'); history.go(-1);</script>";
+        echo "<script>alert('完整预览版价格必须 >= 0'); history.go(-1);</script>";
         exit();
     }
 
     if ($source_price < 0) {
-        echo "<script>alert('原文件价格 must be >= 0'); history.go(-1);</script>";
+        echo "<script>alert('原文件版价格必须 >= 0'); history.go(-1);</script>";
         exit();
     }
 
-    // 强制校验：原文件价格必须 >= 预览版价格
+    // 强制校验：原文件版价格必须 >= 完整预览版价格
     if ($source_price < $preview_price) {
-        echo "<script>alert('原文件价格必须大于等于预览版价格'); history.go(-1);</script>";
+        echo "<script>alert('原文件版价格必须大于等于完整预览版价格'); history.go(-1);</script>";
         exit();
     }
 
@@ -184,18 +197,18 @@ $subject_list = pdo_query($sql);
         </div>
 
         <div class="form-group">
-            <label class="col-sm-2 control-label">预览版价格（元）</label>
+            <label class="col-sm-2 control-label">完整预览版价格（积分，1积分=1元）</label>
             <div class="col-sm-6">
-                <input type="number" name="preview_price" class="form-control" value="0" min="0" step="0.01">
-                <small class="text-muted">0表示免费，购买后可查看完整在线预览内容</small>
+                <input type="number" name="preview_price" class="form-control" value="0" min="0" step="1">
+                <small class="text-muted">0表示免费；大于0表示需消耗对应积分，1积分=1元</small>
             </div>
         </div>
 
         <div class="form-group">
-            <label class="col-sm-2 control-label">原文件价格（元）</label>
+            <label class="col-sm-2 control-label">原文件版价格（积分，1积分=1元）</label>
             <div class="col-sm-6">
-                <input type="number" name="source_price" class="form-control" value="0" min="0" step="0.01">
-                <small class="text-muted">0表示免费，购买后可下载可编辑原文件</small>
+                <input type="number" name="source_price" class="form-control" value="0" min="0" step="1">
+                <small class="text-muted">0表示免费；大于0表示需消耗对应积分，1积分=1元</small>
             </div>
         </div>
 

@@ -701,12 +701,705 @@ function update_course_download_count($user_id, $course_id) {
     // 检查该用户对该课程是否已经计过数
     $check_counted_sql = "SELECT id FROM course_order WHERE user_id = ? AND course_id = ? AND counted = 1 AND pay_status = 1";
     $check_counted_result = pdo_query($check_counted_sql, $user_id, $course_id);
-    
+
     if (empty($check_counted_result)) {
         // 未计数过，更新下载次数
         pdo_query("UPDATE course SET download_count = download_count + 1 WHERE id = ?", $course_id);
         // 标记该用户的所有该课程订单为已计数
         pdo_query("UPDATE course_order SET counted = 1 WHERE user_id = ? AND course_id = ? AND pay_status = 1", $user_id, $course_id);
+    }
+}
+
+/**
+ * 获取用户对课程的所有权限状态
+ * @param int $user_id 用户ID（未登录传0）
+ * @param int $course_id 课程ID
+ * @return array 权限状态集合
+ */
+function get_user_course_permission($user_id, $course_id) {
+    global $OJ_NAME;
+
+    $permission = [
+        'is_login' => $user_id > 0,
+        'has_full_preview' => false,
+        'has_source' => false,
+        'can_upgrade' => false,
+        'has_source_resource' => false,
+        'is_full_preview_free' => false,
+        'is_source_free' => false,
+        'full_preview_price' => 0,
+        'source_price' => 0,
+        'upgrade_price' => 0,
+        'course' => null
+    ];
+
+    // 查询课程信息
+    $course_sql = "SELECT c.*, s.name as subject_name
+                   FROM course c
+                   INNER JOIN course_subject s ON c.subject_id = s.id
+                   WHERE c.id = ? AND c.status = 1";
+    $course_result = pdo_query($course_sql, $course_id);
+
+    if (empty($course_result)) {
+        return $permission;
+    }
+
+    $course = $course_result[0];
+    $permission['course'] = $course;
+    $permission['full_preview_price'] = floatval($course['preview_price']);
+    $permission['source_price'] = floatval($course['source_price']);
+    $permission['is_full_preview_free'] = $permission['full_preview_price'] == 0;
+    $permission['is_source_free'] = $permission['source_price'] == 0;
+    $permission['has_source_resource'] = !empty($course['courseware_link']) || !empty($course['lesson_plan_link']);
+
+    // 未登录用户不查询权限
+    if (!$permission['is_login']) {
+        return $permission;
+    }
+
+    // 查询用户拥有的权限
+    $order_sql = "SELECT license_type FROM course_order
+                  WHERE user_id = ? AND course_id = ? AND pay_status = 1";
+    $order_result = pdo_query($order_sql, $user_id, $course_id);
+
+    foreach ($order_result as $order) {
+        if ($order['license_type'] == 1) {
+            $permission['has_full_preview'] = true;
+        } elseif ($order['license_type'] == 2) {
+            $permission['has_source'] = true;
+        }
+    }
+
+    // 拥有原文件版自动拥有预览版权限
+    if ($permission['has_source']) {
+        $permission['has_full_preview'] = true;
+    }
+
+    // 计算是否可以升级
+    if ($permission['has_full_preview'] && !$permission['has_source'] && $permission['source_price'] > 0) {
+        $permission['upgrade_price'] = $permission['source_price'] - $permission['full_preview_price'];
+        if ($permission['upgrade_price'] < 0) {
+            $permission['upgrade_price'] = 0;
+        }
+        $permission['can_upgrade'] = true;
+    }
+
+    return $permission;
+}
+
+/**
+ * 计算课程应付金额
+ * @param array $course 课程信息
+ * @param int $license_type 权限类型 1=完整预览版 2=原文件版
+ * @param bool $is_upgrade 是否是升级购买
+ * @return float 应付金额
+ */
+function calculate_course_price($course, $license_type, $is_upgrade = false) {
+    $preview_price = floatval($course['preview_price']);
+    $source_price = floatval($course['source_price']);
+
+    if ($is_upgrade && $license_type == 2) {
+        // 升级购买，计算差价
+        $price = $source_price - $preview_price;
+        return $price > 0 ? $price : 0;
+    } elseif ($license_type == 1) {
+        return $preview_price;
+    } else {
+        return $source_price;
+    }
+}
+
+/**
+ * 统一授予用户课程权限
+ * @param int $user_id 用户ID
+ * @param int $course_id 课程ID
+ * @param int $license_type 权限类型 1=完整预览版 2=原文件版
+ * @param array $order_info 订单信息（可选：order_no, pay_channel, amount, is_upgrade）
+ * @return array 结果：['success' => bool, 'message' => string, 'order_no' => string]
+ */
+function grant_course_license($user_id, $course_id, $license_type, $order_info = []) {
+    global $OJ_NAME;
+
+    // 默认值；订单号使用 random_int 生成（不再使用 rand/mt_rand）
+    $order_no = isset($order_info['order_no']) ? $order_info['order_no'] : 'CO' . time() . random_int(1000, 9999);
+    $pay_channel = isset($order_info['pay_channel']) ? $order_info['pay_channel'] : 'free';
+    $amount = isset($order_info['amount']) ? floatval($order_info['amount']) : 0;
+    $is_upgrade = isset($order_info['is_upgrade']) ? boolval($order_info['is_upgrade']) : false;
+
+    // 是否积分支付（积分数 > 0）—— 与免费订单一样需要立即落定支付状态、刷新下载次数、发送通知
+    $is_point_paid = ($pay_channel === 'point' && $amount > 0);
+    // 是否需要立即结算的“成交订单”
+    $is_settled = ($amount == 0) || $is_point_paid;
+
+    // 查询课程信息
+    $course_sql = "SELECT * FROM course WHERE id = ? AND status = 1";
+    $course_result = pdo_query($course_sql, $course_id);
+
+    if (empty($course_result)) {
+        return ['success' => false, 'message' => '课程不存在或已下架'];
+    }
+
+    $course = $course_result[0];
+
+    // 检查是否已经拥有该权限
+    $check_sql = "SELECT id FROM course_order
+                  WHERE user_id = ? AND course_id = ? AND license_type = ? AND pay_status = 1";
+    $check_result = pdo_query($check_sql, $user_id, $course_id, $license_type);
+
+    if (!empty($check_result)) {
+        return ['success' => true, 'message' => '您已经拥有该权限', 'order_no' => $order_no];
+    }
+
+    // 升级购买的特殊检查
+    if ($is_upgrade && $license_type == 2) {
+        // 检查是否拥有预览版权限
+        $preview_check_sql = "SELECT id FROM course_order
+                              WHERE user_id = ? AND course_id = ? AND license_type = 1 AND pay_status = 1";
+        $preview_check_result = pdo_query($preview_check_sql, $user_id, $course_id);
+
+        if (empty($preview_check_result)) {
+            return ['success' => false, 'message' => '升级失败：您还未拥有完整预览版权限'];
+        }
+    }
+
+    try {
+        // 检查是否有未支付的相同类型订单
+        $existing_order_sql = "SELECT id, order_no FROM course_order
+                               WHERE user_id = ? AND course_id = ? AND license_type = ? AND pay_status = 0";
+        $existing_order_result = pdo_query($existing_order_sql, $user_id, $course_id, $license_type);
+
+        if (!empty($existing_order_result)) {
+            // 复用已有未支付订单
+            $existing_order = $existing_order_result[0];
+            $order_no = $existing_order['order_no'];
+
+            if ($is_settled) {
+                // 免费 / 积分已支付：直接标记为已支付并刷新金额、渠道
+                pdo_query("UPDATE course_order SET pay_status = 1, pay_time = NOW(), pay_channel = ?, amount = ? WHERE id = ?",
+                         $pay_channel, $amount, $existing_order['id']);
+
+                // 更新下载次数
+                update_course_download_count($user_id, $course_id);
+
+                // 发送飞书通知
+                if (function_exists('send_order_feishu_notify')) {
+                    send_order_feishu_notify($course, $user_id, $order_no, $license_type, $amount, $pay_channel, $is_upgrade,
+                                           floatval($course['preview_price']), floatval($course['source_price']));
+                }
+
+                return ['success' => true, 'message' => '权限获取成功', 'order_no' => $order_no];
+            } else {
+                // 第三方付费订单返回现有订单号用于支付
+                return ['success' => true, 'message' => '订单已存在，可继续支付', 'order_no' => $order_no];
+            }
+        }
+
+        // 创建新订单
+        pdo_query("INSERT INTO course_order
+                  (order_no, user_id, course_id, license_type, amount, pay_status, pay_time, pay_channel, mail_status, counted)
+                  VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, 0, 0)",
+                 $order_no, $user_id, $course_id, $license_type, $amount, $is_settled ? 1 : 0, $pay_channel);
+
+        // 免费 / 积分已支付订单直接处理后续逻辑
+        if ($is_settled) {
+            // 更新下载次数
+            update_course_download_count($user_id, $course_id);
+
+            // 发送飞书通知
+            if (function_exists('send_order_feishu_notify')) {
+                send_order_feishu_notify($course, $user_id, $order_no, $license_type, $amount, $pay_channel, $is_upgrade,
+                                       floatval($course['preview_price']), floatval($course['source_price']));
+            }
+        }
+
+        return ['success' => true, 'message' => $is_settled ? '权限获取成功' : '订单创建成功', 'order_no' => $order_no];
+
+    } catch (Exception $e) {
+        return ['success' => false, 'message' => '系统错误：' . $e->getMessage()];
+    }
+}
+
+
+// =====================================================================
+// 平台积分（point）相关函数
+//
+// 数据表：
+//   users        : 新增 INT NOT NULL DEFAULT 0 字段 `point`，记录积分余额
+//   point_card   : 充值卡（固定面额 10 积分）
+//   point_log    : 积分流水
+//                  type: 1=充值卡兑换, 2=课件购买, 3=管理员调整, 4=系统操作
+//
+// 设计约定：
+//   - 所有交易使用 InnoDB 事务 + SELECT ... FOR UPDATE
+//   - 卡密 / 密码等敏感信息绝不写入日志或异常信息
+//   - 新生成的卡号 / 订单号统一使用 random_int，禁止 rand / mt_rand
+// =====================================================================
+
+/** 充值卡固定面额（积分） */
+if (!defined('POINT_CARD_VALUE')) {
+    define('POINT_CARD_VALUE', 10);
+}
+
+/** 积分流水类型常量 */
+if (!defined('POINT_LOG_TYPE_CARD'))   define('POINT_LOG_TYPE_CARD',   1); // 充值卡兑换
+if (!defined('POINT_LOG_TYPE_COURSE')) define('POINT_LOG_TYPE_COURSE', 2); // 课件购买
+if (!defined('POINT_LOG_TYPE_ADMIN'))  define('POINT_LOG_TYPE_ADMIN',  3); // 管理员调整
+if (!defined('POINT_LOG_TYPE_SYSTEM')) define('POINT_LOG_TYPE_SYSTEM', 4); // 系统操作
+
+/** 充值卡状态常量 */
+if (!defined('POINT_CARD_STATUS_UNUSED'))   define('POINT_CARD_STATUS_UNUSED',   0);
+if (!defined('POINT_CARD_STATUS_REDEEMED')) define('POINT_CARD_STATUS_REDEEMED', 1);
+if (!defined('POINT_CARD_STATUS_DISABLED')) define('POINT_CARD_STATUS_DISABLED', 2);
+
+/**
+ * 确保 PDO 连接已经初始化（事务 API 需要直接操作 $dbh）。
+ * pdo_query 的连接是惰性创建的，因此先执行一次轻量 SELECT 触发建立。
+ */
+function _point_ensure_dbh() {
+    global $dbh;
+    if (!$dbh) {
+        pdo_query('SELECT 1');
+    }
+    return $dbh;
+}
+
+/** 开启事务 */
+function point_tx_begin() {
+    $dbh = _point_ensure_dbh();
+    if ($dbh && !$dbh->inTransaction()) {
+        $dbh->beginTransaction();
+    }
+}
+
+/** 提交事务 */
+function point_tx_commit() {
+    global $dbh;
+    if ($dbh && $dbh->inTransaction()) {
+        $dbh->commit();
+    }
+}
+
+/** 回滚事务（安全：未在事务中时静默忽略） */
+function point_tx_rollback() {
+    global $dbh;
+    try {
+        if ($dbh && $dbh->inTransaction()) {
+            $dbh->rollBack();
+        }
+    } catch (Exception $e) {
+        // 回滚失败时不抛出二次异常，避免覆盖原始错误上下文
+    }
+}
+
+/**
+ * 读取用户积分余额（不加锁）。
+ * @param string $user_id
+ * @return int 余额；用户不存在返回 0
+ */
+function point_get_balance($user_id) {
+    if ($user_id === null || $user_id === '') return 0;
+    $rows = pdo_query("SELECT `point` FROM `users` WHERE user_id = ?", $user_id);
+    if (empty($rows)) return 0;
+    return intval($rows[0]['point']);
+}
+
+/**
+ * 在事务中对用户行加排他锁，并返回当前余额。
+ * 调用方必须已经处于事务上下文（通常由 point_tx_begin 开启）。
+ *
+ * @param string $user_id
+ * @return int|false 余额；用户不存在返回 false
+ */
+function point_lock_user($user_id) {
+    _point_ensure_dbh();
+    $rows = pdo_query("SELECT `point` FROM `users` WHERE user_id = ? FOR UPDATE", $user_id);
+    if (empty($rows)) return false;
+    return intval($rows[0]['point']);
+}
+
+/**
+ * 写入一条积分流水。
+ * 注意：调用方需自行保证 balance 与 users.point 更新一致。
+ *
+ * @param string $user_id     用户ID
+ * @param int    $change      积分变化（正/负）
+ * @param int    $balance     变动后余额
+ * @param int    $type        类型常量 POINT_LOG_TYPE_*
+ * @param string $relation_id 业务关联 ID（卡号 / 订单号等；卡密绝不可传入）
+ * @param string $remark      备注（避免写入卡密、密码等敏感信息）
+ */
+function point_add_log($user_id, $change, $balance, $type, $relation_id = null, $remark = null) {
+    pdo_query(
+        "INSERT INTO `point_log` (user_id, change_point, balance, type, relation_id, remark, create_time)
+         VALUES (?, ?, ?, ?, ?, ?, NOW())",
+        $user_id, intval($change), intval($balance), intval($type), $relation_id, $remark
+    );
+}
+
+/**
+ * 在事务中应用一次积分变更：锁定用户、检查余额、更新 users.point、写入流水。
+ * 不负责事务的开启 / 提交，由外层组合调用。
+ *
+ * @param string $user_id
+ * @param int    $delta        积分变化（不能为 0）
+ * @param int    $type         POINT_LOG_TYPE_*
+ * @param string $relation_id  关联业务 ID
+ * @param string $remark       备注
+ * @return array ['success'=>bool, 'message'=>string, 'balance'=>int]
+ */
+function point_apply_change($user_id, $delta, $type, $relation_id = null, $remark = null) {
+    $delta = intval($delta);
+    if ($delta === 0) {
+        return ['success' => false, 'message' => '积分变化不能为 0'];
+    }
+    $current = point_lock_user($user_id);
+    if ($current === false) {
+        return ['success' => false, 'message' => '用户不存在'];
+    }
+    $new_balance = $current + $delta;
+    if ($new_balance < 0) {
+        return ['success' => false, 'message' => '积分余额不足'];
+    }
+    pdo_query("UPDATE `users` SET `point` = ? WHERE user_id = ?", $new_balance, $user_id);
+    point_add_log($user_id, $delta, $new_balance, $type, $relation_id, $remark);
+    return ['success' => true, 'message' => 'ok', 'balance' => $new_balance];
+}
+
+/**
+ * 生成充值卡卡号。
+ *  - 16 位大写字母 + 数字组合
+ *  - 前缀 PC（point card），后接批次号末 4 位，便于人工核对
+ *  - 全程 random_int，不使用 rand/mt_rand
+ *
+ * @param string $batch_no
+ * @return string
+ */
+function point_generate_card_no($batch_no = '') {
+    $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 去掉易混字符 0/O/1/I
+    $len = strlen($alphabet);
+    $suffix_len = 10;
+    $suffix = '';
+    for ($i = 0; $i < $suffix_len; $i++) {
+        $suffix .= $alphabet[random_int(0, $len - 1)];
+    }
+    $batch_tail = '';
+    if ($batch_no !== '') {
+        $batch_tail = strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $batch_no), -4));
+    }
+    $batch_tail = str_pad($batch_tail, 4, '0', STR_PAD_LEFT);
+    return 'PC' . $batch_tail . $suffix;
+}
+
+/**
+ * 生成充值卡卡密：16 位大小写字母 + 数字。
+ * 全程 random_int。
+ *
+ * @return string
+ */
+function point_generate_card_secret() {
+    $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    $len = strlen($alphabet);
+    $secret_len = 16;
+    $out = '';
+    for ($i = 0; $i < $secret_len; $i++) {
+        $out .= $alphabet[random_int(0, $len - 1)];
+    }
+    return $out;
+}
+
+/**
+ * 兑换一张充值卡：固定加 POINT_CARD_VALUE 积分。
+ *
+ * 安全约定：
+ *   - 不存在卡号 与 卡密错误 返回同一条消息，避免枚举攻击
+ *   - 已兑换 / 已禁用 返回区分消息，便于用户判断
+ *   - 卡密绝不写入 point_log.remark 或异常 / 日志
+ *
+ * @param string $user_id
+ * @param string $card_no
+ * @param string $card_secret
+ * @param string $ip
+ * @return array ['success'=>bool, 'message'=>string, 'balance'=>int, 'add'=>int]
+ */
+function point_redeem_card($user_id, $card_no, $card_secret, $ip) {
+    $card_no = trim((string)$card_no);
+    $card_secret = trim((string)$card_secret);
+    if ($user_id === '' || $card_no === '' || $card_secret === '') {
+        return ['success' => false, 'message' => '卡号或卡密不正确'];
+    }
+    if (strlen($ip) > 45) $ip = substr($ip, 0, 45);
+
+    try {
+        point_tx_begin();
+
+        // 锁定卡片
+        $card_rows = pdo_query(
+            "SELECT id, card_no, card_secret, status FROM `point_card` WHERE card_no = ? FOR UPDATE",
+            $card_no
+        );
+        if (empty($card_rows)) {
+            point_tx_rollback();
+            // 不存在 与 卡密错误 统一文案
+            return ['success' => false, 'message' => '卡号或卡密不正确'];
+        }
+        $card = $card_rows[0];
+
+        // 验证卡密（使用 hash_equals 防止时序攻击；明文比较等价）
+        if (!hash_equals((string)$card['card_secret'], $card_secret)) {
+            point_tx_rollback();
+            return ['success' => false, 'message' => '卡号或卡密不正确'];
+        }
+
+        $status = intval($card['status']);
+        if ($status === POINT_CARD_STATUS_REDEEMED) {
+            point_tx_rollback();
+            return ['success' => false, 'message' => '该充值卡已被兑换'];
+        }
+        if ($status === POINT_CARD_STATUS_DISABLED) {
+            point_tx_rollback();
+            return ['success' => false, 'message' => '该充值卡已被禁用'];
+        }
+        if ($status !== POINT_CARD_STATUS_UNUSED) {
+            point_tx_rollback();
+            return ['success' => false, 'message' => '该充值卡不可用'];
+        }
+
+        // 更新卡片状态：0 -> 1，仅在仍为未使用时成功
+        $affected = pdo_query(
+            "UPDATE `point_card`
+                SET status = ?, redeem_user_id = ?, redeem_time = NOW(), redeem_ip = ?
+              WHERE id = ? AND status = ?",
+            POINT_CARD_STATUS_REDEEMED, $user_id, $ip, $card['id'], POINT_CARD_STATUS_UNUSED
+        );
+        if (intval($affected) !== 1) {
+            point_tx_rollback();
+            return ['success' => false, 'message' => '该充值卡已被兑换'];
+        }
+
+        // 给用户加分
+        $apply = point_apply_change(
+            $user_id,
+            POINT_CARD_VALUE,
+            POINT_LOG_TYPE_CARD,
+            $card_no,                  // 关联业务 ID：卡号（绝不是卡密）
+            '充值卡兑换'
+        );
+        if (!$apply['success']) {
+            point_tx_rollback();
+            return ['success' => false, 'message' => $apply['message']];
+        }
+
+        point_tx_commit();
+        return [
+            'success' => true,
+            'message' => '兑换成功',
+            'balance' => $apply['balance'],
+            'add'     => POINT_CARD_VALUE,
+        ];
+    } catch (Exception $e) {
+        point_tx_rollback();
+        // 异常信息中不要回显卡密
+        return ['success' => false, 'message' => '系统繁忙，请稍后再试'];
+    }
+}
+
+/**
+ * 课件积分支付：服务端重新计算价格、扣减积分、登记订单。
+ *
+ * @param string $user_id
+ * @param int    $course_id
+ * @param int    $license_type 1=完整预览版 2=原文件版
+ * @param bool   $is_upgrade   是否预览版 -> 原文件版升级
+ * @return array ['success'=>bool, 'message'=>string, 'order_no'=>string, 'balance'=>int, 'point'=>int]
+ */
+function point_pay_for_course($user_id, $course_id, $license_type, $is_upgrade = false) {
+    $license_type = intval($license_type);
+    if (!in_array($license_type, [1, 2], true)) {
+        return ['success' => false, 'message' => '权限类型不正确'];
+    }
+    if ($user_id === '' || intval($course_id) <= 0) {
+        return ['success' => false, 'message' => '参数错误'];
+    }
+
+    // 服务端权限 / 价格重算
+    $perm = get_user_course_permission($user_id, $course_id);
+    if (empty($perm['course'])) {
+        return ['success' => false, 'message' => '课程不存在或已下架'];
+    }
+    $course = $perm['course'];
+
+    // 已拥有判断
+    if ($license_type == 1 && $perm['has_full_preview']) {
+        return ['success' => false, 'message' => '您已拥有该权限'];
+    }
+    if ($license_type == 2 && $perm['has_source']) {
+        return ['success' => false, 'message' => '您已拥有该权限'];
+    }
+    // 升级规则校验
+    if ($is_upgrade) {
+        if ($license_type != 2) {
+            return ['success' => false, 'message' => '升级仅适用于原文件版'];
+        }
+        if (!$perm['has_full_preview']) {
+            return ['success' => false, 'message' => '升级失败：您还未拥有完整预览版权限'];
+        }
+        if ($perm['has_source']) {
+            return ['success' => false, 'message' => '您已拥有原文件版权限'];
+        }
+    }
+
+    // 价格重算（积分以整数计；先确保非负数再向上取整）
+    $price = calculate_course_price($course, $license_type, $is_upgrade);
+    if ($price < 0) $price = 0;
+    $point_amount = intval(ceil($price));
+    if ($point_amount <= 0) {
+        return ['success' => false, 'message' => '该课程当前无需积分支付，请直接领取'];
+    }
+
+    try {
+        point_tx_begin();
+
+        // 余额校验 & 锁定
+        $balance = point_lock_user($user_id);
+        if ($balance === false) {
+            point_tx_rollback();
+            return ['success' => false, 'message' => '用户不存在'];
+        }
+        if ($balance < $point_amount) {
+            point_tx_rollback();
+            return ['success' => false, 'message' => '积分余额不足，请先兑换充值卡'];
+        }
+
+        // 事务内复查“已拥有”，避免并发重复扣分
+        $owned_rows = pdo_query(
+            "SELECT id FROM `course_order`
+              WHERE user_id = ? AND course_id = ? AND license_type = ? AND pay_status = 1",
+            $user_id, $course_id, $license_type
+        );
+        if (!empty($owned_rows)) {
+            point_tx_rollback();
+            return ['success' => false, 'message' => '您已拥有该权限'];
+        }
+
+        // 生成订单号；如果已有未支付订单则复用
+        $order_no = null;
+        $existing = pdo_query(
+            "SELECT id, order_no FROM `course_order`
+              WHERE user_id = ? AND course_id = ? AND license_type = ? AND pay_status = 0
+              FOR UPDATE",
+            $user_id, $course_id, $license_type
+        );
+        if (!empty($existing)) {
+            $order_no = $existing[0]['order_no'];
+            pdo_query(
+                "UPDATE `course_order`
+                    SET amount = ?, pay_status = 1, pay_time = NOW(), pay_channel = 'point'
+                  WHERE id = ?",
+                $point_amount, $existing[0]['id']
+            );
+        } else {
+            $order_no = 'CO' . time() . random_int(1000, 9999);
+            pdo_query(
+                "INSERT INTO `course_order`
+                    (order_no, user_id, course_id, license_type, amount, pay_status, pay_time, pay_channel, mail_status, counted)
+                 VALUES (?, ?, ?, ?, ?, 1, NOW(), 'point', 0, 0)",
+                $order_no, $user_id, $course_id, $license_type, $point_amount
+            );
+        }
+
+        // 扣积分并记录流水（type=2）
+        $apply = point_apply_change(
+            $user_id,
+            -$point_amount,
+            POINT_LOG_TYPE_COURSE,
+            $order_no,
+            '课件购买：' . (isset($course['title']) ? mb_substr($course['title'], 0, 80) : ('课程#' . $course_id))
+        );
+        if (!$apply['success']) {
+            point_tx_rollback();
+            return ['success' => false, 'message' => $apply['message']];
+        }
+
+        point_tx_commit();
+    } catch (Exception $e) {
+        point_tx_rollback();
+        return ['success' => false, 'message' => '系统繁忙，请稍后再试'];
+    }
+
+    // 事务成功后再做幂等的下载次数刷新 / 通知
+    update_course_download_count($user_id, $course_id);
+    if (function_exists('send_order_feishu_notify')) {
+        send_order_feishu_notify(
+            $course, $user_id, $order_no, $license_type,
+            $point_amount, 'point', $is_upgrade,
+            floatval($course['preview_price']), floatval($course['source_price'])
+        );
+    }
+
+    return [
+        'success' => true,
+        'message' => '支付成功',
+        'order_no' => $order_no,
+        'balance' => $apply['balance'],
+        'point'   => $point_amount,
+    ];
+}
+
+/**
+ * 管理员手动调整某用户的积分余额。
+ *
+ * @param string $admin_id       操作管理员 ID（写入流水备注）
+ * @param string $target_user_id 目标用户
+ * @param int    $delta          调整数（非零整数；负数不可使余额 < 0）
+ * @param string $reason         操作原因
+ * @return array ['success'=>bool, 'message'=>string, 'balance'=>int]
+ */
+function point_admin_adjust($admin_id, $target_user_id, $delta, $reason) {
+    $delta = intval($delta);
+    if ($delta === 0) {
+        return ['success' => false, 'message' => '调整积分必须为非零整数'];
+    }
+    if ($admin_id === '' || $target_user_id === '') {
+        return ['success' => false, 'message' => '参数错误'];
+    }
+    $reason = trim((string)$reason);
+    if ($reason === '') {
+        return ['success' => false, 'message' => '请填写调整原因'];
+    }
+
+    try {
+        point_tx_begin();
+
+        // 用户存在性 & 加锁
+        $balance = point_lock_user($target_user_id);
+        if ($balance === false) {
+            point_tx_rollback();
+            return ['success' => false, 'message' => '目标用户不存在'];
+        }
+        if ($delta < 0 && $balance + $delta < 0) {
+            point_tx_rollback();
+            return ['success' => false, 'message' => '扣减后余额不能为负'];
+        }
+
+        // 备注必须包含管理员 ID 和原因
+        $remark = '管理员调整[admin=' . $admin_id . ']：' . mb_substr($reason, 0, 200);
+        $apply = point_apply_change(
+            $target_user_id,
+            $delta,
+            POINT_LOG_TYPE_ADMIN,
+            $admin_id,
+            $remark
+        );
+        if (!$apply['success']) {
+            point_tx_rollback();
+            return ['success' => false, 'message' => $apply['message']];
+        }
+
+        point_tx_commit();
+        return ['success' => true, 'message' => '调整成功', 'balance' => $apply['balance']];
+    } catch (Exception $e) {
+        point_tx_rollback();
+        return ['success' => false, 'message' => '系统繁忙，请稍后再试'];
     }
 }
 

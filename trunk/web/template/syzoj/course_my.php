@@ -48,23 +48,38 @@
             <div class="row">
               <div class="twelve wide column">
                 <h3 style="margin: 0 0 10px 0; color: #333;">
-                  <?php echo htmlspecialchars($course['title'], ENT_QUOTES, 'UTF-8'); ?>
+                  <?php echo htmlentities($course['title'], ENT_QUOTES, 'UTF-8'); ?>
                 </h3>
                 <div style="color: #666; font-size: 0.9em;">
-                  <span><i class="clock icon"></i> <?php echo $MSG_GET_TIME; ?>: <?php echo htmlspecialchars($course['created_at'], ENT_QUOTES, 'UTF-8'); ?></span>
+                  <span><i class="clock icon"></i> <?php echo $MSG_GET_TIME; ?>: <?php echo htmlentities($course['created_at'], ENT_QUOTES, 'UTF-8'); ?></span>
                   <span style="margin: 0 15px;">|</span>
-                  <?php $price = floatval($course['price']); $is_free = $price == 0; ?>
+                  <?php
+                    $license_map = array(1 => '完整预览版', 2 => '原文件版');
+                    $license_text = isset($license_map[$course['license_type']]) ? $license_map[$course['license_type']] : '历史/未知';
+                    $pay_channel = isset($course['pay_channel']) ? $course['pay_channel'] : '';
+                    $pay_map = array(
+                        'point'  => '积分支付',
+                        'free'   => '免费获取',
+                        'alipay' => '支付宝(历史)',
+                        'wxpay'  => '微信(历史)',
+                    );
+                    $pay_text = isset($pay_map[$pay_channel]) ? $pay_map[$pay_channel] : ($pay_channel ?: '未知');
+                    $point_amount = intval(round(floatval($course['amount'])));
+                    $is_free = $point_amount == 0 || $pay_channel === 'free';
+                  ?>
+                  <span style="color:#1677ff;">
+                    <i class="key icon"></i><?php echo htmlentities($license_text, ENT_QUOTES, 'UTF-8'); ?>
+                  </span>
+                  <span style="margin: 0 15px;">|</span>
                   <?php if ($is_free): ?>
                     <span style="color: #52c41a; font-weight: 600;"><?php echo $MSG_FREE; ?></span>
                   <?php else: ?>
-                    <span style="color: #ff6b6b; font-weight: 600;">¥<?php echo number_format($price, 2); ?></span>
+                    <span style="color: #ff6b6b; font-weight: 600;"><?php echo $point_amount; ?> 积分</span>
                   <?php endif; ?>
                   <span style="margin: 0 15px;">|</span>
-                  <?php if ($course['mail_status'] == 1): ?>
-                    <span style="color: #52c41a;"><i class="checkmark icon"></i> <?php echo $MSG_MAIL_SENT; ?></span>
-                  <?php else: ?>
-                    <span style="color: #52c41a;"><i class="checkmark icon"></i> <?php echo $MSG_ACQUIRED; ?></span>
-                  <?php endif; ?>
+                  <span style="color:#666;">
+                    <i class="credit card icon"></i><?php echo htmlentities($pay_text, ENT_QUOTES, 'UTF-8'); ?>
+                  </span>
                 </div>
               </div>
               <div class="four wide column right aligned">

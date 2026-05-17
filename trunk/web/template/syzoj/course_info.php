@@ -50,13 +50,13 @@
               <?php endif; ?>
               <span style="margin: 0 15px; color: #ddd;">|</span>
               <?php if ($view_preview_price > 0 && $view_source_price > 0): ?>
-                <span style="color: #667eea; font-weight: 600;">预览版：¥<?php echo number_format($view_preview_price, 2); ?></span>
+                <span style="color: #667eea; font-weight: 600;">预览版：<?php echo intval($view_preview_price); ?> 积分</span>
                 <span style="margin: 0 10px; color: #ddd;">/</span>
-                <span style="color: #52c41a; font-weight: 600;">原文件版：¥<?php echo number_format($view_source_price, 2); ?></span>
+                <span style="color: #52c41a; font-weight: 600;">原文件版：<?php echo intval($view_source_price); ?> 积分</span>
               <?php elseif ($view_preview_price > 0): ?>
-                <span style="color: #667eea; font-weight: 600;">预览版：¥<?php echo number_format($view_preview_price, 2); ?></span>
+                <span style="color: #667eea; font-weight: 600;">预览版：<?php echo intval($view_preview_price); ?> 积分</span>
               <?php else: ?>
-                <span style="color: #52c41a; font-weight: 600;">原文件版：¥<?php echo number_format($view_source_price, 2); ?></span>
+                <span style="color: #52c41a; font-weight: 600;">原文件版：<?php echo intval($view_source_price); ?> 积分</span>
               <?php endif; ?>
             <?php else: ?>
               <span style="margin: 0 15px; color: #ddd;">|</span>
@@ -70,44 +70,69 @@
           <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
             <a class="ui teal button" href="loginpage.php">去登录购买</a>
           <?php elseif ($view_has_source_license): ?>
-            <!-- 已购买原文件版：只显示已拥有完整权限 -->
+            <!-- 已拥有原文件版：显示已拥有完整权限 -->
             <div class="ui positive message" style="padding: 15px 20px;">
               <i class="checkmark icon"></i>
               已拥有完整权限（可下载）
             </div>
           <?php elseif ($view_has_preview_license): ?>
-            <!-- 仅购买了预览版：显示升级按钮 -->
-            <?php if ($view_source_price > $view_preview_price): ?>
-            <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1"
-               class="ui large orange button">
-              <i class="arrow up icon"></i> 升级到原文件版 ¥<?php echo number_format($view_upgrade_price, 2); ?>
-            </a>
+            <!-- 仅拥有完整预览版：显示升级或已拥有提示 -->
+            <?php if ($view_has_source_resource): ?>
+              <?php if ($view_source_price > 0): ?>
+                <!-- 原文件版付费：显示升级按钮 -->
+                <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1"
+                   class="ui large orange button">
+                  <i class="arrow up icon"></i> 升级到原文件版 <?php echo intval($view_upgrade_price); ?> 积分
+                </a>
+              <?php elseif ($view_source_price == 0): ?>
+                <!-- 原文件版免费：显示限时免费获取按钮 -->
+                <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1"
+                   class="ui large green button">
+                  <i class="gift icon"></i> 限时免费获取原文件版
+                </a>
+              <?php else: ?>
+                <div class="ui positive message" style="padding: 15px 20px;">
+                  <i class="checkmark icon"></i>
+                  已拥有完整预览权限
+                </div>
+              <?php endif; ?>
             <?php else: ?>
-            <div class="ui positive message" style="padding: 15px 20px;">
-              <i class="checkmark icon"></i>
-              已拥有预览权限
-            </div>
+              <div class="ui positive message" style="padding: 15px 20px;">
+                <i class="checkmark icon"></i>
+                已拥有完整预览权限
+              </div>
             <?php endif; ?>
-          <?php elseif ($view_is_free): ?>
-            <!-- 免费课程：显示免费获取按钮 -->
-            <a href="course_get.php?id=<?php echo $view_course['id']; ?>"
-               class="ui large green button">
-              <i class="gift icon"></i>限时免费获取完整预览版
-            </a>
           <?php else: ?>
-            <!-- 未购买任何权限：显示两个购买按钮 -->
+            <!-- 未购买任何权限：根据价格显示对应按钮 -->
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <?php if ($view_preview_price > 0): ?>
+              <?php if ($view_is_full_preview_free): ?>
+                <!-- 完整预览版免费 -->
+                <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1"
+                   class="ui large green button">
+                  <i class="gift icon"></i>限时免费获取完整预览版
+                </a>
+              <?php elseif ($view_preview_price > 0): ?>
+                <!-- 完整预览版付费 -->
                 <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1"
                    class="ui large primary button">
-                  <i class="eye icon"></i> 解锁完整预览 ¥<?php echo number_format($view_preview_price, 2); ?>
+                  <i class="eye icon"></i> 解锁完整预览 <?php echo intval($view_preview_price); ?> 积分
                 </a>
               <?php endif; ?>
-              <?php if ($view_source_price > 0): ?>
-                <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2"
-                   class="ui large positive button">
-                  <i class="download icon"></i> 解锁原文件下载 ¥<?php echo number_format($view_source_price, 2); ?>
-                </a>
+
+              <?php if ($view_has_source_resource): ?>
+                <?php if ($view_is_source_free): ?>
+                  <!-- 原文件版免费 -->
+                  <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2"
+                     class="ui large green button">
+                    <i class="gift icon"></i>限时免费获取原文件版
+                  </a>
+                <?php elseif ($view_source_price > 0): ?>
+                  <!-- 原文件版付费 -->
+                  <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2"
+                     class="ui large positive button">
+                    <i class="download icon"></i> 解锁原文件下载 <?php echo intval($view_source_price); ?> 积分
+                  </a>
+                <?php endif; ?>
               <?php endif; ?>
             </div>
           <?php endif; ?>
@@ -118,21 +143,23 @@
 
 
   <!-- 权限对比说明模块 -->
-<?php if ($view_preview_price > 0 || $view_source_price > 0): ?>
+<?php if (true): ?> <!-- 始终显示版本对比，包括免费版本 -->
   <div class="ui segment" style="border-radius: 12px; margin-top: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
     <h3 class="ui header" style="color: #333; margin-bottom: 20px;">
       <i class="key icon"></i> 选择适合你的版本
     </h3>
 
-    <div class="ui two column grid">
-      <!-- 预览版 -->
+    <div class="ui <?php echo $view_has_source_resource ? 'two' : 'one'; ?> column grid">
+      <!-- 完整预览版 -->
       <div class="column">
         <div class="ui card" style="width: 100%; border-radius: 10px; border: 2px solid #667eea; <?php if ($view_has_preview_license): ?>opacity: 0.7;<?php endif; ?>">
           <div class="content" style="padding: 20px;">
             <div class="header" style="font-size: 1.3em; margin-bottom: 10px; color: #667eea; display: flex; align-items: center;">
-              <i class="eye icon" style="margin-right: 8px;"></i> 🔵 预览版
+              <i class="eye icon" style="margin-right: 8px;"></i> 🔵 完整预览版
               <?php if ($view_has_preview_license): ?>
                 <div class="ui green label" style="margin-left: auto;">已拥有</div>
+              <?php elseif ($view_is_full_preview_free): ?>
+                <div class="ui green label" style="margin-left: auto;">限时免费</div>
               <?php endif; ?>
             </div>
             <div style="color: #666; margin-bottom: 15px; line-height: 1.6;">
@@ -146,31 +173,50 @@
               适合：仅需要参考内容学习、不需要编辑修改的用户
             </div>
             <div style="font-size: 1.8em; font-weight: 700; color: #667eea; margin-bottom: 5px;">
-              ¥<?php echo number_format($view_preview_price, 2); ?>
+              <?php if ($view_is_full_preview_free): ?>
+                <span style="color: #21ba45;">限时免费</span>
+              <?php else: ?>
+                <?php echo intval($view_preview_price); ?> 积分
+              <?php endif; ?>
             </div>
             <div style="color: #999; font-size: 0.85em;">一次性买断，永久使用</div>
           </div>
-          <?php if (!$view_has_preview_license && !$view_has_source_license && $view_preview_price > 0): ?>
-          <div class="extra content" style="padding: 15px 20px; background: #f8f9ff; border-radius: 0 0 10px 10px; text-align: center;">
-            <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
-              <a class="ui primary button" href="loginpage.php">去登录</a>
-            <?php else: ?>
-              <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1" class="ui primary button">
-                <i class="shopping cart icon"></i> 立即购买预览版
-              </a>
+          <?php if (!$view_has_preview_license && !$view_has_source_license): ?>
+            <?php if ($view_is_full_preview_free): ?>
+              <!-- 免费获取按钮 -->
+              <div class="extra content" style="padding: 15px 20px; background: #f8f9ff; border-radius: 0 0 10px 10px; text-align: center;">
+                <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
+                  <a class="ui primary button" href="loginpage.php">去登录领取</a>
+                <?php else: ?>
+                  <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1" class="ui primary button">
+                    <i class="gift icon"></i> 限时免费获取
+                  </a>
+                <?php endif; ?>
+              </div>
+            <?php elseif ($view_preview_price > 0): ?>
+              <!-- 付费购买按钮 -->
+              <div class="extra content" style="padding: 15px 20px; background: #f8f9ff; border-radius: 0 0 10px 10px; text-align: center;">
+                <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
+                  <a class="ui primary button" href="loginpage.php">去登录购买</a>
+                <?php else: ?>
+                  <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1" class="ui primary button">
+                    <i class="shopping cart icon"></i> 立即购买
+                  </a>
+                <?php endif; ?>
+              </div>
             <?php endif; ?>
-          </div>
           <?php elseif ($view_has_preview_license && !$view_has_source_license): ?>
-          <div class="extra content" style="padding: 15px 20px; background: #f8f9ff; border-radius: 0 0 10px 10px; text-align: center;">
-            <span style="color: #52c41a; font-weight: 600;">
-              <i class="checkmark icon"></i> 已拥有
-            </span>
-          </div>
+            <div class="extra content" style="padding: 15px 20px; background: #f8f9ff; border-radius: 0 0 10px 10px; text-align: center;">
+              <span style="color: #52c41a; font-weight: 600;">
+                <i class="checkmark icon"></i> 已拥有
+              </span>
+            </div>
           <?php endif; ?>
         </div>
       </div>
 
-      <!-- 原文件版 -->
+      <!-- 原文件版（只有存在资源时才显示） -->
+      <?php if ($view_has_source_resource): ?>
       <div class="column">
         <div class="ui card" style="width: 100%; border-radius: 10px; border: 2px solid #52c41a; <?php if ($view_has_source_license): ?>opacity: 0.7;<?php endif; ?>">
           <div class="content" style="padding: 20px;">
@@ -178,12 +224,14 @@
               <i class="download icon" style="margin-right: 8px;"></i> 🟢 原文件版
               <?php if ($view_has_source_license): ?>
                 <div class="ui green label" style="margin-left: auto;">已拥有</div>
+              <?php elseif ($view_is_source_free): ?>
+                <div class="ui green label" style="margin-left: auto;">限时免费</div>
               <?php endif; ?>
             </div>
             <div style="color: #666; margin-bottom: 15px; line-height: 1.6;">
               <div style="font-weight: 600; margin-bottom: 8px;">✅ 包含权益：</div>
               <ul style="margin: 0; padding-left: 20px;">
-                <li>预览版全部权益（完整在线预览）</li>
+                <li>完整预览版全部权益（完整在线预览）</li>
                 <li>可下载课件可编辑原文件</li>
                 <li>可下载教案可编辑原文件</li>
               </ul>
@@ -193,45 +241,82 @@
             </div>
             <div style="font-size: 1.8em; font-weight: 700; color: #52c41a; margin-bottom: 5px;">
               <?php if ($view_has_only_preview): ?>
-                ¥<?php echo number_format($view_upgrade_price, 2); ?> <span style="font-size: 0.5em; color: #999; text-decoration: line-through;">¥<?php echo number_format($view_source_price, 2); ?></span>
+                <?php if ($view_upgrade_price == 0): ?>
+                  <span style="color: #21ba45;">限时免费升级</span>
+                <?php else: ?>
+                  <?php echo intval($view_upgrade_price); ?> 积分 <span style="font-size: 0.5em; color: #999; text-decoration: line-through;"><?php echo intval($view_source_price); ?> 积分</span>
+                <?php endif; ?>
               <?php else: ?>
-                ¥<?php echo number_format($view_source_price, 2); ?>
+                <?php if ($view_is_source_free): ?>
+                  <span style="color: #21ba45;">限时免费</span>
+                <?php else: ?>
+                  <?php echo intval($view_source_price); ?> 积分
+                <?php endif; ?>
               <?php endif; ?>
             </div>
             <div style="color: #999; font-size: 0.85em;">一次性买断，永久使用</div>
           </div>
-          <?php if (!$view_has_source_license && $view_source_price > 0): ?>
-          <div class="extra content" style="padding: 15px 20px; background: #f0fff4; border-radius: 0 0 10px 10px; text-align: center;">
-            <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
-              <a class="ui positive button" href="loginpage.php">去登录</a>
+          <?php if (!$view_has_source_license): ?>
+            <?php if ($view_has_only_preview): ?>
+              <!-- 升级按钮 -->
+              <div class="extra content" style="padding: 15px 20px; background: #f0fff4; border-radius: 0 0 10px 10px; text-align: center;">
+                <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
+                  <a class="ui positive button" href="loginpage.php">去登录升级</a>
+                <?php else: ?>
+                  <?php if ($view_upgrade_price == 0): ?>
+                    <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1" class="ui positive button">
+                      <i class="gift icon"></i> 限时免费升级
+                    </a>
+                  <?php else: ?>
+                    <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1" class="ui positive button">
+                      <i class="arrow up icon"></i> 立即升级 <?php echo intval($view_upgrade_price); ?> 积分
+                    </a>
+                  <?php endif; ?>
+                <?php endif; ?>
+              </div>
             <?php else: ?>
-              <?php if ($view_has_only_preview): ?>
-                <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1" class="ui positive button">
-                  <i class="arrow up icon"></i> 升级到原文件版
-                </a>
-              <?php else: ?>
-                <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2" class="ui positive button">
-                  <i class="shopping cart icon"></i> 立即购买原文件版
-                </a>
+              <!-- 直接购买按钮 -->
+              <?php if ($view_is_source_free): ?>
+                <!-- 免费获取 -->
+                <div class="extra content" style="padding: 15px 20px; background: #f0fff4; border-radius: 0 0 10px 10px; text-align: center;">
+                  <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
+                    <a class="ui positive button" href="loginpage.php">去登录领取</a>
+                  <?php else: ?>
+                    <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2" class="ui positive button">
+                      <i class="gift icon"></i> 限时免费获取
+                    </a>
+                  <?php endif; ?>
+                </div>
+              <?php elseif ($view_source_price > 0): ?>
+                <!-- 付费购买 -->
+                <div class="extra content" style="padding: 15px 20px; background: #f0fff4; border-radius: 0 0 10px 10px; text-align: center;">
+                  <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
+                    <a class="ui positive button" href="loginpage.php">去登录购买</a>
+                  <?php else: ?>
+                    <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2" class="ui positive button">
+                      <i class="shopping cart icon"></i> 立即购买
+                    </a>
+                  <?php endif; ?>
+                </div>
               <?php endif; ?>
             <?php endif; ?>
-          </div>
           <?php elseif ($view_has_source_license): ?>
-          <div class="extra content" style="padding: 15px 20px; background: #f0fff4; border-radius: 0 0 10px 10px; text-align: center;">
-            <span style="color: #52c41a; font-weight: 600;">
-              <i class="checkmark icon"></i> 已拥有
-            </span>
-          </div>
+            <div class="extra content" style="padding: 15px 20px; background: #f0fff4; border-radius: 0 0 10px 10px; text-align: center;">
+              <span style="color: #52c41a; font-weight: 600;">
+                <i class="checkmark icon"></i> 已拥有
+              </span>
+            </div>
           <?php endif; ?>
         </div>
       </div>
+      <?php endif; ?>
     </div>
 
     <!-- 购买建议 -->
     <div style="margin-top: 20px; padding: 15px; background: #fffbeb; border-radius: 8px; border-left: 4px solid #f59e0b;">
       <p style="margin: 0; color: #92400e;">
         💡 <strong>选购指南：</strong>
-        <br>• 仅需要参考学习 → 选择预览版
+        <br>• 仅需要参考学习 → 选择完整预览版
         <br>• 需要下载修改使用 → 选择原文件版
       </p>
     </div>
@@ -271,7 +356,16 @@
         <div>
           <div style="font-weight: 600; color: #d46b08; margin-bottom: 5px;">💡 当前展示的是课件部分内容预览</div>
           <div style="color: #8c5e00; font-size: 0.95em; line-height: 1.6;">
-            购买<strong style="color: #667eea;">预览版</strong>可查看完整内容在线预览，购买<strong style="color: #52c41a;">原文件版</strong>可下载可编辑的完整文件。
+            <?php if ($view_is_full_preview_free): ?>
+              <strong style="color: #667eea;">限时免费获取完整预览版</strong>可查看完整内容在线预览，
+            <?php else: ?>
+              购买<strong style="color: #667eea;">完整预览版</strong>可查看完整内容在线预览，
+            <?php endif; ?>
+            <?php if ($view_is_source_free): ?>
+              <strong style="color: #52c41a;">限时免费获取原文件版</strong>可下载可编辑的完整文件。
+            <?php else: ?>
+              购买<strong style="color: #52c41a;">原文件版</strong>可下载可编辑的完整文件。
+            <?php endif; ?>
           </div>
         </div>
       </div>
@@ -292,7 +386,7 @@
                 </div>
                 <div class="meta" style="color: #999; font-size: 0.9em;">
                   <?php if (!empty($view_courseware_url)): ?>
-                    <i class="eye icon"></i> 
+                    <i class="eye icon"></i>
                     <?php if ($view_has_preview_license): ?>
                       完整预览
                     <?php elseif ($view_has_source_license): ?>
@@ -311,7 +405,7 @@
                   $lock_text = '';
                   if (!$view_has_preview_license && $view_has_full_courseware) {
                     $show_lock = true;
-                    $lock_text = $view_preview_price > 0 ? '完整预览需购买' : '免费';
+                    $lock_text = $view_preview_price > 0 ? '完整预览需购买' : '限时免费';
                   }
                   if (!$view_has_source_license && !empty($view_course['courseware_link'])) {
                     $show_lock = true;
@@ -336,27 +430,36 @@
               </a>
               <?php endif; ?>
             <?php elseif ($view_has_preview_license): ?>
-              <!-- 仅拥有预览版权限：展示查看完整预览按钮，可能有升级按钮 -->
+              <!-- 仅拥有完整预览版权限：展示查看完整预览按钮，可能有升级按钮 -->
               <div style="margin-bottom: 10px;">
                 <?php if (!empty($view_courseware_full_preview_url)): ?>
                 <a href="<?php echo htmlspecialchars($view_courseware_full_preview_url, ENT_QUOTES, 'UTF-8'); ?>"
                    target="_blank" rel="noopener noreferrer" class="ui primary button" style="width: 100%;">
-                  <i class="eye icon"></i> 查看预览版
+                  <i class="eye icon"></i> 查看完整预览版
                 </a>
                 <?php endif; ?>
               </div>
-              <?php if ($view_source_price > 0): ?>
-              <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1"
-                 class="ui orange button" style="width: 100%;">
-                <i class="arrow up icon"></i> 升级到原文件版
-              </a>
+              <?php if ($view_has_source_resource): ?>
+                <?php if ($view_upgrade_price == 0): ?>
+                  <!-- 免费升级 -->
+                  <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1"
+                     class="ui green button" style="width: 100%;">
+                    <i class="gift icon"></i> 限时免费升级到原文件版
+                  </a>
+                <?php elseif ($view_upgrade_price > 0): ?>
+                  <!-- 付费升级 -->
+                  <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1"
+                     class="ui orange button" style="width: 100%;">
+                    <i class="arrow up icon"></i> 升级到原文件版 <?php echo intval($view_upgrade_price); ?> 积分
+                  </a>
+                <?php endif; ?>
               <?php endif; ?>
               <!-- 提示文案 -->
               <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #eaeaea; text-align: center; font-size: 12px; color: #888;">
                 <?php if ($view_source_price > 0): ?>
-                  当前拥有预览版权限，可查看课件完整内容。如需下载编辑，请升级到原文件版
+                  当前拥有完整预览版权限，可查看课件完整内容。如需下载编辑，请升级到原文件版
                 <?php else: ?>
-                  当前拥有预览版权限，可查看课件完整内容
+                  当前拥有完整预览版权限，可查看课件完整内容
                 <?php endif; ?>
               </div>
             <?php else: ?>
@@ -369,15 +472,17 @@
                   </a>
                 <?php endif; ?>
                 <?php if ($view_preview_price > 0 || $view_source_price > 0): ?>
-                  <?php if ($view_preview_price > 0): ?>
+                  <?php if ($view_is_full_preview_free): ?>
+                    <!-- 完整预览版免费 -->
+                    <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1"
+                       class="ui green button">
+                      <i class="gift icon"></i> 限时免费获取预览
+                    </a>
+                  <?php elseif ($view_preview_price > 0): ?>
+                    <!-- 完整预览版付费 -->
                     <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1"
                        class="ui blue button">
-                      <i class="eye icon"></i> 解锁完整预览
-                    </a>
-                  <?php else: ?>
-                    <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2"
-                       class="ui green button">
-                      <i class="download icon"></i> 解锁下载
+                      <i class="eye icon"></i> 解锁完整预览 <?php echo intval($view_preview_price); ?> 积分
                     </a>
                   <?php endif; ?>
                 <?php endif; ?>
@@ -385,11 +490,11 @@
               <!-- 提示文案 -->
               <div style="padding-top: 12px; border-top: 1px solid #eaeaea; text-align: center; font-size: 12px; color: #888;">
                 <?php if ($view_preview_price > 0 && $view_source_price > 0): ?>
-                  当前为免费预览，购买预览版可看完整内容，购买原文件版可下载编辑
+                  当前为免费预览，购买完整预览版可看完整内容，购买原文件版可下载编辑
                 <?php elseif ($view_preview_price > 0): ?>
-                  当前为免费预览，购买预览版可看完整内容
+                  当前为免费预览，购买完整预览版可看完整内容
                 <?php else: ?>
-                  当前为免费预览，购买原文件版可下载编辑
+                  当前为免费预览，<?php echo $view_is_source_free ? '限时免费' : '购买'; ?>原文件版可下载编辑
                 <?php endif; ?>
               </div>
             <?php endif; ?>
@@ -411,7 +516,7 @@
                 </div>
                 <div class="meta" style="color: #999; font-size: 0.9em;">
                   <?php if (!empty($view_lesson_plan_url)): ?>
-                    <i class="eye icon"></i> 
+                    <i class="eye icon"></i>
                     <?php if ($view_has_preview_license): ?>
                       完整预览
                     <?php elseif ($view_has_source_license): ?>
@@ -425,12 +530,12 @@
                 </div>
               </div>
               <div class="four wide column right aligned">
-                <?php 
+                <?php
                   $show_lock = false;
                   $lock_text = '';
                   if (!$view_has_preview_license && $view_has_full_lesson_plan) {
                     $show_lock = true;
-                    $lock_text = $view_preview_price > 0 ? '完整预览需购买' : '免费';
+                    $lock_text = $view_preview_price > 0 ? '完整预览需购买' : '限时免费';
                   }
                   if (!$view_has_source_license && !empty($view_course['lesson_plan_link'])) {
                     $show_lock = true;
@@ -455,27 +560,36 @@
               </a>
               <?php endif; ?>
             <?php elseif ($view_has_preview_license): ?>
-              <!-- 仅拥有预览版权限：展示查看完整预览按钮，可能有升级按钮 -->
+              <!-- 仅拥有完整预览版权限：展示查看完整预览按钮，可能有升级按钮 -->
               <div style="margin-bottom: 10px;">
                 <?php if (!empty($view_lesson_plan_full_preview_url)): ?>
                 <a href="<?php echo htmlspecialchars($view_lesson_plan_full_preview_url, ENT_QUOTES, 'UTF-8'); ?>"
                    target="_blank" rel="noopener noreferrer" class="ui primary button" style="width: 100%;">
-                  <i class="eye icon"></i> 查看预览版
+                  <i class="eye icon"></i> 查看完整预览版
                 </a>
                 <?php endif; ?>
               </div>
-              <?php if ($view_source_price > 0): ?>
-              <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1"
-                 class="ui orange button" style="width: 100%;">
-                <i class="arrow up icon"></i> 升级到原文件版
-              </a>
+              <?php if ($view_has_source_resource): ?>
+                <?php if ($view_upgrade_price == 0): ?>
+                  <!-- 免费升级 -->
+                  <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1"
+                     class="ui green button" style="width: 100%;">
+                    <i class="gift icon"></i> 限时免费升级到原文件版
+                  </a>
+                <?php elseif ($view_upgrade_price > 0): ?>
+                  <!-- 付费升级 -->
+                  <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1"
+                     class="ui orange button" style="width: 100%;">
+                    <i class="arrow up icon"></i> 升级到原文件版 <?php echo intval($view_upgrade_price); ?> 积分
+                  </a>
+                <?php endif; ?>
               <?php endif; ?>
               <!-- 提示文案 -->
               <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #eaeaea; text-align: center; font-size: 12px; color: #888;">
                 <?php if ($view_source_price > 0): ?>
-                  当前拥有预览版权限，可查看教案完整内容。如需下载编辑，请升级到原文件版
+                  当前拥有完整预览版权限，可查看教案完整内容。如需下载编辑，请升级到原文件版
                 <?php else: ?>
-                  当前拥有预览版权限，可查看教案完整内容
+                  当前拥有完整预览版权限，可查看教案完整内容
                 <?php endif; ?>
               </div>
             <?php else: ?>
@@ -488,15 +602,17 @@
                   </a>
                 <?php endif; ?>
                 <?php if ($view_preview_price > 0 || $view_source_price > 0): ?>
-                  <?php if ($view_preview_price > 0): ?>
+                  <?php if ($view_is_full_preview_free): ?>
+                    <!-- 完整预览版免费 -->
+                    <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1"
+                       class="ui green button">
+                      <i class="gift icon"></i> 限时免费获取预览
+                    </a>
+                  <?php elseif ($view_preview_price > 0): ?>
+                    <!-- 完整预览版付费 -->
                     <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1"
                        class="ui blue button">
-                      <i class="eye icon"></i> 解锁完整预览
-                    </a>
-                  <?php else: ?>
-                    <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2"
-                       class="ui green button">
-                      <i class="download icon"></i> 解锁下载
+                      <i class="eye icon"></i> 解锁完整预览 <?php echo intval($view_preview_price); ?> 积分
                     </a>
                   <?php endif; ?>
                 <?php endif; ?>
@@ -504,11 +620,11 @@
               <!-- 提示文案 -->
               <div style="padding-top: 12px; border-top: 1px solid #eaeaea; text-align: center; font-size: 12px; color: #888;">
                 <?php if ($view_preview_price > 0 && $view_source_price > 0): ?>
-                  当前为免费预览，购买预览版可看完整内容，购买原文件版可下载编辑
+                  当前为免费预览，购买完整预览版可看完整内容，购买原文件版可下载编辑
                 <?php elseif ($view_preview_price > 0): ?>
-                  当前为免费预览，购买预览版可看完整内容
+                  当前为免费预览，购买完整预览版可看完整内容
                 <?php else: ?>
-                  当前为免费预览，购买原文件版可下载编辑
+                  当前为免费预览，<?php echo $view_is_source_free ? '限时免费' : '购买'; ?>原文件版可下载编辑
                 <?php endif; ?>
               </div>
             <?php endif; ?>

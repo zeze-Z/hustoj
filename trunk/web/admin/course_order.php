@@ -41,7 +41,7 @@ $stats_sql = "SELECT
 $stats_result = pdo_query($stats_sql);
 $stats = $stats_result[0];
 $total_orders = intval($stats['total_orders']);
-$total_income = floatval($stats['total_income']);
+$total_points = intval($stats['total_income']);
 
 $idsperpage = 25;
 $pages = intval(ceil($ids / $idsperpage));
@@ -86,11 +86,18 @@ $mail_status_map = array(
     2 => '发送失败'
 );
 
-// 定义支付渠道映射
+// 定义支付渠道映射（积分支付为主要渠道；保留 wxpay/alipay 用于兼容历史订单）
 $pay_channel_map = array(
     'free' => '免费',
-    'wxpay' => '微信',
-    'alipay' => '支付宝'
+    'point' => '积分支付',
+    'wxpay' => '微信（历史）',
+    'alipay' => '支付宝（历史）'
+);
+
+// 定义授权类型映射（license_type）
+$license_type_map = array(
+    1 => '完整预览版',
+    2 => '原文件版'
 );
 ?>
 
@@ -101,7 +108,7 @@ $pay_channel_map = array(
 <div class="padding">
     <!-- 筛选条件 -->
     <div style="margin-bottom: 15px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
-        <form method="GET" action="order.php" style="display: inline;">
+        <form method="GET" action="course_order.php" style="display: inline;">
             <label>支付状态：
                 <select name="pay_status" style="padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
                     <option value="-1" <?php echo $pay_status_filter == -1 ? 'selected' : ''; ?>>全部</option>
@@ -110,7 +117,7 @@ $pay_channel_map = array(
                 </select>
             </label>
             <button type="submit" class="ui primary small button">筛选</button>
-            <a href="order.php" class="ui secondary small button">重置</a>
+            <a href="course_order.php" class="ui secondary small button">重置</a>
         </form>
     </div>
 
@@ -119,7 +126,7 @@ $pay_channel_map = array(
         <strong>统计：</strong>
         总订单数：<span style="color: #2185d0;"><?php echo $total_orders; ?></span>
         &nbsp;&nbsp;|&nbsp;&nbsp;
-        总收入：<span style="color: #e64a19; font-weight: bold;">¥<?php echo number_format($total_income, 2); ?></span>
+        总消耗积分：<span style="color: #e64a19; font-weight: bold;"><?php echo number_format($total_points); ?></span>
     </div>
 
     <center>
@@ -129,7 +136,8 @@ $pay_channel_map = array(
                 <td>订单号</td>
                 <td>用户ID</td>
                 <td>课程名称</td>
-                <td>金额</td>
+                <td>授权类型</td>
+                <td>消耗积分</td>
                 <td>支付渠道</td>
                 <td>支付状态</td>
                 <td>邮件状态</td>
@@ -144,15 +152,25 @@ $pay_channel_map = array(
                     : '';
             ?>
             <tr style='height:30px; background: <?php echo $row_bg; ?>;' order_id='<?php echo $row['id'] ?>'>
-                <td><?php echo $row['id'] ?></td>
+                <td><?php echo intval($row['id']) ?></td>
                 <td><?php echo htmlentities($row['order_no'], ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?php echo htmlentities($row['user_id'], ENT_QUOTES, 'UTF-8') ?></td>
-                <td><?php echo htmlentities($row['course_title'], ENT_QUOTES, 'UTF-8') ?></td>
-                <td>¥<?php echo number_format(floatval($row['amount']), 2) ?></td>
-                <td><?php echo isset($pay_channel_map[$row['pay_channel']]) ? $pay_channel_map[$row['pay_channel']] : '-' ?></td>
-                <td><?php echo $pay_status_map[$row['pay_status']] ?></td>
-                <td><?php echo $mail_status_map[$row['mail_status']] ?></td>
-                <td><?php echo $row['created_at'] ?></td>
+                <td><?php echo htmlentities($row['course_title'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
+                <td>
+                    <?php
+                    $lt = isset($row['license_type']) ? intval($row['license_type']) : 0;
+                    if (isset($license_type_map[$lt])) {
+                        echo htmlentities($license_type_map[$lt], ENT_QUOTES, 'UTF-8');
+                    } else {
+                        echo '历史/未知';
+                    }
+                    ?>
+                </td>
+                <td><?php echo intval($row['amount']) ?> 积分</td>
+                <td><?php echo isset($pay_channel_map[$row['pay_channel']]) ? htmlentities($pay_channel_map[$row['pay_channel']], ENT_QUOTES, 'UTF-8') : '-' ?></td>
+                <td><?php echo isset($pay_status_map[$row['pay_status']]) ? htmlentities($pay_status_map[$row['pay_status']], ENT_QUOTES, 'UTF-8') : '-' ?></td>
+                <td><?php echo isset($mail_status_map[$row['mail_status']]) ? htmlentities($mail_status_map[$row['mail_status']], ENT_QUOTES, 'UTF-8') : '-' ?></td>
+                <td><?php echo htmlentities($row['created_at'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?php echo $mail_resend_btn ?></td>
             </tr>
             <?php } ?>
@@ -162,13 +180,13 @@ $pay_channel_map = array(
         <div style="margin-top: 15px;">
             <?php
             if ($page > 1) {
-                echo '<a href="order.php?page=' . ($page - 1) . '&pay_status=' . $pay_status_filter . '" class="ui secondary small button">上一页</a>';
+                echo '<a href="course_order.php?page=' . ($page - 1) . '&pay_status=' . $pay_status_filter . '" class="ui secondary small button">上一页</a>';
             }
             ?>
             <span style="margin: 0 10px;">第 <?php echo $page ?> / <?php echo $pages ?> 页</span>
             <?php
             if ($page < $pages) {
-                echo '<a href="order.php?page=' . ($page + 1) . '&pay_status=' . $pay_status_filter . '" class="ui secondary small button">下一页</a>';
+                echo '<a href="course_order.php?page=' . ($page + 1) . '&pay_status=' . $pay_status_filter . '" class="ui secondary small button">下一页</a>';
             }
             ?>
         </div>

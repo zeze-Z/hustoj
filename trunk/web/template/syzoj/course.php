@@ -108,9 +108,9 @@
                 <?php if ($is_free): ?>
                   <span style="color: #52c41a; font-weight: 600;"><?php echo $MSG_FREE; ?></span>
                 <?php elseif ($preview_price > 0 && $source_price > 0): ?>
-                  <span style="color: #ff6b6b; font-weight: 600;">¥<?php echo number_format($min_price, 2); ?>起</span>
+                  <span style="color: #ff6b6b; font-weight: 600;"><?php echo intval($min_price); ?> 积分起</span>
                 <?php else: ?>
-                  <span style="color: #ff6b6b; font-weight: 600;">¥<?php echo number_format(max($preview_price, $source_price), 2); ?></span>
+                  <span style="color: #ff6b6b; font-weight: 600;"><?php echo intval(max($preview_price, $source_price)); ?> 积分</span>
                 <?php endif; ?>
               </div>
 

@@ -14,7 +14,14 @@
     <div class="ui error message" style="border-radius: 12px;">
       <i class="close icon"></i>
       <div class="header"><?php echo $MSG_ERROR; ?></div>
-      <p><?php echo $view_error; ?></p>
+      <p><?php echo htmlentities($view_error, ENT_QUOTES, 'UTF-8'); ?></p>
+      <?php if (strpos($view_error, '积分') !== false): ?>
+        <p style="margin-top:10px;">
+          <a href="point_index.php" class="ui small orange button">
+            <i class="dollar sign icon"></i>去充值
+          </a>
+        </p>
+      <?php endif; ?>
     </div>
   <?php endif; ?>
 
@@ -23,19 +30,19 @@
     <div class="ui success message" style="border-radius: 12px;">
       <i class="close icon"></i>
       <div class="header"><?php echo $MSG_SUCCESS; ?></div>
-      <p><?php echo $view_success; ?></p>
+      <p><?php echo htmlentities($view_success, ENT_QUOTES, 'UTF-8'); ?></p>
       <p style="margin-top: 10px; color: #666;">
         <i class="spinner loading icon"></i>
         <span id="countdown">3</span> 秒后自动跳转...
       </p>
-      <a href="<?php echo $view_redirect_url; ?>" class="ui large blue button" style="width: 100%; margin-top: 15px;">
+      <a href="<?php echo htmlentities($view_redirect_url, ENT_QUOTES, 'UTF-8'); ?>" class="ui large blue button" style="width: 100%; margin-top: 15px;">
         <i class="arrow right icon"></i> 立即查看课程
       </a>
     </div>
 
     <script>
       var countdown = 3;
-      var redirectUrl = '<?php echo $view_redirect_url; ?>';
+      var redirectUrl = '<?php echo htmlentities($view_redirect_url, ENT_QUOTES, 'UTF-8'); ?>';
       var timer = setInterval(function() {
         countdown--;
         var el = document.getElementById('countdown');
@@ -54,12 +61,12 @@
       <h2 class="ui header" style="margin-bottom: 20px; color: #333;">
         <i class="shopping cart icon"></i>
         <div class="content">
-          <?php echo htmlspecialchars($view_course['title'], ENT_QUOTES, 'UTF-8'); ?>
+          <?php echo htmlentities($view_course['title'], ENT_QUOTES, 'UTF-8'); ?>
           <div class="sub header">
-            <?php echo htmlspecialchars($view_course['subject_name'], ENT_QUOTES, 'UTF-8'); ?>
+            <?php echo htmlentities($view_course['subject_name'], ENT_QUOTES, 'UTF-8'); ?>
             <?php if (!empty($view_license_name)): ?>
               <span class="ui label" style="margin-left: 10px; <?php if ($view_license_type == 1): ?>background: #667eea; color: white;<?php elseif ($view_license_type == 2): ?>background: #52c41a; color: white;<?php else: ?>background: #f59e0b; color: white;<?php endif; ?>">
-                <?php echo $view_license_name; ?>
+                <?php echo htmlentities($view_license_name, ENT_QUOTES, 'UTF-8'); ?>
               </span>
             <?php endif; ?>
           </div>
@@ -73,14 +80,13 @@
             <span style="color: #666;"><i class="clock icon"></i> <?php echo $MSG_LESSON_COUNT; ?>: <?php echo intval($view_course['lesson_count']); ?></span>
           </div>
           <div>
-            <?php if ($view_amount == 0): ?>
-              <span class="ui green label" style="font-size: 1.1em;">
-                <?php echo $MSG_FREE; ?>
-              </span>
+            <?php if (!$view_is_paid): ?>
+              <span class="ui green label" style="font-size: 1.1em;">限时免费</span>
             <?php else: ?>
               <span class="ui red label" style="font-size: 1.1em;">
-                ¥<?php echo number_format($view_amount, 2); ?>
+                <?php echo intval($view_required_points); ?> 积分
               </span>
+              <small style="color:#999;margin-left:6px;">1积分=1元</small>
             <?php endif; ?>
           </div>
         </div>
@@ -93,50 +99,63 @@
           <?php echo $MSG_ALREADY_ACQUIRED_HINT; ?>
         </div>
 
-        <a href="course_info.php?id=<?php echo $view_course['id']; ?>" class="ui large blue button" style="width: 100%; margin-bottom: 20px;">
+        <a href="course_info.php?id=<?php echo intval($view_course['id']); ?>" class="ui large blue button" style="width: 100%; margin-bottom: 20px;">
           <i class="eye icon"></i><?php echo $MSG_VIEW_FULL_COURSEWARE; ?>
         </a>
+      <?php else: ?>
+
+      <!-- 积分余额信息（仅付费时显示） -->
+      <?php if ($view_is_paid): ?>
+        <div style="margin-bottom: 20px; padding: 15px; background: #fff7e6; border-radius: 8px; border:1px solid #ffe1a8;">
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div>当前积分余额：<strong><?php echo intval($view_user_balance); ?></strong> 积分</div>
+            <div>本次需消耗：<strong style="color:#d4380d;"><?php echo intval($view_required_points); ?></strong> 积分</div>
+            <div>支付后余额：<strong><?php echo intval($view_balance_after); ?></strong> 积分</div>
+          </div>
+          <?php if (!$view_enough_balance): ?>
+            <div style="margin-top:10px;color:#d4380d;">
+              <i class="warning circle icon"></i>积分不足，请先充值后再购买。
+              <a href="point_index.php" class="ui small orange button" style="margin-left:10px;">
+                <i class="dollar sign icon"></i>去充值
+              </a>
+            </div>
+          <?php endif; ?>
+        </div>
       <?php endif; ?>
 
       <!-- 获取表单 -->
       <form class="ui form" method="POST" action="course_get.php">
-        <input type="hidden" name="postkey" value="<?php echo isset($_SESSION[$OJ_NAME.'_'.'postkey']) ? $_SESSION[$OJ_NAME.'_'.'postkey'] : ''; ?>">
-        <input type="hidden" name="course_id" value="<?php echo $view_course['id']; ?>">
-        <input type="hidden" name="license_type" value="<?php echo $view_license_type; ?>">
+        <input type="hidden" name="postkey" value="<?php echo isset($_SESSION[$OJ_NAME.'_'.'postkey']) ? htmlentities($_SESSION[$OJ_NAME.'_'.'postkey'], ENT_QUOTES, 'UTF-8') : ''; ?>">
+        <input type="hidden" name="course_id" value="<?php echo intval($view_course['id']); ?>">
+        <input type="hidden" name="license_type" value="<?php echo intval($view_license_type); ?>">
         <?php if ($view_is_upgrade): ?>
         <input type="hidden" name="upgrade" value="1">
         <?php endif; ?>
 
-        <!-- 免费课程：显示确认获取按钮 -->
         <?php if (!$view_is_paid): ?>
+          <!-- 免费课程：显示确认获取按钮 -->
           <button type="submit" class="ui large green button" style="width: 100%;">
             <i class="gift icon"></i>
-            确认获取<?php echo str_replace("(升级)", "", $view_license_name); ?>
+            <?php if ($view_is_upgrade): ?>
+              确认免费升级到原文件版
+            <?php else: ?>
+              确认免费获取<?php echo htmlentities(str_replace("(升级)", "", $view_license_name), ENT_QUOTES, 'UTF-8'); ?>
+            <?php endif; ?>
           </button>
         <?php else: ?>
-          <!-- 付费课程：支付方式选择 -->
-          <div class="field" style="margin-bottom: 20px;">
-            <label style="font-weight: 600; color: #333;">
-              <i class="credit card icon"></i> <?php echo $MSG_PAYMENT_METHOD; ?>
-            </label>
-            <div class="ui form" style="display: flex; gap: 15px; margin-top: 10px;">
-              <div class="field" style="flex: 1;">
-                <div class="ui radio checkbox">
-                <input type="radio" name="pay_channel" value="alipay" id="alipay" checked>
-                <label for="alipay">
-                    <i class="paypal icon" style="color: #1678ff;"></i> 支付宝
-                </label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <button type="submit" class="ui large primary button" style="width: 100%;">
+          <!-- 积分支付：确认消耗按钮 -->
+          <button type="submit" class="ui large primary button" style="width: 100%;" <?php if (!$view_enough_balance): ?>disabled<?php endif; ?>>
             <i class="<?php echo $view_is_upgrade ? 'arrow up' : 'shopping cart'; ?> icon"></i>
-            <?php echo $view_is_upgrade ? '立即支付升级费用' : '立即购买' . $view_license_name; ?>
+            <?php if ($view_is_upgrade): ?>
+              确认消耗 <?php echo intval($view_required_points); ?> 积分升级到原文件版
+            <?php else: ?>
+              确认消耗 <?php echo intval($view_required_points); ?> 积分获取<?php echo htmlentities($view_license_name, ENT_QUOTES, 'UTF-8'); ?>
+            <?php endif; ?>
           </button>
+          <p style="text-align:center;margin-top:10px;color:#999;font-size:12px;">1积分 = 1元；积分通过<a href="point_index.php">我的积分</a>页面兑换。</p>
         <?php endif; ?>
       </form>
+      <?php endif; ?>
     </div>
   <?php endif; ?>
 

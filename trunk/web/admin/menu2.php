@@ -258,6 +258,20 @@
                     </div>
                 </div>
 
+    <?php if (isset($_SESSION[$OJ_NAME.'_'.'administrator'])){?>
+                <div class="btn-group" role="menu">
+                    <button type="button" class="btn btn-secondary dropdown-toggle btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="glyphicon glyphicon-usd"></i> 积分管理 <span class="caret"></span>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item btn-sm" href="point_card_list.php" target="main" title="充值卡管理"><i class="glyphicon glyphicon-credit-card"></i> 充值卡管理</a>
+                        <a class="dropdown-item btn-sm" href="point_card_list.php?status=1" target="main" title="兑换记录"><i class="glyphicon glyphicon-ok"></i> 兑换记录</a>
+                        <a class="dropdown-item btn-sm" href="point_log_list.php" target="main" title="积分流水"><i class="glyphicon glyphicon-list"></i> 积分流水</a>
+                        <a class="dropdown-item btn-sm" href="point_adjust.php" target="main" title="手动调整积分"><i class="glyphicon glyphicon-edit"></i> 手动调整</a>
+                    </div>
+                </div>
+    <?php }?>
+
                 <div class="btn-group" role="menu">
                     <button type="button" class="btn btn-secondary dropdown-toggle btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class="glyphicon glyphicon-question-sign"></i> <?php echo $MSG_PROBLEM."-".$MSG_ADMIN ?> <span class="caret"></span>

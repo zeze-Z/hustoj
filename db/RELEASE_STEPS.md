@@ -1,6 +1,6 @@
 # OJ 功能发布步骤
 
-## 当前版本：V1.8（2026-05-16）
+## 当前版本：V1.9（2026-06-07）
 
 ---
 
@@ -18,6 +18,7 @@
 | V1.6 | 2026-05-11 | 注册功能优化：用户角色选择、邮箱唯一性校验、教师/学生区分通知 |
 | V1.7 | 2026-05-12 | 成都TOP50中小学数据入库 |
 | V1.8 | 2026-05-16 | 课件列表页添加课程下载次数展示 |
+| V1.9 | 2026-06-07 | 平台积分充值与课件积分支付体系 |
 
 ---
 
@@ -63,6 +64,9 @@ mysql -u root -p jol < db/V1.7_20260512_add_chengdu_schools.sql
 
 # 9. 课件列表页添加课程下载次数展示
 mysql -u root -p jol < db/V1.8_20260516_course_download_count.sql
+
+# 10. 平台积分充值与课件积分支付体系（V1.9）
+mysql -u root -p jol < db/V1.9_20260607_point_payment.sql
 ```
 
 **验证：**
@@ -113,6 +117,35 @@ SELECT COUNT(*) FROM jol.school WHERE code LIKE 'chengdu_%';  -- 预期：56（�
 -- 课件下载次数功能
 DESCRIBE jol.course download_count;     -- int(11), Default: 0, Comment: 课程下载次数
 DESCRIBE jol.course_order counted;       -- tinyint(1), Default: 0, Comment: 是否已计入下载次数
+
+-- 平台积分充值与课件积分支付体系（V1.9）
+-- users 表已转为 InnoDB 并新增 point 字段
+SELECT ENGINE FROM information_schema.TABLES
+ WHERE TABLE_SCHEMA='jol' AND TABLE_NAME='users';   -- 预期：InnoDB
+DESCRIBE jol.users point;                            -- int(11), NOT NULL, Default: 0, Comment: 平台积分余额
+
+-- 新建积分相关表
+SHOW TABLES IN jol LIKE 'point_%';
+-- 预期输出：point_card, point_log
+
+-- point_card 关键字段与索引
+DESCRIBE jol.point_card;
+SHOW INDEX FROM jol.point_card WHERE Key_name='uk_card_no';        -- UNIQUE
+SHOW INDEX FROM jol.point_card WHERE Key_name='idx_batch_no';
+SHOW INDEX FROM jol.point_card WHERE Key_name='idx_status';
+SHOW INDEX FROM jol.point_card WHERE Key_name='idx_redeem_user_id';
+
+-- point_log 关键字段与索引
+DESCRIBE jol.point_log;
+SHOW INDEX FROM jol.point_log WHERE Key_name='idx_user_id';
+SHOW INDEX FROM jol.point_log WHERE Key_name='idx_type';
+SHOW INDEX FROM jol.point_log WHERE Key_name='idx_create_time';
+
+-- 引擎与字符集检查
+SELECT TABLE_NAME, ENGINE, TABLE_COLLATION
+  FROM information_schema.TABLES
+ WHERE TABLE_SCHEMA='jol' AND TABLE_NAME IN ('point_card','point_log');
+-- 预期：ENGINE=InnoDB, TABLE_COLLATION=utf8mb4_*
 ```
 
 ---
@@ -176,6 +209,12 @@ ssh judge@<生产机IP> "sudo service php-fpm restart"
 | 9 | 学生交卷-全对 | exam_do.php 提交正确答案 | 正确率 100% + exam_result 有记录 |
 | 10 | 学生交卷-全错 | exam_do.php 提交错误答案 | 正确率 0% |
 | 11 | 重复交卷 | 同一试卷交卷两次 | exam_result 更新而非重复插入 |
+| 12 | 积分字段默认值 | `SELECT MIN(point), MAX(point) FROM users;` | 历史用户 point 全部为 0 |
+| 13 | 充值卡兑换 | 用户输入有效卡号卡密兑换 | users.point +10、point_card.status=1、point_log 新增一条 type=1 记录 |
+| 14 | 重复兑换防御 | 已兑换卡密再次兑换 | 失败提示且不重复加积分 |
+| 15 | 课件积分购买 | 用户余额足购买课件 | users.point 扣减、course_order 写入、point_log 新增 type=2 记录 |
+| 16 | 积分不足购买 | 余额不足购买课件 | 拒绝并提示充值，不写订单 |
+| 17 | 管理员手动调整 | 后台对用户加/扣分 | users.point 变化、point_log type=3 记录 remark |
 
 ---
 
@@ -232,3 +271,19 @@ db/V1.0_20260317_db_init.sql          # 基础OJ初始化
 db/V1.5_20260507_add_problem_level.sql       # 题目难度等级 level
 db/V1.8_20260516_course_download_count.sql  # 课件下载次数功能
 ```
+
+---
+
+## V1.9 发布文件清单（平台积分充值与课件积分支付体系）
+
+### 数据库
+```
+db/V1.9_20260607_point_payment.sql   # users 转 InnoDB + point 字段；新建 point_card / point_log 表
+```
+
+### 新增文件（随后续任务补充）
+> 本次 V1.9 包含多个开发任务，下列文件清单将由后续任务完成时补全；
+> 这里仅列出数据库变更，应用层文件清单以最终发布前的实际改动为准。
+
+### 修改文件（随后续任务补充）
+> 同上，待应用层任务完成后补全（如：用户菜单/我的积分页/课件支付改造/后台积分管理等）。
