@@ -5,6 +5,7 @@
  */
 
 require_once('./include/db_info.inc.php');
+require_once('./include/my_func.inc.php');
 require_once('./include/course_mail.php');
 
 /**
@@ -43,6 +44,8 @@ function log_notify($message) {
     $timestamp = date('Y-m-d H:i:s');
     file_put_contents($log_file, "[$timestamp] $message\n", FILE_APPEND);
 }
+
+
 
 // 获取请求参数（支付宝可能是POST或GET）
 $params = array_merge($_GET, $_POST);
@@ -111,6 +114,9 @@ try {
         $trade_no, $out_trade_no
     );
     log_notify("订单状态已更新: out_trade_no=$out_trade_no");
+
+    // 更新下载次数
+    update_course_download_count($order['user_id'], $order['course_id']);
 
     // 查询课程信息
     $course_sql = "SELECT * FROM course WHERE id = ?";

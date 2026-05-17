@@ -114,6 +114,12 @@
                 <?php endif; ?>
               </div>
 
+              <!-- 下载次数 -->
+              <div class="meta" style="color: #999; font-size: 0.85em; margin-top: 5px;">
+                <i class="download icon"></i>
+                已下载 <?php echo intval($course['download_count']); ?> 次
+              </div>
+
               <!-- 购买状态 -->
               <div style="margin-top: 12px;">
                 <?php if ($is_purchased): ?>

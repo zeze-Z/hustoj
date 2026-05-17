@@ -6,6 +6,7 @@
 
 require_once('./include/db_info.inc.php');
 require_once('./include/const.inc.php');
+require_once('./include/my_func.inc.php');
 require_once('./include/cache_start.php');
 require_once('./include/setlang.php');
 require_once("./include/set_get_key.php");
@@ -197,6 +198,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $redirect_url = 'course_info.php?id=' . $course_id;
         }
 
+
+
         // 免费课程：创建单条权限记录（简化版：只需一条记录）
         if ($is_free_course && !$is_upgrade) {
             // 检查是否已获取过任意权限
@@ -217,6 +220,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 // 发送飞书通知
                 send_order_feishu_notify($course, $user_id, $order_no, 1, 0, 'free', false, $preview_price, $source_price);
+
+                // 更新下载次数
+                update_course_download_count($user_id, $course_id);
 
                 set_success_and_redirect($course_id, $MSG_GET_SUCCESS);
             }
@@ -273,6 +279,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             "UPDATE course_order SET pay_status = 1, pay_time = NOW(), pay_channel = 'free' WHERE id = ?",
                             $order['id']
                         );
+                        // 更新下载次数
+                        update_course_download_count($user_id, $course_id);
                         set_success_and_redirect($course_id, $MSG_GET_SUCCESS);
                     } else {
                         $error_message = "请选择支付方式";
@@ -311,6 +319,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                     // 发送飞书通知
                     send_order_feishu_notify($course, $user_id, $order_no, $license_type, 0, 'free', false, $preview_price, $source_price);
+
+                    // 更新下载次数
+                    update_course_download_count($user_id, $course_id);
 
                     set_success_and_redirect($course_id, $MSG_GET_SUCCESS);
                 }

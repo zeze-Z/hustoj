@@ -1,6 +1,6 @@
 # OJ 功能发布步骤
 
-## 当前版本：V1.6（2026-05-11）
+## 当前版本：V1.8（2026-05-16）
 
 ---
 
@@ -17,6 +17,7 @@
 | V1.4 | 2026-05-07 | 题目增加level字段（难度等级1-5） |
 | V1.6 | 2026-05-11 | 注册功能优化：用户角色选择、邮箱唯一性校验、教师/学生区分通知 |
 | V1.7 | 2026-05-12 | 成都TOP50中小学数据入库 |
+| V1.8 | 2026-05-16 | 课件列表页添加课程下载次数展示 |
 
 ---
 
@@ -59,6 +60,9 @@ mysql -u root -p jol < db/V1.6_2026-05-11_register_role.sql
 
 # 8. 成都TOP50中小学数据入库
 mysql -u root -p jol < db/V1.7_20260512_add_chengdu_schools.sql
+
+# 9. 课件列表页添加课程下载次数展示
+mysql -u root -p jol < db/V1.8_20260516_course_download_count.sql
 ```
 
 **验证：**
@@ -105,6 +109,10 @@ DESCRIBE jol.users role;         -- varchar(20), Default: student, Comment: 用�
 
 -- 成都TOP50中小学数据入库
 SELECT COUNT(*) FROM jol.school WHERE code LIKE 'chengdu_%';  -- 预期：56（原有6条+新增50条）
+
+-- 课件下载次数功能
+DESCRIBE jol.course download_count;     -- int(11), Default: 0, Comment: 课程下载次数
+DESCRIBE jol.course_order counted;       -- tinyint(1), Default: 0, Comment: 是否已计入下载次数
 ```
 
 ---
@@ -209,6 +217,9 @@ trunk/web/admin/problem_list.php  # 题型筛选
 trunk/web/admin/menu2.php         # 管理菜单
 trunk/web/lang/cn.php             # 语言包
 trunk/web/template/syzoj/problem.php # 前端选择题展示
+trunk/web/course_get.php          # 添加下载计数逻辑
+trunk/web/course_notify.php       # 支付回调添加下载计数
+trunk/web/template/syzoj/course.php # 前端展示下载次数
 ```
 
 ### 数据库
@@ -219,4 +230,5 @@ db/V1.0_20260317_db_init.sql          # 基础OJ初始化
  db/V1.1_20260419_choice_and_exam.sql  # 合并SQL：选择题 + 考试模块
  db/V1.2_20260501_courseware_preview_upgrade.sql  # 课件预览付费改造
 db/V1.5_20260507_add_problem_level.sql       # 题目难度等级 level
+db/V1.8_20260516_course_download_count.sql  # 课件下载次数功能
 ```
