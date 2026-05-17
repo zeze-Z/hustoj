@@ -75,7 +75,7 @@
           <div>
             <?php if ($view_amount == 0): ?>
               <span class="ui green label" style="font-size: 1.1em;">
-                <?php echo $MSG_FREE; ?>
+                限时免费
               </span>
             <?php else: ?>
               <span class="ui red label" style="font-size: 1.1em;">
@@ -111,7 +111,11 @@
         <?php if (!$view_is_paid): ?>
           <button type="submit" class="ui large green button" style="width: 100%;">
             <i class="gift icon"></i>
-            确认获取<?php echo str_replace("(升级)", "", $view_license_name); ?>
+            <?php if ($view_is_upgrade): ?>
+              确认限时免费升级到原文件版
+            <?php else: ?>
+              确认限时免费获取<?php echo str_replace("(升级)", "", $view_license_name); ?>
+            <?php endif; ?>
           </button>
         <?php else: ?>
           <!-- 付费课程：支付方式选择 -->
@@ -133,7 +137,11 @@
 
           <button type="submit" class="ui large primary button" style="width: 100%;">
             <i class="<?php echo $view_is_upgrade ? 'arrow up' : 'shopping cart'; ?> icon"></i>
-            <?php echo $view_is_upgrade ? '立即支付升级费用' : '立即购买' . $view_license_name; ?>
+            <?php if ($view_is_upgrade): ?>
+              立即支付升级费用 ¥<?php echo number_format($view_amount, 2); ?>
+            <?php else: ?>
+              立即购买<?php echo $view_license_name; ?> ¥<?php echo number_format($view_amount, 2); ?>
+            <?php endif; ?>
           </button>
         <?php endif; ?>
       </form>

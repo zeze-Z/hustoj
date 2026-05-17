@@ -19,20 +19,53 @@ if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
 
 $user_id = $_SESSION[$OJ_NAME . '_' . 'user_id'];
 $course_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-$license_type = isset($_GET['type']) ? intval($_GET['type']) : 2;
+$license_type = isset($_GET['type']) ? intval($_GET['type']) : 1; // 默认完整预览版
 $is_upgrade = isset($_GET['upgrade']) ? intval($_GET['upgrade']) : 0;
-
-if (!in_array($license_type, [1, 2])) {
-    $license_type = 2;
-}
-
-if ($is_upgrade && $license_type != 2) {
-    $is_upgrade = 0;
-}
 
 $error_message = '';
 $success_message = '';
 $redirect_url = '';
+
+// 参数合法性校验
+if (!in_array($license_type, [1, 2])) {
+    $license_type = 1; // 非法值默认完整预览版
+}
+
+// 升级只能是升级到原文件版
+if ($is_upgrade && $license_type != 2) {
+    $is_upgrade = 0;
+}
+
+// 基础参数校验
+if ($course_id <= 0) {
+    $error_message = $MSG_COURSE_NOT_AVAILABLE;
+} else {
+    // 获取用户权限和课程信息（统一使用公共函数）
+    $permission = get_user_course_permission($user_id, $course_id);
+    $course = $permission['course'];
+
+    // 课程不存在或已下架
+    if (empty($course)) {
+        $error_message = $MSG_COURSE_NOT_AVAILABLE;
+    } else {
+        // 升级购买校验
+        if ($is_upgrade) {
+            if (!$permission['has_full_preview']) {
+                $error_message = "升级失败：您还未拥有完整预览版权限";
+            } elseif ($permission['has_source']) {
+                $error_message = "您已经拥有原文件版权限，无需重复升级";
+            } elseif ($permission['upgrade_price'] <= 0) {
+                $error_message = "升级失败：价格计算错误";
+            }
+        } else {
+            // 正常购买校验：检查是否已经拥有对应权限
+            if (($license_type == 1 && $permission['has_full_preview']) ||
+                ($license_type == 2 && $permission['has_source'])) {
+                $error_message = "您已经拥有该版本权限，无需重复获取";
+            }
+        }
+    }
+}
 
 /**
  * 支付宝 RSA2 签名函数
@@ -129,201 +162,122 @@ function initiate_alipay_payment($order, $course) {
     return $form;
 }
 
+/**
+ * 发送飞书订单通知（移到POST外面，避免重复定义）
+ */
+function send_order_feishu_notify($course, $user_id, $order_no, $license_type, $amount, $pay_channel, $is_upgrade, $preview_price, $source_price) {
+    if (!file_exists('./include/feishu_notify.php')) {
+        return;
+    }
+    require_once('./include/feishu_notify.php');
+
+    $license_text = '';
+    if ($is_upgrade) {
+        $license_text = '原文件版(升级)';
+    } else {
+        switch ($license_type) {
+            case 1: $license_text = '完整预览版'; break;
+            case 2: $license_text = '原文件版'; break;
+            default: $license_text = '完整版'; break;
+        }
+    }
+
+    $is_free = ($amount == 0);
+    $pay_text = $pay_channel === 'free' ? '免费' : ($pay_channel === 'alipay' ? '支付宝' : $pay_channel);
+    $amount_text = $is_free ? '免费' : '¥' . number_format($amount, 2);
+
+    $content = "**课程名称**：{$course['title']}\n"
+             . "**用户ID**：{$user_id}\n"
+             . "**订单号**：{$order_no}\n"
+             . "**权限类型**：{$license_text}\n"
+             . "**支付金额**：{$amount_text}\n"
+             . "**支付方式**：{$pay_text}";
+
+    feishu_notify('课程订单通知', $content, 'info');
+}
+
+function set_success_and_redirect($course_id, $success_msg) {
+    global $success_message, $redirect_url;
+    $success_message = $success_msg;
+    $redirect_url = 'course_info.php?id=' . $course_id;
+}
+
 // 处理POST请求（获取课程或发起支付）
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     require_once('./include/check_post_key.php');
 
     $course_id = isset($_POST['course_id']) ? intval($_POST['course_id']) : 0;
     $pay_channel = isset($_POST['pay_channel']) ? trim($_POST['pay_channel']) : '';
-    $license_type = isset($_POST['license_type']) ? intval($_POST['license_type']) : 2;
+    $license_type = isset($_POST['license_type']) ? intval($_POST['license_type']) : 1; // 默认完整预览版
     $is_upgrade = isset($_POST['upgrade']) ? intval($_POST['upgrade']) : 0;
 
+    // 参数合法性校验
     if (!in_array($license_type, [1, 2])) {
-        $license_type = 2;
+        $license_type = 1;
     }
 
     if ($is_upgrade && $license_type != 2) {
         $is_upgrade = 0;
     }
 
-    // 查询课程信息
-    $course_sql = "SELECT * FROM course WHERE id = ? AND status = 1";
-    $course_result = pdo_query($course_sql, $course_id);
-
-    if (empty($course_result)) {
+    if ($course_id <= 0) {
         $error_message = $MSG_COURSE_NOT_AVAILABLE;
     } else {
-        $course = $course_result[0];
-        $preview_price = floatval($course['preview_price']);
-        $source_price = floatval($course['source_price']);
-        $is_free_course = ($preview_price == 0 && $source_price == 0);
+        // 获取课程和用户权限信息
+        $permission = get_user_course_permission($user_id, $course_id);
+        $course = $permission['course'];
 
-        /**
-         * 发送飞书订单通知
-         */
-        function send_order_feishu_notify($course, $user_id, $order_no, $license_type, $amount, $pay_channel, $is_upgrade, $preview_price, $source_price) {
-            if (!file_exists('./include/feishu_notify.php')) {
-                return;
-            }
-            require_once('./include/feishu_notify.php');
-
-            $license_text = '';
-            if ($is_upgrade) {
-                $license_text = '原文件版(升级)';
-            } else {
-                switch ($license_type) {
-                    case 1: $license_text = '预览版'; break;
-                    case 2: $license_text = '原文件版'; break;
-                    default: $license_text = '完整版'; break;
-                }
-            }
-
-            $is_free = ($preview_price == 0 && $source_price == 0);
-            $pay_text = $pay_channel === 'free' ? '免费' : ($pay_channel === 'alipay' ? '支付宝' : $pay_channel);
-            $amount_text = $is_free ? '免费' : '¥' . number_format($amount, 2);
-
-            $content = "**课程名称**：{$course['title']}\n"
-                     . "**用户ID**：{$user_id}\n"
-                     . "**订单号**：{$order_no}\n"
-                     . "**权限类型**：{$license_text}\n"
-                     . "**支付金额**：{$amount_text}\n"
-                     . "**支付方式**：{$pay_text}";
-
-            feishu_notify('课程订单通知', $content, 'info');
-        }
-
-        function set_success_and_redirect($course_id, $success_msg) {
-            global $success_message, $redirect_url;
-            $success_message = $success_msg;
-            $redirect_url = 'course_info.php?id=' . $course_id;
-        }
-
-
-
-        // 免费课程：创建单条权限记录（简化版：只需一条记录）
-        if ($is_free_course && !$is_upgrade) {
-            // 检查是否已获取过任意权限
-            $check_sql = "SELECT id FROM course_order WHERE user_id = ? AND course_id = ? AND pay_status = 1";
-            $check_result = pdo_query($check_sql, $user_id, $course_id);
-
-            if (!empty($check_result)) {
-                set_success_and_redirect($course_id, $MSG_GET_SUCCESS);
-            } else {
-                $order_no = 'CO' . time() . rand(1000, 9999);
-
-                // 创建一条预览版权限记录（免费课程只给预览版权限，以后可以升级到原文件版）
-                pdo_query(
-                    "INSERT INTO course_order (order_no, user_id, course_id, license_type, amount, pay_status, pay_time, pay_channel, mail_status)
-                     VALUES (?, ?, ?, 1, 0, 1, NOW(), 'free', 0)",
-                    $order_no, $user_id, $course_id
-                );
-
-                // 发送飞书通知
-                send_order_feishu_notify($course, $user_id, $order_no, 1, 0, 'free', false, $preview_price, $source_price);
-
-                // 更新下载次数
-                update_course_download_count($user_id, $course_id);
-
-                set_success_and_redirect($course_id, $MSG_GET_SUCCESS);
-            }
+        if (empty($course)) {
+            $error_message = $MSG_COURSE_NOT_AVAILABLE;
         } else {
-            // 付费课程或升级购买
-            if ($is_upgrade) {
-                $check_sql = "SELECT id FROM course_order WHERE user_id = ? AND course_id = ? AND license_type = 1 AND pay_status = 1";
-                $check_result = pdo_query($check_sql, $user_id, $course_id);
-                if (empty($check_result)) {
-                    $error_message = "升级失败：您还未购买预览版权限";
-                } else {
-                    $amount = $source_price - $preview_price;
-                    if ($amount <= 0) {
-                        $error_message = "升级失败：价格计算错误";
-                    }
-                    $license_name = "原文件版(升级)";
-                }
-            } else {
-                switch ($license_type) {
-                    case 1:
-                        $amount = $preview_price;
-                        $license_name = "预览版";
-                        break;
-                    case 2:
-                    default:
-                        $amount = $source_price;
-                        $license_name = "原文件版";
-                        break;
-                }
-            }
-
+            // 计算应付金额（统一使用公共函数）
+            $amount = calculate_course_price($course, $license_type, $is_upgrade);
             $is_paid = $amount > 0;
 
-            // 检查是否已获取过该类型权限
-            $order_sql = "SELECT * FROM course_order WHERE user_id = ? AND course_id = ? AND license_type = ?";
-            $order_result = pdo_query($order_sql, $user_id, $course_id, $license_type);
+            // 检查是否已经拥有对应权限
+            $has_permission = ($license_type == 1 && $permission['has_full_preview']) ||
+                              ($license_type == 2 && $permission['has_source']);
 
-            if (!empty($order_result)) {
-                $order = $order_result[0];
-                if ($order['pay_status'] == 1) {
-                    set_success_and_redirect($course_id, $MSG_ALREADY_ACQUIRED_HINT);
-                } else {
-                    // 订单未支付，复用已有订单发起支付
-                    if ($is_paid && !empty($pay_channel)) {
-                        $pay_form = initiate_alipay_payment($order, $course);
-                        if ($pay_form) {
-                            echo $pay_form;
-                            exit();
-                        } else {
-                            $error_message = "支付系统未配置，请联系管理员";
-                        }
-                    } else if (!$is_paid) {
-                        pdo_query(
-                            "UPDATE course_order SET pay_status = 1, pay_time = NOW(), pay_channel = 'free' WHERE id = ?",
-                            $order['id']
-                        );
-                        // 更新下载次数
-                        update_course_download_count($user_id, $course_id);
-                        set_success_and_redirect($course_id, $MSG_GET_SUCCESS);
-                    } else {
-                        $error_message = "请选择支付方式";
-                    }
-                }
+            if ($has_permission) {
+                set_success_and_redirect($course_id, $MSG_ALREADY_ACQUIRED_HINT);
             } else {
-                $order_no = 'CO' . time() . rand(1000, 9999);
+                // 准备订单信息
+                $order_info = array(
+                    'pay_channel' => $is_paid ? $pay_channel : 'free',
+                    'amount' => $amount,
+                    'is_upgrade' => $is_upgrade
+                );
 
-                if ($is_paid) {
-                    // 付费课程，创建待支付订单
-                    pdo_query(
-                        "INSERT INTO course_order (order_no, user_id, course_id, license_type, amount, pay_status, pay_time, pay_channel, mail_status)
-                         VALUES (?, ?, ?, ?, ?, 0, NULL, 'alipay', 0)",
-                        $order_no, $user_id, $course_id, $license_type, $amount
-                    );
+                // 调用统一授权处理（免费直接授予权限，付费创建待支付订单）
+                $grant_result = grant_course_license($user_id, $course_id, $license_type, $order_info);
 
-                    // 发起支付宝支付
-                    $new_order = array(
-                        'order_no' => $order_no,
-                        'amount' => $amount
-                    );
-                    $pay_form = initiate_alipay_payment($new_order, $course);
-                    if ($pay_form) {
-                        echo $pay_form;
-                        exit();
-                    } else {
-                        $error_message = "支付系统未配置，请联系管理员";
-                    }
+                if (!$grant_result['success']) {
+                    $error_message = $grant_result['message'];
                 } else {
-                    // 免费课程
-                    pdo_query(
-                        "INSERT INTO course_order (order_no, user_id, course_id, license_type, amount, pay_status, pay_time, pay_channel, mail_status)
-                         VALUES (?, ?, ?, ?, 0, 1, NOW(), 'free', 0)",
-                        $order_no, $user_id, $course_id, $license_type
-                    );
+                    $order_no = $grant_result['order_no'];
 
-                    // 发送飞书通知
-                    send_order_feishu_notify($course, $user_id, $order_no, $license_type, 0, 'free', false, $preview_price, $source_price);
-
-                    // 更新下载次数
-                    update_course_download_count($user_id, $course_id);
-
-                    set_success_and_redirect($course_id, $MSG_GET_SUCCESS);
+                    if ($is_paid) {
+                        // 付费订单：发起支付宝支付
+                        if (empty($pay_channel)) {
+                            $error_message = "请选择支付方式";
+                        } else {
+                            // 查询订单信息用于支付
+                            $order = array(
+                                'order_no' => $order_no,
+                                'amount' => $amount
+                            );
+                            $pay_form = initiate_alipay_payment($order, $course);
+                            if ($pay_form) {
+                                echo $pay_form;
+                                exit();
+                            } else {
+                                $error_message = "支付系统未配置，请联系管理员";
+                            }
+                        }
+                    } else {
+                        // 免费获取成功
+                        set_success_and_redirect($course_id, $MSG_GET_SUCCESS);
+                    }
                 }
             }
         }
@@ -332,57 +286,38 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 // GET请求：查询课程信息
 if ($course_id > 0 && empty($error_message) && empty($success_message)) {
-    $sql = "SELECT c.*, s.name as subject_name
-            FROM course c
-            INNER JOIN course_subject s ON c.subject_id = s.id
-            WHERE c.id = ? AND c.status = 1";
-    $result = pdo_query($sql, $course_id);
+    // 从公共函数返回结果中获取数据，避免重复查询
+    $preview_price = $permission['full_preview_price'];
+    $source_price = $permission['source_price'];
 
-    if (empty($result)) {
-        $error_message = $MSG_COURSE_NOT_AVAILABLE;
+    // 价格计算
+    if ($is_upgrade) {
+        $amount = $permission['upgrade_price'];
+        $license_name = "原文件版(升级)";
     } else {
-        $course = $result[0];
-        $preview_price = floatval($course['preview_price']);
-        $source_price = floatval($course['source_price']);
-
-        // 升级购买校验
-        if ($is_upgrade) {
-            // 检查是否已拥有预览版权限
-            $check_sql = "SELECT id FROM course_order WHERE user_id = ? AND course_id = ? AND license_type = 1 AND pay_status = 1";
-            $check_result = pdo_query($check_sql, $user_id, $course_id);
-            if (empty($check_result)) {
-                $error_message = "升级失败：您还未购买预览版权限";
-            } else {
-                // 计算差价
-                $amount = $source_price - $preview_price;
-                if ($amount <= 0) {
-                    $error_message = "升级失败：价格计算错误";
-                }
-                $license_name = "原文件版(升级)";
-            }
-        } else {
-            // 正常购买价格计算
-            switch ($license_type) {
-                case 1:
-                    $amount = $preview_price;
-                    $license_name = "预览版";
-                    break;
-                case 2:
-                default:
-                    $amount = $source_price;
-                    $license_name = "原文件版";
-                    break;
-            }
+        switch ($license_type) {
+            case 1:
+                $amount = $preview_price;
+                $license_name = "完整预览版";
+                break;
+            case 2:
+            default:
+                $amount = $source_price;
+                $license_name = "原文件版";
+                break;
         }
-        $is_paid = $amount > 0;
+    }
+    $is_paid = $amount > 0;
 
-        // 检查是否已成功获取该类型权限（pay_status = 1）
+    // 检查是否已成功获取该类型权限（已经在参数校验中做过，这里直接从permission获取）
+    $is_acquired = ($license_type == 1 && $permission['has_full_preview']) ||
+                   ($license_type == 2 && $permission['has_source']);
+
+    // 如果已获取，查询订单信息用于重发邮件
+    if ($is_acquired) {
         $order_sql = "SELECT * FROM course_order WHERE user_id = ? AND course_id = ? AND license_type = ? AND pay_status = 1";
         $order_result = pdo_query($order_sql, $user_id, $course_id, $license_type);
-        $is_acquired = !empty($order_result);
-
-        // 如果已获取，获取订单信息用于重发邮件
-        if ($is_acquired) {
+        if (!empty($order_result)) {
             $order = $order_result[0];
         }
     }

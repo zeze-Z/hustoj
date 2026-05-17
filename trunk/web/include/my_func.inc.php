@@ -701,12 +701,216 @@ function update_course_download_count($user_id, $course_id) {
     // 检查该用户对该课程是否已经计过数
     $check_counted_sql = "SELECT id FROM course_order WHERE user_id = ? AND course_id = ? AND counted = 1 AND pay_status = 1";
     $check_counted_result = pdo_query($check_counted_sql, $user_id, $course_id);
-    
+
     if (empty($check_counted_result)) {
         // 未计数过，更新下载次数
         pdo_query("UPDATE course SET download_count = download_count + 1 WHERE id = ?", $course_id);
         // 标记该用户的所有该课程订单为已计数
         pdo_query("UPDATE course_order SET counted = 1 WHERE user_id = ? AND course_id = ? AND pay_status = 1", $user_id, $course_id);
+    }
+}
+
+/**
+ * 获取用户对课程的所有权限状态
+ * @param int $user_id 用户ID（未登录传0）
+ * @param int $course_id 课程ID
+ * @return array 权限状态集合
+ */
+function get_user_course_permission($user_id, $course_id) {
+    global $OJ_NAME;
+
+    $permission = [
+        'is_login' => $user_id > 0,
+        'has_full_preview' => false,
+        'has_source' => false,
+        'can_upgrade' => false,
+        'has_source_resource' => false,
+        'is_full_preview_free' => false,
+        'is_source_free' => false,
+        'full_preview_price' => 0,
+        'source_price' => 0,
+        'upgrade_price' => 0,
+        'course' => null
+    ];
+
+    // 查询课程信息
+    $course_sql = "SELECT c.*, s.name as subject_name
+                   FROM course c
+                   INNER JOIN course_subject s ON c.subject_id = s.id
+                   WHERE c.id = ? AND c.status = 1";
+    $course_result = pdo_query($course_sql, $course_id);
+
+    if (empty($course_result)) {
+        return $permission;
+    }
+
+    $course = $course_result[0];
+    $permission['course'] = $course;
+    $permission['full_preview_price'] = floatval($course['preview_price']);
+    $permission['source_price'] = floatval($course['source_price']);
+    $permission['is_full_preview_free'] = $permission['full_preview_price'] == 0;
+    $permission['is_source_free'] = $permission['source_price'] == 0;
+    $permission['has_source_resource'] = !empty($course['courseware_link']) || !empty($course['lesson_plan_link']);
+
+    // 未登录用户不查询权限
+    if (!$permission['is_login']) {
+        return $permission;
+    }
+
+    // 查询用户拥有的权限
+    $order_sql = "SELECT license_type FROM course_order
+                  WHERE user_id = ? AND course_id = ? AND pay_status = 1";
+    $order_result = pdo_query($order_sql, $user_id, $course_id);
+
+    foreach ($order_result as $order) {
+        if ($order['license_type'] == 1) {
+            $permission['has_full_preview'] = true;
+        } elseif ($order['license_type'] == 2) {
+            $permission['has_source'] = true;
+        }
+    }
+
+    // 拥有原文件版自动拥有预览版权限
+    if ($permission['has_source']) {
+        $permission['has_full_preview'] = true;
+    }
+
+    // 计算是否可以升级
+    if ($permission['has_full_preview'] && !$permission['has_source'] && $permission['source_price'] > 0) {
+        $permission['upgrade_price'] = $permission['source_price'] - $permission['full_preview_price'];
+        if ($permission['upgrade_price'] < 0) {
+            $permission['upgrade_price'] = 0;
+        }
+        $permission['can_upgrade'] = true;
+    }
+
+    return $permission;
+}
+
+/**
+ * 计算课程应付金额
+ * @param array $course 课程信息
+ * @param int $license_type 权限类型 1=完整预览版 2=原文件版
+ * @param bool $is_upgrade 是否是升级购买
+ * @return float 应付金额
+ */
+function calculate_course_price($course, $license_type, $is_upgrade = false) {
+    $preview_price = floatval($course['preview_price']);
+    $source_price = floatval($course['source_price']);
+
+    if ($is_upgrade && $license_type == 2) {
+        // 升级购买，计算差价
+        $price = $source_price - $preview_price;
+        return $price > 0 ? $price : 0;
+    } elseif ($license_type == 1) {
+        return $preview_price;
+    } else {
+        return $source_price;
+    }
+}
+
+/**
+ * 统一授予用户课程权限
+ * @param int $user_id 用户ID
+ * @param int $course_id 课程ID
+ * @param int $license_type 权限类型 1=完整预览版 2=原文件版
+ * @param array $order_info 订单信息（可选：order_no, pay_channel, amount, is_upgrade）
+ * @return array 结果：['success' => bool, 'message' => string, 'order_no' => string]
+ */
+function grant_course_license($user_id, $course_id, $license_type, $order_info = []) {
+    global $OJ_NAME;
+
+    // 默认值
+    $order_no = isset($order_info['order_no']) ? $order_info['order_no'] : 'CO' . time() . rand(1000, 9999);
+    $pay_channel = isset($order_info['pay_channel']) ? $order_info['pay_channel'] : 'free';
+    $amount = isset($order_info['amount']) ? floatval($order_info['amount']) : 0;
+    $is_upgrade = isset($order_info['is_upgrade']) ? boolval($order_info['is_upgrade']) : false;
+
+    // 查询课程信息
+    $course_sql = "SELECT * FROM course WHERE id = ? AND status = 1";
+    $course_result = pdo_query($course_sql, $course_id);
+
+    if (empty($course_result)) {
+        return ['success' => false, 'message' => '课程不存在或已下架'];
+    }
+
+    $course = $course_result[0];
+
+    // 检查是否已经拥有该权限
+    $check_sql = "SELECT id FROM course_order
+                  WHERE user_id = ? AND course_id = ? AND license_type = ? AND pay_status = 1";
+    $check_result = pdo_query($check_sql, $user_id, $course_id, $license_type);
+
+    if (!empty($check_result)) {
+        return ['success' => true, 'message' => '您已经拥有该权限', 'order_no' => $order_no];
+    }
+
+    // 升级购买的特殊检查
+    if ($is_upgrade && $license_type == 2) {
+        // 检查是否拥有预览版权限
+        $preview_check_sql = "SELECT id FROM course_order
+                              WHERE user_id = ? AND course_id = ? AND license_type = 1 AND pay_status = 1";
+        $preview_check_result = pdo_query($preview_check_sql, $user_id, $course_id);
+
+        if (empty($preview_check_result)) {
+            return ['success' => false, 'message' => '升级失败：您还未拥有完整预览版权限'];
+        }
+    }
+
+    try {
+        // 检查是否有未支付的相同类型订单
+        $existing_order_sql = "SELECT id, order_no FROM course_order
+                               WHERE user_id = ? AND course_id = ? AND license_type = ? AND pay_status = 0";
+        $existing_order_result = pdo_query($existing_order_sql, $user_id, $course_id, $license_type);
+
+        if (!empty($existing_order_result)) {
+            // 复用已有未支付订单
+            $existing_order = $existing_order_result[0];
+            $order_no = $existing_order['order_no'];
+
+            if ($amount == 0) {
+                // 免费订单直接标记为已支付
+                pdo_query("UPDATE course_order SET pay_status = 1, pay_time = NOW(), pay_channel = ? WHERE id = ?",
+                         $pay_channel, $existing_order['id']);
+
+                // 更新下载次数
+                update_course_download_count($user_id, $course_id);
+
+                // 发送飞书通知
+                if (function_exists('send_order_feishu_notify')) {
+                    send_order_feishu_notify($course, $user_id, $order_no, $license_type, $amount, $pay_channel, $is_upgrade,
+                                           floatval($course['preview_price']), floatval($course['source_price']));
+                }
+
+                return ['success' => true, 'message' => '权限获取成功', 'order_no' => $order_no];
+            } else {
+                // 付费订单返回现有订单号用于支付
+                return ['success' => true, 'message' => '订单已存在，可继续支付', 'order_no' => $order_no];
+            }
+        }
+
+        // 创建新订单
+        pdo_query("INSERT INTO course_order
+                  (order_no, user_id, course_id, license_type, amount, pay_status, pay_time, pay_channel, mail_status, counted)
+                  VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, 0, 0)",
+                 $order_no, $user_id, $course_id, $license_type, $amount, $amount == 0 ? 1 : 0, $pay_channel);
+
+        // 免费订单直接处理后续逻辑
+        if ($amount == 0) {
+            // 更新下载次数
+            update_course_download_count($user_id, $course_id);
+
+            // 发送飞书通知
+            if (function_exists('send_order_feishu_notify')) {
+                send_order_feishu_notify($course, $user_id, $order_no, $license_type, $amount, $pay_channel, $is_upgrade,
+                                       floatval($course['preview_price']), floatval($course['source_price']));
+            }
+        }
+
+        return ['success' => true, 'message' => $amount == 0 ? '权限获取成功' : '订单创建成功', 'order_no' => $order_no];
+
+    } catch (Exception $e) {
+        return ['success' => false, 'message' => '系统错误：' . $e->getMessage()];
     }
 }
 

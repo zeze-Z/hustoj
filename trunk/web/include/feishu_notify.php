@@ -14,6 +14,7 @@
  */
 function feishu_notify($title, $content, $level = 'info') {
     global $OJ_NAME, $FEISHU_WEBHOOK_URL;
+    $server_ip = gethostbyname(gethostname());
 
     // 未配置 webhook 则静默跳过
     if (empty($FEISHU_WEBHOOK_URL)) {
@@ -37,7 +38,7 @@ function feishu_notify($title, $content, $level = 'info') {
         'card' => [
             'config' => ['wide_screen_mode' => true],
             'header' => [
-                'title' => ['tag' => 'plain_text', 'content' => "[$OJ_NAME] $title"],
+                'title' => ['tag' => 'plain_text', 'content' => "[$OJ_NAME|$server_ip] $title"],
                 'template' => $color,
             ],
             'elements' => [
