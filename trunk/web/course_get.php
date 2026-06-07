@@ -17,7 +17,7 @@ if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
     exit();
 }
 
-$user_id = $_SESSION[$OJ_NAME . '_' . 'user_id'];
+$user_id = $_SESSION[$OJ_NAME.'_'.'user_id'];
 $course_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $license_type = isset($_GET['type']) ? intval($_GET['type']) : 1; // 默认完整预览版
 $is_upgrade = isset($_GET['upgrade']) ? intval($_GET['upgrade']) : 0;

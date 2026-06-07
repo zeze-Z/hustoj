@@ -71,6 +71,7 @@
             <a class="ui teal button" href="loginpage.php">去登录购买</a>
           <?php elseif ($view_has_source_license): ?>
             <!-- 已拥有原文件版：显示已拥有完整权限 -->
+            <!-- 已拥有原文件版：显示已拥有完整权限 -->
             <div class="ui positive message" style="padding: 15px 20px;">
               <i class="checkmark icon"></i>
               已拥有完整权限（可下载）
@@ -602,6 +603,14 @@
                   </a>
                 <?php endif; ?>
                 <?php if ($view_preview_price > 0 || $view_source_price > 0): ?>
+                  <?php if ($view_is_full_preview_free): ?>
+                    <!-- 完整预览版免费 -->
+                    <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1"
+                       class="ui green button">
+                      <i class="gift icon"></i> 限时免费获取预览
+                    </a>
+                  <?php elseif ($view_preview_price > 0): ?>
+                    <!-- 完整预览版付费 -->
                   <?php if ($view_is_full_preview_free): ?>
                     <!-- 完整预览版免费 -->
                     <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1"

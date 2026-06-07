@@ -702,6 +702,7 @@ function update_course_download_count($user_id, $course_id) {
     $check_counted_sql = "SELECT id FROM course_order WHERE user_id = ? AND course_id = ? AND counted = 1 AND pay_status = 1";
     $check_counted_result = pdo_query($check_counted_sql, $user_id, $course_id);
 
+
     if (empty($check_counted_result)) {
         // 未计数过，更新下载次数
         pdo_query("UPDATE course SET download_count = download_count + 1 WHERE id = ?", $course_id);
