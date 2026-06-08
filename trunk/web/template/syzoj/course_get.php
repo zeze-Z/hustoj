@@ -4,7 +4,7 @@
 
   <!-- 返回按钮 -->
   <div style="margin-bottom: 15px;">
-    <a href="course.php" class="ui small grey button">
+    <a href="<?php echo !empty($view_course) ? 'course_info.php?id=' . intval($view_course['id']) : 'course.php'; ?>" class="ui small grey button">
       <i class="left arrow icon"></i><?php echo $MSG_BACK; ?>
     </a>
   </div>
@@ -83,10 +83,17 @@
             <?php if (!$view_is_paid): ?>
               <span class="ui green label" style="font-size: 1.1em;">限时免费</span>
             <?php else: ?>
-              <span class="ui red label" style="font-size: 1.1em;">
-                <?php echo intval($view_required_points); ?> 积分
-              </span>
-              <small style="color:#999;margin-left:6px;">1积分=1元</small>
+              <?php if ($view_is_upgrade): ?>
+                <span class="ui red label" style="font-size: 1.1em;">
+                  补差价 <?php echo intval($view_required_points); ?> 积分
+                </span>
+                <small style="color:#999;margin-left:6px;">原价 <?php echo intval($view_source_price); ?>，已抵扣 <?php echo intval($view_upgrade_deduct_points); ?></small>
+              <?php else: ?>
+                <span class="ui red label" style="font-size: 1.1em;">
+                  <?php echo intval($view_required_points); ?> 积分
+                </span>
+                <small style="color:#999;margin-left:6px;">1积分=1元</small>
+              <?php endif; ?>
             <?php endif; ?>
           </div>
         </div>
@@ -107,9 +114,21 @@
       <!-- 积分余额信息（仅付费时显示） -->
       <?php if ($view_is_paid): ?>
         <div style="margin-bottom: 20px; padding: 15px; background: #fff7e6; border-radius: 8px; border:1px solid #ffe1a8;">
+          <?php if ($view_is_upgrade): ?>
+            <div style="margin-bottom: 12px; padding: 10px 12px; background: #fff; border-radius: 6px; border: 1px solid #ffe1a8;">
+              <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">
+                <i class="info circle icon"></i> 升级抵扣明细
+              </div>
+              <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;color:#666;font-size:0.95em;">
+                <div>原文件版原价：<strong><?php echo intval($view_source_price); ?></strong> 积分</div>
+                <div>已拥有完整预览版抵扣：<strong style="color:#21ba45;">-<?php echo intval($view_upgrade_deduct_points); ?></strong> 积分</div>
+                <div>本次补差价：<strong style="color:#d4380d;"><?php echo intval($view_required_points); ?></strong> 积分</div>
+              </div>
+            </div>
+          <?php endif; ?>
           <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;">
             <div>当前积分余额：<strong><?php echo intval($view_user_balance); ?></strong> 积分</div>
-            <div>本次需消耗：<strong style="color:#d4380d;"><?php echo intval($view_required_points); ?></strong> 积分</div>
+            <div><?php echo $view_is_upgrade ? '本次补差价' : '本次需消耗'; ?>：<strong style="color:#d4380d;"><?php echo intval($view_required_points); ?></strong> 积分</div>
             <div>支付后余额：<strong><?php echo intval($view_balance_after); ?></strong> 积分</div>
           </div>
           <?php if (!$view_enough_balance): ?>
@@ -147,7 +166,7 @@
           <button type="submit" class="ui large primary button" style="width: 100%;" <?php if (!$view_enough_balance): ?>disabled<?php endif; ?>>
             <i class="<?php echo $view_is_upgrade ? 'arrow up' : 'shopping cart'; ?> icon"></i>
             <?php if ($view_is_upgrade): ?>
-              确认消耗 <?php echo intval($view_required_points); ?> 积分升级到原文件版
+              确认补差价 <?php echo intval($view_required_points); ?> 积分升级到原文件版
             <?php else: ?>
               确认消耗 <?php echo intval($view_required_points); ?> 积分获取<?php echo htmlentities($view_license_name, ENT_QUOTES, 'UTF-8'); ?>
             <?php endif; ?>

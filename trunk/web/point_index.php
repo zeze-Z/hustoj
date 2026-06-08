@@ -2,7 +2,7 @@
 /**
  * 我的积分中心
  *  - 展示余额、发卡网充值入口、兑换表单
- *  - 展示积分流水与课件购买记录
+ *  - 展示统一的积分流水（含课件购买、可直接跳转课件详情）
  */
 
 require_once('./include/db_info.inc.php');
@@ -46,35 +46,38 @@ $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $per_page = 20;
 $offset = ($page - 1) * $per_page;
 
-$where_sql = "WHERE user_id = ?";
+// 流水主表 LEFT JOIN 课件订单 + 课件标题：
+//   - type=2 (课件购买) 时 relation_id 是 order_no，可关联到 course_order
+//   - 其他类型不会命中 JOIN，course_* 字段为 NULL
+$where_sql = "WHERE pl.user_id = ?";
 $params = [$user_id];
 if ($type_filter > 0) {
-    $where_sql .= " AND type = ?";
+    $where_sql .= " AND pl.type = ?";
     $params[] = $type_filter;
 }
 
-$count_rows = pdo_query("SELECT COUNT(*) AS total FROM point_log $where_sql", $params);
+$count_rows = pdo_query("SELECT COUNT(*) AS total FROM point_log pl $where_sql", $params);
 $total = isset($count_rows[0]['total']) ? intval($count_rows[0]['total']) : 0;
 $total_pages = $total > 0 ? (int)ceil($total / $per_page) : 0;
 
-$logs_sql = "SELECT id, change_point, balance, type, relation_id, remark, create_time
-             FROM point_log $where_sql
-             ORDER BY id DESC
-             LIMIT $per_page OFFSET $offset";
+$logs_sql = "SELECT pl.id, pl.change_point, pl.balance, pl.type, pl.relation_id,
+                    pl.remark, pl.create_time,
+                    co.course_id    AS co_course_id,
+                    co.license_type AS co_license_type,
+                    co.pay_channel  AS co_pay_channel,
+                    c.title         AS co_course_title
+               FROM point_log pl
+          LEFT JOIN course_order co
+                 ON pl.type = " . POINT_LOG_TYPE_COURSE . "
+                AND pl.relation_id = co.order_no
+                AND co.user_id = pl.user_id
+          LEFT JOIN course c
+                 ON c.id = co.course_id
+              $where_sql
+           ORDER BY pl.id DESC
+              LIMIT $per_page OFFSET $offset";
 $view_logs = pdo_query($logs_sql, $params);
 if (!is_array($view_logs)) $view_logs = [];
-
-// 已购买课件（不再使用 c.price，统一使用 course_order.amount / license_type / pay_channel）
-$courses_sql = "SELECT co.order_no, co.course_id, co.license_type, co.pay_channel,
-                       co.amount, co.pay_status, co.pay_time, co.created_at,
-                       c.title AS course_title
-                  FROM course_order co
-                  INNER JOIN course c ON co.course_id = c.id
-                 WHERE co.user_id = ? AND co.pay_status = 1
-                 ORDER BY co.id DESC
-                 LIMIT 50";
-$view_courses = pdo_query($courses_sql, $user_id);
-if (!is_array($view_courses)) $view_courses = [];
 
 $view_user_id         = $user_id;
 $view_type_filter     = $type_filter;
