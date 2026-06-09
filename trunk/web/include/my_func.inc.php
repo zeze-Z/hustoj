@@ -721,7 +721,7 @@ function get_user_course_permission($user_id, $course_id) {
     global $OJ_NAME;
 
     $permission = [
-        'is_login' => $user_id > 0,
+        'is_login' => !empty($user_id),
         'has_full_preview' => false,
         'has_source' => false,
         'can_upgrade' => false,
