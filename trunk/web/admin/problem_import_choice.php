@@ -123,7 +123,10 @@ if (isset($_POST['do_import'])) {
                     $options = [];
                     if ($problem_type == 'judge') {
                         // 判断题自动生成选项
-                        $options = ['A' => '正确', 'B' => '错误'];
+                        $options = [
+                            ['label' => 'A', 'content' => '正确'],
+                            ['label' => 'B', 'content' => '错误']
+                        ];
                     } else {
                         if ($optA === '' || $optB === '') {
                             $errors[] = "第{$row_num}行：单选/多选题至少需要填写选项A和B";
@@ -131,11 +134,11 @@ if (isset($_POST['do_import'])) {
                             $row_num++;
                             continue;
                         }
-                        if ($optA !== '') $options['A'] = $optA;
-                        if ($optB !== '') $options['B'] = $optB;
-                        if ($optC !== '') $options['C'] = $optC;
-                        if ($optD !== '') $options['D'] = $optD;
-                        if ($optE !== '') $options['E'] = $optE;
+                        if ($optA !== '') $options[] = ['label' => 'A', 'content' => $optA];
+                        if ($optB !== '') $options[] = ['label' => 'B', 'content' => $optB];
+                        if ($optC !== '') $options[] = ['label' => 'C', 'content' => $optC];
+                        if ($optD !== '') $options[] = ['label' => 'D', 'content' => $optD];
+                        if ($optE !== '') $options[] = ['label' => 'E', 'content' => $optE];
                     }
                     $options_json = json_encode($options, JSON_UNESCAPED_UNICODE);
 

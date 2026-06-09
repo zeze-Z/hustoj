@@ -73,9 +73,18 @@ $postfix = "";
 $filter_sql = "";
 $limit_sql = "";
 $order_by = " order by problem_id ";
-if (isset($_GET['search']) && trim($_GET['search']) != "") {
-    $search = "%" . ($_GET['search']) . "%";
-    $filter_sql = " ( title like ? or source like ?)";
+
+// 提前获取学校过滤条件，用于后续拼接
+$school_filter = getProblemSchoolFilter();
+
+if (isset($_GET['source']) && trim($_GET['source']) != "") {
+    $search = "%" . trim($_GET['source']) . "%";
+    $filter_sql = " source like ? ";
+    $limit_sql = " LIMIT " . ($page - 1) * $page_cnt . "," . $page_cnt;
+    $postfix = "&source=" . urlencode($_GET['source']);
+} else if (isset($_GET['search']) && trim($_GET['search']) != "") {
+    $search = "%" . trim($_GET['search']) . "%";
+    $filter_sql = " ( title like ? or source like ?) ";
     $limit_sql = " LIMIT " . ($page - 1) * $page_cnt . "," . $page_cnt;
     $postfix = "&search=" . urlencode($_GET['search']);
 } else if (isset($_GET['list']) && trim($_GET['list'] != "")) {
@@ -144,13 +153,16 @@ if (isset($_SESSION[$OJ_NAME . '_' . 'administrator'])) {  //all problems
  * 统计总页数，获取当前页的问题数据
  */
 pdo_query("SET sort_buffer_size = 1024*1024");   // Out of sort memory, consider increasing server sort buffer size
-// 添加学校过滤条件，仅显示编程题，非编程题只在竞赛中显示
-$school_filter = getProblemSchoolFilter();
+// 添加题目类型过滤条件，仅显示编程题，非编程题只在竞赛中显示
 $filter_sql .= " AND problem_type = 'programming' ";
 $sql = "select `problem_id`,`title`,`source`,`submit`,`accepted`,defunct FROM problem A WHERE $filter_sql $school_filter $order_by $limit_sql ";
 $count_sql = "select count(1) from problem where  $filter_sql $school_filter ";
 //echo htmlentities( $sql);
-if (isset($_GET['search']) && trim($_GET['search']) != "") {
+if (isset($_GET['source']) && trim($_GET['source']) != "") {
+    $total = pdo_query($count_sql, $search);
+    $cnt = $total[0][0] / $page_cnt;
+    $result = pdo_query($sql, $search);
+} else if (isset($_GET['search']) && trim($_GET['search']) != "") {
     $total = pdo_query($count_sql, $search, $search);
     $cnt = $total[0][0] / $page_cnt;
     $result = pdo_query($sql, $search, $search);

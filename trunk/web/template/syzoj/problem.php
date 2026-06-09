@@ -235,8 +235,20 @@ document.addEventListener('keydown', function(e) {
   <?php }?>
   <?php
     $problem_type = $row['problem_type'];
-    $options = json_decode($row['options'], true);
-    if ($problem_type != 'programming' && !empty($options)) {
+    $options_raw = json_decode($row['options'], true);
+    if ($problem_type != 'programming' && !empty($options_raw)) {
+      // 兼容两种格式：扁平 {"A":"选项内容",...} 和结构化 [{"label":"A","content":"选项内容"},...]
+      $options_normalized = [];
+      $first_val = reset($options_raw);
+      if (is_array($first_val) && isset($first_val['label'])) {
+        // 结构化格式，直接使用
+        $options_normalized = $options_raw;
+      } else {
+        // 扁平键值格式，转换为结构化
+        foreach ($options_raw as $key => $val) {
+          $options_normalized[] = ['label' => $key, 'content' => $val];
+        }
+      }
   ?>
   <div class="row">
       <div class="column">
@@ -251,14 +263,14 @@ document.addEventListener('keydown', function(e) {
                   <input type="hidden" name="pid" value="<?php echo $pid ?>">
                   <?php } ?>
                   <input type="hidden" name="problem_type" value="<?php echo $problem_type ?>">
-                  <?php foreach ($options as $option) { ?>
+                  <?php foreach ($options_normalized as $opt) { ?>
                   <div style="margin-bottom: 10px;">
                       <label style="font-weight: normal; cursor: pointer;">
                           <input type="<?php echo $problem_type == 'choice_multi' ? 'checkbox' : 'radio' ?>"
                                  name="<?php echo $problem_type == 'choice_multi' ? 'answer[]' : 'answer' ?>"
-                                 value="<?php echo $option['label'] ?>"
+                                 value="<?php echo htmlentities($opt['label'], ENT_QUOTES, 'UTF-8') ?>"
                                  style="margin-right: 8px;">
-                          <strong><?php echo $option['label'] ?>.</strong> <?php echo $option['content'] ?>
+                          <strong><?php echo htmlentities($opt['label'], ENT_QUOTES, 'UTF-8') ?>.</strong> <?php echo htmlentities($opt['content'], ENT_QUOTES, 'UTF-8') ?>
                       </label>
                   </div>
                   <?php } ?>

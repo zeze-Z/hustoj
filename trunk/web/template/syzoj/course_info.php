@@ -462,10 +462,10 @@
   <div class="ui segment" style="border-radius: 12px; margin-top: 20px; background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border: 1px solid #667eea30;">
     <div style="text-align: center; padding: 20px;">
       <div style="font-size: 1.3em; margin-bottom: 10px;">
-        🎁 有优质课件资源想分享售卖？
+        🎁 有优质课件资源，欢迎联系我们，助您变现！
       </div>
       <div style="color: #555; margin-bottom: 15px;">
-        欢迎教师入驻！我们提供平台支持，收益分成。
+        平台优质流量➕垂直精准客群🟰课件精准投放。
       </div>
       <div style="font-size: 1.1em;">
         <i class="qq icon" style="color: #12b7f5;"></i>

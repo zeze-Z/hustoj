@@ -76,7 +76,7 @@ if (!$result) {
         $view_category .= "<a class='ui label' style='display: inline-block; margin:6px; padding: 8px 16px; background: {$color_val}15; color: {$color_val}; border: 1px solid {$color_val}30; font-size: 0.95em; transition: all 0.2s; cursor: pointer;'
             onmouseover=\"this.style.background='{$color_val}25'; this.style.transform='scale(1.05)';\"
             onmouseout=\"this.style.background='{$color_val}15'; this.style.transform='scale(1)';\"
-            href='problemset.php?search=" . htmlentities(urlencode($cat), ENT_QUOTES, 'utf-8') . "'>" . htmlentities($cat, ENT_QUOTES, 'utf-8') . "</a> ";
+            href='problemset.php?source=" . htmlentities(urlencode($cat), ENT_QUOTES, 'utf-8') . "'>" . htmlentities($cat, ENT_QUOTES, 'utf-8') . "</a> ";
     }
 
     $view_category .= "</div>";
