@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = point_admin_adjust($admin_id, $target_user, $delta, $reason);
     $msg_type = $result['success'] ? 'success' : 'error';
     if ($result['success']) {
-        $msg = "调整成功，{$target_user} 当前余额：" . intval($result['balance']);
+        $msg = "调整成功，用户名（用户ID）：{$target_user}，当前余额：" . intval($result['balance']);
     } else {
         $msg = $result['message'];
     }
@@ -52,10 +52,12 @@ $postkey = isset($_SESSION[$OJ_NAME.'_'.'postkey']) ? $_SESSION[$OJ_NAME.'_'.'po
     <input type="hidden" name="postkey" value="<?php echo htmlentities($postkey, ENT_QUOTES, 'UTF-8'); ?>">
 
     <div class="form-group">
-      <label class="col-sm-3 control-label">用户ID</label>
+      <label class="col-sm-3 control-label">用户名（用户ID）</label>
       <div class="col-sm-7">
         <input type="text" class="form-control" name="user_id" required
+               placeholder="请输入登录用户名，不是昵称"
                value="<?php echo htmlentities($last_user, ENT_QUOTES, 'UTF-8'); ?>">
+        <p class="help-block">这里填写 users.user_id（登录用户名），不是昵称。</p>
         <?php if ($last_user !== ''): ?>
           <p class="help-block">当前余额：<strong><?php echo intval($current_balance); ?></strong> 积分</p>
         <?php endif; ?>

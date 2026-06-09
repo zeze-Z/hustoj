@@ -107,6 +107,8 @@
                 <span style="margin: 0 8px; color: #ddd;">|</span>
                 <?php if ($is_free): ?>
                   <span style="color: #52c41a; font-weight: 600;"><?php echo $MSG_FREE; ?></span>
+                <?php elseif ($preview_price == 0 && $source_price > 0): ?>
+                  <span style="color: #52c41a; font-weight: 600;">预览免费</span>
                 <?php elseif ($preview_price > 0 && $source_price > 0): ?>
                   <span style="color: #ff6b6b; font-weight: 600;"><?php echo intval($min_price); ?> 积分起</span>
                 <?php else: ?>

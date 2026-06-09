@@ -439,7 +439,7 @@
 
     <!-- 底部统一提示 -->
     <div style="margin-top: 10px; padding: 8px 12px; background: #fffbeb; border-radius: 6px; border-left: 3px solid #f59e0b; font-size: 0.85em; color: #92400e;">
-      💡 仅参考学习选完整预览版；需下载修改选原文件版 · 一次性买断，永久使用
+      💡 仅参考学习选完整预览版；需下载修改选原文件版。积分解锁后永久使用。
     </div>
   </div>
 
