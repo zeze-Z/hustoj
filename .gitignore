@@ -6,7 +6,7 @@ trunk/web/discuss3/*
 .claude/memory/hustoj-optimization-issues.md
 .claude/memory/MEMORY.md
 .claude/settings.local.json
-.claude/worktrees/
+.claude/worktrees/*
 test_machine_ssh_key
 oj运营/
 TODO.md

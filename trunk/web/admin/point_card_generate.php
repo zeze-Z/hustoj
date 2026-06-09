@@ -57,9 +57,19 @@ try {
         }
     }
     point_tx_commit();
+
+    // 飞书通知：充值卡生成成功（不发送 card_secret）
+    $admin_id = $_SESSION[$OJ_NAME . '_' . 'user_id'];
+    send_point_card_generate_success_notify($batch_no, $ok, $admin_id);
 } catch (Exception $e) {
     point_tx_rollback();
     // 错误信息不包含卡密
+    $admin_id = isset($_SESSION[$OJ_NAME . '_' . 'user_id']) ? $_SESSION[$OJ_NAME . '_' . 'user_id'] : '';
+    send_point_business_exception_notify('积分充值卡生成', $e->getMessage(), [
+        'admin_id' => $admin_id,
+        'batch_no' => $batch_no,
+        'count' => $count,
+    ]);
     echo "<script>alert('生成失败：" . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "');history.go(-1);</script>";
     exit(1);
 }

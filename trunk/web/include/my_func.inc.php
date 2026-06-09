@@ -952,6 +952,8 @@ if (!defined('POINT_CARD_STATUS_UNUSED'))   define('POINT_CARD_STATUS_UNUSED',  
 if (!defined('POINT_CARD_STATUS_REDEEMED')) define('POINT_CARD_STATUS_REDEEMED', 1);
 if (!defined('POINT_CARD_STATUS_DISABLED')) define('POINT_CARD_STATUS_DISABLED', 2);
 
+require_once(__DIR__ . '/point_feishu_notify.php');
+
 /**
  * 确保 PDO 连接已经初始化（事务 API 需要直接操作 $dbh）。
  * pdo_query 的连接是惰性创建的，因此先执行一次轻量 SELECT 触发建立。
@@ -1191,6 +1193,10 @@ function point_redeem_card($user_id, $card_no, $card_secret, $ip) {
         }
 
         point_tx_commit();
+
+        // 飞书通知：充值卡兑换成功（不发送 card_secret）
+        send_point_card_redeem_success_notify($user_id, $card_no, POINT_CARD_VALUE, $apply['balance'], $ip);
+
         return [
             'success' => true,
             'message' => '兑换成功',
@@ -1200,6 +1206,11 @@ function point_redeem_card($user_id, $card_no, $card_secret, $ip) {
     } catch (Exception $e) {
         point_tx_rollback();
         // 异常信息中不要回显卡密
+        send_point_business_exception_notify('充值卡兑换', $e->getMessage(), [
+            'user_id' => $user_id,
+            'card_no' => $card_no,
+            'ip' => $ip,
+        ]);
         return ['success' => false, 'message' => '系统繁忙，请稍后再试'];
     }
 }
@@ -1324,6 +1335,12 @@ function point_pay_for_course($user_id, $course_id, $license_type, $is_upgrade =
         point_tx_commit();
     } catch (Exception $e) {
         point_tx_rollback();
+        send_point_business_exception_notify('课件积分支付', $e->getMessage(), [
+            'user_id' => $user_id,
+            'course_id' => $course_id,
+            'license_type' => $license_type,
+            'is_upgrade' => $is_upgrade ? '1' : '0',
+        ]);
         return ['success' => false, 'message' => '系统繁忙，请稍后再试'];
     }
 
@@ -1397,9 +1414,18 @@ function point_admin_adjust($admin_id, $target_user_id, $delta, $reason) {
         }
 
         point_tx_commit();
+
+        // 飞书通知：管理员手动调整成功
+        send_point_admin_adjust_success_notify($admin_id, $target_user_id, $delta, $reason, $apply['balance']);
+
         return ['success' => true, 'message' => '调整成功', 'balance' => $apply['balance']];
     } catch (Exception $e) {
         point_tx_rollback();
+        send_point_business_exception_notify('管理员手动调整积分', $e->getMessage(), [
+            'admin_id' => $admin_id,
+            'target_user_id' => $target_user_id,
+            'delta' => $delta,
+        ]);
         return ['success' => false, 'message' => '系统繁忙，请稍后再试'];
     }
 }

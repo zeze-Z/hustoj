@@ -38,6 +38,25 @@ if ($card_no === '' || $card_secret === '') {
     } else {
         $msg_type = 'error';
         $msg = isset($result['message']) ? $result['message'] : '兑换失败，请稍后重试';
+
+        // 飞书风控：同一登录会话 10 分钟内多次兑换失败时告警；不发送 card_secret
+        $fail_key = $OJ_NAME . '_point_redeem_fail';
+        $now = time();
+        if (!isset($_SESSION[$fail_key]) || !is_array($_SESSION[$fail_key]) || $now - intval($_SESSION[$fail_key]['start']) > 600) {
+            $_SESSION[$fail_key] = ['start' => $now, 'count' => 0, 'notified' => false];
+        }
+        $_SESSION[$fail_key]['count'] = intval($_SESSION[$fail_key]['count']) + 1;
+        if ($_SESSION[$fail_key]['count'] >= 5 && empty($_SESSION[$fail_key]['notified'])) {
+            send_point_business_exception_notify('充值卡兑换失败频繁', '同一用户短时间内多次兑换失败', [
+                'user_id' => $user_id,
+                'ip' => $ip,
+                'fail_count' => $_SESSION[$fail_key]['count'],
+                'window_seconds' => 600,
+                'last_card_no' => $card_no,
+                'last_message' => $msg,
+            ], 'warn');
+            $_SESSION[$fail_key]['notified'] = true;
+        }
     }
 }
 

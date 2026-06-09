@@ -26,8 +26,15 @@ if (empty($clean)) {
 $place = implode(',', array_fill(0, count($clean), '?'));
 
 // 只允许禁用未兑换（status=0），已兑换/已禁用不动
-pdo_query("UPDATE point_card SET status = 2, update_time = NOW()
+$stmt = pdo_query("UPDATE point_card SET status = 2, update_time = NOW()
             WHERE status = 0 AND id IN ($place)", $clean);
+$disabled_count = $stmt->rowCount();
+
+// 飞书通知：充值卡禁用（不发送 card_secret，仅 ID 摘要）
+if (intval($disabled_count) > 0) {
+    $admin_id = $_SESSION[$OJ_NAME . '_' . 'user_id'];
+    send_point_card_disable_notify($clean, $disabled_count, $admin_id);
+}
 
 header('Location: point_card_list.php');
 exit();
