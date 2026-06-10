@@ -170,8 +170,6 @@
               <i class="eye icon" style="margin-right: 6px;"></i>完整预览版
               <?php if ($view_has_preview_license): ?>
                 <div class="ui mini green label" style="margin-left: auto;">已拥有</div>
-              <?php elseif ($view_is_full_preview_free): ?>
-                <div class="ui mini green label" style="margin-left: auto;">限时免费</div>
               <?php else: ?>
                 <div class="ui mini grey label" style="margin-left: auto;">未解锁</div>
               <?php endif; ?>
@@ -228,8 +226,6 @@
               <i class="download icon" style="margin-right: 6px;"></i>原文件版
               <?php if ($view_has_source_license): ?>
                 <div class="ui mini green label" style="margin-left: auto;">已拥有</div>
-              <?php elseif ($view_is_source_free): ?>
-                <div class="ui mini green label" style="margin-left: auto;">限时免费</div>
               <?php else: ?>
                 <div class="ui mini grey label" style="margin-left: auto;">未解锁</div>
               <?php endif; ?>
