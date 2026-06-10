@@ -20,18 +20,12 @@
         ]]></hint>
         <source>入门 输入输出</source>
         <difficulty>1</difficulty>
-        <test_input>
-<![CDATA[1 2
-3 4
--1 5
-]]>
-        </test_input>
-        <test_output>
-<![CDATA[3
-7
-4
-]]>
-        </test_output>
+        <test_input name="test1"><![CDATA[1 2]]></test_input>
+        <test_output name="test1"><![CDATA[3]]></test_output>
+        <test_input name="test2"><![CDATA[3 4]]></test_input>
+        <test_output name="test2"><![CDATA[7]]></test_output>
+        <test_input name="test3"><![CDATA[-1 5]]></test_input>
+        <test_output name="test3"><![CDATA[4]]></test_output>
     </item>
 
     <item>
@@ -54,17 +48,11 @@
         ]]></hint>
         <source>GESP 一级 浮点数</source>
         <difficulty>1</difficulty>
-        <test_input>
-<![CDATA[2
-3.5
-0
-]]>
-        </test_input>
-        <test_output>
-<![CDATA[12.57
-38.48
-0.00
-]]>
-        </test_output>
+        <test_input name="test1"><![CDATA[2]]></test_input>
+        <test_output name="test1"><![CDATA[12.57]]></test_output>
+        <test_input name="test2"><![CDATA[3.5]]></test_input>
+        <test_output name="test2"><![CDATA[38.48]]></test_output>
+        <test_input name="test3"><![CDATA[0]]></test_input>
+        <test_output name="test3"><![CDATA[0.00]]></test_output>
     </item>
 </fps>
