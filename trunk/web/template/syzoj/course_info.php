@@ -172,6 +172,8 @@
                 <div class="ui mini green label" style="margin-left: auto;">已拥有</div>
               <?php elseif ($view_is_full_preview_free): ?>
                 <div class="ui mini green label" style="margin-left: auto;">限时免费</div>
+              <?php else: ?>
+                <div class="ui mini grey label" style="margin-left: auto;">未解锁</div>
               <?php endif; ?>
             </div>
             <div style="color: #666; margin-bottom: 8px; line-height: 1.5; font-size: 0.85em;">
@@ -228,6 +230,8 @@
                 <div class="ui mini green label" style="margin-left: auto;">已拥有</div>
               <?php elseif ($view_is_source_free): ?>
                 <div class="ui mini green label" style="margin-left: auto;">限时免费</div>
+              <?php else: ?>
+                <div class="ui mini grey label" style="margin-left: auto;">未解锁</div>
               <?php endif; ?>
             </div>
             <div style="color: #666; margin-bottom: 8px; line-height: 1.5; font-size: 0.85em;">
