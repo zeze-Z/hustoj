@@ -459,12 +459,12 @@
 </div>
 
   <!-- 创作者入驻引导 -->
-  <div class="ui segment" style="border-radius: 12px; margin-top: 20px; background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border: 1px solid #667eea30;">
-    <div style="text-align: center; padding: 12px 20px;">
-      <div style="font-size: 1.1em; margin-bottom: 8px; font-weight: 600; color: #333;">
+  <div class="ui segment" style="border-radius: 12px; margin-top: 20px; padding: 10px !important; background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border: 1px solid #667eea30;">
+    <div style="text-align: center;">
+      <div style="font-size: 1.1em; margin-bottom: 4px; font-weight: 600; color: #333;">
         🎁 有优质课件资源，欢迎联系我们，助您变现！
       </div>
-      <div style="color: #555; margin-bottom: 12px; font-size: 0.9em;">
+      <div style="color: #555; margin-bottom: 6px; font-size: 0.9em;">
         平台优质流量➕垂直精准客群🟰课件精准投放。
       </div>
       <div style="font-size: 1em;">
