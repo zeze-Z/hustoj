@@ -178,9 +178,9 @@
         <p align=left><?php echo "<h4>".$MSG_CONTEST."</h4>"?>
           <select name=contest_id>
             <?php
-            $sql="SELECT `contest_id`,`title` FROM `contest` WHERE `start_time`>NOW() order by `contest_id`";
+            $sql="SELECT `contest_id`,`title` FROM `contest` order by `contest_id` DESC";
             $result=pdo_query($sql);
-            echo "<option value=''>none</option>";
+            echo "<option value=''>无</option>";
             if (count($result)==0) {
             }
             else {

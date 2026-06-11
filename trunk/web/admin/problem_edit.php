@@ -208,6 +208,26 @@ include_once("kindeditor.php") ;
         </select>
         <br><br>
 
+        <?php echo "<h4>".$MSG_CONTEST."</h4>"?>
+        <select name=contest_id>
+          <?php
+          // 查询题目当前关联的竞赛
+          $sql="SELECT contest_id FROM contest_problem WHERE problem_id = ?";
+          $result_cp=pdo_query($sql, [$pid]);
+          $current_contest_id = !empty($result_cp) ? $result_cp[0]['contest_id'] : null;
+
+          $sql="SELECT `contest_id`,`title` FROM `contest` order by `contest_id` DESC";
+          $result_contest=pdo_query($sql);
+          echo "<option value='0'>无</option>";
+          if (count($result_contest)>0) {
+            foreach ($result_contest as $row_contest) {
+              $selected = ($current_contest_id == $row_contest['contest_id']) ? "selected" : "";
+              echo "<option value='{$row_contest['contest_id']}' $selected>{$row_contest['contest_id']} {$row_contest['title']}</option>";
+            }
+          }?>
+        </select>
+        <br><br>
+
         <?php echo "<h4>".$MSG_REMOTE_OJ."</h4>"?>
         <input name=remote_oj value='<?php echo htmlentities((string)$row['remote_oj'],ENT_QUOTES,"UTF-8")?>' placeholder='<?php echo $MSG_HELP_LOCAL_EMPTY ?>' >
         <input name=remote_id value='<?php echo htmlentities((string)$row['remote_id'],ENT_QUOTES,"UTF-8")?>' placeholder='<?php echo $MSG_HELP_LOCAL_EMPTY ?>' ><br>
@@ -592,8 +612,39 @@ include_once("kindeditor.php") ;
       $sql = "UPDATE `problem` SET `title`=?,`time_limit`=?,`memory_limit`=?, `description`=?,`input`=?,`output`=?,`sample_input`=?,`sample_output`=?,`hint`=?,`source`=?,`spj`=?,remote_oj=?,remote_id=?,`in_date`=NOW(),`school_id`=?,`is_public`=?,`level`=?,`problem_type`=?,`options`=?,`answer`=?,`analysis`=?,`score`=? WHERE `problem_id`=?";
 
       //echo "SQL: " . $sql . "<br>";
-      //echo "Params: remote_oj=[$remote_oj] (" . strlen($remote_oj) . "), remote_id=[$remote_id] (" . strlen($remote_id) . ")<br>"; 
+      //echo "Params: remote_oj=[$remote_oj] (" . strlen($remote_oj) . "), remote_id=[$remote_id] (" . strlen($remote_id) . ")<br>";
       @pdo_query($sql,$title,$time_limit,$memory_limit,$description,$input,$output,$sample_input,$sample_output,$hint,$source,$spj,$remote_oj,$remote_id,$school_id,$is_public,$level,$problem_type,$options_json,$answer,$analysis,$score,$id);
+
+      // 处理竞赛关联
+      if (isset($_POST['contest_id'])) {
+          $new_contest_id = intval($_POST['contest_id']);
+
+          // 先查询题目当前关联的竞赛
+          $sql = "SELECT contest_id FROM contest_problem WHERE problem_id = ?";
+          $result = pdo_query($sql, $id);
+          $current_contest_id = !empty($result) ? $result[0]['contest_id'] : null;
+
+          if ($new_contest_id > 0 && $new_contest_id != $current_contest_id) {
+              // 如果有新的竞赛关联，先删除旧关联，再添加新关联
+              if ($current_contest_id) {
+                  $sql = "DELETE FROM contest_problem WHERE problem_id = ? AND contest_id = ?";
+                  pdo_query($sql, $id, $current_contest_id);
+              }
+
+              // 获取新竞赛的题目数量
+              $sql = "SELECT count(*) FROM contest_problem WHERE contest_id = ?";
+              $result = pdo_query($sql, $new_contest_id);
+              $num = $result[0][0];
+
+              // 添加到新竞赛
+              $sql = "INSERT INTO contest_problem (problem_id, contest_id, num) VALUES (?, ?, ?)";
+              pdo_query($sql, $id, $new_contest_id, $num);
+          } elseif (empty($new_contest_id) && $current_contest_id) {
+              // 如果选择了"无"，删除当前关联
+              $sql = "DELETE FROM contest_problem WHERE problem_id = ? AND contest_id = ?";
+              pdo_query($sql, $id, $current_contest_id);
+          }
+      }
   
       echo "Edit OK!<br>";
       echo "<a href='../problem.php?id=$id'>See The Problem!</a>";
