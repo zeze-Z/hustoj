@@ -34,7 +34,7 @@ if (isset($_POST['do'])) {
     }
     $preview_price = intval($preview_price_raw);
     $source_price = intval($source_price_raw);
-    $status = isset($_POST['status']) ? 1 : 0;
+    $status = isset($_POST['status']) ? intval($_POST['status']) : 0;
     $courseware_preview_url = trim($_POST['courseware_preview_url']);
     $lesson_plan_preview_url = trim($_POST['lesson_plan_preview_url']);
     $courseware_full_preview_url = trim($_POST['courseware_full_preview_url']);
@@ -42,6 +42,9 @@ if (isset($_POST['do'])) {
     $courseware_link = trim($_POST['courseware_link']);
     $lesson_plan_link = trim($_POST['lesson_plan_link']);
     $link_expire_date = trim($_POST['link_expire_date']);
+    if (empty($link_expire_date)) {
+        $link_expire_date = null;
+    }
     $sort_order = intval($_POST['sort_order']);
 
     // 校验

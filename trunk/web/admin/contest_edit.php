@@ -195,7 +195,9 @@ if(isset($_POST['startdate'])){
     <br>
     <p align=left>
       <?php echo $MSG_CONTEST."-".$MSG_PROBLEM_ID?>
-      <?php echo "( Add problemIDs with coma , )"?><br>
+      <?php echo "( Add problemIDs with coma , )"?>
+      <button type="button" class="btn btn-default" style="margin-left:8px;" onclick="openProblemSearch()">🔍 筛选题目</button>
+      <br>
       <input id="plist" onchange="showTitles()" class=input-xxlarge type=text style="width:100%" name=cproblem value='<?php echo $plist?>'>
       <div id="ptitles"></div>
     </p>
@@ -252,6 +254,8 @@ if(isset($_POST['startdate'])){
                 <option value=0 <?php echo $private=='0'?'selected=selected':''?>><?php echo $MSG_Public?></option>
                 <option value=1 <?php echo $private=='1'?'selected=selected':''?>><?php echo $MSG_Private?></option>
               </select>
+              <span style="font-size:12px;color:#666;">（控制谁能参加竞赛，私有竞赛需要密码或权限）</span>
+              <br>
               <?php echo $MSG_CONTEST."-".$MSG_PASSWORD?>:
               <input type=text name=password style="width:150px;" value='<?php echo htmlentities($password,ENT_QUOTES,'utf-8')?>'>
             </p>
@@ -286,6 +290,7 @@ if(isset($_POST['startdate'])){
         <label>
           <input type="checkbox" name="is_public" value="1" <?php echo (!empty($row['is_public'])) ? 'checked' : ''; ?>> 公开比赛（允许其他学校访问）
         </label>
+        <span style="font-size:12px;color:#666;">（控制哪些学校的用户能在竞赛列表中看到这个比赛）</span>
       </p>
       <?php endif; ?>
 
@@ -297,6 +302,130 @@ if(isset($_POST['startdate'])){
   </form>
 </div>
 <script>
+  function openProblemSearch(){
+    let pids = getCurrentPids();
+
+    let html = '<div id="ps_dialog" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;">'
+      + '<div style="background:#fff;width:90%;max-width:1100px;height:85vh;border-radius:8px;display:flex;flex-direction:column;box-shadow:0 4px 20px rgba(0,0,0,0.2);overflow:hidden;">'
+      + '<div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;background:#f8f9fa;font-size:16px;font-weight:bold;display:flex;justify-content:space-between;align-items:center;">'
+      +   '题目筛选'
+      +   '<button type="button" class="close" onclick="closeProblemSearch()" style="font-size:20px;border:none;background:none;cursor:pointer;">&times;</button>'
+      + '</div>'
+      + '<div style="display:flex;flex:1;min-height:0;">'
+      +   '<div style="flex:1;padding:15px;border-right:1px solid #e5e5e5;display:flex;flex-direction:column;min-width:0;">'
+      +     '<div style="margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">'
+      +       '<input type=text id="ps_keyword" placeholder="题目ID / 标题 / 描述 / 来源 / 提示" style="width:220px;" class="input-large form-control">&nbsp;'
+      +       '<select id="ps_source" class="form-control" style="width:100px;"><option value="">所有来源</option><option value="蓝桥杯">蓝桥杯</option><option value="CSP-J">CSP-J</option><option value="CSP-S">CSP-S</option><option value="GESP">GESP</option><option value="NOIP">NOIP</option><option value="其他">其他</option></select>&nbsp;'
+      +       '<select id="ps_level" class="form-control" style="width:100px;"><option value="">所有难度</option><option value="1">入门1-2</option><option value="3">基础3-4</option><option value="5">进阶5-6</option><option value="7">竞赛7-8</option></select>&nbsp;'
+      +       '<select id="ps_type" class="form-control" style="width:90px;"><option value="">所有题型</option><option value="programming">编程题</option><option value="choice_single">单选题</option><option value="choice_multi">多选题</option><option value="judge">判断题</option></select>&nbsp;'
+      +       '<button type="button" class="btn btn-primary" onclick="searchProblems()">搜索</button>&nbsp;'
+      +       '<button type="button" class="btn btn-default" onclick="selectAllProblems(true)" style="min-width:60px;">全选</button>&nbsp;'
+      +       '<button type="button" class="btn btn-default" onclick="selectAllProblems(false)" style="min-width:60px;">清空</button>'
+      +     '</div>'
+      +     '<div style="flex:1;overflow-y:auto;border:1px solid #ddd;border-radius:4px;">'
+      +       '<table class="table table-striped table-hover" style="margin:0;">'
+      +         '<thead style="background:#f5f5f5;position:sticky;top:0;z-index:10;"><tr><th style="width:40px;">选</th><th style="width:70px;">ID</th><th>标题</th><th style="width:130px;">来源</th><th style="width:60px;">题型</th><th style="width:50px;">难度</th></tr></thead>'
+      +         '<tbody id="ps_result"><tr><td colspan=\'6\' align=\'center\' style=\'padding:30px;color:#999;\'>请输入搜索条件并点击搜索</td></tr></tbody>'
+      +       '</table>'
+      +     '</div>'
+      +   '</div>'
+      +   '<div style="width:300px;padding:15px;display:flex;flex-direction:column;min-width:0;background:#fafafa;">'
+      +     '<div style="font-weight:bold;margin-bottom:8px;font-size:14px;">已选题目 (<span id="ps_selected_count">0</span>)</div>'
+      +     '<div id="ps_selected_list" style="flex:1;overflow-y:auto;border:1px solid #ddd;padding:10px;background:#fff;border-radius:4px;font-size:13px;line-height:1.8;"></div>'
+      +     '<div style="margin-top:12px;color:#888;font-size:12px;">点击左侧复选框添加/移除题目</div>'
+      +   '</div>'
+      + '</div>'
+      + '<div style="padding:15px 20px;border-top:1px solid #e5e5e5;background:#f8f9fa;text-align:right;">'
+      +   '<button type="button" class="btn btn-default" onclick="closeProblemSearch()">取消</button>&nbsp;'
+      +   '<button type="button" class="btn btn-primary" onclick="confirmProblemSelect()">确认添加</button>'
+      + '</div>'
+      + '</div></div>';
+
+    $("body").append(html);
+
+    window._ps_selected = {};
+    for(let i=0;i<pids.length;i++) window._ps_selected[pids[i]]=true;
+    updateSelectedList();
+  }
+
+  function closeProblemSearch(){
+    $("#ps_dialog").remove();
+  }
+
+  function confirmProblemSelect(){
+    let pids = [];
+    for(let pid in window._ps_selected){
+      if(window._ps_selected[pid]) pids.push(parseInt(pid));
+    }
+    pids.sort(function(a,b){return a-b;});
+    $("#plist").val(pids.join(","));
+    closeProblemSearch();
+    showTitles();
+  }
+
+  function getCurrentPids(){
+    let val=$("#plist").val().trim();
+    if(!val)return [];
+    return val.split(",").map(function(v){return parseInt(v.trim());}).filter(function(v){return !isNaN(v)&&v>0;});
+  }
+
+  function searchProblems(){
+    let keyword=$("#ps_keyword").val();
+    let source=$("#ps_source").val();
+    let level=$("#ps_level").val();
+    let ptype=$("#ps_type").val();
+    let html=$.ajax({url:"ajax.php",method:"post",data:{"m":"problem_search","keyword":keyword,"source":source,"level":level,"problem_type":ptype,"limit":100},async:false}).responseText;
+    $("#ps_result").html(html);
+    syncCheckedState();
+  }
+
+  function toggleProblem(pid,cb){
+    if(cb.checked){
+      window._ps_selected[pid]=true;
+    }else{
+      delete window._ps_selected[pid];
+    }
+    updateSelectedList();
+  }
+
+  function selectAllProblems(checked){
+    $(".ps_cb").each(function(i,e){
+      if(e.checked!==checked){
+        e.checked=checked;
+        toggleProblem(parseInt(e.value),e);
+      }
+    });
+  }
+
+  function syncCheckedState(){
+    $(".ps_cb").each(function(i,e){
+      let pid=parseInt(e.value);
+      if(window._ps_selected && window._ps_selected[pid]) e.checked=true;
+      else e.checked=false;
+    });
+  }
+
+  function updateSelectedList(){
+    let pids=[];
+    for(let pid in window._ps_selected){
+      if(window._ps_selected[pid]) pids.push(parseInt(pid));
+    }
+    pids.sort(function(a,b){return a-b;});
+    $("#ps_selected_count").text(pids.length);
+    let html="";
+    for(let i=0;i<pids.length;i++){
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px dotted #eee;padding:2px 0;"><span>#'+pids[i]+'</span><a href="#" onclick="removeSelected('+pids[i]+');return false;" style="color:#c00;text-decoration:none;">✕</a></div>';
+    }
+    if(pids.length===0) html='<div style="color:#999;text-align:center;padding:20px 0;">尚未选择题目</div>';
+    $("#ps_selected_list").html(html);
+  }
+
+  function removeSelected(pid){
+    delete window._ps_selected[pid];
+    updateSelectedList();
+    syncCheckedState();
+  }
+
 	function showTitles(){
 		let ts=$("#ptitles");
 		let pids=$("#plist").val().split(",");
@@ -307,11 +436,9 @@ if(isset($_POST['startdate'])){
 			console.log(v);
 		});
 		ts.html(html);
-		
 	}
 	$(document).ready(function(){
 		showTitles();
-	
 	});
 
 </script>

@@ -130,5 +130,88 @@ if($_SERVER['REQUEST_METHOD']=="POST"){
 			}
 	}
 
+	if($m=="problem_search" && ( isset($_SESSION[$OJ_NAME.'_administrator'])||isset($_SESSION[$OJ_NAME.'_contest_creator'])||isset($_SESSION[$OJ_NAME.'_problem_editor']) )){
+		$keyword=isset($_POST['keyword'])?trim($_POST['keyword']):"";
+		$source=isset($_POST['source'])?trim($_POST['source']):"";
+		$problem_type=isset($_POST['problem_type'])?trim($_POST['problem_type']):"";
+		$level=isset($_POST['level'])?trim($_POST['level']):"";
+		$limit=isset($_POST['limit'])?intval($_POST['limit']):50;
+		if($limit>200)$limit=200;
+
+		$where=array();
+		$params=array();
+
+		// 与 problem_list.php 保持一致：5个字段模糊搜索
+		if($keyword!=""){
+			$where[]="(problem_id LIKE ? OR title LIKE ? OR description LIKE ? OR source LIKE ? OR hint LIKE ?)";
+			$kw="%$keyword%";
+			$params=array_merge($params,array($kw,$kw,$kw,$kw,$kw));
+		}
+		// 与 problem_list.php 保持一致：source 模糊搜索
+		if($source!=""){
+			$where[]="source LIKE ?";
+			$params[]="%$source%";
+		}
+		// 与 problem_list.php 保持一致：problem_type 精确匹配
+		if($problem_type!=""){
+			$where[]="problem_type=?";
+			$params[]=$problem_type;
+		}
+		// 与 problem_list.php 保持一致：level 用 BETWEEN 方式
+		if($level!=""){
+			$lv=intval($level);
+			$where[]="level BETWEEN ? AND ?";
+			$params[]=$lv;
+			$params[]=$lv+1;
+		}
+
+		// 加载学校相关函数，添加学校隔离
+		if (file_exists("../include/school.php")) {
+			require_once("../include/school.php");
+			$school_filter = getSchoolSQLFilter('', 'school_id', 'is_public');
+			if ($school_filter) {
+				$where[] = substr($school_filter, 5); // 去掉开头的 ' AND '
+			}
+		}
+
+		// 统一添加 1=1 确保有 WHERE 条件，简化 SQL 拼接逻辑；
+		// LIMIT 使用 intval 直接拼接而非参数绑定：pdo_query 通过 execute(array) 传参时，
+		// PDO 会把所有值当作字符串处理（如 LIMIT '50'），在 MariaDB 中会触发语法错误；
+		// $limit 已通过 intval + 200 上限双重校验，拼接无注入风险
+		if(count($where)==0){
+			$where[] = "1=1";
+		}
+		$sql="SELECT `problem_id`,`title`,`source`,`level`,`problem_type` FROM `problem` WHERE ".implode(" AND ",$where)." ORDER BY `problem_id` ".($keyword||$source||$problem_type||$level ? "ASC" : "DESC")." LIMIT ".intval($limit);
+
+		// 使用 ...$params 展开参数
+		if(count($params)>0){
+			$problems=pdo_query($sql,...$params);
+		}else{
+			$problems=pdo_query($sql);
+		}
+
+		header('Content-Type: text/html; charset=utf-8');
+		if(count($problems)==0){
+			echo "<tr><td colspan='6' align='center' style='padding:20px;color:#999;'>未找到匹配的题目</td></tr>";
+		}else{
+			foreach($problems as $p){
+				$ptype=$p['problem_type'];
+				$type_text=$ptype;
+				if($ptype=="programming")$type_text="编程";
+				else if($ptype=="choice_single")$type_text="单选";
+				else if($ptype=="choice_multi")$type_text="多选";
+				else if($ptype=="judge")$type_text="判断";
+				echo "<tr>".
+						"<td><input type='checkbox' class='ps_cb' value='".intval($p['problem_id'])."' onclick='toggleProblem(".intval($p['problem_id']).",this)'></td>".
+						"<td>".intval($p['problem_id'])."</td>".
+						"<td>".htmlentities($p['title'],ENT_QUOTES,'UTF-8')."</td>".
+						"<td>".htmlentities($p['source'],ENT_QUOTES,'UTF-8')."</td>".
+						"<td>".htmlentities($type_text,ENT_QUOTES,'UTF-8')."</td>".
+						"<td>".intval($p['level'])."</td>".
+					 "</tr>";
+			}
+		}
+	}
+
 }
 
