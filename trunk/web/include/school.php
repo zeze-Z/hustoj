@@ -147,18 +147,18 @@ function getSchoolSQLFilter($tableAlias = '', $idField = 'school_id', $publicFie
     $prefix = $tableAlias ? $tableAlias . '.' : '';
     $school_id = getCurrentUserSchoolId();
 
-    // 游客（未登录）：只能看公开数据（兼容 'Y' 和 1 两种值）
+    // 游客（未登录）：只能看公开数据（用 CAST 避免 MySQL 类型强制转换：数字列上 'Y'→0 会错误匹配 is_public=0 的私有记录）
     if (!$school_id && getCurrentUserRole() === 'guest') {
-        return " AND ({$prefix}{$publicField} = 'Y' OR {$prefix}{$publicField} = 1)";
+        return " AND CAST({$prefix}{$publicField} AS CHAR) IN ('Y', '1')";
     }
 
     // 已登录但未分配学校的用户，只能看公开数据 + 无学校归属的数据（超管添加的通用题目）
     if (!$school_id) {
-        return " AND ({$prefix}{$publicField} = 'Y' OR {$prefix}{$publicField} = 1 OR {$prefix}{$idField} IS NULL)";
+        return " AND (CAST({$prefix}{$publicField} AS CHAR) IN ('Y', '1') OR {$prefix}{$idField} IS NULL)";
     }
 
     // 过滤：本校数据 + 公开数据 + 无学校归属的数据（超管添加的题目）
-    return " AND ({$prefix}{$idField} = {$school_id} OR {$prefix}{$publicField} = 'Y' OR {$prefix}{$idField} IS NULL)";
+    return " AND ({$prefix}{$idField} = {$school_id} OR CAST({$prefix}{$publicField} AS CHAR) IN ('Y', '1') OR {$prefix}{$idField} IS NULL)";
 }
 
 /**
