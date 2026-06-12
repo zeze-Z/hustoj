@@ -66,75 +66,113 @@
     ?>
 
     <?php if ($show_form) { ?>
-    - Import Problem <b>FPS(.xml)/ZIP(.xml inside) 导入xml或zip压缩的xml文件，支持一个或多个，不支持子目录。</b> <br><br>
-    <form class='form-inline' action='problem_import_xml.php' method=post enctype="multipart/form-data">
-      <div class='form-group'>
-        <input class='form-control' type=file name=fps>
-        <button class='btn btn-success btn-sm' type=submit>Upload to HUSTOJ</button>
-      </div>
-      <?php require("../include/set_post_key.php");?>
-    </form>
-	  <hr>
--  QDUOJ - json - zip<br>应该是真的QDUOJ，未严格测试，感谢[温十六中]吴晓阳提供例子文件<br>
-    <form class='form-inline' action='problem_import_qduoj.php' method=post enctype="multipart/form-data">
-      <div class='form-group'>
-        <input class='form-control' type=file name=fps>
-        <button class='btn btn-info btn-sm' type=submit>Upload to HUSTOJ</button>
-      </div>
-      <?php require("../include/set_post_key.php");?>
-    </form> <hr>
-    - SYZOJ - zip<br><br>
-    <form class='form-inline' action='problem_import_syzoj.php' method=post enctype="multipart/form-data">
-      <div class='form-group'>
-        <input class='form-control' type=file name=fps>
-        <button class='btn btn-warning btn-sm' type=submit>Upload to HUSTOJ</button>
-      </div>
-      <?php require("../include/set_post_key.php");?>
-    </form> <hr>
-    - HydroOJ - zip<br><br>
-    <form class='form-inline' action='problem_import_hydro.php' method=post enctype="multipart/form-data">
-      <div class='form-group'>
-        <input class='form-control' type=file name=fps>
-        <button class='btn btn-danger btn-sm' type=submit>Upload to HUSTOJ</button>
-      </div>
-      <?php require("../include/set_post_key.php");?>
-    </form> <hr>
-    - HOJ - zip<br><br>
-    <form class='form-inline' action='problem_import_hoj.php' method=post enctype="multipart/form-data">
-      <div class='form-group'>
-        <input class='form-control' type=file name=fps>
-        <button class='btn btn-info btn-sm' type=submit>Upload to HUSTOJ</button>
-      </div>
-      <?php require("../include/set_post_key.php");?>
-    </form>
-    - TYVJ - zip<br><br>
-    <form class='form-inline' action='problem_import_tyvj.php' method=post enctype="multipart/form-data">
-      <div class='form-group'>
-        <input class='form-control' type=file name=fps>
-        <button class='btn btn-primary btn-sm' type=submit>Upload to HUSTOJ</button>
-      </div>
-      <?php require("../include/set_post_key.php");?>
-    </form>
-   - Markdown - zip<br>zip压缩的.md文件，首行为标题<br>
-    <form class='form-inline' action='problem_import_md.php' method=post enctype="multipart/form-data">
-      <div class='form-group'>
-        <input class='form-control' type=file name=fps>
-        <button class='btn btn-warning btn-sm' type=submit>Upload to HUSTOJ</button>
-      </div>
-      <?php require("../include/set_post_key.php");?>
-    </form>
+    <h4>常用导入入口</h4>
+
+    <div class='well well-sm'>
+      <b>编程题导入：FPS XML / ZIP XML</b><br>
+      适用于标准编程题，包含题面、输入输出说明、样例、测试数据。<br>
+      推荐用于 GESP/CSP/蓝桥杯等真题中的编程题导入。支持上传单个 <code>.xml</code> 文件，或包含一个/多个 XML 文件的 <code>.zip</code> 压缩包（不支持子目录）。<br><br>
+      <form class='form-inline' action='problem_import_xml.php' method=post enctype="multipart/form-data">
+        <div class='form-group'>
+          <input class='form-control' type=file name=fps accept=".xml,.zip">
+          <button class='btn btn-success btn-sm' type=submit>导入编程题</button>
+        </div>
+        <?php require("../include/set_post_key.php");?>
+      </form>
+    </div>
+
+    <div class='well well-sm'>
+      <b>选择题导入：CSV</b><br>
+      适用于单选题、多选题、判断题批量导入。<br>
+      推荐用于 GESP/CSP/蓝桥杯等真题中的客观题导入。请先下载模板，按模板填写后保存为 CSV UTF-8 格式。<br><br>
+      <form class='form-inline' action='problem_import_choice.php' method=post enctype="multipart/form-data">
+        <div class='form-group'>
+          <a class='btn btn-info btn-sm' href='problem_import_choice.php?action=download' target='_blank'>下载选择题模板(CSV)</a>
+          <input class='form-control ml-2' type=file name=csv_file accept=".csv">
+          <button class='btn btn-success btn-sm ml-2' type=submit>导入选择题</button>
+        </div>
+        <?php require("../include/set_post_key.php");?>
+      </form>
+    </div>
 
     <hr>
-    <h4>选择题批量导入</h4>
-    - 支持单选/多选/判断题批量导入，CSV格式，无需安装额外工具<br><br>
-    <form class='form-inline' action='problem_import_choice.php' method=post enctype="multipart/form-data">
-      <div class='form-group'>
-        <a class='btn btn-info btn-sm' href='problem_import_choice.php?action=download' target='_blank'>下载导入模板(CSV)</a>
-        <input class='form-control ml-2' type=file name=csv_file accept=".csv">
-        <button class='btn btn-success btn-sm ml-2' type=submit>导入选择题</button>
-      </div>
-      <?php require("../include/set_post_key.php");?>
-    </form>
+    <h4>第三方 OJ 兼容导入入口</h4>
+    <div class='alert alert-warning'>
+      以下入口仅用于从其它 OJ 导出的历史题库包迁移，格式要求各不相同，平时导入竞赛真题不建议使用。<br>
+      如果你手上是本项目模板生成的真题文件，请优先使用上面的“编程题导入”和“选择题导入”。
+    </div>
+
+    <div class='well well-sm'>
+      <b>QDUOJ JSON ZIP</b><br>
+      适用于 QDUOJ 导出的 JSON 压缩包，未严格测试；不适用于普通 FPS XML 或选择题 CSV。<br><br>
+      <form class='form-inline' action='problem_import_qduoj.php' method=post enctype="multipart/form-data">
+        <div class='form-group'>
+          <input class='form-control' type=file name=fps accept=".zip">
+          <button class='btn btn-default btn-sm' type=submit>导入 QDUOJ 包</button>
+        </div>
+        <?php require("../include/set_post_key.php");?>
+      </form>
+    </div>
+
+    <div class='well well-sm'>
+      <b>SYZOJ ZIP</b><br>
+      适用于 SYZOJ 导出的题目压缩包；不适用于普通 FPS XML 或选择题 CSV。<br><br>
+      <form class='form-inline' action='problem_import_syzoj.php' method=post enctype="multipart/form-data">
+        <div class='form-group'>
+          <input class='form-control' type=file name=fps accept=".zip">
+          <button class='btn btn-default btn-sm' type=submit>导入 SYZOJ 包</button>
+        </div>
+        <?php require("../include/set_post_key.php");?>
+      </form>
+    </div>
+
+    <div class='well well-sm'>
+      <b>HydroOJ ZIP</b><br>
+      适用于 HydroOJ 导出的题目压缩包；不适用于普通 FPS XML 或选择题 CSV。<br><br>
+      <form class='form-inline' action='problem_import_hydro.php' method=post enctype="multipart/form-data">
+        <div class='form-group'>
+          <input class='form-control' type=file name=fps accept=".zip">
+          <button class='btn btn-default btn-sm' type=submit>导入 HydroOJ 包</button>
+        </div>
+        <?php require("../include/set_post_key.php");?>
+      </form>
+    </div>
+
+    <div class='well well-sm'>
+      <b>HOJ ZIP</b><br>
+      适用于 HOJ 导出的题目压缩包；不适用于普通 FPS XML 或选择题 CSV。<br><br>
+      <form class='form-inline' action='problem_import_hoj.php' method=post enctype="multipart/form-data">
+        <div class='form-group'>
+          <input class='form-control' type=file name=fps accept=".zip">
+          <button class='btn btn-default btn-sm' type=submit>导入 HOJ 包</button>
+        </div>
+        <?php require("../include/set_post_key.php");?>
+      </form>
+    </div>
+
+    <div class='well well-sm'>
+      <b>TYVJ ZIP</b><br>
+      适用于 TYVJ 导出的题目压缩包；不适用于普通 FPS XML 或选择题 CSV。<br><br>
+      <form class='form-inline' action='problem_import_tyvj.php' method=post enctype="multipart/form-data">
+        <div class='form-group'>
+          <input class='form-control' type=file name=fps accept=".zip">
+          <button class='btn btn-default btn-sm' type=submit>导入 TYVJ 包</button>
+        </div>
+        <?php require("../include/set_post_key.php");?>
+      </form>
+    </div>
+
+    <div class='well well-sm'>
+      <b>Markdown ZIP</b><br>
+      适用于由 Markdown 文件组成的压缩包，约定每个 Markdown 文件首行为题目标题；不适用于普通 FPS XML 或选择题 CSV。<br><br>
+      <form class='form-inline' action='problem_import_md.php' method=post enctype="multipart/form-data">
+        <div class='form-group'>
+          <input class='form-control' type=file name=fps accept=".zip">
+          <button class='btn btn-default btn-sm' type=submit>导入 Markdown 包</button>
+        </div>
+        <?php require("../include/set_post_key.php");?>
+      </form>
+    </div>
 
     <?php } ?>
 

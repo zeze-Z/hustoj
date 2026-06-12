@@ -153,23 +153,42 @@ if (isset($_SESSION[$OJ_NAME . '_' . 'administrator'])) {  //all problems
  * 统计总页数，获取当前页的问题数据
  */
 pdo_query("SET sort_buffer_size = 1024*1024");   // Out of sort memory, consider increasing server sort buffer size
-// 添加题目类型过滤条件，仅显示编程题，非编程题只在竞赛中显示
+// 问题集只展示普通编程题；选择题/多选题/判断题通过考试或竞赛真题页面展示
 $filter_sql .= " AND problem_type = 'programming' ";
+
+// 精细屏蔽竞赛真题套卷中的题目，避免套卷题目在普通题库重复展示。
+// 不直接排除所有 contest_problem，避免误伤普通比赛/作业题目。
+$past_paper_keywords = ['真题', 'GESP', 'CSP', '蓝桥杯', 'NOIP', 'CCF'];
+$past_paper_like_sql = [];
+$past_paper_params = [];
+foreach ($past_paper_keywords as $keyword) {
+    $past_paper_like_sql[] = "c.title LIKE ?";
+    $past_paper_params[] = "%" . $keyword . "%";
+}
+$filter_sql .= " AND problem_id NOT IN (
+    SELECT cp.problem_id
+    FROM contest_problem cp
+    INNER JOIN contest c ON c.contest_id = cp.contest_id
+    WHERE c.defunct = 'N' AND (" . implode(' OR ', $past_paper_like_sql) . ")
+) ";
 $sql = "select `problem_id`,`title`,`source`,`submit`,`accepted`,defunct FROM problem A WHERE $filter_sql $school_filter $order_by $limit_sql ";
 $count_sql = "select count(1) from problem where  $filter_sql $school_filter ";
 //echo htmlentities( $sql);
 if (isset($_GET['source']) && trim($_GET['source']) != "") {
-    $total = pdo_query($count_sql, $search);
+    $query_params = array_merge([$search], $past_paper_params);
+    $total = pdo_query($count_sql, ...$query_params);
     $cnt = $total[0][0] / $page_cnt;
-    $result = pdo_query($sql, $search);
+    $result = pdo_query($sql, ...$query_params);
 } else if (isset($_GET['search']) && trim($_GET['search']) != "") {
-    $total = pdo_query($count_sql, $search, $search);
+    $query_params = array_merge([$search, $search], $past_paper_params);
+    $total = pdo_query($count_sql, ...$query_params);
     $cnt = $total[0][0] / $page_cnt;
-    $result = pdo_query($sql, $search, $search);
+    $result = pdo_query($sql, ...$query_params);
 } else {
-    $total = mysql_query_cache($count_sql);
+    $query_params = $past_paper_params;
+    $total = pdo_query($count_sql, ...$query_params);
     $cnt = $total[0][0] / $page_cnt;
-    $result = mysql_query_cache($sql);
+    $result = pdo_query($sql, ...$query_params);
 }
 //echo "$cnt $count_sql";
 

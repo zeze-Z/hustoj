@@ -23,6 +23,13 @@ require_once ("../include/problem.php");
 <hr>
 &nbsp;&nbsp;- Import Offline ... <br>
 <b><?php echo $MSG_CONTEST."-".$MSG_IMPORT ?></b>
+
+<div style="margin:12px 0;padding:12px 16px;border:1px solid #faebcc;background:#fcf8e3;color:#8a6d3b;border-radius:4px;line-height:1.7;">
+  <b>导入说明：</b><br>
+  当前页面用于导入 <b>离线比赛包</b>，适合包含 <code>data/</code> 测试数据目录和 <code>source/</code> 选手源码目录的 ZIP 包。导入后系统会创建比赛记录、关联比赛题目，并导入选手提交源码。<br>
+  如果只是导入 GESP / CSP / 蓝桥杯等真题到题库中供学生练习，请不要使用本页面；请前往 <a href="problem_import.php">问题导入</a>，编程题使用 <b>FPS XML / ZIP XML</b>，选择题/判断题使用 <b>CSV 选择题导入</b>。
+</div>
+
 <?php
 function startsWith( $haystack, $needle ) {
      $length = strlen( $needle );
