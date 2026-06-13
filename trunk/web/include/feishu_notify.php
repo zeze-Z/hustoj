@@ -25,7 +25,7 @@ function feishu_notify($title, $content, $level = 'info') {
     $isTestEnv = false;
     // 检测访问者IP
     $client_ip = $_SERVER['REMOTE_ADDR'] ?? 'CLI';
-    if (strpos($client_ip, '192.168.') === 0) {
+    if (strpos($client_ip, '192.168.') === 0 || strpos($client_ip, '127.0.') === 0) {
         $isTestEnv = true;
     }
     
