@@ -133,10 +133,29 @@ function get_extension($file) {
 
 function import_fps($tempfile) {
   global $OJ_DATA,$OJ_SAE,$OJ_REDIS,$OJ_REDISSERVER,$OJ_REDISPORT,$OJ_REDISQNAME,$domain,$DOMAIN,$OJ_NAME,$OJ_REMOTE_JUDGE;
+  $oldUseInternalErrors = libxml_use_internal_errors(true);
+  libxml_clear_errors();
   $xmlDoc = simplexml_load_file($tempfile, 'SimpleXMLElement', LIBXML_PARSEHUGE);
+  if ($xmlDoc === false) {
+    echo "&nbsp;&nbsp;- Error: XML file is not well-formed.<br>";
+    foreach (libxml_get_errors() as $error) {
+      echo "&nbsp;&nbsp;&nbsp;&nbsp;line ".$error->line.", column ".$error->column.": ".htmlentities(trim($error->message), ENT_QUOTES, 'UTF-8')."<br>";
+    }
+    libxml_clear_errors();
+    libxml_use_internal_errors($oldUseInternalErrors);
+    if (file_exists($tempfile)) unlink($tempfile);
+    return false;
+  }
+  libxml_clear_errors();
+  libxml_use_internal_errors($oldUseInternalErrors);
   $searchNodes = $xmlDoc->xpath("/fps/item");
+  if ($searchNodes === false) {
+    echo "&nbsp;&nbsp;- Error: Invalid FPS XML structure.<br>";
+    if (file_exists($tempfile)) unlink($tempfile);
+    return false;
+  }
   $spid = 0;
-  
+
   foreach ($searchNodes as $searchNode) {
     unset($spjlang);
     unset($tpjlang); 
@@ -351,7 +370,7 @@ function import_fps($tempfile) {
     }
   }
 
-  unlink($tempfile);
+  if (file_exists($tempfile)) unlink($tempfile);
 
   if (isset($OJ_REDIS) && $OJ_REDIS) {
     try {
