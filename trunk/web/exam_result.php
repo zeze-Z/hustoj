@@ -44,8 +44,8 @@ if ($is_calculated == 0) {
     pdo_query("UPDATE exam_attend SET score_calculated=2 WHERE exam_id=? AND user_id=?", $eid, $user_id);
 
     // 获取成绩详情
-    $problems = pdo_query("SELECT ep.*, p.title, p.answer, p.problem_type,
-        er.user_answer, er.is_correct, er.score
+    $problems = pdo_query("SELECT ep.*, ep.score AS max_score, p.title, p.answer, p.problem_type,
+        er.user_answer, er.is_correct, er.score AS obtained_score
         FROM exam_problem ep
         JOIN problem p ON ep.problem_id=p.problem_id
         LEFT JOIN exam_result er ON er.exam_id=ep.exam_id AND er.problem_id=ep.problem_id AND er.user_id=?
@@ -56,12 +56,12 @@ if ($is_calculated == 0) {
     $has_pending_judge = false; // 是否有还在判分的编程题
 
     foreach ($problems as &$p) {
-        $total_score += intval($p['score']);
+        $total_score += intval($p['max_score']);
         if ($p['problem_type'] == 'programming') {
             // 编程题查solution表最高得分
             $sol = pdo_query("SELECT result, pass_rate FROM solution
                 WHERE exam_id=? AND user_id=? AND problem_id=?
-                ORDER BY result DESC, pass_rate DESC LIMIT 1", $eid, $user_id, $p['problem_id']);
+                ORDER BY CASE WHEN result=4 THEN 1 ELSE 0 END DESC, pass_rate DESC, solution_id DESC LIMIT 1", $eid, $user_id, $p['problem_id']);
 
             if (!empty($sol)) {
                 $res = $sol[0];
@@ -71,13 +71,13 @@ if ($is_calculated == 0) {
                     $p['is_correct'] = 'N';
                     $p['judge_status'] = '判题中';
                 } else if (intval($res['result']) == 4) { // 正确，满分
-                    $p['score'] = intval($p['score']);
+                    $p['score'] = intval($p['max_score']);
                     $p['is_correct'] = 'Y';
                     $p['judge_status'] = '正确';
                     $total_obtained += intval($p['score']);
                 } else { // 错误，按通过率算分
-                    $pass_rate = floatval($res['pass_rate']);
-                    $get_score = intval($p['score'] * $pass_rate / 100);
+                    $pass_rate = exam_pass_rate($res['pass_rate']);
+                    $get_score = intval($p['max_score'] * $pass_rate);
                     $p['score'] = $get_score;
                     $p['is_correct'] = $get_score > 0 ? 'P' : 'N'; // P部分正确
                     $p['judge_status'] = $get_score > 0 ? '部分正确' : '错误';
@@ -90,7 +90,8 @@ if ($is_calculated == 0) {
             }
         } else {
             // 客观题直接读成绩
-            $total_obtained += intval($p['score'] ?? 0);
+            $p['score'] = intval($p['obtained_score'] ?? 0);
+            $total_obtained += $p['score'];
         }
     }
 
@@ -104,8 +105,8 @@ if ($is_calculated == 0) {
     }
 } else {
     // 已计算，直接读取题目详情
-    $problems = pdo_query("SELECT ep.*, p.title, p.answer, p.problem_type,
-        er.user_answer, er.is_correct, er.score
+    $problems = pdo_query("SELECT ep.*, ep.score AS max_score, p.title, p.answer, p.problem_type,
+        er.user_answer, er.is_correct, er.score AS obtained_score
         FROM exam_problem ep
         JOIN problem p ON ep.problem_id=p.problem_id
         LEFT JOIN exam_result er ON er.exam_id=ep.exam_id AND er.problem_id=ep.problem_id AND er.user_id=?
@@ -113,24 +114,35 @@ if ($is_calculated == 0) {
 
     $total_score = 0;
     foreach ($problems as &$p) {
-        $total_score += intval($p['score']);
+        $total_score += intval($p['max_score']);
         if ($p['problem_type'] == 'programming') {
-            // 已缓存总分的情况下，也显示编程题状态
+            // 已缓存总分的情况下，也显示编程题状态和本题得分
             $sol = pdo_query("SELECT result, pass_rate FROM solution
                 WHERE exam_id=? AND user_id=? AND problem_id=?
-                ORDER BY result DESC, pass_rate DESC LIMIT 1", $eid, $user_id, $p['problem_id']);
+                ORDER BY CASE WHEN result=4 THEN 1 ELSE 0 END DESC, pass_rate DESC, solution_id DESC LIMIT 1", $eid, $user_id, $p['problem_id']);
             if (!empty($sol)) {
                 $res = $sol[0];
                 if (intval($res['result']) == 4) {
+                    $p['score'] = intval($p['max_score']);
+                    $p['is_correct'] = 'Y';
                     $p['judge_status'] = '正确';
                 } else if (intval($res['result']) > 4) {
-                    $p['judge_status'] = floatval($res['pass_rate']) > 0 ? '部分正确' : '错误';
+                    $rate = exam_pass_rate($res['pass_rate']);
+                    $p['score'] = intval($p['max_score'] * $rate);
+                    $p['is_correct'] = $p['score'] > 0 ? 'P' : 'N';
+                    $p['judge_status'] = $p['score'] > 0 ? '部分正确' : '错误';
                 } else {
+                    $p['score'] = 0;
+                    $p['is_correct'] = 'N';
                     $p['judge_status'] = '判题中';
                 }
             } else {
+                $p['score'] = 0;
+                $p['is_correct'] = 'N';
                 $p['judge_status'] = '未提交';
             }
+        } else {
+            $p['score'] = intval($p['obtained_score'] ?? 0);
         }
     }
 }
@@ -167,7 +179,7 @@ if ($is_calculated == 0) {
     <div class="detail-card">
         <div class="prob-title">
             <?php echo $d['num']; ?>. <?php echo htmlspecialchars($d['title']); ?>
-            <span style="float:right;"><?php echo intval($d['score'] ?? 0); ?> / <?php echo intval($d['score']); ?>分</span>
+            <span style="float:right;"><?php echo intval($d['score'] ?? 0); ?> / <?php echo intval($d['max_score']); ?>分</span>
         </div>
         <div style="margin-top:5px;">
             <?php if ($d['problem_type'] == 'programming'): ?>

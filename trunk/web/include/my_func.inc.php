@@ -476,6 +476,13 @@ function trigger_judge($solution_id=0){
           else
                 send_udp_message($JUDGE_HOST, $OJ_UDPPORT, $solution_id );
 }
+function exam_pass_rate($pass_rate) {
+    $rate = floatval($pass_rate);
+    if ($rate > 1) $rate = $rate / 100;
+    if ($rate < 0) $rate = 0;
+    if ($rate > 1) $rate = 1;
+    return $rate;
+}
 function crypto_rand_secure($min, $max) {
         $range = $max - $min;
         if ($range < 0) return $min; // not so random...

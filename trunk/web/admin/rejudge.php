@@ -65,16 +65,20 @@ if (!(isset($_SESSION[$OJ_NAME.'_'.'administrator']))){
         echo str_repeat(" ",4096);
         flush();
         if($OJ_REDIS){
-           $redis = new Redis();
-           $redis->connect($OJ_REDISSERVER, $OJ_REDISPORT);
-           if(isset($OJ_REDISAUTH)) $redis->auth($OJ_REDISAUTH);
-                $sql="select solution_id from solution where result=1,pass_rate=0 and problem_id>0";
+           try {
+               $redis = new Redis();
+               $redis->connect($OJ_REDISSERVER, $OJ_REDISPORT);
+               if(isset($OJ_REDISAUTH)) $redis->auth($OJ_REDISAUTH);
+                $sql="select solution_id from solution where result=1 AND pass_rate=0 and problem_id>0";
                  $result=pdo_query($sql);
                  foreach($result as $row){
                         echo $row['solution_id']."\n";
                         $redis->lpush($OJ_REDISQNAME,$row['solution_id']);
                 }
-           $redis->close();
+               $redis->close();
+           } catch (Exception $e) {
+               echo "Warning: Redis unavailable, skipped auto-judge trigger.\n";
+           }
         }
         if (isset($OJ_UDP) && $OJ_UDP) {
            trigger_judge();

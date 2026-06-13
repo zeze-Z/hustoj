@@ -332,14 +332,22 @@ function import_fps($tempfile,$tempData) {
   unlink($tempfile);
 
   if (isset($OJ_REDIS) && $OJ_REDIS) {
-    $redis = new Redis();
-    $redis->connect($OJ_REDISSERVER, $OJ_REDISPORT);
-    $sql = "SELECT solution_id FROM solution WHERE result=0 AND problem_id>0";
-    $result = pdo_query($sql);
+    try {
+      $redis = new Redis();
+      $redis->connect($OJ_REDISSERVER, $OJ_REDISPORT);
+      if (isset($OJ_REDISAUTH)) {
+        $redis->auth($OJ_REDISAUTH);
+      }
+      $sql = "SELECT solution_id FROM solution WHERE result=0 AND problem_id>0";
+      $result = pdo_query($sql);
 
-    foreach ($result as $row) {
-      echo $row['solution_id']."\n";
-      $redis->lpush($OJ_REDISQNAME,$row['solution_id']);
+      foreach ($result as $row) {
+        echo $row['solution_id']."\n";
+        $redis->lpush($OJ_REDISQNAME,$row['solution_id']);
+      }
+      $redis->close();
+    } catch (Exception $e) {
+      echo "Warning: Redis unavailable, skipped auto-judge trigger.\n";
     }
   }
 

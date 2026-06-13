@@ -49,28 +49,33 @@ if($OJ_MENU_NEWS)
 {
   if($OJ_REDIS)
   {
-    $redis = new Redis();
-    $redis->connect($OJ_REDISSERVER, $OJ_REDISPORT);
+    try {
+      $redis = new Redis();
+      $redis->connect($OJ_REDISSERVER, $OJ_REDISPORT);
 
-    if(isset($OJ_REDISAUTH))
-    {
-      $redis->auth($OJ_REDISAUTH);
-    }
+      if(isset($OJ_REDISAUTH))
+      {
+        $redis->auth($OJ_REDISAUTH);
+      }
     
-    $redisDataKey = $OJ_REDISQNAME.'_MENU_NEWS_CACHE';
+      $redisDataKey = $OJ_REDISQNAME.'_MENU_NEWS_CACHE';
     
-    if($redis->exists($redisDataKey))
-    {
-      $sql_news_menu_result_html = $redis->get($redisDataKey);
-    }
-    else
-    {
+      if($redis->exists($redisDataKey))
+      {
+        $sql_news_menu_result_html = $redis->get($redisDataKey);
+      }
+      else
+      {
+        $sql_news_menu_result_html = get_menu_news();
+        $redis->set($redisDataKey, $sql_news_menu_result_html);
+        $redis->expire($redisDataKey, 300);
+      }
+
+      $redis->close();
+    } catch (Exception $e) {
+      // Redis 不可用，降级为直接查询
       $sql_news_menu_result_html = get_menu_news();
-      $redis->set($redisDataKey, $sql_news_menu_result_html);
-      $redis->expire($redisDataKey, 300);
     }
-
-    $redis->close();
   }
   else
   {

@@ -38,7 +38,7 @@ foreach ($attendees as $att) {
             $pid = $p['problem_id'];
             if ($p['problem_type'] == 'programming') {
                 // 编程题查最高分
-                $sol = pdo_query("SELECT result, pass_rate FROM solution WHERE exam_id=? AND user_id=? AND problem_id=? ORDER BY result DESC, pass_rate DESC LIMIT 1", $eid, $user_id, $pid);
+                $sol = pdo_query("SELECT result, pass_rate FROM solution WHERE exam_id=? AND user_id=? AND problem_id=? ORDER BY CASE WHEN result=4 THEN 1 ELSE 0 END DESC, pass_rate DESC, solution_id DESC LIMIT 1", $eid, $user_id, $pid);
                 if (!empty($sol)) {
                     $res = $sol[0];
                     if (intval($res['result']) < 4) {
@@ -46,8 +46,8 @@ foreach ($attendees as $att) {
                     } else if (intval($res['result']) == 4) {
                         $obt += intval($p['score']);
                     } else {
-                        $pass_rate = floatval($res['pass_rate']);
-                        $obt += intval($p['score'] * $pass_rate / 100);
+                        $pass_rate = exam_pass_rate($res['pass_rate']);
+                        $obt += intval($p['score'] * $pass_rate);
                     }
                 }
             } else {
@@ -68,6 +68,21 @@ foreach ($attendees as $att) {
     $er_rows = pdo_query("SELECT problem_id, is_correct, score FROM exam_result WHERE exam_id=? AND user_id=?", $eid, $user_id);
     $er_map = [];
     foreach ($er_rows as $er) $er_map[$er['problem_id']] = $er;
+    foreach ($problems as $p) {
+        if ($p['problem_type'] != 'programming') continue;
+        $pid = $p['problem_id'];
+        $sol = pdo_query("SELECT result, pass_rate FROM solution WHERE exam_id=? AND user_id=? AND problem_id=? ORDER BY CASE WHEN result=4 THEN 1 ELSE 0 END DESC, pass_rate DESC, solution_id DESC LIMIT 1", $eid, $user_id, $pid);
+        if (empty($sol)) continue;
+        $res = $sol[0];
+        if (intval($res['result']) < 4) {
+            $er_map[$pid] = ['problem_id' => $pid, 'is_correct' => 'P', 'score' => '判题中'];
+        } else if (intval($res['result']) == 4) {
+            $er_map[$pid] = ['problem_id' => $pid, 'is_correct' => 'Y', 'score' => intval($p['score'])];
+        } else {
+            $score = intval($p['score'] * exam_pass_rate($res['pass_rate']));
+            $er_map[$pid] = ['problem_id' => $pid, 'is_correct' => $score > 0 ? 'P' : 'N', 'score' => $score];
+        }
+    }
     $results[] = ['att' => $att, 'map' => $er_map, 'obt' => $total_obtained];
 }
 ?>
@@ -123,7 +138,7 @@ foreach ($attendees as $att) {
                     if (!$er) {
                         echo "<td style='color:#ccc;'>-</td>";
                     } else {
-                        $color = $er['is_correct'] == 'Y' ? 'green' : 'red';
+                        $color = $er['is_correct'] == 'Y' ? 'green' : ($er['is_correct'] == 'P' ? 'orange' : 'red');
                         echo "<td class='score-cell' style='color:$color;'>{$er['score']}</td>";
                     }
                 }

@@ -544,15 +544,19 @@ if (~$OJ_LANGMASK & (1 << $language)) {
 
     //using redis task queue
     if ($OJ_REDIS && $result == 0) {
-        $redis = new Redis();
-        $redis->connect($OJ_REDISSERVER, $OJ_REDISPORT);
+        try {
+            $redis = new Redis();
+            $redis->connect($OJ_REDISSERVER, $OJ_REDISPORT);
 
-        if (isset($OJ_REDISAUTH)) {
-            $redis->auth($OJ_REDISAUTH);
+            if (isset($OJ_REDISAUTH)) {
+                $redis->auth($OJ_REDISAUTH);
+            }
+
+            $redis->lpush($OJ_REDISQNAME, $insert_id);
+            $redis->close();
+        } catch (Exception $e) {
+            // Redis 推送失败，静默降级，继续依赖 UDP 或被动判题
         }
-
-        $redis->lpush($OJ_REDISQNAME, $insert_id);
-        $redis->close();
     }
 }
 

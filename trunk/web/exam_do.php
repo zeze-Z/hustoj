@@ -19,8 +19,12 @@ $exam = $exam[0];
 $now = date('Y-m-d H:i:s');
 $user_id = $_SESSION[$OJ_NAME . '_' . 'user_id'] ?? 'guest_' . substr(md5(uniqid()), 0, 8);
 
-// 记录参考
+// 记录参考；已交卷则不允许重复提交
 pdo_query("INSERT IGNORE INTO exam_attend(exam_id, user_id) VALUES(?,?)", $eid, $user_id);
+$attend = pdo_query("SELECT submitted FROM exam_attend WHERE exam_id=? AND user_id=?", $eid, $user_id);
+if (!empty($attend) && $attend[0]['submitted'] == 'Y') {
+    exit("已交卷，不能重复提交");
+}
 
 // 获取试卷题目
 $problems = pdo_query("SELECT ep.*, p.title, p.answer, p.problem_type
@@ -39,19 +43,56 @@ foreach ($problems as $p) {
     $user_ans = '';
 
     if ($p['problem_type'] == 'programming') {
-        // 编程题：记录代码，交给OJ判题
+        // 编程题：固定使用 C++，保存源码并投递到 OJ 判题队列
         $code = trim($user_codes[$pid] ?? '');
-        $lang = 0; // C++
-        $ip = $_SERVER['REMOTE_ADDR'];
-        $len = strlen($code);
-        $sql = "INSERT INTO solution(problem_id,user_id,in_date,language,ip,code_length,result,exam_id) VALUES(?,?,NOW(),?,?,?,0,?)";
-        pdo_query($sql, $pid, $user_id, $lang, $ip, $len, $eid);
+        $user_ans = $code === '' ? '（未提交代码）' : '代码已提交，等待判题';
+        $is_correct = 'N';
+        $score = 0;
+
+        if ($code !== '') {
+            $lang = 1; // C++
+            $ip = $_SERVER['REMOTE_ADDR'];
+            if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+                $tmp_ip = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+                $ip = htmlentities($tmp_ip[0], ENT_QUOTES, "UTF-8");
+            }
+            $len = strlen($code);
+
+            if ($len > 65536) {
+                exit("题目 {$p['num']} 代码过长，请控制在 64KB 以内");
+            }
+
+            $nick_row = pdo_query("SELECT nick FROM users WHERE user_id=?", $user_id);
+            $nick = !empty($nick_row) ? $nick_row[0]['nick'] : $user_id;
+            if (empty($nick)) $nick = $user_id;
+
+            $sql = "INSERT INTO solution(problem_id,user_id,nick,in_date,language,ip,code_length,result,exam_id) VALUES(?,?,?,NOW(),?,?,?,0,?)";
+            $insert_id = pdo_query($sql, $pid, $user_id, $nick, $lang, $ip, $len, $eid);
+
+            pdo_query("INSERT INTO source_code_user(solution_id,source) VALUES(?,?)", $insert_id, $code);
+            pdo_query("INSERT INTO source_code(solution_id,source) VALUES(?,?)", $insert_id, $code);
+            pdo_query("UPDATE problem SET submit=submit+1 WHERE problem_id=?", $pid);
+
+            if (isset($OJ_REDIS) && $OJ_REDIS) {
+                try {
+                    $redis = new Redis();
+                    $redis->connect($OJ_REDISSERVER, $OJ_REDISPORT);
+                    if (isset($OJ_REDISAUTH)) {
+                        $redis->auth($OJ_REDISAUTH);
+                    }
+                    $redis->lpush($OJ_REDISQNAME, $insert_id);
+                    $redis->close();
+                } catch (Exception $e) {
+                    // Redis 推送失败，静默降级，继续依赖 UDP 或被动判题
+                }
+            }
+            if (isset($OJ_UDP) && $OJ_UDP) {
+                trigger_judge($insert_id);
+            }
+        }
 
         // 提交新代码后重置成绩计算状态，下次查询自动重算
         pdo_query("UPDATE exam_attend SET score_calculated=0 WHERE exam_id=? AND user_id=?", $eid, $user_id);
-        // 更新exam_result（编程题需要等待判题）
-        $is_correct = 'N';
-        $score = 0;
     } else {
         // 选择/判断题：立即判分
         if (is_array($user_answers[$pid] ?? null)) {
@@ -121,11 +162,16 @@ pdo_query("UPDATE exam_attend SET submitted='Y' WHERE exam_id=? AND user_id=?", 
             <span style="float:right;"><?php echo $d['score']; ?> / <?php echo $d['max_score']; ?>分</span>
         </div>
         <div style="margin-top:5px;">
-            你的答案：<strong style="color:<?php echo $d['is_correct']=='Y'?'green':'red'; ?>"><?php echo htmlspecialchars($d['user_ans']) ?: '（未作答）'; ?></strong>
-            &nbsp;&nbsp;正确答案：<strong style="color:green"><?php echo htmlspecialchars($d['correct']); ?></strong>
-            <span style="float:right;">
-                <span class="ui <?php echo $d['is_correct']=='Y'?'green':'red'; ?> label"><?php echo $d['is_correct']=='Y'?'正确':'错误'; ?></span>
-            </span>
+            <?php if ($d['type'] == 'programming') { ?>
+                判题状态：<strong style="color:#f2711c"><?php echo htmlspecialchars($d['user_ans']); ?></strong>
+                <span style="float:right;"><span class="ui orange label">判题中</span></span>
+            <?php } else { ?>
+                你的答案：<strong style="color:<?php echo $d['is_correct']=='Y'?'green':'red'; ?>"><?php echo htmlspecialchars($d['user_ans']) ?: '（未作答）'; ?></strong>
+                &nbsp;&nbsp;正确答案：<strong style="color:green"><?php echo htmlspecialchars($d['correct']); ?></strong>
+                <span style="float:right;">
+                    <span class="ui <?php echo $d['is_correct']=='Y'?'green':'red'; ?> label"><?php echo $d['is_correct']=='Y'?'正确':'错误'; ?></span>
+                </span>
+            <?php } ?>
         </div>
     </div>
     <?php } ?>
