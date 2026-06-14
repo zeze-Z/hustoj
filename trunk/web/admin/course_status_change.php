@@ -1,6 +1,6 @@
 <?php
-require_once("../include/check_post_key.php");
 require_once("../include/db_info.inc.php");
+require_once("../include/check_post_key.php");
 
 // 仅管理员可操作
 if (!isset($_SESSION[$OJ_NAME.'_'.'administrator'])) {
@@ -19,8 +19,12 @@ if ($id <= 0 || !in_array($status, [0, 1])) {
 $sql = "UPDATE `course` SET `status` = ? WHERE `id` = ?";
 
 try {
-    pdo_query($sql, $status, $id);
-    echo "success";
+    $ret = pdo_query($sql, $status, $id);
+    if ($ret === -1) {
+        echo "Database error";
+    } else {
+        echo "success";
+    }
 } catch (Exception $e) {
     echo "Database error: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
 }

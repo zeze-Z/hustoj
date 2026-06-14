@@ -151,6 +151,8 @@ if(isset($_POST['startdate'])){
   $contest_type= $row['contest_type'];
   $description = $row['description'];
   $title = htmlentities($row['title'],ENT_QUOTES,"UTF-8");
+  $contest_school_id = isset($row['school_id']) ? $row['school_id'] : '';
+  $contest_is_public = !empty($row['is_public']);
 
   $plist = "";
   $sql = "select `problem_id` FROM `contest_problem` WHERE `contest_id`=? ORDER BY `num`";
@@ -172,136 +174,332 @@ if(isset($_POST['startdate'])){
 }
 ?>
 
-<div class="padding">
+<style>
+  .contest-add-wrap {
+    max-width: 1180px;
+    margin: 0 auto 40px;
+    padding: 0 15px;
+  }
+  .contest-add-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .contest-add-card .card-title {
+    margin: 0;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+  }
+  .contest-add-card .card-body {
+    padding: 16px;
+  }
+  .contest-form-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .contest-form-group {
+    flex: 1;
+    min-width: 240px;
+  }
+  .contest-form-group.full {
+    flex-basis: 100%;
+  }
+  .contest-form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #374151;
+  }
+  .contest-form-group .help-block {
+    margin: 6px 0 0;
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .time-inline {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .time-inline input[type=date] {
+    min-width: 160px;
+  }
+  .time-inline input[type=text] {
+    width: 52px;
+    text-align: center;
+  }
+  .contest-grid-2 {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) minmax(320px, 1.4fr);
+    gap: 16px;
+  }
+  .contest-lock-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(240px, 1fr));
+    gap: 8px 14px;
+  }
+  .contest-check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.5;
+    margin: 0;
+    font-weight: normal;
+  }
+  .contest-check-item input {
+    margin-top: 3px;
+  }
+  .contest-lang-select {
+    width: 100%;
+    min-height: 230px;
+  }
+  .contest-user-tools {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .contest-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    margin-top: 18px;
+    padding: 14px 16px;
+    text-align: center;
+    background: rgba(248,250,252,0.96);
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+  }
+  .contest-actions input[type=submit], .contest-actions input[type=reset] {
+    min-width: 120px;
+    padding: 8px 24px;
+    font-size: 15px;
+  }
+  #ptitles {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border: 1px dashed #d1d5db;
+    border-radius: 4px;
+    background: #fafafa;
+    min-height: 38px;
+    max-height: 160px;
+    overflow-y: auto;
+    line-height: 1.7;
+  }
+  @media (max-width: 900px) {
+    .contest-grid-2 {
+      grid-template-columns: 1fr;
+    }
+    .contest-lock-list {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="contest-add-wrap">
   <form method=POST>
-    <?php require_once("../include/set_post_key.php");?>
     <input type=hidden name='cid' value=<?php echo $cid?>>
-    <p align=left>
-      <?php echo "<h3>".$MSG_CONTEST."-".$MSG_TITLE."</h3>"?>
-      <input class="input input-xxlarge" style="width:100%;" type=text name=title value="<?php echo $title?>"><br><br>
-    </p>
-    <p align=left>
-      <?php echo $MSG_CONTEST.$MSG_Start?>:
-      <input class=input-large type=date name='startdate' value='<?php echo substr($starttime,0,10)?>' size=4 >
-      Hour: <input class=input-mini type=text name=shour size=2 value='<?php echo substr($starttime,11,2)?>'>&nbsp;
-      Minute: <input class=input-mini type=text name=sminute value='<?php echo substr($starttime,14,2)?>' size=2 >
-    </p>
-    <p align=left>
-      <?php echo $MSG_CONTEST.$MSG_End?>:
-      <input class=input-large type=date name='enddate' value='<?php echo substr($endtime,0,10)?>' size=4 >
-      Hour: <input class=input-mini type=text name=ehour size=2 value='<?php echo substr($endtime,11,2)?>'>&nbsp;
-      Minute: <input class=input-mini type=text name=eminute value='<?php echo substr($endtime,14,2)?>' size=2 >
-    </p>
-    <br>
-    <p align=left>
-      <?php echo $MSG_CONTEST."-".$MSG_PROBLEM_ID?>
-      <?php echo "( Add problemIDs with coma , )"?>
-      <button type="button" class="btn btn-default" style="margin-left:8px;" onclick="openProblemSearch()">🔍 筛选题目</button>
-      <br>
-      <input id="plist" onchange="showTitles()" class=input-xxlarge type=text style="width:100%" name=cproblem value='<?php echo $plist?>'>
-      <div id="ptitles"></div>
-    </p>
-    <br><?php echo $MSG_SUBNET ?>
-      <input class=input-xxlarge type=text style="width:100%" name=subnet value='<?php echo htmlentities($subnet)?>' placeholder='0.0.0.0/0'>
-    <p align=left>
-      <?php echo "<h4>".$MSG_CONTEST."-".$MSG_Description."</h4>"?>
-      <textarea class=kindeditor rows=13 name=description cols=80>
-        <?php echo htmlentities($description,ENT_QUOTES,'UTF-8')?>
-      </textarea>
-      <br>
-      <table width="100%">
-        <tr>
-          <td rowspan=2>
-            <p aligh=left>
-              <?php echo $MSG_CONTEST."-".$MSG_LANG?>
-              <?php echo "( Add PLs with Ctrl+click )"?><br>
-              <?php echo $MSG_PLS_ADD?><br>
-              <select name="lang[]" multiple="multiple" style="height:220px">
-              <?php
-              $lang_count = count($language_ext);
-              $lang = (~((int)$langmask))&((1<<$lang_count)-1);
 
-              if(isset($_COOKIE['lastlang'])) $lastlang=$_COOKIE['lastlang'];
-              else $lastlang = 0;
+    <div class="contest-add-card">
+      <h4 class="card-title">基本信息</h4>
+      <div class="card-body">
+        <div class="contest-form-row">
+          <div class="contest-form-group full">
+            <label><?php echo $MSG_CONTEST."-".$MSG_TITLE?></label>
+            <input class="form-control input input-xxlarge" type=text name=title value="<?php echo $title?>" placeholder="请输入竞赛真题标题">
+          </div>
+        </div>
 
-              for($i=0; $i<$lang_count; $i++){
-		       if( (1<<$i) & $OJ_LANGMASK ) continue;
-                echo "<option value=$i ".( $lang&(1<<$i)?"selected":"").">".$language_name[$i]."</option>";
-              }
-              ?>
-              </select>
-            </p>
-          </td>
+        <div class="contest-form-row">
+          <div class="contest-form-group">
+            <label><?php echo $MSG_CONTEST.$MSG_Start?></label>
+            <div class="time-inline">
+              <input class="form-control input-large" type=date name='startdate' value='<?php echo substr($starttime,0,10)?>' size=4>
+              <span>时</span><input class="form-control input-mini" type=text name=shour size=2 value='<?php echo substr($starttime,11,2)?>'>
+              <span>分</span><input class="form-control input-mini" type=text name=sminute value='<?php echo substr($starttime,14,2)?>' size=2>
+            </div>
+          </div>
+          <div class="contest-form-group">
+            <label><?php echo $MSG_CONTEST.$MSG_End?></label>
+            <div class="time-inline">
+              <input class="form-control input-large" type=date name='enddate' value='<?php echo substr($endtime,0,10)?>' size=4>
+              <span>时</span><input class="form-control input-mini" type=text name=ehour size=2 value='<?php echo substr($endtime,11,2)?>'>
+              <span>分</span><input class="form-control input-mini" type=text name=eminute value='<?php echo substr($endtime,14,2)?>' size=2>
+            </div>
+          </div>
+        </div>
 
-          <td rowspan=2>
-            <p aligh=left>
-              <?php echo $MSG_FORBIDDEN?><br>
-              <?php
-              $locks_count = count($contest_locks);
-              $contest_lock = (~((int)$contest_type))&((1<<$locks_count)-1);
+        <div class="contest-form-row">
+          <div class="contest-form-group full">
+            <label><?php echo $MSG_CONTEST."-".$MSG_PROBLEM_ID?></label>
+            <div class="input-group">
+              <input id="plist" onchange="showTitles()" class="form-control input-xxlarge" placeholder="Example:1000,1001,1002" type=text name=cproblem value='<?php echo htmlentities($plist, ENT_QUOTES, "UTF-8")?>'>
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-default" onclick="openProblemSearch()">🔍 筛选题目</button>
+              </span>
+            </div>
+            <p class="help-block">多个题号使用英文逗号分隔；保存后会重新生成竞赛真题题目关联。</p>
+            <div id="ptitles"></div>
+          </div>
+        </div>
 
-              for($i=0; $i<$locks_count; $i++){
-                echo "<input type=checkbox name='contest_type[]'  value=$i ".( $contest_type&(1<<$i)?"checked":"").">".$contest_locks[$i]."<br>";
-              }
-              ?>
-            </p>
-          </td>
-
-          <td height="10px">
-            <p align=left>
-              <?php echo $MSG_CONTEST."-".$MSG_Public?>:
-              <select name=private style="width:150px;">
-                <option value=0 <?php echo $private=='0'?'selected=selected':''?>><?php echo $MSG_Public?></option>
-                <option value=1 <?php echo $private=='1'?'selected=selected':''?>><?php echo $MSG_Private?></option>
-              </select>
-              <span style="font-size:12px;color:#666;">（控制谁能参加竞赛，私有竞赛需要密码或权限）</span>
-              <br>
-              <?php echo $MSG_CONTEST."-".$MSG_PASSWORD?>:
-              <input type=text name=password style="width:150px;" value='<?php echo htmlentities($password,ENT_QUOTES,'utf-8')?>'>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td height="*">
-            <p align=left>
-              <?php echo $MSG_CONTEST."-".$MSG_USER?>
-              <?php echo "( Add private contest's userIDs with newline &#47;n )"?>
-              <br>
-              <textarea name='ulist' rows='10' style='width:100%;' placeholder='user1<?php echo "\n"?>user2<?php echo "\n"?>user3<?php echo "\n"?>
-              <?php echo $MSG_PRIVATE_USERS_ADD?><?php echo "\n"?>'><?php if(isset($ulist)){ echo $ulist;}?></textarea>
-            </p>
-          </td>
-        </tr>
-      </table>
-
-      <?php if(isset($school_list) && is_array($school_list)): ?>
-      <p align=left>
-        <?php echo "<h4>".$MSG_SCHOOL."</h4>"?>
-        <select name="school_id" class="form-control" style="width:100%;">
-          <option value="">选择学校</option>
-          <?php foreach ($school_list as $school): ?>
-            <option value="<?php echo $school['id'] ?>" <?php echo ($row['school_id'] == $school['id']) ? 'selected' : ''; ?>>
-              <?php echo htmlentities($school['name'], ENT_QUOTES, 'UTF-8') ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-      </p>
-      <p align=left>
-        <label>
-          <input type="checkbox" name="is_public" value="1" <?php echo (!empty($row['is_public'])) ? 'checked' : ''; ?>> 公开比赛（允许其他学校访问）
-        </label>
-        <span style="font-size:12px;color:#666;">（控制哪些学校的用户能在竞赛列表中看到这个比赛）</span>
-      </p>
-      <?php endif; ?>
-
-      <div align=center>
-        <?php require_once("../include/set_post_key.php");?>
-        <input type=submit value='<?php echo $MSG_SAVE?>' name=submit> <input type=reset value=Reset name=reset>
+        <div class="contest-form-row">
+          <div class="contest-form-group full">
+            <label><?php echo $MSG_SUBNET ?></label>
+            <input class="form-control input-xxlarge" type=text name=subnet value='<?php echo htmlentities($subnet, ENT_QUOTES, "UTF-8")?>' placeholder='0.0.0.0/0'>
+            <p class="help-block">可限制允许参加的 IP 网段；不限制时保持默认即可。</p>
+          </div>
+        </div>
       </div>
-    </p>
+    </div>
+
+    <div class="contest-add-card">
+      <h4 class="card-title"><?php echo $MSG_CONTEST."-".$MSG_Description?></h4>
+      <div class="card-body">
+        <textarea class=kindeditor rows=13 name=description cols=80><?php echo htmlentities($description,ENT_QUOTES,'UTF-8')?></textarea>
+      </div>
+    </div>
+
+    <div class="contest-add-card">
+      <h4 class="card-title">规则设置</h4>
+      <div class="card-body contest-grid-2">
+        <div class="contest-form-group">
+          <label><?php echo $MSG_CONTEST."-".$MSG_LANG?></label>
+          <p class="help-block"><?php echo $MSG_PLS_ADD?>（按住 Ctrl/Command 可多选）</p>
+          <select name="lang[]" multiple="multiple" class="contest-lang-select form-control">
+          <?php
+            $lang_count = count($language_ext);
+            $lang = (~((int)$langmask))&((1<<$lang_count)-1);
+
+            if(isset($_COOKIE['lastlang'])) $lastlang=$_COOKIE['lastlang'];
+            else $lastlang = 0;
+
+            for($i=0; $i<$lang_count; $i++){
+              if( (1<<$i) & $OJ_LANGMASK ) continue;
+              echo "<option value=$i ".( $lang&(1<<$i)?"selected":"").">".$language_name[$i]."</option>";
+            }
+          ?>
+          </select>
+        </div>
+
+        <div class="contest-form-group">
+          <label><?php echo $MSG_FORBIDDEN?></label>
+          <p class="help-block">这里显示当前竞赛真题已保存的限制配置，可按实际场景调整。</p>
+          <div class="contest-lock-list">
+          <?php
+            $locks_count = count($contest_locks);
+            $contest_lock = (~((int)$contest_type))&((1<<$locks_count)-1);
+
+            for($i=0; $i<$locks_count; $i++){
+              echo "<label class='contest-check-item'><input type=checkbox name='contest_type[]' value=$i ".( $contest_type&(1<<$i)?"checked":"")."> <span>".$contest_locks[$i]."</span></label>";
+            }
+          ?>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="contest-add-card">
+      <h4 class="card-title">访问权限</h4>
+      <div class="card-body">
+        <div class="contest-form-row">
+          <div class="contest-form-group">
+            <label><?php echo $MSG_CONTEST."-".$MSG_Public?></label>
+            <select name=private class="form-control" style="max-width:220px;">
+              <option value=0 <?php echo $private=='0'?'selected=selected':''?>><?php echo $MSG_Public?></option>
+              <option value=1 <?php echo $private=='1'?'selected=selected':''?>><?php echo $MSG_Private?></option>
+            </select>
+            <p class="help-block">控制谁能参加竞赛；私有竞赛需要密码或参赛用户权限。</p>
+          </div>
+          <div class="contest-form-group">
+            <label><?php echo $MSG_CONTEST."-".$MSG_PASSWORD?></label>
+            <input type=text name=password class="form-control" style="max-width:260px;" value='<?php echo htmlentities($password,ENT_QUOTES,'utf-8')?>'>
+            <p class="help-block">私有竞赛可设置访问密码。</p>
+          </div>
+        </div>
+
+        <div class="contest-form-row">
+          <div class="contest-form-group full">
+            <label><?php echo $MSG_CONTEST."-".$MSG_USER?></label>
+            <div class="contest-user-tools">
+              <span class="help-block" style="margin:0;">每行一个用户 ID</span>
+              <select id="copy_from" class="form-control" style="width:auto;" onchange="copy_user_from_contest($(this).val());">
+                <option value=0><?php echo $MSG_COPY_USER_LIST_FROM_CONTEST ?></option>
+                <?php
+                  $contests="0";
+                  foreach($_SESSION as $right=>$value){
+                    if(strpos($right,$OJ_NAME.'_m')===0){
+                      $contests.=",".substr($right,strlen($OJ_NAME."_m"));
+                    }
+                  }
+                  $contests=pdo_query("select contest_id,title from contest where contest_id in ($contests)  order by contest_id desc limit 20 ");
+                  if(!empty($contests)){
+                    foreach( $contests as $contest ){
+                      echo "<option value='".$contest['contest_id']."'>".$contest['title']."</option>";
+                    }
+                  }
+                ?>
+              </select>
+            </div>
+            <textarea id="ulist" name='ulist' rows='8' class="form-control" placeholder='user1&#10;user2&#10;user3&#10;<?php echo $MSG_PRIVATE_USERS_ADD?>'><?php echo htmlentities($ulist, ENT_QUOTES, 'UTF-8');?></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <?php if(isset($school_list) && is_array($school_list)): ?>
+    <div class="contest-add-card">
+      <h4 class="card-title"><?php echo $MSG_SCHOOL?></h4>
+      <div class="card-body">
+        <div class="contest-form-row">
+          <div class="contest-form-group">
+            <label><?php echo $MSG_SCHOOL?></label>
+            <select name="school_id" class="form-control">
+              <option value="">选择学校</option>
+              <?php foreach ($school_list as $school): ?>
+                <option value="<?php echo $school['id'] ?>" <?php echo ($contest_school_id == $school['id']) ? 'selected' : ''; ?>>
+                  <?php echo htmlentities($school['name'], ENT_QUOTES, 'UTF-8') ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="contest-form-group">
+            <label>公开范围</label>
+            <label class="contest-check-item" style="margin-top:8px;">
+              <input type="checkbox" name="is_public" value="1" <?php echo $contest_is_public ? 'checked' : ''; ?>> <span>公开比赛（允许其他学校访问）</span>
+            </label>
+            <p class="help-block">控制哪些学校的用户能在竞赛列表中看到这个比赛。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <?php endif; ?>
+
+    <div class="contest-actions">
+      <?php require_once("../include/set_post_key.php");?>
+      <input type=submit class="btn btn-primary" value='<?php echo $MSG_SAVE?>' name=submit>
+      <input type=reset class="btn btn-default" value=Reset name=reset>
+    </div>
   </form>
 </div>
+
 <script>
+  function copy_user_from_contest(cid){
+      $("#ulist").val($.ajax({url:"ajax.php",method:"post",data:{"contest_id":cid,"m":"get_user_list_of_contest"},async:false}).responseText);
+  }
+
   function openProblemSearch(){
     let pids = getCurrentPids();
 
@@ -344,7 +542,11 @@ if(isset($_POST['startdate'])){
     $("body").append(html);
 
     window._ps_selected = {};
-    for(let i=0;i<pids.length;i++) window._ps_selected[pids[i]]=true;
+    window._ps_selected_order = [];
+    for(let i=0;i<pids.length;i++){
+      window._ps_selected[pids[i]]=true;
+      window._ps_selected_order.push(pids[i]);
+    }
     updateSelectedList();
   }
 
@@ -354,10 +556,9 @@ if(isset($_POST['startdate'])){
 
   function confirmProblemSelect(){
     let pids = [];
-    for(let pid in window._ps_selected){
+    (window._ps_selected_order || []).forEach(function(pid){
       if(window._ps_selected[pid]) pids.push(parseInt(pid));
-    }
-    pids.sort(function(a,b){return a-b;});
+    });
     $("#plist").val(pids.join(","));
     closeProblemSearch();
     showTitles();
@@ -381,9 +582,14 @@ if(isset($_POST['startdate'])){
 
   function toggleProblem(pid,cb){
     if(cb.checked){
-      window._ps_selected[pid]=true;
+      if(!window._ps_selected[pid]){
+        window._ps_selected[pid]=true;
+        if(!window._ps_selected_order) window._ps_selected_order=[];
+        window._ps_selected_order.push(pid);
+      }
     }else{
       delete window._ps_selected[pid];
+      window._ps_selected_order=(window._ps_selected_order || []).filter(function(v){return parseInt(v)!==parseInt(pid);});
     }
     updateSelectedList();
   }
@@ -407,10 +613,9 @@ if(isset($_POST['startdate'])){
 
   function updateSelectedList(){
     let pids=[];
-    for(let pid in window._ps_selected){
+    (window._ps_selected_order || []).forEach(function(pid){
       if(window._ps_selected[pid]) pids.push(parseInt(pid));
-    }
-    pids.sort(function(a,b){return a-b;});
+    });
     $("#ps_selected_count").text(pids.length);
     let html="";
     for(let i=0;i<pids.length;i++){
@@ -422,6 +627,7 @@ if(isset($_POST['startdate'])){
 
   function removeSelected(pid){
     delete window._ps_selected[pid];
+    window._ps_selected_order=(window._ps_selected_order || []).filter(function(v){return parseInt(v)!==parseInt(pid);});
     updateSelectedList();
     syncCheckedState();
   }

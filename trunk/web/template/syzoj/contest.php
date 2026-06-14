@@ -78,6 +78,58 @@
             </div>
         </div>
         <?php } ?>
+        <?php if(isset($view_true_question_completed) && $view_true_question_completed && isset($view_true_question_score)){ ?>
+        <div class="row">
+            <div class="column">
+                <div class="ui positive message">
+                    <div class="header">竞赛真题已完成</div>
+                    <p>
+                        总分：<?php echo number_format($view_true_question_score['user_score'], 2) ?> / <?php echo number_format($view_true_question_score['total_score'], 2) ?>
+                        <?php if(isset($view_true_question_progress)){ ?>
+                        ，完成进度：<?php echo intval($view_true_question_progress['submitted']) ?> / <?php echo intval($view_true_question_progress['total']) ?>
+                        <?php } ?>
+                    </p>
+                    <?php if($view_true_question_score['has_pending']){ ?>
+                    <p>部分题目仍在判题中，成绩可能稍后更新。</p>
+                    <?php } ?>
+                </div>
+                <table class="ui celled table">
+                    <thead>
+                        <tr>
+                            <th class="one wide center aligned">题号</th>
+                            <th>标题</th>
+                            <th class="two wide center aligned">用户答案</th>
+                            <th class="two wide center aligned">正确答案</th>
+                            <th class="two wide center aligned">结果</th>
+                            <th class="two wide center aligned">得分</th>
+                            <th>解析</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($view_true_question_score['items'] as $item){ ?>
+                        <tr>
+                            <td class="center aligned"><?php echo intval($item['num']) + 1 ?></td>
+                            <td><?php echo htmlentities($item['title'], ENT_QUOTES, 'UTF-8') ?></td>
+                            <td class="center aligned"><?php echo htmlentities($item['user_answer'], ENT_QUOTES, 'UTF-8') ?></td>
+                            <td class="center aligned"><?php echo htmlentities($item['answer'], ENT_QUOTES, 'UTF-8') ?></td>
+                            <td class="center aligned">
+                                <?php if($item['correct']){ ?>
+                                <span class="ui green label"><?php echo htmlentities($item['status'], ENT_QUOTES, 'UTF-8') ?></span>
+                                <?php }else if($item['pending']){ ?>
+                                <span class="ui yellow label"><?php echo htmlentities($item['status'], ENT_QUOTES, 'UTF-8') ?></span>
+                                <?php }else{ ?>
+                                <span class="ui red label"><?php echo htmlentities($item['status'], ENT_QUOTES, 'UTF-8') ?></span>
+                                <?php } ?>
+                            </td>
+                            <td class="center aligned"><?php echo number_format($item['score'], 2) ?> / <?php echo number_format($item['max_score'], 2) ?></td>
+                            <td><?php echo $item['analysis'] ?></td>
+                        </tr>
+                        <?php } ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <?php } ?>
         <div class="row">
             <div class="column">
                 <table class="ui selectable celled table">

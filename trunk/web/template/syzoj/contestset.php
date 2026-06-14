@@ -4,22 +4,13 @@
 <div class="ui grid" style="margin-bottom: 10px; ">
     <div class="row" style="white-space: nowrap; ">
       <div class="seven wide column">
-          <form method=post action=contest.php >
-            <div class="ui search" style="width: 280px; height: 28px; margin-top: -5.3px; ">
-              <div class="ui left icon input" style="width: 100%; ">
-                <input class="prompt" style="width: 100%; " type="text" value="" placeholder=" <?php echo $MSG_CONTEST_NAME ?> …" name="keyword">
-                <i class="search icon"></i>&nbsp;&nbsp;&nbsp;
-                <?php
-                if(isset($_GET['my'])){
-                
-                echo '<a  class="ui button primary"  href="contest.php" >'.$MSG_VIEW_ALL_CONTESTS .'</a>';
-                }else{
-                
-                echo '<a  class="ui button red"  href="contest.php?my" >'.$MSG_VIEW_MY_CONTESTS .'</a>';
-                };
-                ?>
-              </div>
-              <div class="results" style="width: 100%; "></div>
+          <form method=get action=contest.php>
+            <div class="ui action input" style="width: 520px; max-width: 100%; margin-top: -5.3px;">
+              <input class="prompt" type="text" value="<?php echo isset($keyword_text) ? htmlentities($keyword_text, ENT_QUOTES, 'UTF-8') : '' ?>" placeholder="<?php echo $MSG_CONTEST_NAME ?> …" name="keyword">
+              <?php if(isset($_GET['my'])){ ?>
+                <input type="hidden" name="my" value="1">
+              <?php } ?>
+              <button class="ui primary button" type="submit"><i class="search icon"></i><?php echo $MSG_SEARCH?></button>
             </div>
           </form>
 

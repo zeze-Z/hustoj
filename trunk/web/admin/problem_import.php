@@ -89,7 +89,7 @@
         <div class='form-group'>
           <a class='btn btn-info btn-sm' href='problem_import_choice.php?action=download' target='_blank'>下载选择题模板(CSV)</a>
           <input class='form-control ml-2' type=file name=csv_file accept=".csv">
-          <button class='btn btn-success btn-sm ml-2' type=submit>导入选择题</button>
+          <button class='btn btn-success btn-sm ml-2' type=submit name="do_import" value="1">导入选择题</button>
         </div>
         <?php require("../include/set_post_key.php");?>
       </form>

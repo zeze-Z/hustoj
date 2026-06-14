@@ -592,8 +592,17 @@
             <!-- 更多功能 -->
             <a class="item <?php if ($url=="more.php") echo "active";?>" href="<?php echo $path_fix?>more.php" style="font-weight: 500;">更多</a>
             <?php }
+            $is_true_question_nav = false;
             if( isset($_GET['cid']) && intval($_GET['cid'])>0 ){
                      $cid=intval($_GET['cid']);
+                     $is_true_question_nav = !empty($view_is_true_question_contest);
+                     if($is_true_question_nav){ ?>
+                            <a class="item true-question-nav" href="<?php echo $path_fix?>contest.php" ><i class="arrow left icon"></i><span class="desktop-only">返回真题列表</span></a>
+                            <a class="item true-question-nav" href="<?php echo $path_fix?>contest.php?cid=<?php echo $cid?>" ><i class="file alternate outline icon"></i><span class="desktop-only">返回试卷</span></a>
+                            <?php if(isset($_GET['pid'])){ $nav_pid=intval($_GET['pid']); ?>
+                            <span class="item true-question-nav disabled"><i class="bookmark outline icon"></i><span class="desktop-only">当前：第 <?php echo $nav_pid + 1; ?> 题</span></span>
+                            <?php } ?>
+            <?php    }else{
                      if(!isset($OJ_ON_SITE_CONTEST_ID)){   ?>
                             <a id="" class="item" href="<?php echo $path_fix?>contest.php" ><i class="arrow left icon"></i><span class="desktop-only"><?php echo $MSG_CONTEST.$MSG_LIST?></span></a>
             <?php    }      ?>
@@ -610,7 +619,9 @@
                     <?php if(isset($_SESSION[$OJ_NAME.'_'.'administrator'])||isset($_SESSION[$OJ_NAME.'_'.'contest_creator'])||isset($_SESSION[$OJ_NAME.'_'.'problem_editor'])){ ?>
                             <a id="" class="item active" href="<?php echo $path_fix?>conteststatistics.php?cid=<?php echo $cid?>" ><i class="eye icon"></i><span class="desktop-only"><?php echo $MSG_STATISTICS?></span></a>
                     <?php }  ?>
-            <?php }  ?>
+            <?php    }
+            }  ?>
+            <?php if(empty($is_true_question_nav)){ ?>
             <?php
                 if($OJ_MENU_DROPDOWN){
             ?>
@@ -624,6 +635,7 @@
                 ?>
                         </div>
             </div>
+            <?php } ?>
             <?php } ?>
 
             <div class="right menu">

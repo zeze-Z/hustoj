@@ -57,44 +57,55 @@ try {
 
 <div class="padding">
     <center>
+        <style>
+            .course-drag-handle { cursor: move; color: #337ab7; }
+            .course-dragging { opacity: 0.5; }
+            #course-sort-body tr { cursor: move; }
+        </style>
         <table width="100%" border="1" style="text-align:center;">
-            <tr style='height:22px;'>
-                <td>ID</td>
-                <td><?php echo $MSG_COURSE_TITLE ?></td>
-                <td><?php echo $MSG_COURSE_SUBJECT ?></td>
-                <td>完整预览版价格（积分）</td>
-                <td>原文件版价格（积分）</td>
-                <td><?php echo $MSG_LINK_EXPIRE_DATE ?></td>
-                <td><?php echo $MSG_STATUS ?></td>
-                <td><?php echo $MSG_OPERATOR ?></td>
-            </tr>
-            <?php
-            foreach ($result as $row) {
-            ?>
-            <tr style='height:22px;' course_id='<?php echo $row['id'] ?>'>
-                <td><?php echo $row['id'] ?></td>
-                <td><?php echo htmlentities($row['title'], ENT_QUOTES, 'UTF-8') ?></td>
-                <td><?php echo htmlentities($row['subject_name'], ENT_QUOTES, 'UTF-8') ?></td>
-                <td><?php echo intval($row['preview_price']) ?> 积分</td>
-                <td><?php echo intval($row['source_price']) ?> 积分</td>
-                <td><?php echo $row['link_expire_date'] ?></td>
-                <td>
-                    <?php if ($row['status'] == 1) { ?>
-                        <span class="green"><?php echo $MSG_AVAILABLE ?></span>
-                    <?php } else { ?>
-                        <span class="red"><?php echo $MSG_RESERVED ?></span>
-                    <?php } ?>
-                </td>
-                <td>
-                    <a href="course_edit.php?id=<?php echo $row['id'] ?>"><?php echo $MSG_EDIT ?></a>
-                    <?php if ($row['status'] == 1) { ?>
-                        | <a href="#" onclick="changeStatus(<?php echo $row['id'] ?>, 0, '<?php echo $MSG_RESERVED ?>')"><?php echo $MSG_RESERVED ?></a>
-                    <?php } else { ?>
-                        | <a href="#" onclick="changeStatus(<?php echo $row['id'] ?>, 1, '<?php echo $MSG_AVAILABLE ?>')"><?php echo $MSG_AVAILABLE ?></a>
-                    <?php } ?>
-                </td>
-            </tr>
-            <?php } ?>
+            <thead>
+                <tr style='height:22px;'>
+                    <td><?php echo $MSG_SORT ?></td>
+                    <td>ID</td>
+                    <td><?php echo $MSG_COURSE_TITLE ?></td>
+                    <td><?php echo $MSG_COURSE_SUBJECT ?></td>
+                    <td>完整预览版价格（积分）</td>
+                    <td>原文件版价格（积分）</td>
+                    <td><?php echo $MSG_LINK_EXPIRE_DATE ?></td>
+                    <td><?php echo $MSG_STATUS ?></td>
+                    <td><?php echo $MSG_OPERATOR ?></td>
+                </tr>
+            </thead>
+            <tbody id="course-sort-body">
+                <?php
+                foreach ($result as $row) {
+                ?>
+                <tr style='height:22px;' course_id='<?php echo $row['id'] ?>' data-course-id="<?php echo intval($row['id']) ?>" draggable="true">
+                    <td class="course-drag-handle">拖动</td>
+                    <td><?php echo $row['id'] ?></td>
+                    <td><?php echo htmlentities($row['title'], ENT_QUOTES, 'UTF-8') ?></td>
+                    <td><?php echo htmlentities($row['subject_name'], ENT_QUOTES, 'UTF-8') ?></td>
+                    <td><?php echo intval($row['preview_price']) ?> 积分</td>
+                    <td><?php echo intval($row['source_price']) ?> 积分</td>
+                    <td><?php echo $row['link_expire_date'] ?></td>
+                    <td>
+                        <?php if ($row['status'] == 1) { ?>
+                            <span class="green"><?php echo $MSG_AVAILABLE ?></span>
+                        <?php } else { ?>
+                            <span class="red"><?php echo $MSG_RESERVED ?></span>
+                        <?php } ?>
+                    </td>
+                    <td>
+                        <a href="course_edit.php?id=<?php echo $row['id'] ?>"><?php echo $MSG_EDIT ?></a>
+                        <?php if ($row['status'] == 1) { ?>
+                            | <a href="#" onclick="changeStatus(<?php echo $row['id'] ?>, 0, '<?php echo $MSG_RESERVED ?>')"><?php echo $MSG_RESERVED ?></a>
+                        <?php } else { ?>
+                            | <a href="#" onclick="changeStatus(<?php echo $row['id'] ?>, 1, '<?php echo $MSG_AVAILABLE ?>')"><?php echo $MSG_AVAILABLE ?></a>
+                        <?php } ?>
+                    </td>
+                </tr>
+                <?php } ?>
+            </tbody>
         </table>
     </center>
 </div>
@@ -120,6 +131,9 @@ echo "</div>";
 
 <?php require_once("../include/set_post_key.php"); ?>
 <script>
+var draggedRow = null;
+var orderChanged = false;
+
 function changeStatus(id, status, actionName) {
     if (confirm('Confirm to ' + actionName + ' this course?')) {
         $.post("course_status_change.php", {
@@ -135,6 +149,59 @@ function changeStatus(id, status, actionName) {
         });
     }
 }
+
+function saveCourseOrder() {
+    var ids = [];
+    $('#course-sort-body tr').each(function() {
+        ids.push($(this).data('course-id'));
+    });
+
+    $.post("course_sort_update.php", {
+        ids: ids,
+        page: <?php echo intval($page); ?>,
+        postkey: "<?php echo $_SESSION[$OJ_NAME.'_'.'postkey']; ?>"
+    }, function(data) {
+        if (data && data.success) {
+            window.location.reload();
+        } else {
+            alert('Operation failed: ' + (data && data.message ? data.message : 'Unknown error'));
+            window.location.reload();
+        }
+    }, 'json').fail(function() {
+        alert('Operation failed: Network error');
+        window.location.reload();
+    });
+}
+
+$('#course-sort-body tr').on('dragstart', function(e) {
+    draggedRow = this;
+    orderChanged = false;
+    $(this).addClass('course-dragging');
+    e.originalEvent.dataTransfer.effectAllowed = 'move';
+    e.originalEvent.dataTransfer.setData('text/plain', $(this).data('course-id'));
+});
+
+$('#course-sort-body tr').on('dragover', function(e) {
+    e.preventDefault();
+    if (!draggedRow || draggedRow === this) return;
+
+    var rect = this.getBoundingClientRect();
+    var next = (e.originalEvent.clientY - rect.top) > (rect.height / 2);
+    if (next) {
+        $(this).after(draggedRow);
+    } else {
+        $(this).before(draggedRow);
+    }
+    orderChanged = true;
+});
+
+$('#course-sort-body tr').on('dragend', function() {
+    $(this).removeClass('course-dragging');
+    draggedRow = null;
+    if (orderChanged) {
+        saveCourseOrder();
+    }
+});
 </script>
 
 <?php require("admin-footer.php"); ?>

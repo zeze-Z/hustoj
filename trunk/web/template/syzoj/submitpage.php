@@ -1,5 +1,10 @@
 
 <?php $show_title="$MSG_SUBMIT - $OJ_NAME"; ?>
+<?php
+$is_true_question_page = !empty($view_is_true_question_contest);
+$true_question_number = isset($pid) ? intval($pid) + 1 : 0;
+$true_question_description = isset($view_problem_row['description']) ? $view_problem_row['description'] : '';
+?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 
   <style>
@@ -7,6 +12,52 @@
     width: 80%;
     height: 600px;
     background-color:rgb(255,225,225,0.5);
+}
+.true-question-submit-layout {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr) minmax(360px, 1fr);
+    gap: 14px;
+    width: 99%;
+    margin: 0 auto 16px auto;
+    text-align: left;
+}
+.true-question-nav-card,
+.true-question-description-card,
+.true-question-editor-card {
+    background: rgba(255,255,255,0.92);
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 12px;
+}
+.true-question-nav-title,
+.true-question-card-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+.true-question-nav-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+    gap: 8px;
+}
+.true-question-nav-list .ui.button {
+    padding-left: 0;
+    padding-right: 0;
+}
+.true-question-description-body {
+    max-height: calc(100vh - 190px);
+    overflow: auto;
+}
+.true-question-editor-card #source {
+    width: 100% !important;
+}
+.true-question-editor-card pre#source {
+    height: calc(100vh - 190px) !important;
+    min-height: 520px;
+}
+@media (max-width: 1100px) {
+    .true-question-submit-layout {
+        grid-template-columns: 1fr;
+    }
 }
 
 .ace-chrome .ace_marker-layer .ace_active-line{   /*当前行*/
@@ -28,17 +79,34 @@ body{
     position: absolute;
     background-color: rgba(255, 0, 0, 0.3); /* 红色半透明背景 */
   }
+  .true-question-submit-toolbar {
+    margin: 12px auto 16px auto;
+    padding: 12px 16px;
+    width: 99%;
+    background: rgba(255,255,255,0.9);
+    border-radius: 6px;
+    text-align: left;
+  }
+  .true-question-submit-toolbar .ui.button {
+    margin-top: 6px;
+  }
   </style>
     
 <center>
 
 <script src="<?php echo $OJ_CDN_URL?>include/checksource.js"></script>
 <form id=frmSolution action="submit.php<?php if (isset($_GET['spa'])) echo "?spa" ?>" method="post" onsubmit='do_submit()' enctype="multipart/form-data" >
-<?php if (!isset($_GET['spa']) || $solution_name ) {?>
+<?php if ((!isset($_GET['spa']) || $solution_name) && (!$is_true_question_page || $solution_name) ) {?>
         <input type='file' name='answer' placeholder='Upload answer file' >
 <?php } ?>
 
-<?php if (isset($id)){?>
+<?php if($is_true_question_page && isset($cid) && isset($pid)){ ?>
+<div class="true-question-submit-toolbar">
+  <button id="Submit" type="button" class="ui primary icon button" onclick="do_submit();">提交并下一题</button>
+  <span class="ui label">第 <?php echo $true_question_number?> 题</span>
+  <input id="cid" type='hidden' value='<?php echo $cid?>' name="cid">
+  <input id="pid" type='hidden' value='<?php echo $pid?>' name="pid">
+<?php }else if (isset($id)){?>
 <span style="color:#0000ff">Problem <b><?php echo $id?></b></span>
 <input id=problem_id type='hidden' value='<?php echo $id?>' name="id" >
 <?php }else{
@@ -49,7 +117,7 @@ Problem <span class=blue><b><?php echo chr($pid+ord('A'))?></b></span> of Contes
 <input id="cid" type='hidden' value='<?php echo $cid?>' name="cid">
 <input id="pid" type='hidden' value='<?php echo $pid?>' name="pid">
 <?php }?>
-<span id="language_span">Language: 
+<span id="language_span">Language:
 <select id="language" name="language" onChange="reloadtemplate($(this).val());" >
 <?php
 $lang_count=count($language_ext);
@@ -74,21 +142,49 @@ echo"<option value=$i ".( $lastlang==$i?"selected":"").">
 <?php echo $MSG_VCODE?>:
 <input name="vcode" size=4 type=text autocomplete=off ><img id="vcode" alt="click to change" src="vcode.php" onclick="this.src='vcode.php?'+Math.random()">
 <?php }?>
-<button  id="Submit" type="button" class="ui primary icon button"  onclick="do_submit();"><?php echo $MSG_SUBMIT?></button> 
+<?php if(!$is_true_question_page){ ?>
+<button  id="Submit" type="button" class="ui primary icon button"  onclick="do_submit();"><?php echo $MSG_SUBMIT?></button>
+<?php } ?>
 <label id="countDown" ></label>
-<?php if (isset($OJ_ENCODE_SUBMIT)&&$OJ_ENCODE_SUBMIT){?>
+<?php if (!$is_true_question_page && isset($OJ_ENCODE_SUBMIT)&&$OJ_ENCODE_SUBMIT){?>
 <input class="btn btn-success" title="WAF gives you reset ? try this." type=button value="Encoded <?php echo $MSG_SUBMIT?>"  onclick="encoded_submit();">
 <input type=hidden id="encoded_submit_mark" name="reverse2" value="reverse"/>
 <?php }?>
-<?php if (isset($_SESSION[$OJ_NAME.'_administrator'])){?>
+<?php if (!$is_true_question_page && isset($_SESSION[$OJ_NAME.'_administrator'])){?>
 <input class="btn btn-danger" title="AI everythin..." type=button value="AI一下"  onclick="ai_gen('Main.'+$('#language option:selected').text().trim());" id='ai_bt'>
 <?php }?>
 <!--选择题状态-->
-<?php if ($spj>1 || !$OJ_TEST_RUN ){?>
-<span class="btn" id=result><?php echo $MSG_STATUS?></span>	
+<?php if (!$is_true_question_page && ($spj>1 || !$OJ_TEST_RUN) ){?>
+<span class="btn" id=result><?php echo $MSG_STATUS?></span>
 <?php }?>
 </span>
-<?php if($spj <= 1 &&  !$solution_name){ ?>
+<?php if($is_true_question_page && isset($cid) && isset($pid)){ ?>
+</div>
+<?php } ?>
+<?php if($is_true_question_page && isset($cid) && isset($pid)){ ?>
+<div class="true-question-submit-layout">
+  <div class="true-question-nav-card">
+    <div class="true-question-nav-title">答题卡</div>
+    <div class="true-question-nav-list">
+      <?php foreach($view_contest_problem_nav as $nav_row){ $nav_num=intval($nav_row['num']); ?>
+      <a class="ui <?php echo $nav_num==$pid ? 'blue' : ($nav_row['answered'] ? 'green basic' : 'basic') ?> button" title="<?php echo htmlentities($nav_row['title'], ENT_QUOTES, 'UTF-8') ?>" href="<?php echo $nav_row['problem_type']=='programming' ? 'submitpage.php' : 'problem.php' ?>?cid=<?php echo $cid?>&pid=<?php echo $nav_num?><?php echo $nav_row['problem_type']=='programming' ? '&langmask='.$langmask : '' ?>"><?php echo $nav_num+1?></a>
+      <?php } ?>
+    </div>
+  </div>
+  <div class="true-question-description-card">
+    <div class="true-question-card-title">第 <?php echo $true_question_number?> 题：<?php echo htmlentities($view_problem_row['title'], ENT_QUOTES, 'UTF-8') ?></div>
+    <div class="true-question-description-body">
+      <?php if (str_contains($true_question_description,"md auto_select")) echo $true_question_description; else echo bbcode_to_html($true_question_description); ?>
+      <?php if($view_problem_row['input']||isset($_GET['spa'])){ ?><h4><?php echo $MSG_Input?></h4><div><?php echo bbcode_to_html($view_problem_row['input']); ?></div><?php } ?>
+      <?php if($view_problem_row['output']||isset($_GET['spa'])){ ?><h4><?php echo $MSG_Output?></h4><div><?php echo bbcode_to_html($view_problem_row['output']); ?></div><?php } ?>
+      <?php if(strlen($view_sample_input)>0 && $view_sample_input!="\n"||isset($_GET['spa'])){ ?><h4><?php echo $MSG_Sample_Input?></h4><pre><code><?php echo htmlentities($view_sample_input, ENT_QUOTES, 'UTF-8'); ?></code></pre><?php } ?>
+      <?php if(strlen($view_sample_output)>0 && $view_sample_output!="\n"||isset($_GET['spa'])){ ?><h4><?php echo $MSG_Sample_Output?></h4><pre><code><?php echo htmlentities($view_sample_output, ENT_QUOTES, 'UTF-8'); ?></code></pre><?php } ?>
+      <?php if($view_problem_row['hint']||isset($_GET['spa'])){ ?><h4><?php echo $MSG_HINT?></h4><div><?php echo bbcode_to_html($view_problem_row['hint']); ?></div><?php } ?>
+    </div>
+  </div>
+  <div class="true-question-editor-card">
+<?php } ?>
+<?php if($spj <= 1 &&  !$solution_name && !$is_true_question_page){ ?>
     <button onclick="toggleTheme(event)" style="background-color: bisque; position: absolute; top: 5px; right:70px;" v-if="false">
         <i>🌗</i>
     </button>
@@ -121,6 +217,10 @@ echo"<option value=$i ".( $lastlang==$i?"selected":"").">
         }
 
 	?>
+<?php if($is_true_question_page && isset($cid) && isset($pid)){ ?>
+  </div>
+</div>
+<?php } ?>
 <style>
             .button, input, optgroup, select, textarea {
     font-family: sans-serif;
@@ -184,7 +284,7 @@ echo"<option value=$i ".( $lastlang==$i?"selected":"").">
 	<span id='reinfo' style="display:none"></span>
    </div>
 <?php }	 ?>
-<?php if (isset($OJ_TEST_RUN)&&$OJ_TEST_RUN && $spj<=1 && !$solution_name  ){?>
+<?php if (!$is_true_question_page && isset($OJ_TEST_RUN)&&$OJ_TEST_RUN && $spj<=1 && !$solution_name  ){?>
         <!--运行按钮-->
             <input style="
              margin-top: 30px;
@@ -199,7 +299,7 @@ echo"<option value=$i ".( $lastlang==$i?"selected":"").">
         </div>
          <input type="hidden" value="0" id="problem_id" name="problem_id"/>
     </form>
-<?php if (isset($OJ_BLOCKLY)&&$OJ_BLOCKLY){?>
+<?php if (!$is_true_question_page && isset($OJ_BLOCKLY)&&$OJ_BLOCKLY){?>
 	<input id="blockly_loader" type=button class="btn" onclick="openBlockly()" value="<?php echo $MSG_BLOCKLY_OPEN?>" style="color:white;background-color:rgb(169,91,128)">
 	<input id="transrun" type=button  class="btn" onclick="loadFromBlockly() " value="<?php echo $MSG_BLOCKLY_TEST?>" style="display:none;color:white;background-color:rgb(90,164,139)">
 <div id="blockly" class="center">Blockly</div>

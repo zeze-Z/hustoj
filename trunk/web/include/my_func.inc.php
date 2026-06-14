@@ -483,6 +483,127 @@ function exam_pass_rate($pass_rate) {
     if ($rate > 1) $rate = 1;
     return $rate;
 }
+
+function is_true_question_contest_title($title) {
+    $keywords = array('真题', 'GESP', 'CSP', '蓝桥杯', 'NOIP', 'CCF');
+    foreach ($keywords as $keyword) {
+        if (stripos($title, $keyword) !== false) return true;
+    }
+    return false;
+}
+
+function contest_true_question_progress($cid, $user_id) {
+    $cid = intval($cid);
+    $user_id = strval($user_id);
+    $problems = pdo_query("SELECT `num` FROM `contest_problem` WHERE `contest_id`=? ORDER BY `num`", $cid);
+    $submitted_rows = pdo_query("SELECT DISTINCT `num` FROM `solution` WHERE `contest_id`=? AND `user_id`=? AND `problem_id`>0 AND `num`>=0", $cid, $user_id);
+    $submitted = array();
+
+    if ($problems === -1 || $submitted_rows === -1) return array('next_num' => null);
+
+    foreach ($submitted_rows as $row) {
+        $submitted[intval($row['num'])] = true;
+    }
+
+    $next_num = null;
+    foreach ($problems as $row) {
+        $num = intval($row['num']);
+        if (!isset($submitted[$num])) {
+            $next_num = $num;
+            break;
+        }
+    }
+
+    $total = count($problems);
+    $submitted_count = 0;
+    foreach ($problems as $row) {
+        if (isset($submitted[intval($row['num'])])) $submitted_count++;
+    }
+
+    return array(
+        'total' => $total,
+        'submitted' => $submitted_count,
+        'completed' => $total > 0 && $submitted_count >= $total,
+        'next_num' => $next_num
+    );
+}
+
+function contest_true_question_score($cid, $user_id) {
+    $cid = intval($cid);
+    $user_id = strval($user_id);
+    $problems = pdo_query("SELECT cp.`num`, p.`problem_id`, p.`title`, p.`problem_type`, p.`score`, p.`answer`, p.`analysis` FROM `contest_problem` cp INNER JOIN `problem` p ON cp.`problem_id`=p.`problem_id` WHERE cp.`contest_id`=? ORDER BY cp.`num`", $cid);
+    $items = array();
+    $total_score = 0;
+    $user_score = 0;
+    $has_pending = false;
+
+    if ($problems === -1) return array('items' => $items, 'total_score' => $total_score, 'user_score' => $user_score, 'has_pending' => $has_pending);
+
+    foreach ($problems as $problem) {
+        $num = intval($problem['num']);
+        $problem_id = intval($problem['problem_id']);
+        // 竞赛真题没有独立分值字段，题目分值为空时按每题100分兜底。
+        $max_score = floatval($problem['score']);
+        if ($max_score <= 0) $max_score = 100;
+        $total_score += $max_score;
+
+        $solutions = pdo_query("SELECT s.`solution_id`, s.`result`, s.`pass_rate`, scu.`source` AS user_answer FROM `solution` s LEFT JOIN `source_code_user` scu ON s.`solution_id`=scu.`solution_id` WHERE s.`contest_id`=? AND s.`user_id`=? AND s.`num`=? AND s.`problem_id`=? ORDER BY CASE WHEN s.`result`=4 THEN 1 ELSE 0 END DESC, CASE WHEN s.`pass_rate`>1 THEN s.`pass_rate`/100 ELSE s.`pass_rate` END DESC, s.`solution_id` DESC LIMIT 1", $cid, $user_id, $num, $problem_id);
+
+        $score = 0;
+        $status = '未提交';
+        $result = null;
+        $pass_rate = 0;
+        $user_answer = '';
+        $correct = false;
+        $pending = false;
+
+        if (!empty($solutions)) {
+            $solution = $solutions[0];
+            $result = intval($solution['result']);
+            $pass_rate = exam_pass_rate($solution['pass_rate']);
+            $user_answer = isset($solution['user_answer']) ? $solution['user_answer'] : '';
+
+            if ($result < 4) {
+                $status = '判题中';
+                $pending = true;
+                $has_pending = true;
+            } else if ($result == 4) {
+                $status = '正确';
+                $correct = true;
+                $score = $max_score;
+            } else if ($pass_rate > 0) {
+                $status = '部分正确';
+                $score = $max_score * $pass_rate;
+            } else {
+                $status = '错误';
+            }
+        }
+
+        $user_score += $score;
+        $items[] = array(
+            'num' => $num,
+            'problem_id' => $problem_id,
+            'title' => $problem['title'],
+            'problem_type' => $problem['problem_type'],
+            'user_answer' => $user_answer,
+            'answer' => $problem['answer'],
+            'analysis' => $problem['analysis'],
+            'status' => $status,
+            'correct' => $correct,
+            'pending' => $pending,
+            'score' => $score,
+            'max_score' => $max_score,
+            'result' => $result
+        );
+    }
+
+    return array(
+        'total_score' => $total_score,
+        'user_score' => $user_score,
+        'has_pending' => $has_pending,
+        'items' => $items
+    );
+}
 function crypto_rand_secure($min, $max) {
         $range = $max - $min;
         if ($range < 0) return $min; // not so random...

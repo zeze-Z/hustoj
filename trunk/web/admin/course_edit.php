@@ -57,7 +57,6 @@ if (isset($_POST['do'])) {
     if (empty($link_expire_date)) {
         $link_expire_date = null;
     }
-    $sort_order = intval($_POST['sort_order']);
 
     // 校验
     if (empty($title)) {
@@ -145,10 +144,10 @@ if (isset($_POST['do'])) {
         exit();
     }
 
-    $sql = "UPDATE `course` SET `title` = ?, `subject_id` = ?, `tags` = ?, `lesson_count` = ?, `description` = ?, `preview_price` = ?, `source_price` = ?, `status` = ?, `courseware_preview_url` = ?, `lesson_plan_preview_url` = ?, `courseware_full_preview_url` = ?, `lesson_plan_full_preview_url` = ?, `courseware_link` = ?, `lesson_plan_link` = ?, `link_expire_date` = ?, `sort_order` = ? WHERE `id` = ?";
+    $sql = "UPDATE `course` SET `title` = ?, `subject_id` = ?, `tags` = ?, `lesson_count` = ?, `description` = ?, `preview_price` = ?, `source_price` = ?, `status` = ?, `courseware_preview_url` = ?, `lesson_plan_preview_url` = ?, `courseware_full_preview_url` = ?, `lesson_plan_full_preview_url` = ?, `courseware_link` = ?, `lesson_plan_link` = ?, `link_expire_date` = ? WHERE `id` = ?";
 
     try {
-        pdo_query($sql, $title, $subject_id, $tags, $lesson_count, $description, $preview_price, $source_price, $status, $courseware_preview_url, $lesson_plan_preview_url, $courseware_full_preview_url, $lesson_plan_full_preview_url, $courseware_link, $lesson_plan_link, $link_expire_date, $sort_order, $course_id);
+        pdo_query($sql, $title, $subject_id, $tags, $lesson_count, $description, $preview_price, $source_price, $status, $courseware_preview_url, $lesson_plan_preview_url, $courseware_full_preview_url, $lesson_plan_full_preview_url, $courseware_link, $lesson_plan_link, $link_expire_date, $course_id);
         echo "<script>alert('$MSG_EDIT $MSG_SUCCESS'); window.location.href='course_list.php';</script>";
     } catch (Exception $e) {
         echo "<script>alert('$MSG_EDIT $MSG_FAILED: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "'); history.go(-1);</script>";
@@ -298,13 +297,6 @@ $subject_list = pdo_query($sql);
             <label class="col-sm-2 control-label"><?php echo $MSG_LINK_EXPIRE_DATE ?></label>
             <div class="col-sm-6">
                 <input type="date" name="link_expire_date" class="form-control" value="<?php echo $row['link_expire_date'] ?>">
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-2 control-label"><?php echo $MSG_SORT ?></label>
-            <div class="col-sm-6">
-                <input type="number" name="sort_order" class="form-control" value="<?php echo $row['sort_order'] ?>" min="0">
             </div>
         </div>
 

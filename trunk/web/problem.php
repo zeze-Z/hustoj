@@ -32,6 +32,9 @@ else
 
 $pr_flag = false;
 $co_flag = false;
+$view_is_true_question_contest = false;
+$view_contest_problem_nav = array();
+$view_latest_answer = '';
 
 if (isset($_GET['id'])) {
     //practice
@@ -76,6 +79,7 @@ if (isset($_GET['id'])) {
     $cid = intval($_GET['cid']);
     $pid = intval($_GET['pid']);
     require_once("contest-check.php");
+    $view_is_true_question_contest = is_true_question_contest_title($view_title);
     if (isset($_SESSION[$OJ_NAME . '_' . 'administrator']) || isset($_SESSION[$OJ_NAME . '_' . 'contest_creator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_editor']))
         $sql = "SELECT langmask,private,defunct FROM `contest` WHERE `contest_id`=?";
     else
@@ -119,6 +123,26 @@ if (isset($_GET['id'])) {
 
         $result = pdo_query($sql, $cid, $pid);
         $id = $result[0]['problem_id'];
+
+        if ($view_is_true_question_contest && isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
+            $nav_rows = pdo_query("SELECT cp.`num`, p.`title`, p.`problem_type` FROM `contest_problem` cp INNER JOIN `problem` p ON cp.`problem_id`=p.`problem_id` WHERE cp.`contest_id`=? ORDER BY cp.`num`", $cid);
+            $submitted_rows = pdo_query("SELECT DISTINCT `num` FROM `solution` WHERE `contest_id`=? AND `user_id`=? AND `problem_id`>0 AND `num`>=0", $cid, $_SESSION[$OJ_NAME . '_' . 'user_id']);
+            $submitted_nums = array();
+            foreach ($submitted_rows as $submitted_row) {
+                $submitted_nums[intval($submitted_row['num'])] = true;
+            }
+            foreach ($nav_rows as $nav_row) {
+                $nav_num = intval($nav_row['num']);
+                $view_contest_problem_nav[] = array(
+                    'num' => $nav_num,
+                    'title' => $nav_row['title'],
+                    'problem_type' => $nav_row['problem_type'],
+                    'answered' => isset($submitted_nums[$nav_num])
+                );
+            }
+            $answer_rows = pdo_query("SELECT scu.`source` FROM `solution` s INNER JOIN `source_code_user` scu ON s.`solution_id`=scu.`solution_id` WHERE s.`contest_id`=? AND s.`user_id`=? AND s.`num`=? AND s.`problem_id`=? ORDER BY s.`solution_id` DESC LIMIT 1", $cid, $_SESSION[$OJ_NAME . '_' . 'user_id'], $pid, $id);
+            if (!empty($answer_rows)) $view_latest_answer = $answer_rows[0]['source'];
+        }
     }
 
     //public

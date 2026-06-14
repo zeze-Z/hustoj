@@ -90,10 +90,14 @@ if (isset($_POST['problem_type']) && in_array($_POST['problem_type'], ['choice_s
     $sql = "INSERT INTO `source_code`(`solution_id`,`source`) VALUES(?, ?)";
     pdo_query($sql, $insert_id, $user_answer);
     
-    // 重定向回题目页面并显示结果
+    // 重定向回题目页面并显示结果；竞赛真题提交后进入自动下一题流程
     $redirect_url = "problem.php?id=$problem_id&result=$result";
     if (isset($_POST['cid']) && isset($_POST['pid'])) {
         $redirect_url = "problem.php?cid=$cid&pid=$pid&result=$result";
+        $contest_rows = pdo_query("SELECT `title` FROM `contest` WHERE `contest_id`=?", $cid);
+        if (!empty($contest_rows) && is_true_question_contest_title($contest_rows[0]['title'])) {
+            $redirect_url = "contest.php?cid=$cid&auto=1";
+        }
     }
     header("Location: $redirect_url");
     exit(0);
@@ -399,6 +403,9 @@ if (!$OJ_BENCHMARK_MODE) {
             if (isset($cid)) {
                 if (isset($_GET['spa'])) $statusURI .= "&spa";
                 $statusURI .= "&cid=$cid&fixed=";
+                if (!$test_run && is_true_question_contest_title($title)) {
+                    $statusURI = "contest.php?cid=$cid&auto=1";
+                }
             }
             if (!$test_run) {
                 header("Location: $statusURI");
@@ -609,6 +616,9 @@ if (isset($_GET['spa'])) $statusURI .= "&spa";
 
 if (isset($cid)) {
     $statusURI .= "&cid=$cid&top=$insert_id&fixed=";
+    if (!$test_run && is_true_question_contest_title($title)) {
+        $statusURI = "contest.php?cid=$cid&auto=1";
+    }
 }
 
 if (!$test_run && !isset($_GET['ajax'])) {

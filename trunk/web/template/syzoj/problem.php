@@ -3,8 +3,13 @@
             $show_title="P$id - ".$row['title']." - $OJ_NAME";
           }else{
             $id=$row['problem_id'];
-            $show_title="$MSG_PROBLEM ".$PID[$pid].": ".$row['title']." - $OJ_NAME";
+            $problem_display_label = (!empty($view_is_true_question_contest) && isset($pid)) ? (intval($pid) + 1) : $PID[$pid];
+            $show_title="$MSG_PROBLEM ".$problem_display_label.": ".$row['title']." - $OJ_NAME";
           }
+?>
+<?php
+$is_true_question_page = !empty($view_is_true_question_contest);
+$problem_description = isset($row['description']) ? $row['description'] : '';
 ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 <style>
@@ -20,6 +25,56 @@
 
 div[class*=ace_br] {
     border-radius: 0 !important;
+}
+
+.true-question-toolbar {
+    margin-bottom: 14px;
+}
+.true-question-answer-card .true-question-option {
+    display: block;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    border: 1px solid #e8e8e8;
+    border-radius: 6px;
+    cursor: pointer;
+    background: rgba(255,255,255,0.82);
+}
+.true-question-answer-card .true-question-option:hover {
+    border-color: #2185d0;
+    background: #f8fbff;
+}
+.true-question-submit-row {
+    margin-top: 16px;
+}
+.true-question-practice-layout {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 14px;
+    width: 100%;
+}
+.true-question-nav-card {
+    background: rgba(255,255,255,0.92);
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 12px;
+}
+.true-question-nav-title {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+.true-question-nav-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+    gap: 8px;
+}
+.true-question-nav-list .ui.button {
+    padding-left: 0;
+    padding-right: 0;
+}
+@media (max-width: 900px) {
+    .true-question-practice-layout {
+        grid-template-columns: 1fr;
+    }
 }
 
 </style>
@@ -47,7 +102,7 @@ div[class*=ace_br] {
           }else{
             $id=$row['problem_id'];
             //echo "<title>$MSG_PROBLEM ".$PID[$pid].": ".$row['title']." </title>";
-            echo "$MSG_PROBLEM ".$PID[$pid]."：".$row['title'];
+            echo "$MSG_PROBLEM ".$problem_display_label."：".$row['title'];
           }
           if($row['defunct']=="Y")
           echo "<span class=\"p-label ui tiny red label\">$MSG_RESERVED</span>";
@@ -88,6 +143,18 @@ if(file_exists($solution_file)){
   <?php if ($row['problem_type'] == 'programming') { ?>
   <div class="row" id="submit-buttons">
     <div class="column">
+      <?php if($is_true_question_page && !$pr_flag){ ?>
+      <div class="ui buttons true-question-toolbar">
+        <?php if(isset($_SESSION[$OJ_NAME.'_'.'user_id'])){ ?>
+          <?php if($contest_is_over){ ?>
+          <a id="submit" class="small ui primary button" href="submitpage.php?id=<?php echo $id?>">提交本题</a>
+          <?php }else{ ?>
+          <a id="submit" class="small ui primary button" href="submitpage.php?cid=<?php echo $cid?>&pid=<?php echo $pid?>&langmask=<?php echo $langmask?>">提交本题</a>
+          <?php } ?>
+        <?php } ?>
+        <a class="small ui basic button" href="contest.php?cid=<?php echo $cid?>">返回试卷</a>
+      </div>
+      <?php }else{ ?>
       <div class="ui buttons">
 
           <?php
@@ -117,6 +184,7 @@ if(file_exists($solution_file)){
           ?>
 
       </div>
+      <?php } ?>
 
       <?php
         if ( isset($_SESSION[$OJ_NAME.'_'.'administrator']) || isset($_SESSION[$OJ_NAME.'_'."p".$row['problem_id']])  ) {  //only  the original editor can edit this  problem
@@ -176,13 +244,15 @@ document.addEventListener('keydown', function(e) {
     </div>
   </div>
 
+  <?php if($row['problem_type'] == 'programming' || trim($problem_description) !== '' || isset($_GET['spa'])){ ?>
   <div class="row">
     <div class="column">
       <h4 class="ui top attached block header"><?php echo $MSG_Description?></h4>
       <div id="description" class="ui bottom attached segment font-content">
-		<?php if (str_contains($row['description'],"md auto_select"))echo $row['description']; else echo  bbcode_to_html($row['description']); ?></div>
+		<?php if (str_contains($problem_description,"md auto_select"))echo $problem_description; else echo  bbcode_to_html($problem_description); ?></div>
     </div>
   </div>
+  <?php } ?>
   <?php if($row['input']||isset($_GET['spa'])){ ?>
     <div class="row">
       <div class="column">
@@ -252,11 +322,23 @@ document.addEventListener('keydown', function(e) {
   ?>
   <div class="row">
       <div class="column">
+          <?php if($is_true_question_page && isset($cid)){ ?>
+          <div class="true-question-practice-layout">
+              <div class="true-question-nav-card">
+                  <div class="true-question-nav-title">答题卡</div>
+                  <div class="true-question-nav-list">
+                      <?php foreach($view_contest_problem_nav as $nav_row){ $nav_num=intval($nav_row['num']); ?>
+                      <a class="ui <?php echo $nav_num==$pid ? 'blue' : ($nav_row['answered'] ? 'green basic' : 'basic') ?> button" title="<?php echo htmlentities($nav_row['title'], ENT_QUOTES, 'UTF-8') ?>" href="<?php echo $nav_row['problem_type']=='programming' ? 'submitpage.php' : 'problem.php' ?>?cid=<?php echo $cid?>&pid=<?php echo $nav_num?><?php echo $nav_row['problem_type']=='programming' ? '&langmask='.$langmask : '' ?>"><?php echo $nav_num+1?></a>
+                      <?php } ?>
+                  </div>
+              </div>
+              <div>
+          <?php } ?>
           <h4 class="ui top attached block header">
               <?php echo $problem_type == 'choice_single' ? '单选题' : ($problem_type == 'choice_multi' ? '多选题' : '判断题') ?>
           </h4>
-          <div class="ui bottom attached segment font-content">
-              <form action="submit.php" method="post">
+          <div class="ui bottom attached segment font-content true-question-answer-card">
+              <form action="submit.php" method="post" class="ui form">
                   <input type="hidden" name="problem_id" value="<?php echo $row['problem_id'] ?>">
                   <?php if (isset($cid)) { ?>
                   <input type="hidden" name="cid" value="<?php echo $cid ?>">
@@ -264,22 +346,32 @@ document.addEventListener('keydown', function(e) {
                   <?php } ?>
                   <input type="hidden" name="problem_type" value="<?php echo $problem_type ?>">
                   <?php foreach ($options_normalized as $opt) { ?>
-                  <div style="margin-bottom: 10px;">
-                      <label style="font-weight: normal; cursor: pointer;">
+                  <?php
+                    $opt_label = strval($opt['label']);
+                    $is_checked = false;
+                    if ($view_latest_answer !== '') {
+                        if ($problem_type == 'choice_multi') $is_checked = strpos($view_latest_answer, $opt_label) !== false;
+                        else $is_checked = trim($view_latest_answer) === $opt_label;
+                    }
+                  ?>
+                  <div class="field">
+                      <label class="<?php echo $is_true_question_page ? 'true-question-option' : '' ?>" style="font-weight: normal; cursor: pointer;">
                           <input type="<?php echo $problem_type == 'choice_multi' ? 'checkbox' : 'radio' ?>"
                                  name="<?php echo $problem_type == 'choice_multi' ? 'answer[]' : 'answer' ?>"
-                                 value="<?php echo htmlentities($opt['label'], ENT_QUOTES, 'UTF-8') ?>"
+                                 value="<?php echo htmlentities($opt_label, ENT_QUOTES, 'UTF-8') ?>"
+                                 <?php echo $is_checked ? 'checked' : '' ?>
                                  style="margin-right: 8px;">
                           <strong><?php echo htmlentities($opt['label'], ENT_QUOTES, 'UTF-8') ?>.</strong> <?php echo htmlentities($opt['content'], ENT_QUOTES, 'UTF-8') ?>
                       </label>
                   </div>
                   <?php } ?>
-                  <br>
+                  <div class="true-question-submit-row">
                   <?php if(isset($_SESSION[$OJ_NAME.'_'.'user_id'])){ ?>
-                  <button type="submit" class="ui primary button">提交答案</button>
+                  <button type="submit" class="ui primary button"><?php echo $is_true_question_page ? '提交并下一题' : '提交答案' ?></button>
                   <?php }else{ ?>
                   <a class="ui primary button" href="loginpage.php">登录后提交答案</a>
                   <?php } ?>
+                  </div>
               </form>
               <?php
               if (isset($_GET['result'])) {
@@ -295,6 +387,10 @@ document.addEventListener('keydown', function(e) {
               </div>
               <?php } ?>
           </div>
+          <?php if($is_true_question_page && isset($cid)){ ?>
+              </div>
+          </div>
+          <?php } ?>
       </div>
   </div>
   <?php } ?>
@@ -339,7 +435,7 @@ document.addEventListener('keydown', function(e) {
     </div>
   <?php } ?>
   
-     <?php if ($row['problem_type'] == 'programming') { ?>
+     <?php if ($row['problem_type'] == 'programming' && !$is_true_question_page) { ?>
      <div class="ui buttons">
 
           <?php

@@ -7,7 +7,9 @@ if (!(isset($_SESSION[$OJ_NAME.'_'.'administrator']) || isset($_SESSION[$OJ_NAME
     exit(1);
 }
 
-require_once("../include/set_post_key.php");
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    require_once("../include/check_post_key.php");
+}
 
 $msg = "";
 $success = 0;
@@ -217,7 +219,8 @@ if (isset($_POST['do_import'])) {
                         <label>选择CSV文件</label>
                         <input type="file" name="csv_file" class="form-control" accept=".csv" required>
                     </div>
-                    <button type="submit" name="do_import" class="btn btn-success">开始导入</button>
+                    <button type="submit" name="do_import" value="1" class="btn btn-success">开始导入</button>
+                    <?php require("../include/set_post_key.php");?>
                 </form>
             </div>
         </div>

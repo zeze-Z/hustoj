@@ -184,7 +184,7 @@ echo "</select>";
         <tr>
         <td colspan=2 style="height:40px;"><?php echo "$MSG_CHECK_TO"?></td>
       <td colspan=7>
-      <input type=submit name='problem2contest' value='<?php echo $MSG_NEW_CONTEST?>'>
+      <input type=submit name='problem2contest' value='用所选题目创建竞赛真题'>
       <input type=submit name='enable' value='<?php echo $MSG_AVAILABLE ?>' onclick='$("form").attr("action","problem_df_change.php")'>
       <input type=submit name='disable' value='<?php echo $MSG_RESERVED ?>' onclick='$("form").attr("action","problem_df_change.php")'>
       <input type=submit name='plist' value='<?php echo $MSG_NEW_PROBLEM_LIST?>' onclick='$("form").attr("action","news_add_page.php")'>
@@ -266,7 +266,7 @@ echo "</select>";
     <tr>
       <td colspan=2 style="height:40px;"><?php echo "$MSG_CHECK_TO"?></td>
       <td colspan=7>
-      <input type=submit name='problem2contest' value='<?php echo $MSG_NEW_CONTEST?>'>
+      <input type=submit name='problem2contest' value='用所选题目创建竞赛真题'>
       <input type=submit name='enable' value='<?php echo $MSG_AVAILABLE ?>' onclick='$("form").attr("action","problem_df_change.php")'>
       <input type=submit name='disable' value='<?php echo $MSG_RESERVED ?>' onclick='$("form").attr("action","problem_df_change.php")'>
       <input type=submit name='plist' value='<?php echo $MSG_NEW_PROBLEM_LIST?>' onclick='$("form").attr("action","news_add_page.php")'>

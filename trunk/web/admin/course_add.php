@@ -45,7 +45,12 @@ if (isset($_POST['do'])) {
     if (empty($link_expire_date)) {
         $link_expire_date = null;
     }
-    $sort_order = intval($_POST['sort_order']);
+    $sort_row = pdo_query("SELECT COALESCE(MAX(`sort_order`), 0) + 1 AS next_sort FROM `course`");
+    if ($sort_row === -1 || count($sort_row) == 0) {
+        echo "<script>alert('数据库查询失败'); history.go(-1);</script>";
+        exit();
+    }
+    $sort_order = intval($sort_row[0]['next_sort']);
 
     // 校验
     if (empty($title)) {
@@ -279,13 +284,6 @@ $subject_list = pdo_query($sql);
             <label class="col-sm-2 control-label"><?php echo $MSG_LINK_EXPIRE_DATE ?></label>
             <div class="col-sm-6">
                 <input type="date" name="link_expire_date" class="form-control">
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-2 control-label"><?php echo $MSG_SORT ?></label>
-            <div class="col-sm-6">
-                <input type="number" name="sort_order" class="form-control" value="0" min="0">
             </div>
         </div>
 

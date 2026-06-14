@@ -2,10 +2,14 @@
 require_once('./include/db_info.inc.php');
 require_once('./include/const.inc.php');
 require_once('./include/my_func.inc.php');
+require_once('./include/bbcode.php');
 require_once('./include/memcache.php');
 require_once('./include/setlang.php');
 require_once('./include/curl.php');
 $view_title = $MSG_SUBMIT;
+$view_is_true_question_contest = false;
+$view_problem_row = array();
+$view_contest_problem_nav = array();
 // 禁用提交页面验证码
 $OJ_VCODE = false;
 if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
@@ -48,10 +52,28 @@ if (isset($_GET['id'])) {
     $cid = intval($_GET['cid']);
     $pid = intval($_GET['pid']);
     require_once("contest-check.php");
+    $view_is_true_question_contest = is_true_question_contest_title($view_title);
     $psql = "SELECT problem_id FROM contest_problem WHERE contest_id=? AND num=?";
     $data = pdo_query($psql, $cid, $pid);
     $row = $data[0];
     $problem_id = $row[0];
+    if ($view_is_true_question_contest) {
+        $nav_rows = pdo_query("SELECT cp.`num`, p.`title`, p.`problem_type` FROM `contest_problem` cp INNER JOIN `problem` p ON cp.`problem_id`=p.`problem_id` WHERE cp.`contest_id`=? ORDER BY cp.`num`", $cid);
+        $submitted_rows = pdo_query("SELECT DISTINCT `num` FROM `solution` WHERE `contest_id`=? AND `user_id`=? AND `problem_id`>0 AND `num`>=0", $cid, $_SESSION[$OJ_NAME . '_' . 'user_id']);
+        $submitted_nums = array();
+        foreach ($submitted_rows as $submitted_row) {
+            $submitted_nums[intval($submitted_row['num'])] = true;
+        }
+        foreach ($nav_rows as $nav_row) {
+            $nav_num = intval($nav_row['num']);
+            $view_contest_problem_nav[] = array(
+                'num' => $nav_num,
+                'title' => $nav_row['title'],
+                'problem_type' => $nav_row['problem_type'],
+                'answered' => isset($submitted_nums[$nav_num])
+            );
+        }
+    }
 } else {
     $view_errors = "<h2>No Such Problem!</h2>";
     require("template/" . $OJ_TEMPLATE . "/error.php");
@@ -163,13 +185,21 @@ if (isset($_GET['sid'])) {
     }
 }
 
+if (!$view_src && $view_is_true_question_contest && isset($cid) && isset($pid) && isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
+    $last_rows = pdo_query("SELECT s.`solution_id`, s.`language`, scu.`source` FROM `solution` s INNER JOIN `source_code_user` scu ON s.`solution_id`=scu.`solution_id` WHERE s.`contest_id`=? AND s.`user_id`=? AND s.`num`=? AND s.`problem_id`=? ORDER BY s.`solution_id` DESC LIMIT 1", $cid, $_SESSION[$OJ_NAME . '_' . 'user_id'], $pid, $problem_id);
+    if (!empty($last_rows)) {
+        $view_src = $last_rows[0]['source'];
+        $lastlang = intval($last_rows[0]['language']);
+    }
+}
+
 if (isset($id))
     $problem_id = $id;
 
 $view_sample_input = "1 2";
 $view_sample_output = "3";
 $spj = 0;
-$sample_sql = "SELECT sample_input,sample_output,problem_id,spj,remote_oj FROM problem WHERE problem_id = ?";
+$sample_sql = "SELECT * FROM problem WHERE problem_id = ?";
 $remote_oj = "";
 if (isset($sample_sql)) {
     //echo $sample_sql;
@@ -184,6 +214,7 @@ if (isset($sample_sql)) {
         exit(0);
     }
     $row = $result[0];
+    $view_problem_row = $row;
     $view_sample_input = $row['sample_input'];
     $view_sample_output = $row['sample_output'];
     $problem_id = $row['problem_id'];

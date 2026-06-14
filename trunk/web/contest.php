@@ -46,6 +46,25 @@ $now = time();
 if (isset($_GET['cid'])) {
 
     require_once("contest-check.php");
+    $view_is_true_question_contest = is_true_question_contest_title($view_title);
+
+    if (isset($_GET['auto']) && $view_is_true_question_contest) {
+        if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id']) || empty($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
+            $redirect = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'contest.php?cid=' . $cid . '&auto=1';
+            header("Location: loginpage.php?redirect=" . urlencode($redirect));
+            exit(0);
+        }
+
+        $true_question_user_id = $_SESSION[$OJ_NAME . '_' . 'user_id'];
+        $view_true_question_progress = contest_true_question_progress($cid, $true_question_user_id);
+        if ($view_true_question_progress['next_num'] !== null) {
+            header("Location: problem.php?cid=$cid&pid=" . $view_true_question_progress['next_num']);
+            exit(0);
+        }
+
+        $view_true_question_completed = true;
+        $view_true_question_score = contest_true_question_score($cid, $true_question_user_id);
+    }
 
     /**
      * 查询竞赛相关问题信息
@@ -93,8 +112,9 @@ if (isset($_GET['cid'])) {
             $view_problemset[$cnt][0] = "";
 
 
+        $problem_label = $view_is_true_question_contest ? ($cnt + 1) : $PID[$cnt];
         if ($now < $end_time) { //竞赛进行中
-            $view_problemset[$cnt][1] = "<a href='problem.php?cid=$cid&pid=$cnt'>" . $PID[$cnt] . "</a>";
+            $view_problemset[$cnt][1] = "<a href='problem.php?cid=$cid&pid=$cnt'>" . $problem_label . "</a>";
             $view_problemset[$cnt][2] = "<a href='problem.php?cid=$cid&pid=$cnt'>" . $row['title'] . "</a>";
         } else {               //竞赛结束
             //检查问题是否会在其他竞赛中使用
@@ -109,10 +129,10 @@ if (isset($_GET['cid'])) {
 
             if (intval($tresult) != 0 && !isset($_SESSION[$OJ_NAME . '_' . "m$cid"])) {
                 //如果问题将在其他私有竞赛中使用，不向其他教师和学生显示
-                $view_problemset[$cnt][1] = $PID[$cnt]; //竞赛结束后隐藏标题
+                $view_problemset[$cnt][1] = $problem_label; //竞赛结束后隐藏标题
                 $view_problemset[$cnt][2] = '--using in another private contest--';
             } else {
-                $view_problemset[$cnt][1] = "<a href='problem.php?id=" . $row['problem_id'] . "'>" . $PID[$cnt] . "</a>";
+                $view_problemset[$cnt][1] = "<a href='problem.php?id=" . $row['problem_id'] . "'>" . $problem_label . "</a>";
                 if ($contest_ok)
                     $view_problemset[$cnt][2] = "<a href='problem.php?cid=$cid&pid=$cnt'>" . $row['title'] . "</a>";
                 else
@@ -149,16 +169,14 @@ if (isset($_GET['cid'])) {
     $page_cnt = 25;
     $pstart = $page_cnt * $page - $page_cnt;
     $pend = $page_cnt;
-    $rows = pdo_query("select count(1) from contest where defunct='N'");
-
-    if ($rows)
-        $total = $rows[0][0];
-
-    $view_total_page = intval($total / $page_cnt) + 1;
     $keyword = "";
+    $keyword_text = "";
 
-    if (isset($_POST['keyword'])) {
-        $keyword = "%" . $_POST['keyword'] . "%";
+    if (isset($_REQUEST['keyword'])) {
+        $keyword_text = trim($_REQUEST['keyword']);
+        if ($keyword_text !== "") {
+            $keyword = "%" . $keyword_text . "%";
+        }
     }
 
     //echo "$keyword";
@@ -215,23 +233,35 @@ if (isset($_GET['cid'])) {
         if (strlen($mycontests) > 0)
             $mycontests = substr($mycontests, 1);
         if (isset($_GET['my']) && $mycontests != "")
-            if (isset($_GET['my'])) $wheremy = " and( contest_id in ($mycontests) or user_id='" . $_SESSION[$OJ_NAME . '_user_id'] . "')";
+            if (isset($_GET['my'])) $wheremy = " and( c.contest_id in ($mycontests) or c.user_id='" . $_SESSION[$OJ_NAME . '_user_id'] . "')";
     }
 
     // 添加学校过滤条件
     $school_filter = getContestSchoolFilter();
-    
-    $sql = "SELECT * FROM `contest` WHERE `defunct`='N' $school_filter ORDER BY `contest_id` DESC LIMIT 1000";
+    $where_sql = "c.defunct='N' $school_filter $wheremy";
+    if ($keyword) {
+        $where_sql .= " AND c.title LIKE ?";
+    }
+
+    $count_sql = "SELECT count(1) FROM contest c WHERE $where_sql";
+    if ($keyword) {
+        $rows = pdo_query($count_sql, $keyword);
+    } else {
+        $rows = pdo_query($count_sql);
+    }
+    $total = 0;
+    if ($rows) {
+        $total = intval($rows[0][0]);
+    }
+
+    $view_total_page = max(1, intval(ceil($total / $page_cnt)));
+
+    $sql = "SELECT c.* FROM contest c WHERE $where_sql ORDER BY c.contest_id DESC";
+    $sql .= " limit " . strval($pstart) . "," . strval($pend);
 
     if ($keyword) {
-        $sql = "SELECT *  FROM contest WHERE contest.defunct='N' $school_filter AND contest.title LIKE ? $wheremy  ORDER BY contest_id DESC";
-        $sql .= " limit " . strval($pstart) . "," . strval($pend);
-
         $result = pdo_query($sql, $keyword);
     } else {
-        $sql = "SELECT *  FROM contest WHERE contest.defunct='N' $school_filter $wheremy  ORDER BY contest_id DESC";
-        $sql .= " limit " . strval($pstart) . "," . strval($pend);
-        //echo $sql;
         $result = mysql_query_cache($sql);
     }
 
@@ -248,7 +278,16 @@ if (isset($_GET['cid'])) {
         if (trim($row['title']) == "")
             $row['title'] = $MSG_CONTEST . $row['contest_id'];
 
-        $view_contest[$i][1] = "<a href='contest.php?cid=" . $row['contest_id'] . "'>" . $row['title'] . "</a>";
+        $contest_id = intval($row['contest_id']);
+        $contest_href = "contest.php?cid=" . $contest_id;
+        $is_manager_view = isset($_SESSION[$OJ_NAME . '_' . 'administrator']) ||
+            isset($_SESSION[$OJ_NAME . '_' . 'm' . $contest_id]) ||
+            isset($_SESSION[$OJ_NAME . '_' . 'contest_creator']) ||
+            (isset($_SESSION[$OJ_NAME . '_' . 'user_id']) && $_SESSION[$OJ_NAME . '_' . 'user_id'] == $row['user_id']);
+        if (isset($_SESSION[$OJ_NAME . '_' . 'user_id']) && !$is_manager_view && is_true_question_contest_title($row['title'])) {
+            $contest_href .= "&auto=1";
+        }
+        $view_contest[$i][1] = "<a href='" . $contest_href . "'>" . $row['title'] . "</a>";
         $start_time = strtotime($row['start_time']);
         $end_time = strtotime($row['end_time']);
         $now = time();
