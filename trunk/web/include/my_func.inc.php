@@ -531,7 +531,7 @@ function contest_true_question_progress($cid, $user_id) {
 function contest_true_question_score($cid, $user_id) {
     $cid = intval($cid);
     $user_id = strval($user_id);
-    $problems = pdo_query("SELECT cp.`num`, p.`problem_id`, p.`title`, p.`problem_type`, p.`score`, p.`answer`, p.`analysis` FROM `contest_problem` cp INNER JOIN `problem` p ON cp.`problem_id`=p.`problem_id` WHERE cp.`contest_id`=? ORDER BY cp.`num`", $cid);
+    $problems = pdo_query("SELECT cp.`num`, p.`problem_id`, p.`title`, p.`problem_type`, p.`score`, p.`answer`, p.`options`, p.`analysis` FROM `contest_problem` cp INNER JOIN `problem` p ON cp.`problem_id`=p.`problem_id` WHERE cp.`contest_id`=? ORDER BY cp.`num`", $cid);
     $items = array();
     $total_score = 0;
     $user_score = 0;
@@ -579,6 +579,30 @@ function contest_true_question_score($cid, $user_id) {
             }
         }
 
+        $answer_descriptions = array();
+        if ($problem['problem_type'] != 'programming' && !empty($problem['options']) && !empty($problem['answer'])) {
+            $options_raw = json_decode($problem['options'], true);
+            $options_map = array();
+            if (is_array($options_raw)) {
+                $first_val = reset($options_raw);
+                if (is_array($first_val) && isset($first_val['label'])) {
+                    foreach ($options_raw as $opt) {
+                        if (isset($opt['label'])) $options_map[strval($opt['label'])] = isset($opt['content']) ? strval($opt['content']) : '';
+                    }
+                } else {
+                    foreach ($options_raw as $key => $val) {
+                        $options_map[strval($key)] = strval($val);
+                    }
+                }
+            }
+            $answer_labels = str_split(strval($problem['answer']));
+            foreach ($answer_labels as $answer_label) {
+                if (isset($options_map[$answer_label]) && $options_map[$answer_label] !== '') {
+                    $answer_descriptions[] = $answer_label . '. ' . $options_map[$answer_label];
+                }
+            }
+        }
+
         $user_score += $score;
         $items[] = array(
             'num' => $num,
@@ -587,6 +611,7 @@ function contest_true_question_score($cid, $user_id) {
             'problem_type' => $problem['problem_type'],
             'user_answer' => $user_answer,
             'answer' => $problem['answer'],
+            'answer_descriptions' => $answer_descriptions,
             'analysis' => $problem['analysis'],
             'status' => $status,
             'correct' => $correct,
