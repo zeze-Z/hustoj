@@ -78,6 +78,13 @@
             </div>
         </div>
         <?php } ?>
+        <?php if(!empty($view_is_true_question_contest) && !(isset($view_true_question_completed) && $view_true_question_completed)){ ?>
+        <div class="row">
+            <div class="column">
+                <a class="ui primary button" href="contest.php?cid=<?php echo $view_cid?>&auto=1">进入答题</a>
+            </div>
+        </div>
+        <?php } ?>
         <?php if(isset($view_true_question_completed) && $view_true_question_completed && isset($view_true_question_score)){ ?>
         <div class="row">
             <div class="column">
@@ -129,7 +136,7 @@
                 </table>
             </div>
         </div>
-        <?php } ?>
+        <?php } else { ?>
         <div class="row">
             <div class="column">
                 <table class="ui selectable celled table">
@@ -161,6 +168,7 @@
                 </table>
             </div>
         </div>
+        <?php } ?>
     </div>
 </div>
 

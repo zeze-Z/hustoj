@@ -48,22 +48,21 @@ if (isset($_GET['cid'])) {
     require_once("contest-check.php");
     $view_is_true_question_contest = is_true_question_contest_title($view_title);
 
-    if (isset($_GET['auto']) && $view_is_true_question_contest) {
-        if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id']) || empty($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
-            $redirect = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'contest.php?cid=' . $cid . '&auto=1';
-            header("Location: loginpage.php?redirect=" . urlencode($redirect));
-            exit(0);
-        }
-
+    if ($view_is_true_question_contest && isset($_SESSION[$OJ_NAME . '_' . 'user_id']) && !empty($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
         $true_question_user_id = $_SESSION[$OJ_NAME . '_' . 'user_id'];
         $view_true_question_progress = contest_true_question_progress($cid, $true_question_user_id);
-        if ($view_true_question_progress['next_num'] !== null) {
+        if (isset($_GET['auto']) && $view_true_question_progress['next_num'] !== null) {
             header("Location: problem.php?cid=$cid&pid=" . $view_true_question_progress['next_num']);
             exit(0);
         }
-
-        $view_true_question_completed = true;
-        $view_true_question_score = contest_true_question_score($cid, $true_question_user_id);
+        if ($view_true_question_progress['completed']) {
+            $view_true_question_completed = true;
+            $view_true_question_score = contest_true_question_score($cid, $true_question_user_id);
+        }
+    } else if (isset($_GET['auto']) && $view_is_true_question_contest) {
+        $redirect = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'contest.php?cid=' . $cid . '&auto=1';
+        header("Location: loginpage.php?redirect=" . urlencode($redirect));
+        exit(0);
     }
 
     /**
@@ -284,9 +283,6 @@ if (isset($_GET['cid'])) {
             isset($_SESSION[$OJ_NAME . '_' . 'm' . $contest_id]) ||
             isset($_SESSION[$OJ_NAME . '_' . 'contest_creator']) ||
             (isset($_SESSION[$OJ_NAME . '_' . 'user_id']) && $_SESSION[$OJ_NAME . '_' . 'user_id'] == $row['user_id']);
-        if (isset($_SESSION[$OJ_NAME . '_' . 'user_id']) && !$is_manager_view && is_true_question_contest_title($row['title'])) {
-            $contest_href .= "&auto=1";
-        }
         $view_contest[$i][1] = "<a href='" . $contest_href . "'>" . $row['title'] . "</a>";
         $start_time = strtotime($row['start_time']);
         $end_time = strtotime($row['end_time']);

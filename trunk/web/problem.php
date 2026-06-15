@@ -80,6 +80,14 @@ if (isset($_GET['id'])) {
     $pid = intval($_GET['pid']);
     require_once("contest-check.php");
     $view_is_true_question_contest = is_true_question_contest_title($view_title);
+    $true_question_manager = isset($_SESSION[$OJ_NAME . '_' . 'administrator']) || isset($_SESSION[$OJ_NAME . '_' . "m$cid"]) || isset($_SESSION[$OJ_NAME . '_' . 'contest_creator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_editor']);
+    if ($view_is_true_question_contest && isset($_SESSION[$OJ_NAME . '_' . 'user_id']) && !$true_question_manager) {
+        $true_question_progress = contest_true_question_progress($cid, $_SESSION[$OJ_NAME . '_' . 'user_id']);
+        if ($true_question_progress['completed']) {
+            header("Location: contest.php?cid=$cid&auto=1");
+            exit(0);
+        }
+    }
     if (isset($_SESSION[$OJ_NAME . '_' . 'administrator']) || isset($_SESSION[$OJ_NAME . '_' . 'contest_creator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_editor']))
         $sql = "SELECT langmask,private,defunct FROM `contest` WHERE `contest_id`=?";
     else

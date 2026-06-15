@@ -152,7 +152,6 @@ if(file_exists($solution_file)){
           <a id="submit" class="small ui primary button" href="submitpage.php?cid=<?php echo $cid?>&pid=<?php echo $pid?>&langmask=<?php echo $langmask?>">提交本题</a>
           <?php } ?>
         <?php } ?>
-        <a class="small ui basic button" href="contest.php?cid=<?php echo $cid?>">返回试卷</a>
       </div>
       <?php }else{ ?>
       <div class="ui buttons">
