@@ -136,6 +136,11 @@ if (!isset($_GET['cid']))
     die("No Such Contest!");
 
 $cid = intval($_GET['cid']);
+$contest_title_row = pdo_query("SELECT `title` FROM `contest` WHERE `contest_id`=?", $cid);
+if (!empty($contest_title_row) && is_true_question_contest_title($contest_title_row[0]['title'])) {
+    header("Location: contest.php?cid=$cid");
+    exit(0);
+}
 
 // 获取比赛题目ID数组
 $pida = array();
@@ -170,6 +175,10 @@ if ($rows_cnt > 0) {
     $end_time = strtotime($row['end_time']);
     $title = $row['title'];
     $view_title = $title;
+    if (is_true_question_contest_title($title)) {
+        header("Location: contest.php?cid=$cid");
+        exit(0);
+    }
 }
 
 if (!$OJ_MEMCACHE)

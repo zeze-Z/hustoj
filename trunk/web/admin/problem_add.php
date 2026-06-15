@@ -71,7 +71,7 @@ $problem_type = isset($_POST['problem_type']) ? $_POST['problem_type'] : 'progra
 $options = array();
 $answer = '';
 $analysis = '';
-$score = 0;
+$score = isset($_POST['score']) ? intval($_POST['score']) : 0;
 
 if ($problem_type != 'programming') {
     // 处理选项
@@ -97,9 +97,8 @@ if ($problem_type != 'programming') {
         }
     }
     
-    // 处理解析和分值
+    // 处理解析
     $analysis = isset($_POST['analysis']) ? $_POST['analysis'] : '';
-    $score = isset($_POST['score']) ? intval($_POST['score']) : 0;
 }
 
 // 转换选项为JSON
@@ -152,11 +151,9 @@ $source = normalize_source($source);
 //echo "->".$OJ_DATA."<-";
 $pid = addproblem($title, $time_limit, $memory_limit, $description, $input, $output, $sample_input, $sample_output, $hint, $source, $spj, $OJ_DATA, $school_id, $is_public, $level);
 
-// 更新选择题相关字段
-if ($problem_type != 'programming') {
-    $sql = "UPDATE problem SET problem_type = ?, options = ?, answer = ?, analysis = ?, score = ? WHERE problem_id = ?";
-    pdo_query($sql, $problem_type, $options_json, $answer, $analysis, $score, $pid);
-}
+// 更新题型、分值及选择题相关字段
+$sql = "UPDATE problem SET problem_type = ?, options = ?, answer = ?, analysis = ?, score = ? WHERE problem_id = ?";
+pdo_query($sql, $problem_type, $options_json, $answer, $analysis, $score, $pid);
 $basedir = "$OJ_DATA/$pid";
 mkdir($basedir);
 if(strlen($sample_output) && !strlen($sample_input)) $sample_input = "0";

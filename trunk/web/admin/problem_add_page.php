@@ -54,7 +54,11 @@
             <option value="judge">判断题</option>
           </select>
         </p>
-        
+        <p align=left>
+          <h4>分值</h4>
+          <input type="number" name="score" class="form-control" min="0" max="1000" value="100">
+        </p>
+
         <div id="programming_fields">
           <p align=left>
             <?php echo $MSG_Time_Limit?>
@@ -95,10 +99,7 @@
           <div id="answer_container">
             <!-- 单选/判断题用radio，多选用checkbox，动态生成 -->
           </div>
-          
-          <h4>分值</h4>
-          <input type="number" name="score" class="form-control" min="1" max="100" value="10">
-          
+
           <h4>答案解析</h4>
           <textarea name="analysis" class="kindeditor" rows=5 cols=80></textarea>
         </div>

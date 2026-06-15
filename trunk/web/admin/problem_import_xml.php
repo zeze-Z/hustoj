@@ -185,6 +185,7 @@ function import_fps($tempfile) {
     //$test_output = getValue($searchNode,'test_output');
     $hint = getValue ($searchNode,'hint');
     $source = getValue ($searchNode,'source');
+    $score = intval(trim((string)getValue($searchNode, 'score')));
     $spjcode = getValue ($searchNode,'spj');
     $remote_oj= trim((string)getValue ($searchNode,'remote_oj'));
     $remote_id= trim((string)getValue ($searchNode,'remote_id'));
@@ -195,8 +196,13 @@ function import_fps($tempfile) {
     $spj = (trim($spjcode)||trim($tpjcode))?1:0;
     if((isset($spjlang) && $spjlang=="Text")||(isset($tpjlang) && $tpjlang=="Text")) $spj=2;
     if(hasRemoteProblem($remote_oj,$remote_id)){
-   	$sql="update problem set title=?,time_limit=?,memory_limit=?,description=?,input=?,output=?,sample_input=?,sample_output=?,hint=?,source=?,spj=? where remote_oj=? and remote_id=?";
-        pdo_query($sql,$title, $time_limit, $memory_limit, $description, $input, $output, $sample_input, $sample_output, $hint, $source, $spj,$remote_oj,$remote_id);	
+        if ($score > 0) {
+            $sql="update problem set title=?,time_limit=?,memory_limit=?,description=?,input=?,output=?,sample_input=?,sample_output=?,hint=?,source=?,spj=?,score=? where remote_oj=? and remote_id=?";
+            pdo_query($sql,$title, $time_limit, $memory_limit, $description, $input, $output, $sample_input, $sample_output, $hint, $source, $spj, $score, $remote_oj,$remote_id);
+        } else {
+            $sql="update problem set title=?,time_limit=?,memory_limit=?,description=?,input=?,output=?,sample_input=?,sample_output=?,hint=?,source=?,spj=? where remote_oj=? and remote_id=?";
+            pdo_query($sql,$title, $time_limit, $memory_limit, $description, $input, $output, $sample_input, $sample_output, $hint, $source, $spj,$remote_oj,$remote_id);
+        }
     }else{
              $tail=0;
              $ptitle = $title;
@@ -207,6 +213,9 @@ function import_fps($tempfile) {
             $title=$ptitle;
 
       $pid = addproblem($title, $time_limit, $memory_limit, $description, $input, $output, $sample_input, $sample_output, $hint, $source, $spj, $OJ_DATA);
+      if ($score > 0) {
+        pdo_query("UPDATE problem SET score=? WHERE problem_id=?", $score, $pid);
+      }
       if($OJ_REMOTE_JUDGE && $remote_oj!=""){
         $sql="update problem set remote_oj=?,remote_id=? where problem_id=?";
         pdo_query($sql,$remote_oj,$remote_id,$pid);

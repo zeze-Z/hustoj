@@ -10,7 +10,9 @@
 <div style="margin-bottom:40px;" class="padding" >
     <h1 style="text-align: left;" >Contest<?php echo $cid?> - <?php echo $title?>   
          <a class='ui small blue button' href="contestrank.xls.php?cid=<?php echo $cid?>" ><?php echo $MSG_DOWNLOAD ?></a>
+         <?php if(empty($view_is_true_question_contest)){ ?>
          <a class='ui small green button' href="contestrank4.php?cid=<?php echo $cid?>" ><?php echo $MSG_REVIEW_CONTESTRANK ?></a>
+         <?php } ?>
          <button  class='ui small yellow button' onclick='$("tr[class!=active]").toggle();'><?php echo $MSG_SHOW ?>/<?php echo $MSG_HIDE ?></button>
  </h1>
 </div>

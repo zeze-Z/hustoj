@@ -64,7 +64,11 @@ include_once("kindeditor.php") ;
           </select>
           <br><br>
         </p>
-        
+        <p align=left>
+          <h4>分值</h4>
+          <input type="number" name="score" class="form-control" min="0" max="1000" value="<?php echo $row['score'] ?>">
+        </p>
+
         <div id="programming_fields" <?php if($row['problem_type'] != 'programming') echo 'style="display:none;"'?>>
           <p align=left>
             <?php echo $MSG_Time_Limit?>
@@ -133,11 +137,7 @@ include_once("kindeditor.php") ;
             ?>
           </div>
           <br><br>
-          
-          <h4>分值</h4>
-          <input type="number" name="score" class="form-control" min="1" max="100" value="<?php echo $row['score'] ?>">
-          <br><br>
-          
+
           <h4>答案解析</h4>
           <textarea name="analysis" class="kindeditor" rows=5 cols=80><?php echo htmlentities($row['analysis'], ENT_QUOTES, 'UTF-8') ?></textarea>
           <br><br>
@@ -555,7 +555,7 @@ include_once("kindeditor.php") ;
       $options = array();
       $answer = '';
       $analysis = '';
-      $score = 0;
+      $score = isset($_POST['score']) ? intval($_POST['score']) : 0;
 
       if ($problem_type != 'programming') {
           // 处理选项
@@ -581,9 +581,8 @@ include_once("kindeditor.php") ;
               }
           }
           
-          // 处理解析和分值
+          // 处理解析
           $analysis = isset($_POST['analysis']) ? $_POST['analysis'] : '';
-          $score = isset($_POST['score']) ? intval($_POST['score']) : 0;
       }
 
       // 转换选项为JSON

@@ -69,7 +69,7 @@ if (isset($_GET['cid'])) {
      * 查询竞赛相关问题信息
      * 使用内连接获取问题标题、ID、来源和竞赛问题编号
      */
-    $sql = "select p.title,p.problem_id,p.source,cp.num as pnum,cp.c_accepted accepted,cp.c_submit submit from problem p inner join contest_problem cp on p.problem_id = cp.problem_id and cp.contest_id=$cid order by cp.num";
+    $sql = "select p.title,p.problem_id,p.source,p.problem_type,cp.num as pnum,cp.c_accepted accepted,cp.c_submit submit from problem p inner join contest_problem cp on p.problem_id = cp.problem_id and cp.contest_id=$cid order by cp.num";
     $result = mysql_query_cache($sql);
     $view_problemset = array();
     $pids = array_column($result, 'problem_id');
@@ -97,24 +97,33 @@ if (isset($_GET['cid'])) {
      * 根据竞赛状态和用户权限设置问题显示内容
      */
     foreach ($result as $row) {
-        $view_problemset[$cnt][0] = "";
-        if (isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
-            $ac = check_ac($cid, $cnt, $noip);
-            $sub = "";
-            if ($ac != "") $sub = "?";
-            if ($noip)
-                $view_problemset[$cnt][0] = "$sub";
-            else
-                $view_problemset[$cnt][0] = "$ac";
+        $problem_type_map = array(
+            'programming' => '编程题',
+            'choice_single' => '单选题',
+            'choice_multi' => '多选题',
+            'judge' => '判断题'
+        );
+        $problem_type = isset($problem_type_map[$row['problem_type']]) ? $problem_type_map[$row['problem_type']] : $row['problem_type'];
+        $col = 0;
+        if (!$view_is_true_question_contest) {
+            $view_problemset[$cnt][$col] = "";
+            if (isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
+                $ac = check_ac($cid, $cnt, $noip);
+                $sub = "";
+                if ($ac != "") $sub = "?";
+                if ($noip)
+                    $view_problemset[$cnt][$col] = "$sub";
+                else
+                    $view_problemset[$cnt][$col] = "$ac";
 
-        } else
-            $view_problemset[$cnt][0] = "";
-
+            }
+            $col++;
+        }
 
         $problem_label = $view_is_true_question_contest ? ($cnt + 1) : $PID[$cnt];
         if ($now < $end_time) { //竞赛进行中
-            $view_problemset[$cnt][1] = "<a href='problem.php?cid=$cid&pid=$cnt'>" . $problem_label . "</a>";
-            $view_problemset[$cnt][2] = "<a href='problem.php?cid=$cid&pid=$cnt'>" . $row['title'] . "</a>";
+            $view_problemset[$cnt][$col] = "<a href='problem.php?cid=$cid&pid=$cnt'>" . $problem_label . "</a>";
+            $view_problemset[$cnt][$col + 1] = "<a href='problem.php?cid=$cid&pid=$cnt'>" . $row['title'] . "</a>";
         } else {               //竞赛结束
             //检查问题是否会在其他竞赛中使用
             $tpid = intval($row['problem_id']);
@@ -128,29 +137,35 @@ if (isset($_GET['cid'])) {
 
             if (intval($tresult) != 0 && !isset($_SESSION[$OJ_NAME . '_' . "m$cid"])) {
                 //如果问题将在其他私有竞赛中使用，不向其他教师和学生显示
-                $view_problemset[$cnt][1] = $problem_label; //竞赛结束后隐藏标题
-                $view_problemset[$cnt][2] = '--using in another private contest--';
+                $view_problemset[$cnt][$col] = $problem_label; //竞赛结束后隐藏标题
+                $view_problemset[$cnt][$col + 1] = '--using in another private contest--';
             } else {
-                $view_problemset[$cnt][1] = "<a href='problem.php?id=" . $row['problem_id'] . "'>" . $problem_label . "</a>";
+                $view_problemset[$cnt][$col] = "<a href='problem.php?id=" . $row['problem_id'] . "'>" . $problem_label . "</a>";
                 if ($contest_ok)
-                    $view_problemset[$cnt][2] = "<a href='problem.php?cid=$cid&pid=$cnt'>" . $row['title'] . "</a>";
+                    $view_problemset[$cnt][$col + 1] = "<a href='problem.php?cid=$cid&pid=$cnt'>" . $row['title'] . "</a>";
                 else
-                    $view_problemset[$cnt][2] = $row['title'];
+                    $view_problemset[$cnt][$col + 1] = $row['title'];
             }
         }
+        $col += 2;
 
-        //$view_problemset[$cnt][3] = $row['source'];
+        if ($view_is_true_question_contest) {
+            $view_problemset[$cnt][$col] = htmlentities($problem_type, ENT_QUOTES, 'UTF-8');
+            $col++;
+        }
+
+        //$view_problemset[$cnt][$col] = $row['source'];
 
         /**
          * 根据NOIP或隐藏设置决定是否显示接受和提交数量
          * 管理员不受限制
          */
         if (($noip || $hide_others) && !(isset($_SESSION[$OJ_NAME . 'm' . $cid]) || isset($_SESSION[$OJ_NAME . '_administrator']))) {
-            $view_problemset[$cnt][3] = "<span class=red>?</span>";
-            $view_problemset[$cnt][4] = "<span class=red>?</span>";
+            $view_problemset[$cnt][$col] = "<span class=red>?</span>";
+            $view_problemset[$cnt][$col + 1] = "<span class=red>?</span>";
         } else {
-            $view_problemset[$cnt][3] = $row['accepted'];
-            $view_problemset[$cnt][4] = $row['submit'];
+            $view_problemset[$cnt][$col] = $row['accepted'];
+            $view_problemset[$cnt][$col + 1] = $row['submit'];
         }
 
 

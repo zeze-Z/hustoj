@@ -93,6 +93,11 @@ function s_cmp($A, $B)
 // contest start time
 if (!isset($_GET['cid'])) die("No Such Contest!");
 $cid = intval($_GET['cid']);
+$contest_title_row = pdo_query("SELECT `title` FROM `contest` WHERE `contest_id`=?", $cid);
+if (!empty($contest_title_row) && is_true_question_contest_title($contest_title_row[0]['title'])) {
+    header("Location: contest.php?cid=$cid");
+    exit(0);
+}
 
 // 获取学校过滤条件
 $school_filter = getContestSchoolFilter();
@@ -114,6 +119,11 @@ if ($rows_cnt > 0) {
     $end_time = strtotime($row['end_time']);
     $title = $row['title'];
     $view_title = $title;
+    $view_is_true_question_contest = is_true_question_contest_title($title);
+    if ($view_is_true_question_contest) {
+        header("Location: contest.php?cid=$cid");
+        exit(0);
+    }
     if (isset($_GET['down'])) {
         header("Content-type:   application/excel");
         $ftitle = rawurlencode(preg_replace('/\.|\\\|\\/|\:|\*|\?|\"|\<|\>|\|/', '', str_replace(' ', '', $title)));

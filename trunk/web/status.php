@@ -51,6 +51,11 @@ if (isset($_GET['cid'])) {
         $end_time = strtotime($row['end_time']);
         $view_description = $row['description'];
         $view_title = $row['title'];
+        $view_is_true_question_contest = is_true_question_contest_title($title);
+        if ($view_is_true_question_contest) {
+            header("Location: contest.php?cid=$cid");
+            exit(0);
+        }
         $view_start_time = $row['start_time'];
         $view_end_time = $row['end_time'];
         $noip = (time() < $end_time) && ((stripos($title, $OJ_NOIP_KEYWORD) !== false) || ($contest_type & 16) > 0);

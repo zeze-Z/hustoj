@@ -35,21 +35,32 @@
     <div class="ui grid">
         <div class="row">
             <div class="column">
+                <?php if(empty($view_is_true_question_contest)){ ?>
                 <div class="ui buttons">
                     <a class="ui small blue button" href="contestrank.php?cid=<?php echo $view_cid?>">ACM<?php echo $MSG_STANDING?></a>
                     <a class="ui small yellow button" href="contestrank-oi.php?cid=<?php echo $view_cid?>">OI<?php echo $MSG_STANDING?></a>
                     <a class="ui small positive button" href="status.php?cid=<?php echo $view_cid?>"><?php echo $MSG_STATUS?></a>
                     <!-- <a class="ui small pink button" href="conteststatistics.php?cid=<?php echo $view_cid?>"><?php echo $MSG_STATISTICS?></a> -->
                 </div>
+                <?php } ?>
                 <div class="ui buttons right floated">
 
                     <?php
-          if ($now>$end_time)
-          echo "<span class=\"ui small button grey\">$MSG_Ended</span>";
-          else if ($now<$start_time)
-          echo "<span class=\"ui small button red\">$MSG_Contest_Pending</span>";
-          else
-          echo "<span class=\"ui small button green\">$MSG_Running</span>";
+          if(!empty($view_is_true_question_contest)){
+            if ($now>$end_time)
+              echo "<span class=\"ui small button grey\">已截止</span>";
+            else if ($now<$start_time)
+              echo "<span class=\"ui small button red\">暂未开放</span>";
+            else
+              echo "<span class=\"ui small button green\">答题开放中</span>";
+          }else{
+            if ($now>$end_time)
+              echo "<span class=\"ui small button grey\">$MSG_Ended</span>";
+            else if ($now<$start_time)
+              echo "<span class=\"ui small button red\">$MSG_Contest_Pending</span>";
+            else
+              echo "<span class=\"ui small button green\">$MSG_Running</span>";
+          }
           ?>
                     <?php
           if ($view_private=='0')
@@ -142,11 +153,16 @@
                 <table class="ui selectable celled table">
                     <thead>
                         <tr>
+                            <?php if(empty($view_is_true_question_contest)){ ?>
                             <th class="one wide" style="text-align: center">
                                     <?php if(isset($_SESSION[$OJ_NAME.'_'.'user_id'])) echo "状态" ?>
                             </th>
+                            <?php } ?>
                             <th class="two wide" style="text-align: center"><?php echo $MSG_PROBLEM_ID ?></th>
                             <th><?php echo $MSG_TITLE ?></th>
+                            <?php if(!empty($view_is_true_question_contest)){ ?>
+                            <th class="two wide center aligned">题目类型</th>
+                            <?php } ?>
                             <!-- <th><?php //echo $MSG_SOURCE ?></th>  -->
                             <th class="one wide center aligned"><?php echo $MSG_AC ?></th>
                             <th class="one wide center aligned"><?php echo $MSG_SUBMIT_NUM ?></th>

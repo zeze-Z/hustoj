@@ -71,7 +71,7 @@
     <div class='well well-sm'>
       <b>编程题导入：FPS XML / ZIP XML</b><br>
       适用于标准编程题，包含题面、输入输出说明、样例、测试数据。<br>
-      推荐用于 GESP/CSP/蓝桥杯等真题中的编程题导入。支持上传单个 <code>.xml</code> 文件，或包含一个/多个 XML 文件的 <code>.zip</code> 压缩包（不支持子目录）。<br><br>
+      推荐用于 GESP/CSP/蓝桥杯等真题中的编程题导入。支持上传单个 <code>.xml</code> 文件，或包含一个/多个 XML 文件的 <code>.zip</code> 压缩包（不支持子目录）。分值可在 XML 的 <code>&lt;score&gt;</code> 标签中填写。<br><br>
       <form class='form-inline' action='problem_import_xml.php' method=post enctype="multipart/form-data">
         <div class='form-group'>
           <input class='form-control' type=file name=fps accept=".xml,.zip">
