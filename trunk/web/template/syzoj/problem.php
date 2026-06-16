@@ -109,6 +109,7 @@ div[class*=ace_br] {
         ?>
       </h1>
     </div>
+      <?php if ($row['problem_type'] == 'programming') { ?>
       <div class="row" style="margin-top: -15px">
            <span class="ui label"><?php echo "文件提交" ?>：<?php 
 if(file_exists($solution_file)){
@@ -138,6 +139,7 @@ if(file_exists($solution_file)){
           <span class="ui label"><?php echo $MSG_SUBMIT ?>：<?php echo $row['submit']; ?></span>
           <span class="ui label"><?php echo $MSG_SOVLED ?>：<?php echo $row['accepted']; ?></span>
       </div>
+      <?php } ?>
 </div>  
 <div class="ui grid">
   <?php if ($row['problem_type'] == 'programming') { ?>
@@ -360,7 +362,7 @@ document.addEventListener('keydown', function(e) {
                                  value="<?php echo htmlentities($opt_label, ENT_QUOTES, 'UTF-8') ?>"
                                  <?php echo $is_checked ? 'checked' : '' ?>
                                  style="margin-right: 8px;">
-                          <strong><?php echo htmlentities($opt['label'], ENT_QUOTES, 'UTF-8') ?>.</strong> <?php echo htmlentities($opt['content'], ENT_QUOTES, 'UTF-8') ?>
+                          <strong><?php echo htmlentities($opt['label'], ENT_QUOTES, 'UTF-8') ?>.</strong> <?php echo nl2br(htmlentities($opt['content'], ENT_QUOTES, 'UTF-8')) ?>
                       </label>
                   </div>
                   <?php } ?>

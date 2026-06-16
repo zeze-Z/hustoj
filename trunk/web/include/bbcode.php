@@ -73,10 +73,12 @@ class BBCode
     // append each one-at-a-time to create output
     $lf = 0;
     $output = '';
+    $line_start = true;  // 标记是否在行首位置
     foreach ($characters as &$ch)
     {
       if ($ch === "\n") {
         $lf ++;
+        $line_start = true;  // 换行后回到行首
       } elseif ($ch === "\r") {
         continue;
       } else {
@@ -90,14 +92,24 @@ class BBCode
 
         if ($ch === '<') {
           $output .= '&lt;';
+          $line_start = false;
         } elseif ($ch === '>') {
           $output .= '&gt;';
+          $line_start = false;
         } elseif ($ch === '&') {
           $output .= '&amp;';
+          $line_start = false;
         } elseif ($ch === "\u{00A0}") {
+          $output .= '&nbsp;';
+          $line_start = false;
+        } elseif ($ch === ' ' && $line_start) {
+          // 行首的空格转换为 &nbsp; 以保留缩进
           $output .= '&nbsp;';
         } else {
           $output .= $ch;
+          if ($ch !== ' ') {
+            $line_start = false;  // 非空格字符后，不再处于行首
+          }
         }
       }
     }
