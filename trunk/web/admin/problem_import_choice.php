@@ -160,8 +160,14 @@ if (isset($_POST['do_import'])) {
                     if (!empty($tags)) $source_parts[] = $tags;
                     $source = implode(' ', $source_parts);
 
-                    // 重复校验
-                    $sql = "SELECT problem_id FROM problem WHERE title = ? AND answer = ? AND problem_type = ?";
+                    // 生成简短标题（截取前30字）
+                    $short_title = mb_substr($title, 0, 30, 'UTF-8');
+                    if (mb_strlen($title, 'UTF-8') > 30) {
+                        $short_title .= '...';
+                    }
+
+                    // 重复校验（现在用 description 代替 title）
+                    $sql = "SELECT problem_id FROM problem WHERE description = ? AND answer = ? AND problem_type = ?";
                     $res = pdo_query($sql, $title, $answer, $problem_type);
                     if (count($res) > 0) {
                         $skipped++;
@@ -169,10 +175,10 @@ if (isset($_POST['do_import'])) {
                         continue;
                     }
 
-                    // 插入数据库
+                    // 插入数据库：题目内容存入 description，title 放简短标题
                     $sql = "INSERT INTO problem (title, description, input, output, spj, hint, problem_type, options, answer, score, level, source, analysis, time_limit, memory_limit, in_date, defunct)
-                            VALUES (?, '', '', '', 0, '', ?, ?, ?, ?, ?, ?, ?, 1, 128, NOW(), 'N')";
-                    $res = pdo_query($sql, $title, $problem_type, $options_json, $answer, $score, $difficulty, $source, $analysis);
+                            VALUES (?, ?, '', '', 0, '', ?, ?, ?, ?, ?, ?, ?, 1, 128, NOW(), 'N')";
+                    $res = pdo_query($sql, $short_title, $title, $problem_type, $options_json, $answer, $score, $difficulty, $source, $analysis);
                     if ($res) {
                         $success++;
                     } else {

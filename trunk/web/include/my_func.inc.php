@@ -531,7 +531,7 @@ function contest_true_question_progress($cid, $user_id) {
 function contest_true_question_score($cid, $user_id) {
     $cid = intval($cid);
     $user_id = strval($user_id);
-    $problems = pdo_query("SELECT cp.`num`, p.`problem_id`, p.`title`, p.`problem_type`, p.`score`, p.`answer`, p.`options`, p.`analysis` FROM `contest_problem` cp INNER JOIN `problem` p ON cp.`problem_id`=p.`problem_id` WHERE cp.`contest_id`=? ORDER BY cp.`num`", $cid);
+    $problems = pdo_query("SELECT cp.`num`, p.`problem_id`, p.`title`, p.`description`, p.`problem_type`, p.`score`, p.`answer`, p.`options`, p.`analysis` FROM `contest_problem` cp INNER JOIN `problem` p ON cp.`problem_id`=p.`problem_id` WHERE cp.`contest_id`=? ORDER BY cp.`num`", $cid);
     $items = array();
     $total_score = 0;
     $user_score = 0;
@@ -608,6 +608,7 @@ function contest_true_question_score($cid, $user_id) {
             'num' => $num,
             'problem_id' => $problem_id,
             'title' => $problem['title'],
+            'description' => $problem['description'],
             'problem_type' => $problem['problem_type'],
             'user_answer' => $user_answer,
             'answer' => $problem['answer'],

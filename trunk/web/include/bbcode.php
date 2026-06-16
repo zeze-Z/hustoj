@@ -67,7 +67,6 @@ class BBCode
   // helper function: normalize HTML entities, with newline handling
   static private function encode($input) : string
   {
-    return $input;
     // break substring into individual unicode chars
     $characters = preg_split('//u', $input, null, PREG_SPLIT_NO_EMPTY);
 
