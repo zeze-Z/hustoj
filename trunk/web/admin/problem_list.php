@@ -163,6 +163,7 @@ echo "</select>";
 <center>
 <table width=100% border=1 style="text-align:center;">
   <form id='pform' method=post action=contest_add.php >
+<?php require("../include/set_post_key.php");?>
 <input type="hidden" name=keyword value="<?php if(isset($_GET['keyword']))echo htmlentities($_GET['keyword'],ENT_QUOTES,"utf-8")?>">
 <input type="hidden" name=hlist value="" >
     <tr>
@@ -188,7 +189,7 @@ echo "</select>";
       <input type=submit name='enable' value='<?php echo $MSG_AVAILABLE ?>' onclick='$("form").attr("action","problem_df_change.php")'>
       <input type=submit name='disable' value='<?php echo $MSG_RESERVED ?>' onclick='$("form").attr("action","problem_df_change.php")'>
       <input type=submit name='plist' value='<?php echo $MSG_NEW_PROBLEM_LIST?>' onclick='$("form").attr("action","news_add_page.php")'>
-      <input type=submit name='delete' value='批量删除' onclick='if(confirm("确定要删除选中的题目吗？此操作不可恢复！")) $("form").attr("action","problem_del.php"); else return false;' style='background:#d9534f;color:white;'>
+      <input type=submit name='delete' value='批量删除' onclick='return confirm("确定要删除选中的题目吗？此操作不可恢复！");' style='background:#d9534f;color:white;' onmousedown='$("form").attr("action","problem_del.php");'>
       <?php if (isset($_SESSION[$OJ_NAME."_administrator"])) { ?><span class='btn btn-primary' onclick='$(".ai.label.label-primary").click();'>AI-category</span> <?php } ?>
       </td>
     </tr>
@@ -271,7 +272,7 @@ echo "</select>";
       <input type=submit name='enable' value='<?php echo $MSG_AVAILABLE ?>' onclick='$("form").attr("action","problem_df_change.php")'>
       <input type=submit name='disable' value='<?php echo $MSG_RESERVED ?>' onclick='$("form").attr("action","problem_df_change.php")'>
       <input type=submit name='plist' value='<?php echo $MSG_NEW_PROBLEM_LIST?>' onclick='$("form").attr("action","news_add_page.php")'>
-      <input type=submit name='delete' value='批量删除' onclick='if(confirm("确定要删除选中的题目吗？此操作不可恢复！")) $("form").attr("action","problem_del.php"); else return false;' style='background:#d9534f;color:white;'>
+      <input type=submit name='delete' value='批量删除' onclick='return confirm("确定要删除选中的题目吗？此操作不可恢复！");' style='background:#d9534f;color:white;' onmousedown='$("form").attr("action","problem_del.php");'>
       </td>
     </tr>
 
