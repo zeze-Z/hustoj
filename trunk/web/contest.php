@@ -24,6 +24,7 @@ require_once('./include/memcache.php');
 require_once('./include/my_func.inc.php');
 require_once('./include/const.inc.php');
 require_once('./include/setlang.php');
+require_once('./include/bbcode.php');
 // 引入学校过滤函数
 if (file_exists('./include/school.php')) {
     require_once('./include/school.php');

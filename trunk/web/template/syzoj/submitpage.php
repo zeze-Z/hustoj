@@ -4,6 +4,24 @@
 $is_true_question_page = !empty($view_is_true_question_contest);
 $true_question_number = isset($pid) ? intval($pid) + 1 : 0;
 $true_question_description = isset($view_problem_row['description']) ? $view_problem_row['description'] : '';
+// 计算下一题的pid和题型，用于"提交并下一题"直接跳转
+$next_pid_value = '';
+$next_problem_type_value = '';
+if ($is_true_question_page && !empty($view_contest_problem_nav) && isset($pid)) {
+    $current_pid = intval($pid);
+    $found_current = false;
+    foreach ($view_contest_problem_nav as $nav_row) {
+        $nav_num = intval($nav_row['num']);
+        if ($found_current) {
+            $next_pid_value = $nav_num;
+            $next_problem_type_value = $nav_row['problem_type'];
+            break;
+        }
+        if ($nav_num == $current_pid) {
+            $found_current = true;
+        }
+    }
+}
 ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 
@@ -95,17 +113,22 @@ body{
 <center>
 
 <script src="<?php echo $OJ_CDN_URL?>include/checksource.js"></script>
-<form id=frmSolution action="submit.php<?php if (isset($_GET['spa'])) echo "?spa" ?>" method="post" onsubmit='do_submit()' enctype="multipart/form-data" >
+<form id=frmSolution action="submit.php<?php if (isset($_GET['spa'])) echo "?spa" ?>" method="post" enctype="multipart/form-data" >
 <?php if ((!isset($_GET['spa']) || $solution_name) && (!$is_true_question_page || $solution_name) ) {?>
         <input type='file' name='answer' placeholder='Upload answer file' >
 <?php } ?>
 
 <?php if($is_true_question_page && isset($cid) && isset($pid)){ ?>
 <div class="true-question-submit-toolbar">
-  <button id="Submit" type="button" class="ui primary icon button" onclick="do_submit();">提交并下一题</button>
+  <?php $is_last_question = ($true_question_progress['submitted'] + 1 >= $true_question_progress['total']); ?>
+  <button id="Submit" type="button" class="ui primary icon button" onclick="do_submit();"><?php echo $is_last_question ? '提交试卷' : '提交并下一题' ?></button>
   <span class="ui label">第 <?php echo $true_question_number?> 题</span>
   <input id="cid" type='hidden' value='<?php echo $cid?>' name="cid">
   <input id="pid" type='hidden' value='<?php echo $pid?>' name="pid">
+  <?php if ($next_pid_value !== ''): ?>
+  <input type="hidden" name="next_pid" value="<?php echo $next_pid_value ?>">
+  <input type="hidden" name="next_problem_type" value="<?php echo $next_problem_type_value ?>">
+  <?php endif; ?>
 <?php }else if (isset($id)){?>
 <span style="color:#0000ff">Problem <b><?php echo $id?></b></span>
 <input id=problem_id type='hidden' value='<?php echo $id?>' name="id" >

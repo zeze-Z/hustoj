@@ -389,6 +389,11 @@ if (!$OJ_BENCHMARK_MODE) {
     $sql = "SELECT `in_date`,solution_id FROM `solution` WHERE `user_id`=? AND in_date>? ORDER BY `in_date` DESC LIMIT 1";
     $res = pdo_query($sql, $user_id, $time_point);
 
+    // 真题竞赛提交跳过冷却时间限制（"提交并下一题"和"提交试卷"）
+    if (!empty($res) && isset($cid) && !$test_run && is_true_question_contest_title($title)) {
+        $res = array();
+    }
+
     if (!empty($res)) {
         /*
         $view_errors = $MSG_BREAK_TIME."<br>";
@@ -610,6 +615,25 @@ if ($OJ_MEMCACHE) {
     unlink($file);
 }
 //echo $file;
+
+// 真题竞赛"提交并下一题"直接跳转到下一题
+if (isset($cid) && !$test_run && isset($_POST['next_pid']) && $_POST['next_pid'] !== '') {
+    $next_pid = intval($_POST['next_pid']);
+    $next_problem_type = isset($_POST['next_problem_type']) ? $_POST['next_problem_type'] : '';
+    if ($next_pid >= 0) {
+        $langmask_row = pdo_query("SELECT `langmask` FROM `contest` WHERE `contest_id`=?", $cid);
+        $langmask_val = $OJ_LANGMASK;
+        if (!empty($langmask_row) && is_array($langmask_row)) {
+            $langmask_val = $langmask_row[0]['langmask'];
+        }
+        if ($next_problem_type === 'programming') {
+            header("Location: submitpage.php?cid=$cid&pid=$next_pid&langmask=$langmask_val");
+        } else {
+            header("Location: problem.php?cid=$cid&pid=$next_pid");
+        }
+        exit(0);
+    }
+}
 
 $statusURI = "status.php?user_id=" . $_SESSION[$OJ_NAME . '_' . 'user_id'];
 if (isset($_GET['spa'])) $statusURI .= "&spa";
