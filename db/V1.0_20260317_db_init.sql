@@ -2,6 +2,15 @@ set names utf8mb4;
 create database if not exists jol ;
 use jol;
 
+-- 0. 创建版本控制表（V1.0遗漏）
+CREATE TABLE IF NOT EXISTS `db_version` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `script_name` varchar(255) NOT NULL COMMENT '脚本文件名',
+  `execute_time` datetime NOT NULL COMMENT '执行时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_script_name` (`script_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='数据库版本控制表';
+
 CREATE TABLE IF NOT EXISTS `compileinfo` (
   `solution_id` int(11) NOT NULL DEFAULT 0,
   `error` text,
