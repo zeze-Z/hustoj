@@ -86,28 +86,28 @@ SELECT x.source_table,
 FROM (
     SELECT 'source_code' AS source_table, sc.solution_id, sc.source
     FROM source_code sc
-    INNER JOIN tmp_cleanup_solution_ids t ON sc.solution_id=t.solution_id
+    INNER JOIN (SELECT solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION) t ON sc.solution_id=t.solution_id
     UNION ALL
     SELECT 'source_code_user' AS source_table, scu.solution_id, scu.source
     FROM source_code_user scu
-    INNER JOIN tmp_cleanup_solution_ids t ON scu.solution_id=t.solution_id
+    INNER JOIN (SELECT solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION) t ON scu.solution_id=t.solution_id
 ) x
 ORDER BY x.solution_id DESC;
 
 SELECT '===== 待清理记录统计 =====' AS '';
-SELECT 'solution' AS table_name, COUNT(*) AS count FROM tmp_cleanup_solution_ids
+SELECT 'solution' AS table_name, COUNT(*) AS count FROM (SELECT s.solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION) t
 UNION ALL
-SELECT 'source_code', COUNT(*) FROM source_code WHERE solution_id IN (SELECT solution_id FROM tmp_cleanup_solution_ids)
+SELECT 'source_code', COUNT(*) FROM source_code WHERE solution_id IN (SELECT s.solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION)
 UNION ALL
-SELECT 'source_code_user', COUNT(*) FROM source_code_user WHERE solution_id IN (SELECT solution_id FROM tmp_cleanup_solution_ids)
+SELECT 'source_code_user', COUNT(*) FROM source_code_user WHERE solution_id IN (SELECT s.solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION)
 UNION ALL
-SELECT 'compileinfo', COUNT(*) FROM compileinfo WHERE solution_id IN (SELECT solution_id FROM tmp_cleanup_solution_ids)
+SELECT 'compileinfo', COUNT(*) FROM compileinfo WHERE solution_id IN (SELECT s.solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION)
 UNION ALL
-SELECT 'runtimeinfo', COUNT(*) FROM runtimeinfo WHERE solution_id IN (SELECT solution_id FROM tmp_cleanup_solution_ids)
+SELECT 'runtimeinfo', COUNT(*) FROM runtimeinfo WHERE solution_id IN (SELECT s.solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION)
 UNION ALL
-SELECT 'custominput', COUNT(*) FROM custominput WHERE solution_id IN (SELECT solution_id FROM tmp_cleanup_solution_ids)
+SELECT 'custominput', COUNT(*) FROM custominput WHERE solution_id IN (SELECT s.solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION)
 UNION ALL
-SELECT 'sim', COUNT(*) FROM sim WHERE s_id IN (SELECT solution_id FROM tmp_cleanup_solution_ids) OR sim_s_id IN (SELECT solution_id FROM tmp_cleanup_solution_ids);
+SELECT 'sim', COUNT(*) FROM sim WHERE s_id IN (SELECT s.solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION) OR sim_s_id IN (SELECT s.solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION);
 EOF
 
 SOLUTION_COUNT=$($MYSQL_CMD -N -B -e "SELECT COUNT(*) FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION;")
@@ -135,19 +135,13 @@ echo "正在删除关联记录和 solution 记录..."
 $MYSQL_CMD <<EOF
 START TRANSACTION;
 
-CREATE TEMPORARY TABLE tmp_cleanup_solution_ids AS
-SELECT s.solution_id
-FROM solution s
-LEFT JOIN contest c ON s.contest_id=c.contest_id
-WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION;
-
-DELETE FROM source_code WHERE solution_id IN (SELECT solution_id FROM tmp_cleanup_solution_ids);
-DELETE FROM source_code_user WHERE solution_id IN (SELECT solution_id FROM tmp_cleanup_solution_ids);
-DELETE FROM compileinfo WHERE solution_id IN (SELECT solution_id FROM tmp_cleanup_solution_ids);
-DELETE FROM runtimeinfo WHERE solution_id IN (SELECT solution_id FROM tmp_cleanup_solution_ids);
-DELETE FROM custominput WHERE solution_id IN (SELECT solution_id FROM tmp_cleanup_solution_ids);
-DELETE FROM sim WHERE s_id IN (SELECT solution_id FROM tmp_cleanup_solution_ids) OR sim_s_id IN (SELECT solution_id FROM tmp_cleanup_solution_ids);
-DELETE FROM solution WHERE solution_id IN (SELECT solution_id FROM tmp_cleanup_solution_ids);
+DELETE FROM source_code WHERE solution_id IN (SELECT solution_id FROM (SELECT s.solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION) tmp_ids);
+DELETE FROM source_code_user WHERE solution_id IN (SELECT solution_id FROM (SELECT s.solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION) tmp_ids);
+DELETE FROM compileinfo WHERE solution_id IN (SELECT solution_id FROM (SELECT s.solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION) tmp_ids);
+DELETE FROM runtimeinfo WHERE solution_id IN (SELECT solution_id FROM (SELECT s.solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION) tmp_ids);
+DELETE FROM custominput WHERE solution_id IN (SELECT solution_id FROM (SELECT s.solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION) tmp_ids);
+DELETE FROM sim WHERE s_id IN (SELECT solution_id FROM (SELECT s.solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION) tmp_ids) OR sim_s_id IN (SELECT solution_id FROM (SELECT s.solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION) tmp_ids);
+DELETE FROM solution WHERE solution_id IN (SELECT solution_id FROM (SELECT s.solution_id FROM solution s LEFT JOIN contest c ON s.contest_id=c.contest_id WHERE s.user_id='$USER_ID' AND $SCOPE_CONDITION) tmp_ids);
 
 COMMIT;
 EOF
