@@ -27,6 +27,11 @@
 - 使用标准DDL语法，兼容 MySQL 8.0.28
 - 文件末尾附回滚SQL
 - 同步更新`db/RELEASE_STEPS.md`发布流程
+- **触发条件**：以下场景必须同步创建SQL归档文件：
+  - ALTER TABLE（新增/修改/删除字段、索引）
+  - CREATE TABLE / DROP TABLE
+  - 数据迁移或批量UPDATE
+- **自检方法**：commit前检查代码中是否新增了`ADD COLUMN`、`MODIFY COLUMN`等DDL操作
 
 ### 代码规范
 
