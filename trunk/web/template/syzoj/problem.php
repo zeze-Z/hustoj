@@ -357,12 +357,17 @@ document.addEventListener('keydown', function(e) {
                   ?>
                   <div class="field">
                       <label class="<?php echo $is_true_question_page ? 'true-question-option' : '' ?>" style="font-weight: normal; cursor: pointer;">
-                          <input type="<?php echo $problem_type == 'choice_multi' ? 'checkbox' : 'radio' ?>"
-                                 name="<?php echo $problem_type == 'choice_multi' ? 'answer[]' : 'answer' ?>"
-                                 value="<?php echo htmlentities($opt_label, ENT_QUOTES, 'UTF-8') ?>"
-                                 <?php echo $is_checked ? 'checked' : '' ?>
-                                 style="margin-right: 8px;">
-                          <strong><?php echo htmlentities($opt['label'], ENT_QUOTES, 'UTF-8') ?>.</strong> <?php echo nl2br(htmlentities($opt['content'], ENT_QUOTES, 'UTF-8')) ?>
+                          <div style="display: flex; align-items: flex-start;">
+                              <input type="<?php echo $problem_type == 'choice_multi' ? 'checkbox' : 'radio' ?>"
+                                     name="<?php echo $problem_type == 'choice_multi' ? 'answer[]' : 'answer' ?>"
+                                     value="<?php echo htmlentities($opt_label, ENT_QUOTES, 'UTF-8') ?>"
+                                     <?php echo $is_checked ? 'checked' : '' ?>
+                                     style="margin-right: 8px; margin-top: 3px; flex-shrink: 0;">
+                              <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px; align-items: start;">
+                                  <strong style="grid-column: 1;"><?php echo htmlentities($opt_label, ENT_QUOTES, 'UTF-8') ?>.</strong>
+                                  <div style="grid-column: 2; white-space: pre-wrap;"><?php echo htmlentities($opt['content'], ENT_QUOTES, 'UTF-8') ?></div>
+                              </div>
+                          </div>
                       </label>
                   </div>
                   <?php } ?>

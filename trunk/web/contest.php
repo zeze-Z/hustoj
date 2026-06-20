@@ -52,7 +52,17 @@ if (isset($_GET['cid'])) {
         $true_question_user_id = $_SESSION[$OJ_NAME . '_' . 'user_id'];
         $view_true_question_progress = contest_true_question_progress($cid, $true_question_user_id);
         if (isset($_GET['auto']) && $view_true_question_progress['next_num'] !== null) {
-            header("Location: problem.php?cid=$cid&pid=" . $view_true_question_progress['next_num']);
+            $next_num = $view_true_question_progress['next_num'];
+            // 查询下一题的题型，编程题跳转到submitpage.php，其他题型跳转到problem.php
+            $next_type_row = pdo_query("SELECT p.`problem_type` FROM `contest_problem` cp INNER JOIN `problem` p ON cp.`problem_id`=p.`problem_id` WHERE cp.`contest_id`=? AND cp.`num`=?", $cid, $next_num);
+            $next_problem_type = !empty($next_type_row) ? $next_type_row[0]['problem_type'] : '';
+            if ($next_problem_type === 'programming') {
+                $langmask_row = pdo_query("SELECT `langmask` FROM `contest` WHERE `contest_id`=?", $cid);
+                $langmask = !empty($langmask_row) ? $langmask_row[0]['langmask'] : $OJ_LANGMASK;
+                header("Location: submitpage.php?cid=$cid&pid=$next_num&langmask=$langmask");
+            } else {
+                header("Location: problem.php?cid=$cid&pid=$next_num");
+            }
             exit(0);
         }
         if ($view_true_question_progress['completed']) {
