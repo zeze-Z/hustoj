@@ -90,7 +90,8 @@ if (isset($_GET['cid'])) {
 
 } else {
     // 统一使用基础条件，具体权限过滤由下面的学校权限逻辑处理
-    $sql = "WHERE problem_id>0 ";
+    // 过滤掉所有竞赛提交（contest_id>0），竞赛提交请在对应竞赛页查看
+    $sql = "WHERE problem_id>0 AND contest_id=0 ";
 }
 
 $start_first = true;

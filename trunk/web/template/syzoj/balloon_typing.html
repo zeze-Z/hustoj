@@ -131,7 +131,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            will-change: transform;
+            will-change: transform, opacity;
+            transform: translateY(100px); /* 初始位置：gameArea 底部下方 */
         }
 
         .balloon-body {
@@ -188,6 +189,7 @@
 
         .balloon.pop {
             animation: pop 0.3s ease-out forwards;
+            transition: none !important; /* 击破时停止浮动动画 */
         }
 
         .explosion {
@@ -402,7 +404,7 @@
         let gamePaused = false;
         let balloons = [];
         let spawnInterval = null;
-        let animationFrame = null;
+        let cleanupInterval = null;
         let currentDifficulty = {
             spawnRate: 2000,
             floatDuration: 8000,
@@ -443,6 +445,8 @@
                 }
             });
             balloons = [];
+            clearInterval(cleanupInterval);
+            cleanupInterval = null;
         }
 
         // 生成随机字母或单词
@@ -464,49 +468,65 @@
             return balloonColors[Math.floor(Math.random() * balloonColors.length)];
         }
 
-        // 创建气球
+        // 创建气球（CSS transition 驱动动画，GPU 合成）
         function createBalloon() {
             if (!gameRunning || gamePaused || balloons.length >= currentDifficulty.maxBalloons) return;
 
             const text = generateText();
             const color = getRandomColor();
-            
+
             // 创建气球元素
             const balloonEl = document.createElement('div');
             balloonEl.className = `balloon ${color}`;
-            
+
             const balloonBody = document.createElement('div');
             balloonBody.className = 'balloon-body';
             balloonBody.textContent = text;
-            
+
             const string = document.createElement('div');
             string.className = 'balloon-string';
-            
+
             balloonEl.appendChild(balloonBody);
             balloonEl.appendChild(string);
-            
+
             // 随机水平位置
             const maxLeft = gameArea.clientWidth - 70;
             const left = Math.random() * maxLeft;
             balloonEl.style.left = `${left}px`;
             balloonEl.style.bottom = '0px';
-            
 
-            
             gameArea.appendChild(balloonEl);
-            
-            // 添加到气球数组
+
+            const duration = currentDifficulty.floatDuration / 1000; // 秒
+
+            // 添加到气球数组（先存再触发动画，确保 transitionend 监听在前）
             const balloon = {
                 element: balloonEl,
                 text: text,
-                position: -100,
-                speed: 400 / (currentDifficulty.floatDuration / 1000) / 60 // 像素/帧
+                popped: false,
+                done: false,
+                startTime: Date.now(),
+                duration: duration
             };
-            
+
+            // transitionend 兜底：动画自然结束时标记 done
+            balloonEl.addEventListener('transitionend', function handler(e) {
+                if (e.propertyName === 'transform' && !balloon.popped) {
+                    balloon.done = true;
+                    balloonEl.removeEventListener('transitionend', handler);
+                }
+            });
+
+            // 设置 CSS transition 并触发浮动（从 100px → -500px）
+            balloonEl.style.transition = `transform ${duration}s linear`;
+            // 强制 reflow 确保初始位置生效
+            balloonEl.offsetHeight; // eslint-disable-line no-unused-expressions
+            balloonEl.style.transform = 'translateY(-500px)';
+
             balloons.push(balloon);
         }
 
-        // 爆炸动画
+        // 爆炸动画（animationend 事件清理，无需 setTimeout）
         function createExplosion(x, y) {
             const explosion = document.createElement('div');
             explosion.className = 'explosion';
@@ -514,82 +534,87 @@
             explosion.style.top = `${y - 50}px`;
             explosion.innerHTML = '💥';
             explosion.style.fontSize = '50px';
+
+            explosion.addEventListener('animationend', () => explosion.remove());
+            // 兜底：万一 animationend 未触发（概率极低），800ms 后清理
+            setTimeout(() => { if (explosion.parentNode) explosion.remove(); }, 800);
+
             gameArea.appendChild(explosion);
-            
-            setTimeout(() => {
-                explosion.remove();
-            }, 500);
         }
 
-        // 击破气球
-        function popBalloon(balloon, index) {
-            balloon.element.classList.add('pop');
-            
-            // 爆炸效果
-            const rect = balloon.element.getBoundingClientRect();
+        // 击破气球（标记 popped，由 cleanupBalloons 统一清理）
+        function popBalloon(balloon) {
+            balloon.popped = true;
+            const el = balloon.element;
+
+            // 停止浮动 transition，锁定当前位置
+            const rect = el.getBoundingClientRect();
             const gameRect = gameArea.getBoundingClientRect();
+            el.style.transition = 'none';
+            el.style.transform = `translateY(${rect.top - gameRect.top - 100}px)`;
+
+            // 播放击破动画
+            el.classList.add('pop');
+            el.addEventListener('animationend', () => el.remove());
+
+            // 爆炸效果
             createExplosion(rect.left - gameRect.left + 30, rect.top - gameRect.top + 35);
-            
+
             // 更新得分
             combo++;
             const baseScore = 10;
             const comboBonus = Math.floor(combo / 5) * 5;
             score += baseScore + comboBonus;
-            
+
             updateStats();
             feedbackEl.textContent = `+${baseScore + comboBonus}分！连击×${combo} 🔥`;
             feedbackEl.style.color = '#66bb6a';
-            
-            // 移除气球
-            setTimeout(() => {
-                if (balloon.element.parentNode) {
-                    balloon.element.remove();
-                }
-                balloons.splice(index, 1);
-            }, 300);
         }
 
-        // 气球到达顶部
-        function balloonMissed(balloon, index) {
+        // 气球到达顶部（标记 done，由 cleanupBalloons 统一清理）
+        function balloonMissed(balloon) {
+            balloon.done = true;
             lives--;
             combo = 0;
-            
+
             updateStats();
             feedbackEl.textContent = '气球飞走了 😢';
             feedbackEl.style.color = '#ef5350';
-            
-            // 移除气球
+
             if (balloon.element.parentNode) {
                 balloon.element.remove();
             }
-            balloons.splice(index, 1);
-            
-            // 检查游戏结束
+
             if (lives <= 0) {
                 endGame();
             }
         }
 
-        // 游戏主循环
-        function gameLoop() {
-            if (!gameRunning || gamePaused) {
-                animationFrame = requestAnimationFrame(gameLoop);
-                return;
+        // 定期清理已完成/已击破的气球（替代每帧 splice）
+        function cleanupBalloons() {
+            for (let i = balloons.length - 1; i >= 0; i--) {
+                if (balloons[i].done || balloons[i].popped) {
+                    balloons.splice(i, 1);
+                }
             }
+        }
 
-            // 更新所有气球位置
+        // 游戏主循环（轻量兜底：检查 CSS transition 可能漏掉的到期气球）
+        function gameLoop() {
+            if (!gameRunning || gamePaused) return;
+
+            const now = Date.now();
             for (let i = balloons.length - 1; i >= 0; i--) {
                 const balloon = balloons[i];
-                balloon.position += balloon.speed;
-                balloon.element.style.transform = `translateY(${-balloon.position}px)`;
-                
-                // 检查是否到达顶部
-                if (balloon.position > 400) {
-                    balloonMissed(balloon, i);
+                if (balloon.popped || balloon.done) continue;
+
+                // 超时兜底：transitionend 可能因浏览器原因未触发
+                if (now - balloon.startTime > balloon.duration * 1000 + 200) {
+                    balloonMissed(balloon);
                 }
             }
 
-            animationFrame = requestAnimationFrame(gameLoop);
+            requestAnimationFrame(gameLoop);
         }
 
         // 开始游戏
@@ -605,22 +630,50 @@
             
             // 开始生成气球
             spawnInterval = setInterval(createBalloon, currentDifficulty.spawnRate);
-            
-            // 开始游戏循环
-            gameLoop();
+
+            // 定期清理已结束的气球（1秒一次，替代每帧 splice）
+            cleanupInterval = setInterval(cleanupBalloons, 1000);
+
+            // 启动兜底检查循环
+            requestAnimationFrame(gameLoop);
         }
 
-        // 暂停游戏
+        // 暂停游戏（冻结/恢复 CSS transition）
         function togglePause() {
             if (!gameRunning) return;
-            
+
             gamePaused = !gamePaused;
             pauseBtn.textContent = gamePaused ? '继续' : '暂停';
-            
+
             if (gamePaused) {
+                // 冻结每个气球的当前位置
+                const now = Date.now();
+                balloons.forEach(balloon => {
+                    if (balloon.popped || balloon.done) return;
+                    const elapsed = (now - balloon.startTime) / 1000;
+                    balloon.remainingTime = Math.max(0, balloon.duration - elapsed);
+                    // 读取当前渲染位置并冻结
+                    const currentY = getComputedStyle(balloon.element).transform;
+                    balloon.element.style.transition = 'none';
+                    balloon.element.style.transform = currentY === 'none' ? 'translateY(100px)' : currentY;
+                });
                 feedbackEl.textContent = '游戏已暂停 ⏸️';
             } else {
+                // 恢复：从冻结位置续播剩余时间
+                balloons.forEach(balloon => {
+                    if (balloon.popped || balloon.done) return;
+                    if (balloon.remainingTime <= 0) {
+                        balloonMissed(balloon);
+                        return;
+                    }
+                    balloon.startTime = Date.now();
+                    balloon.duration = balloon.remainingTime;
+                    balloon.element.style.transition = `transform ${balloon.remainingTime}s linear`;
+                    balloon.element.offsetHeight; // 强制 reflow
+                    balloon.element.style.transform = 'translateY(-500px)';
+                });
                 feedbackEl.textContent = '';
+                requestAnimationFrame(gameLoop);
                 inputArea.focus();
             }
         }
@@ -628,13 +681,15 @@
         // 结束游戏
         function endGame() {
             gameRunning = false;
-            
+
             clearInterval(spawnInterval);
-            cancelAnimationFrame(animationFrame);
-            
+            clearInterval(cleanupInterval);
+            spawnInterval = null;
+            cleanupInterval = null;
+
             inputArea.disabled = true;
             pauseBtn.disabled = true;
-            
+
             finalScoreEl.textContent = score;
             gameOverEl.style.display = 'block';
         }
@@ -695,8 +750,8 @@
             
             // 查找匹配的气球
             for (let i = 0; i < balloons.length; i++) {
-                if (balloons[i].text.toLowerCase() === input) {
-                    popBalloon(balloons[i], i);
+                if (balloons[i].text.toLowerCase() === input && !balloons[i].popped) {
+                    popBalloon(balloons[i]);
                     inputArea.value = '';
                     return;
                 }
@@ -704,7 +759,7 @@
             
             // 没有匹配 - 只在有实际输入内容时才算打错
             // 部分匹配不算错，让用户继续输入
-            const hasPartialMatch = balloons.some(b => b.text.toLowerCase().startsWith(input));
+            const hasPartialMatch = balloons.some(b => !b.popped && !b.done && b.text.toLowerCase().startsWith(input));
             if (!hasPartialMatch && input.length > 1) {
                 combo = 0;
                 updateStats();
@@ -732,8 +787,8 @@
             if (!input) return;
             // 完全匹配则击破
             for (let i = 0; i < balloons.length; i++) {
-                if (balloons[i].text.toLowerCase() === input) {
-                    popBalloon(balloons[i], i);
+                if (balloons[i].text.toLowerCase() === input && !balloons[i].popped) {
+                    popBalloon(balloons[i]);
                     inputArea.value = '';
                     return;
                 }
