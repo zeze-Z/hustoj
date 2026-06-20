@@ -78,6 +78,7 @@ mysql -u root -p jol < db/V1.9_20260607_point_payment.sql
 -- 基础表
 SHOW TABLES IN jol LIKE 'problem';
 SHOW TABLES IN jol LIKE 'solution';
+SHOW TABLES IN jol LIKE 'db_version';  -- 版本控制表
 
 -- 课件商城模块
 SHOW TABLES IN jol LIKE 'course%';

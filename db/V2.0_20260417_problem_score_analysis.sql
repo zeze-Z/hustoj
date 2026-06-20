@@ -1,5 +1,14 @@
 -- V2.0_20260417_problem_score_analysis.sql
--- 选择题分值、解析字段、答案、竞赛来源、竞赛题目分值
+-- 选择题分值、解析字段、答案、竞赛来源、竞赛题目分值、版本控制表
+
+-- 0. 创建版本控制表（V1.0遗漏）
+CREATE TABLE IF NOT EXISTS `db_version` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `script_name` varchar(255) NOT NULL COMMENT '脚本文件名',
+  `execute_time` datetime NOT NULL COMMENT '执行时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_script_name` (`script_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='数据库版本控制表';
 
 -- 1. 添加答案字段（V1.0遗漏）
 ALTER TABLE `problem` ADD COLUMN `answer` VARCHAR(500) DEFAULT NULL COMMENT '正确答案（选择题）/ OJ配置（编程题）' AFTER `source`;
@@ -22,3 +31,4 @@ ALTER TABLE `contest_problem` ADD COLUMN `score` INT(11) DEFAULT 0 COMMENT '竞�
 -- ALTER TABLE `problem` DROP COLUMN `analysis`;
 -- ALTER TABLE `problem` DROP COLUMN `score`;
 -- ALTER TABLE `problem` DROP COLUMN `answer`;
+-- DROP TABLE IF EXISTS `db_version`;
