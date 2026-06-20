@@ -12,7 +12,7 @@
 | V1.0 | 2026-03-31 | 课件商城模块 |
 | V1.0 | 2026-04-11 | 多学校隔离功能 |
 | V1.1 | 2026-04-19 | 选择题功能 + 考试模块（合并发布） |
-| V1.1.1 | 2026-04-17 | 选择题分值和解析字段（补充归档） |
+| V2.0 | 2026-04-17 | 选择题分值/解析/竞赛来源字段（补充归档） |
 | V1.2 | 2026-05-01 | 课件预览付费改造 |
 | V1.3 | 2026-05-05 | 删除提取码字段（百度网盘→金山文档） |
 | V1.4 | 2026-05-07 | 题目增加level字段（难度等级1-5） |
@@ -51,8 +51,8 @@ mysql -u root -p jol < db/V1.0_20260411_school_mode.sql
 # 4. 选择题功能 + 考试模块
 mysql -u root -p jol < db/V1.1_20260419_choice_and_exam.sql
 
-# 4.1 选择题分值和解析字段（补充归档）
-mysql -u root -p jol < db/V1.1.1_20260417_problem_score_analysis.sql
+# 4.1 选择题分值/解析/竞赛来源字段（补充归档）
+mysql -u root -p jol < db/V2.0_20260417_problem_score_analysis.sql
 
 # 5. 课件预览付费改造
 mysql -u root -p jol < db/V1.2_2026-05-01_courseware_preview_upgrade.sql
@@ -98,9 +98,11 @@ DESCRIBE jol.problem problem_type;   -- ENUM('programming','choice_single','choi
 DESCRIBE jol.problem options;        -- longtext
 DESCRIBE jol.problem answer;         -- varchar(500)
 
--- 选择题分值和解析字段
+-- 选择题分值/解析/竞赛来源字段
 DESCRIBE jol.problem score;          -- int(11), Default: 0, Comment: 题目分值
 DESCRIBE jol.problem analysis;       -- text, Comment: 答案解析
+DESCRIBE jol.problem contest_source; -- varchar(100), Comment: 竞赛来源
+DESCRIBE jol.contest_problem score;  -- int(11), Default: 0, Comment: 竞赛中该题分值
 
 -- solution 表变更
 DESCRIBE jol.solution pass_rate;     -- decimal(5,2)
