@@ -108,6 +108,7 @@
 	  <textarea class="kindeditor" rows=13 name=description cols=80><span class='md auto_select'>&nbsp;
 &nbsp;</span></textarea><br>
         </p>
+        <div id="programming_extra_fields">
         <p align=left>
           <?php echo "<h4>".$MSG_Input."(<64kB)</h4>"?>
           <textarea class="kindeditor" rows=13 name=input cols=80><span class='md'>
@@ -143,10 +144,11 @@
         </p>
         <p>
           <?php echo "<h4>".$MSG_SPJ."</h4>"?>
-	  <input type=radio name=spj value='0' checked ><?php echo $MSG_NJ?> 更多测试数据，在题目添加后补充。<br> 
+	  <input type=radio name=spj value='0' checked ><?php echo $MSG_NJ?> 更多测试数据，在题目添加后补充。<br>
 	  <input type=radio name=spj value='1' ><?php echo $MSG_SPJ?> <?php echo "(".$MSG_HELP_SPJ.")"?><br>
-	  <input type=radio name=spj value='2' ><?php echo $MSG_RTJ?>)<br>
+	  <input type=radio name=spj value='2' ><?php echo $MSG_RTJ?><br>
         </p>
+        </div>
         <p align=left>
           <?php echo "<h4>竞赛来源</h4>"?>
           <select name="contest_source" class="form-control" style="width:100%;">
@@ -223,14 +225,17 @@
   function toggleProblemFields() {
     var problemType = document.getElementById('problem_type').value;
     var programmingFields = document.getElementById('programming_fields');
+    var programmingExtraFields = document.getElementById('programming_extra_fields');
     var choiceFields = document.getElementById('choice_fields');
     var answerContainer = document.getElementById('answer_container');
-    
+
     if (problemType == 'programming') {
       programmingFields.style.display = 'block';
+      programmingExtraFields.style.display = 'block';
       choiceFields.style.display = 'none';
     } else {
       programmingFields.style.display = 'none';
+      programmingExtraFields.style.display = 'none';
       choiceFields.style.display = 'block';
       
       // 生成答案选择项
@@ -340,59 +345,148 @@
         setTimeout('hide()',1500);	
 	$("input").keyup(sync);
 	$("textarea").keyup(sync);
+	$("#problem_type, #options_container, #answer_container").on("change keyup input",sync);
   }
   function hide(){
 	let preview=$("#previewFrame").contents();
-	preview.find(".ui.buttons").hide();
+	if(preview.find(".ui.buttons").length) preview.find(".ui.buttons").hide();
 	preview.find("span.ui.label").eq(2).hide();
 	preview.find("span.ui.label").eq(3).hide();
 	preview.find("span.ui.label").eq(4).hide();
 	preview.find("span.ui.label").eq(5).hide();
-	preview.find("#show_tag_div").parent().hide();
+	if(preview.find("#show_tag_div").length) preview.find("#show_tag_div").parent().hide();
 	sync();
-//	preview.find("h1:first").parent().parent().hide();
   }
   function sync(){
 	console.log("sync...");
 	let preview=$("#previewFrame").contents();
 	let title=$("input[name=title]").val();
 	preview.find("h1:first").html(title);
-	let time=$("input[name=time_limit]").val();
-	preview.find("span.ui.label").eq(0).html("<?php echo $MSG_Time_Limit ?>："+time);
-	let memory=$("input[name=memory_limit]").val();
-	preview.find("span.ui.label").eq(1).html("<?php echo $MSG_Memory_Limit ?>："+memory);
-	
-	let description=$("textarea").eq(0).val();
-	preview.find("#description").html(description);
-	preview.find("#description .md").each(function(){
-		if($("#previewFrame")[0] != undefined) $("#previewFrame")[0].contentWindow.MathJax.typeset();
-		$(this).html(marked.parse($(this).html()));
-	});
-  
-	let input=$("textarea").eq(3).val();
-	preview.find("#input").html(input);
-	preview.find("#input .md").each(function(){
-		if($("#previewFrame")[0] != undefined) $("#previewFrame")[0].contentWindow.MathJax.typeset();
-		$(this).html(marked.parse($(this).html()));
-	});
-	let output=$("textarea").eq(5).val();
-	preview.find("#output").html(output);
-	preview.find("#output .md").each(function(){
-		if($("#previewFrame")[0] != undefined) $("#previewFrame")[0].contentWindow.MathJax.typeset();
-		$(this).html(marked.parse($(this).html()));
-	});
+	let problemType=$("#problem_type").val();
+	var grid=preview.find(".ui.grid").eq(1);
+	var fw=$("#previewFrame")[0];
+	var hasMathJax=fw!=undefined&&fw.contentWindow.MathJax!=undefined;
 
-	let sinput=$("textarea").eq(6).val();
-	preview.find("#sinput").html(sinput);
-	let soutput=$("textarea").eq(7).val();
-	preview.find("#soutput").html(soutput);
-	let hint=$("textarea").eq(11).val();
-	preview.find("#hint").html(hint);
-	preview.find("#hint .md").each(function(){
-		if($("#previewFrame")[0] != undefined) $("#previewFrame")[0].contentWindow.MathJax.typeset();
-		$(this).html(marked.parse($(this).html()));
-	});
-	if($("#previewFrame")[0] != undefined) $("#previewFrame")[0].contentWindow.MathJax.typeset();
+	if(problemType=="programming"){
+		// 编程题：重建预览内容
+		var time=$("input[name=time_limit]").val();
+		var memory=$("input[name=memory_limit]").val();
+		var description=$("textarea[name=description]").val()||"";
+		var input=$("textarea[name=input]").val()||"";
+		var output=$("textarea[name=output]").val()||"";
+		var sinput=$("textarea[name=sample_input]").val()||"";
+		var soutput=$("textarea[name=sample_output]").val()||"";
+		var hint=$("textarea[name=hint]").val()||"";
+		var esc=function(s){ return $("<div/>").text(s).html(); };
+
+		var headerHtml="<div class='row' style='margin-top:-15px'>"
+			+"<span class='ui label'><?php echo $MSG_Time_Limit ?>："+esc(time)+"</span> "
+			+"<span class='ui label'><?php echo $MSG_Memory_Limit ?>："+esc(memory)+"</span>"
+			+"</div>";
+
+		var bodyHtml="";
+		if(description) bodyHtml+="<div class='row'><div class='column'>"
+			+"<h4 class='ui top attached block header'><?php echo $MSG_Description?></h4>"
+			+"<div id='description' class='ui bottom attached segment font-content'>"+description+"</div></div></div>";
+		if(input) bodyHtml+="<div class='row'><div class='column'>"
+			+"<h4 class='ui top attached block header'><?php echo $MSG_Input?></h4>"
+			+"<div id='input' class='ui bottom attached segment font-content'>"+input+"</div></div></div>";
+		if(output) bodyHtml+="<div class='row'><div class='column'>"
+			+"<h4 class='ui top attached block header'><?php echo $MSG_Output?></h4>"
+			+"<div id='output' class='ui bottom attached segment font-content'>"+output+"</div></div></div>";
+		if(sinput) bodyHtml+="<div class='row'><div class='column'>"
+			+"<h4 class='ui top attached block header'><?php echo $MSG_Sample_Input?></h4>"
+			+"<div class='ui bottom attached segment font-content'>"
+			+"<pre style='margin:0'><code>"+esc(sinput)+"</code></pre></div></div></div>";
+		if(soutput) bodyHtml+="<div class='row'><div class='column'>"
+			+"<h4 class='ui top attached block header'><?php echo $MSG_Sample_Output?></h4>"
+			+"<div class='ui bottom attached segment font-content'>"
+			+"<pre style='margin:0'><code>"+esc(soutput)+"</code></pre></div></div></div>";
+		if(hint) bodyHtml+="<div class='row'><div class='column'>"
+			+"<h4 class='ui top attached block header'><?php echo $MSG_HINT?></h4>"
+			+"<div id='hint' class='ui bottom attached segment font-content'>"+hint+"</div></div></div>";
+
+		grid.html(headerHtml+bodyHtml);
+		// 渲染markdown
+		grid.find("#description .md, #input .md, #output .md, #hint .md").each(function(){
+			$(this).html(marked.parse($(this).html()));
+		});
+		if(hasMathJax) fw.contentWindow.MathJax.typeset();
+	} else {
+		// 非编程题：重建预览内容
+		var typeLabel=problemType=="choice_single"?"单选题":(problemType=="choice_multi"?"多选题":"判断题");
+		var inputType=problemType=="choice_multi"?"checkbox":"radio";
+
+		// 获取选项
+		var optionLabels=[];
+		if(problemType=="judge"){
+			optionLabels=[{label:"A",content:"对"},{label:"B",content:"错"}];
+		} else {
+			var optionInputs=document.querySelectorAll("#options_container .option_item");
+			for(var i=0;i<optionInputs.length;i++){
+				var inp=optionInputs[i].querySelector("input[name='option_content[]']");
+				var lbl=String.fromCharCode(65+i);
+				optionLabels.push({label:lbl,content:inp?inp.value:""});
+			}
+		}
+
+		// 获取当前答案
+		var currentAnswer="";
+		if(problemType=="choice_multi"){
+			$("#answer_container input:checked").each(function(){ currentAnswer+=$(this).val(); });
+		} else {
+			var checked=$("#answer_container input:checked");
+			if(checked.length) currentAnswer=checked.val();
+		}
+
+		// 构建选项HTML
+		var optionsHtml="";
+		for(var i=0;i<optionLabels.length;i++){
+			var opt=optionLabels[i];
+			var isChecked=currentAnswer.indexOf(opt.label)!==-1?"checked":"";
+			optionsHtml+="<div style='padding:8px 12px;margin-bottom:6px;border:1px solid #e8e8e8;border-radius:4px;background:#fafafa;'>"
+				+"<label style='font-weight:normal;cursor:pointer;display:flex;align-items:flex-start;'>"
+				+"<input type='"+inputType+"' name='preview_answer' value='"+opt.label+"' "+isChecked+" disabled style='margin-right:8px;margin-top:3px;'>"
+				+"<span><strong>"+opt.label+".</strong> "+$("<div/>").text(opt.content).html()+"</span>"
+				+"</label></div>";
+		}
+
+		// 构建答案显示
+		var answerHtml="";
+		if(currentAnswer) answerHtml="<p style='margin:0;'><strong>正确答案：</strong>"+$("<div/>").text(currentAnswer).html()+"</p>";
+
+		// 构建解析
+		var analysisContent=$("textarea[name=analysis]").val()||"";
+		var analysisHtml="";
+		if(analysisContent) analysisHtml="<div style='border-top:1px solid #eee;padding-top:12px;margin-top:12px;'>"
+			+"<p style='margin:0 0 8px;'><strong>答案解析：</strong></p><div class='font-content'>"+analysisContent+"</div></div>";
+
+		// 构建description
+		var descriptionContent=$("textarea[name=description]").val()||"";
+		var descriptionHtml="";
+		if(descriptionContent) descriptionHtml="<div style='border-bottom:1px solid #eee;padding-bottom:12px;margin-bottom:12px;'>"
+			+"<h4 class='ui top attached block header'><?php echo $MSG_Description?></h4>"
+			+"<div class='ui bottom attached segment font-content'>"+descriptionContent+"</div></div>";
+
+		// 重建预览内容（替换第二个.ui.grid，即内容区域）
+		grid.html(
+			"<div class='row'><div class='column'>"
+			+"<h4 class='ui top attached block header'>"+typeLabel+"</h4>"
+			+"<div class='ui bottom attached segment font-content'>"
+			+descriptionHtml
+			+"<div style='margin-top:12px;'>"+optionsHtml+"</div>"
+			+"<div style='margin-top:12px;padding-top:12px;border-top:1px solid #eee;'>"+answerHtml+"</div>"
+			+analysisHtml
+			+"</div></div></div>"
+		);
+
+		// 隐藏编程题特有的label和按钮
+		preview.find("span.ui.label").each(function(){ $(this).hide(); });
+		if(preview.find("#submit-buttons").length) preview.find("#submit-buttons").hide();
+		if(preview.find("#show_tag_div").length) preview.find("#show_tag_div").parent().hide();
+
+		if(hasMathJax) fw.contentWindow.MathJax.typeset();
+	}
   }
  
    $(document).ready(function(){
