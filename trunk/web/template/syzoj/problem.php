@@ -249,7 +249,7 @@ document.addEventListener('keydown', function(e) {
   <div class="row">
     <div class="column">
       <h4 class="ui top attached block header"><?php echo $MSG_Description?></h4>
-      <div id="description" class="ui bottom attached segment font-content">
+      <div id="description" class="ui bottom attached segment font-content" style="white-space: pre-wrap;">
 		<?php if (str_contains($problem_description,"md auto_select"))echo $problem_description; else echo  bbcode_to_html($problem_description); ?></div>
     </div>
   </div>

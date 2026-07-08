@@ -1,0 +1,784 @@
+<?php $show_title="拼图游戏 - $OJ_NAME"; ?>
+<?php include("template/$OJ_TEMPLATE/header.php");?>
+
+<style>
+:root {
+    --primary-color: #6366f1;
+    --secondary-color: #8b5cf6;
+    --bg-color: #f8fafc;
+    --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --border-radius: 12px;
+}
+
+body { background-color: var(--bg-color); }
+
+.puzzle-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.puzzle-header { text-align: center; margin-bottom: 2rem; }
+.puzzle-header h1 {
+    color: var(--primary-color);
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+.puzzle-intro {
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    text-align: left;
+}
+.puzzle-intro p { margin: 0; color: #374151; font-size: 0.95rem; line-height: 1.6; }
+
+.puzzle-stats {
+    display: flex;
+    justify-content: space-between;
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+}
+.stat-item { text-align: center; }
+.stat-label { font-size: 0.875rem; color: #64748b; margin-bottom: 0.25rem; display: block; }
+.stat-value { font-size: 1.5rem; font-weight: 700; color: var(--primary-color); }
+
+.puzzle-controls {
+    display: flex; gap: 1rem; margin-bottom: 1.5rem;
+    flex-wrap: wrap; justify-content: center;
+}
+.difficulty-select {
+    padding: 0.75rem 1rem; border: 2px solid #e2e8f0;
+    border-radius: var(--border-radius); font-size: 1rem;
+    background: white; cursor: pointer; transition: border-color 0.2s;
+}
+.difficulty-select:focus { outline: none; border-color: var(--primary-color); }
+.btn {
+    padding: 0.75rem 1.5rem; border: none;
+    border-radius: var(--border-radius); font-size: 1rem;
+    font-weight: 600; cursor: pointer; transition: all 0.2s;
+    box-shadow: var(--shadow);
+}
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px -2px rgba(99,102,241,0.3);
+}
+.btn-primary:active { transform: translateY(0); }
+.btn-secondary {
+    background: white; color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+.btn-secondary:hover { background: var(--primary-color); color: white; }
+
+.puzzle-main {
+    display: flex; gap: 1rem; align-items: flex-start;
+}
+
+.puzzle-grid {
+    flex: 1; aspect-ratio: 1 / 1;
+    background: #f1f5f9; border-radius: var(--border-radius);
+    box-shadow: var(--shadow); position: relative;
+    overflow: hidden; user-select: none;
+    -webkit-user-select: none;
+}
+
+.target-highlight {
+    position: absolute; pointer-events: none;
+    border: 2px dashed #22c55e; border-radius: 4px;
+    opacity: 0; z-index: 5; display: none;
+}
+.target-highlight.active {
+    display: block;
+    animation: breathe 1s ease-in-out infinite;
+}
+@keyframes breathe {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+.piece {
+    position: absolute; background-size: cover;
+    background-repeat: no-repeat; border-radius: 4px;
+    border: 1px solid #e2e8f0; background-color: #f1f5f9;
+    cursor: grab; z-index: 1; will-change: transform;
+    box-sizing: border-box;
+}
+.piece:active { cursor: grabbing; }
+.piece.dragging {
+    cursor: grabbing; z-index: 10;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+}
+.piece.correct {
+    border-color: #22c55e; border-width: 2px;
+}
+.piece.selected {
+    border: 2px solid #6366f1; box-shadow: 0 0 8px rgba(99,102,241,0.4);
+}
+.piece.transitioning { transition: transform 0.2s ease; }
+
+.preview-panel {
+    width: 120px; background: white;
+    border-radius: var(--border-radius); box-shadow: var(--shadow);
+    padding: 0.5rem; text-align: center; position: relative;
+    flex-shrink: 0;
+}
+.preview-panel img {
+    width: 100%; height: auto; border-radius: 8px;
+    display: block; border: 1px solid #e2e8f0;
+}
+.preview-toggle {
+    position: absolute; top: 8px; right: 8px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(255,255,255,0.95); border: 1px solid #e2e8f0;
+    cursor: pointer; font-size: 14px; color: #64748b;
+    padding: 0; line-height: 26px; text-align: center;
+}
+.preview-toggle:hover { background: #f1f5f9; }
+
+.puzzle-footer {
+    margin-top: 2rem; text-align: center;
+    color: #64748b; font-size: 0.875rem;
+}
+
+/* Victory Modal */
+.victory-modal {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5); display: flex;
+    align-items: center; justify-content: center; z-index: 1000;
+    opacity: 0; visibility: hidden; transition: all 0.3s ease;
+}
+.victory-modal.show { opacity: 1; visibility: visible; }
+.victory-content {
+    background: white; padding: 2rem 3rem;
+    border-radius: var(--border-radius); text-align: center;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+    transform: scale(0.9); transition: transform 0.3s ease;
+    max-width: 90vw;
+}
+.victory-modal.show .victory-content { transform: scale(1); }
+.victory-content h2 { color: var(--primary-color); font-size: 2rem; margin-bottom: 1rem; }
+.victory-stats { margin: 1.5rem 0; display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; }
+.victory-stats .stat-item { min-width: 80px; }
+
+@media (max-width: 768px) {
+    .puzzle-container { max-width: 100%; margin: 1rem auto; }
+    .puzzle-header h1 { font-size: 2rem; }
+    .puzzle-main { flex-direction: column; align-items: center; }
+    .preview-panel { width: 100px; }
+    .victory-content { padding: 1.5rem 2rem; }
+}
+</style>
+
+<div class="puzzle-container">
+    <div class="puzzle-header">
+        <h1>🧩 拼图游戏</h1>
+        <div class="puzzle-intro">
+            <p>🎮 <strong>玩法说明：</strong>拖拽拼图碎片到正确位置还原图片，也可以点击两个碎片交换位置。训练观察力与空间思维，适合小学1-6年级。</p>
+        </div>
+    </div>
+
+    <div class="puzzle-stats">
+        <div class="stat-item">
+            <span class="stat-label">步数</span>
+            <span class="stat-value" id="moves">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">用时</span>
+            <span class="stat-value" id="time">00:00</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">最佳记录</span>
+            <span class="stat-value" id="best">--:--</span>
+        </div>
+    </div>
+
+    <div class="puzzle-controls">
+        <select id="difficulty" class="difficulty-select">
+            <option value="3">3×3（适合1-2年级）</option>
+            <option value="5" selected>5×5（适合2-4年级）</option>
+            <option value="7">7×7（适合4-5年级）</option>
+            <option value="9">9×9（适合5-6年级）</option>
+        </select>
+        <button id="restart" class="btn btn-primary">🔄 重新开始</button>
+        <button id="changeImg" class="btn btn-secondary">🎲 换一张图</button>
+    </div>
+
+    <div class="puzzle-main">
+        <div class="puzzle-grid" id="grid">
+            <div class="target-highlight" id="targetHighlight"></div>
+        </div>
+        <div class="preview-panel" id="previewPanel">
+            <img id="previewImg" src="" alt="预览原图" />
+            <button class="preview-toggle" id="previewToggle" title="切换预览显示">👁️</button>
+        </div>
+    </div>
+
+    <div class="puzzle-footer">
+        <p>适合小学1-6年级学生，拖动碎片还原图片，训练观察力与空间思维</p>
+    </div>
+</div>
+
+<div class="victory-modal" id="victoryModal">
+    <div class="victory-content">
+        <h2>🎉 恭喜完成！</h2>
+        <div class="victory-stats">
+            <div class="stat-item">
+                <span class="stat-label">总步数</span>
+                <span class="stat-value" id="victoryMoves">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">用时</span>
+                <span class="stat-value" id="victoryTime">00:00</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">难度</span>
+                <span class="stat-value" id="victoryDifficulty">5×5</span>
+            </div>
+        </div>
+        <button id="playAgain" class="btn btn-primary">🔄 再玩一次</button>
+        <button id="challengeHarder" class="btn btn-secondary" style="margin-top:0.75rem;">🚀 挑战更难</button>
+    </div>
+</div>
+
+<script>
+(function(){
+var TOTAL_IMAGES = 6;
+var DRAG_THRESHOLD = 5;
+var SNAP_THRESHOLD = 0.4;
+
+var grid = document.getElementById('grid');
+var movesEl = document.getElementById('moves');
+var timeEl = document.getElementById('time');
+var bestEl = document.getElementById('best');
+var difficultySelect = document.getElementById('difficulty');
+var restartBtn = document.getElementById('restart');
+var changeImgBtn = document.getElementById('changeImg');
+var targetHighlight = document.getElementById('targetHighlight');
+var previewImg = document.getElementById('previewImg');
+var previewToggle = document.getElementById('previewToggle');
+var victoryModal = document.getElementById('victoryModal');
+var playAgainBtn = document.getElementById('playAgain');
+var challengeHarderBtn = document.getElementById('challengeHarder');
+var victoryMovesEl = document.getElementById('victoryMoves');
+var victoryTimeEl = document.getElementById('victoryTime');
+var victoryDifficultyEl = document.getElementById('victoryDifficulty');
+
+var gridSize, pieces, pieceEls, steps, time, timer, started, won, imgSrc, imgIndex;
+var previewVisible = true;
+
+// Drag state
+var dragPiece = null;
+var dragStartX, dragStartY, dragOrigX, dragOrigY, dragDist;
+var rafId = null;
+
+// Click swap state
+var selectedPiece = null;
+
+function fmtTime(s) {
+    var m = Math.floor(s / 60);
+    var sec = s % 60;
+    return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+}
+
+function ps() { return grid.clientWidth / gridSize; }
+
+function loadBest() {
+    var k = 'puzzle_best_' + gridSize;
+    var raw = localStorage.getItem(k);
+    if (raw) {
+        try { var d = JSON.parse(raw); bestEl.textContent = d.steps + '步/' + fmtTime(d.time); }
+        catch(e) { bestEl.textContent = '--:--'; }
+    } else { bestEl.textContent = '--:--'; }
+}
+
+function saveBest() {
+    var k = 'puzzle_best_' + gridSize;
+    var data = {steps: steps, time: time};
+    var prev = localStorage.getItem(k);
+    if (prev) {
+        try {
+            var old = JSON.parse(prev);
+            if (old.time < time) return;
+            if (old.time === time && old.steps <= steps) return;
+        } catch(e) {}
+    }
+    localStorage.setItem(k, JSON.stringify(data));
+    bestEl.textContent = steps + '步/' + fmtTime(time);
+}
+
+function updateMoves() { movesEl.textContent = steps; }
+function updateTime() { timeEl.textContent = fmtTime(time); }
+
+function startTimer() {
+    if (timer) return;
+    started = true;
+    timer = setInterval(function(){ time++; updateTime(); }, 1000);
+}
+
+function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
+
+function randomImage() {
+    imgIndex = Math.floor(Math.random() * TOTAL_IMAGES) + 1;
+    imgSrc = 'image/puzzle/' + String(imgIndex).padStart(2,'0') + '.jpg';
+}
+
+function shuffleCount() {
+    switch(gridSize) { case 3: return 20; case 5: return 50; case 7: return 100; case 9: return 200; default: return 50; }
+}
+
+function findPieceAt(row, col) {
+    for (var i = 0; i < pieces.length; i++) {
+        if (pieces[i].currentRow === row && pieces[i].currentCol === col) return i;
+    }
+    return -1;
+}
+
+function getCellFromCenter(cx, cy) {
+    var psz = ps();
+    var col = Math.floor(cx / psz);
+    var row = Math.floor(cy / psz);
+    if (col < 0 || col >= gridSize || row < 0 || row >= gridSize) return null;
+    var cellCx = col * psz + psz / 2;
+    var cellCy = row * psz + psz / 2;
+    var dx = cx - cellCx, dy = cy - cellCy;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < SNAP_THRESHOLD * psz) return {row: row, col: col};
+    return null;
+}
+
+function showHighlight(col, row) {
+    var psz = ps();
+    targetHighlight.style.width = psz + 'px';
+    targetHighlight.style.height = psz + 'px';
+    targetHighlight.style.top = (row * psz) + 'px';
+    targetHighlight.style.left = (col * psz) + 'px';
+    targetHighlight.classList.add('active');
+}
+
+function hideHighlight() { targetHighlight.classList.remove('active'); }
+
+function checkWin() {
+    for (var i = 0; i < pieces.length; i++) { if (!pieces[i].correct) return false; }
+    return true;
+}
+
+function onVictory() {
+    won = true;
+    stopTimer();
+    saveBest();
+    hideHighlight();
+    clearSelection();
+    setTimeout(function(){
+        victoryMovesEl.textContent = steps;
+        victoryTimeEl.textContent = fmtTime(time);
+        victoryDifficultyEl.textContent = gridSize + '×' + gridSize;
+        victoryModal.classList.add('show');
+    }, 300);
+}
+
+function clearSelection() {
+    if (selectedPiece !== null) {
+        pieceEls[selectedPiece].classList.remove('selected');
+        selectedPiece = null;
+    }
+}
+
+function updateCorrect(p) {
+    p.correct = (p.currentRow === p.targetRow && p.currentCol === p.targetCol);
+}
+
+function updateCorrectClasses() {
+    for (var i = 0; i < pieces.length; i++) {
+        updateCorrect(pieces[i]);
+        if (pieces[i].correct) { pieceEls[i].classList.add('correct'); pieceEls[i].classList.remove('selected'); }
+        else { pieceEls[i].classList.remove('correct'); }
+    }
+}
+
+function positionPiece(el, p) {
+    var psz = ps();
+    el.style.transform = 'translate(' + (p.currentCol * psz) + 'px, ' + (p.currentRow * psz) + 'px)';
+}
+
+function positionAll(instant) {
+    var psz = ps();
+    pieceEls.forEach(function(el) {
+        var i = parseInt(el.dataset.index);
+        var p = pieces[i];
+        if (instant) {
+            el.style.transition = 'none';
+            el.classList.remove('transitioning');
+            el.style.transform = 'translate(' + (p.currentCol * psz) + 'px, ' + (p.currentRow * psz) + 'px)';
+        } else {
+            el.classList.add('transitioning');
+            el.style.transform = 'translate(' + (p.currentCol * psz) + 'px, ' + (p.currentRow * psz) + 'px)';
+        }
+    });
+}
+
+function swapPieces(a, b) {
+    var tmpR = pieces[a].currentRow, tmpC = pieces[a].currentCol;
+    pieces[a].currentRow = pieces[b].currentRow;
+    pieces[a].currentCol = pieces[b].currentCol;
+    pieces[b].currentRow = tmpR;
+    pieces[b].currentCol = tmpC;
+    updateCorrect(pieces[a]);
+    updateCorrect(pieces[b]);
+    var psz = ps();
+    pieceEls[a].classList.add('transitioning');
+    pieceEls[a].style.transform = 'translate(' + (pieces[a].currentCol * psz) + 'px, ' + (pieces[a].currentRow * psz) + 'px)';
+    pieceEls[b].classList.add('transitioning');
+    pieceEls[b].style.transform = 'translate(' + (pieces[b].currentCol * psz) + 'px, ' + (pieces[b].currentRow * psz) + 'px)';
+    updateCorrectClasses();
+    steps++;
+    updateMoves();
+    if (!started) startTimer();
+    if (checkWin()) onVictory();
+}
+
+function handleClickSwap(idx) {
+    if (pieces[idx].correct) return;
+    if (selectedPiece === null) {
+        selectedPiece = idx;
+        pieceEls[idx].classList.add('selected');
+    } else if (selectedPiece === idx) {
+        pieceEls[idx].classList.remove('selected');
+        selectedPiece = null;
+    } else {
+        swapPieces(selectedPiece, idx);
+        pieceEls[selectedPiece].classList.remove('selected');
+        pieceEls[idx].classList.remove('selected');
+        selectedPiece = null;
+    }
+}
+
+function doSnap(idx, targetRow, targetCol) {
+    pieces[idx].currentRow = targetRow;
+    pieces[idx].currentCol = targetCol;
+    updateCorrect(pieces[idx]);
+    updateCorrectClasses();
+    var el = pieceEls[idx];
+    el.classList.add('transitioning');
+    el.style.transition = '';
+    positionPiece(el, pieces[idx]);
+    steps++;
+    updateMoves();
+    if (!started) startTimer();
+    if (checkWin()) onVictory();
+}
+
+function doBounceBack(idx) {
+    var el = pieceEls[idx];
+    el.classList.add('transitioning');
+    el.style.transition = '';
+    positionPiece(el, pieces[idx]);
+}
+
+// === Mouse Drag ===
+grid.addEventListener('mousedown', function(e) {
+    if (won || e.button !== 0) return;
+    var el = e.target.closest('.piece');
+    if (!el) return;
+    var idx = parseInt(el.dataset.index);
+    if (pieces[idx].correct) return;
+    e.preventDefault();
+    dragPiece = idx;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    dragDist = 0;
+    var m = (el.style.transform || '').match(/translate\(([^,]+)px,\s*([^)]+)px\)/);
+    dragOrigX = m ? parseFloat(m[1]) : (pieces[idx].currentCol * ps());
+    dragOrigY = m ? parseFloat(m[2]) : (pieces[idx].currentRow * ps());
+    el.classList.remove('transitioning');
+    el.style.transition = 'none';
+});
+
+document.addEventListener('mousemove', function(e) {
+    if (dragPiece === null || won) return;
+    if (rafId) return;
+    rafId = requestAnimationFrame(function() {
+        rafId = null;
+        var dx = e.clientX - dragStartX;
+        var dy = e.clientY - dragStartY;
+        dragDist = Math.sqrt(dx * dx + dy * dy);
+        if (dragDist < DRAG_THRESHOLD) { hideHighlight(); return; }
+        var el = pieceEls[dragPiece];
+        el.classList.add('dragging');
+        el.style.transform = 'translate(' + (dragOrigX + dx) + 'px, ' + (dragOrigY + dy) + 'px) scale(1.08)';
+        var psz = ps();
+        var cx = dragOrigX + dx + psz / 2;
+        var cy = dragOrigY + dy + psz / 2;
+        var t = getCellFromCenter(cx, cy);
+        if (t) showHighlight(t.col, t.row);
+        else hideHighlight();
+    });
+});
+
+function snapOrSwap(idx, toRow, toCol) {
+    var occupant = findPieceAt(toRow, toCol);
+    if (occupant === -1) {
+        doSnap(idx, toRow, toCol);
+    } else if (occupant !== idx && !pieces[occupant].correct) {
+        swapPieces(idx, occupant);
+    } else {
+        doBounceBack(idx);
+    }
+}
+
+document.addEventListener('mouseup', function(e) {
+    if (dragPiece === null || won) { dragPiece = null; return; }
+    var idx = dragPiece;
+    dragPiece = null;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    var el = pieceEls[idx];
+    el.classList.remove('dragging');
+    hideHighlight();
+    if (dragDist < DRAG_THRESHOLD) {
+        el.style.transition = '';
+        el.style.transform = 'translate(' + (pieces[idx].currentCol * ps()) + 'px, ' + (pieces[idx].currentRow * ps()) + 'px)';
+        handleClickSwap(idx);
+        return;
+    }
+    var dx = e.clientX - dragStartX;
+    var dy = e.clientY - dragStartY;
+    var psz = ps();
+    var cx = dragOrigX + dx + psz / 2;
+    var cy = dragOrigY + dy + psz / 2;
+    var t = getCellFromCenter(cx, cy);
+    if (t) snapOrSwap(idx, t.row, t.col);
+    else doBounceBack(idx);
+});
+
+// === Touch Drag ===
+grid.addEventListener('touchstart', function(e) {
+    if (won) return;
+    var el = e.target.closest('.piece');
+    if (!el) return;
+    var idx = parseInt(el.dataset.index);
+    if (pieces[idx].correct) return;
+    var touch = e.touches[0];
+    dragPiece = idx;
+    dragStartX = touch.clientX;
+    dragStartY = touch.clientY;
+    dragDist = 0;
+    var m = (el.style.transform || '').match(/translate\(([^,]+)px,\s*([^)]+)px\)/);
+    dragOrigX = m ? parseFloat(m[1]) : (pieces[idx].currentCol * ps());
+    dragOrigY = m ? parseFloat(m[2]) : (pieces[idx].currentRow * ps());
+    el.classList.remove('transitioning');
+    el.style.transition = 'none';
+}, {passive: true});
+
+grid.addEventListener('touchmove', function(e) {
+    if (dragPiece === null || won) return;
+    if (rafId) return;
+    rafId = requestAnimationFrame(function() {
+        rafId = null;
+        var touch = e.touches[0];
+        var dx = touch.clientX - dragStartX;
+        var dy = touch.clientY - dragStartY;
+        dragDist = Math.sqrt(dx * dx + dy * dy);
+        if (dragDist < DRAG_THRESHOLD) { hideHighlight(); return; }
+        var el = pieceEls[dragPiece];
+        el.classList.add('dragging');
+        el.style.transform = 'translate(' + (dragOrigX + dx) + 'px, ' + (dragOrigY + dy) + 'px) scale(1.08)';
+        var psz = ps();
+        var cx = dragOrigX + dx + psz / 2;
+        var cy = dragOrigY + dy + psz / 2;
+        var t = getCellFromCenter(cx, cy);
+        if (t) showHighlight(t.col, t.row);
+        else hideHighlight();
+    });
+}, {passive: true});
+
+grid.addEventListener('touchend', function(e) {
+    if (dragPiece === null || won) { dragPiece = null; return; }
+    var idx = dragPiece;
+    dragPiece = null;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    var el = pieceEls[idx];
+    el.classList.remove('dragging');
+    hideHighlight();
+    if (dragDist < DRAG_THRESHOLD) {
+        el.style.transition = '';
+        el.style.transform = 'translate(' + (pieces[idx].currentCol * ps()) + 'px, ' + (pieces[idx].currentRow * ps()) + 'px)';
+        handleClickSwap(idx);
+        return;
+    }
+    var touch = e.changedTouches[0];
+    var dx = touch.clientX - dragStartX;
+    var dy = touch.clientY - dragStartY;
+    var psz = ps();
+    var cx = dragOrigX + dx + psz / 2;
+    var cy = dragOrigY + dy + psz / 2;
+    var t = getCellFromCenter(cx, cy);
+    if (t) snapOrSwap(idx, t.row, t.col);
+    else doBounceBack(idx);
+}, {passive: true});
+
+// Prevent text selection during drag
+grid.addEventListener('selectstart', function(e) {
+    if (dragPiece !== null) e.preventDefault();
+});
+grid.addEventListener('dragstart', function(e) { e.preventDefault(); });
+
+// === Resize ===
+window.addEventListener('resize', function() {
+    if (won || dragPiece !== null) return;
+    positionAll(true);
+});
+
+// === Controls ===
+previewToggle.addEventListener('click', function() {
+    previewVisible = !previewVisible;
+    previewImg.style.display = previewVisible ? 'block' : 'none';
+    previewToggle.textContent = previewVisible ? '👁️' : '👁️‍🗨️';
+});
+
+function startGame() {
+    gridSize = parseInt(difficultySelect.value);
+    // Reset state
+    won = false;
+    steps = 0;
+    time = 0;
+    started = false;
+    stopTimer();
+    timer = null;
+    dragPiece = null;
+    selectedPiece = null;
+    rafId = null;
+    updateMoves();
+    updateTime();
+    hideHighlight();
+    if (!imgSrc) randomImage();
+    // Build pieces after image status confirmed
+    loadBest();
+    initPieces();
+    shuffle();
+    positionAll(false);
+    updateCorrectClasses();
+    previewImg.src = imgSrc;
+    // Background: detect load failure and swap to fallback if needed
+    var testImg = new Image();
+    testImg.onerror = function() {
+        var c = document.createElement('canvas');
+        c.width = 600; c.height = 600;
+        var ctx = c.getContext('2d');
+        var colors = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6'];
+        var hue = colors[(imgIndex || 1) - 1];
+        ctx.fillStyle = hue;
+        ctx.fillRect(0, 0, 600, 600);
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        for (var i = 0; i < 8; i++) {
+            ctx.beginPath();
+            ctx.arc(100 + i * 55, 200 + (i % 3) * 120, 60, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        imgSrc = c.toDataURL();
+        previewImg.src = imgSrc;
+        // Update all piece backgrounds to fallback image
+        Array.prototype.forEach.call(pieceEls, function(el) {
+            el.style.backgroundImage = 'url(' + imgSrc + ')';
+        });
+    };
+    testImg.src = imgSrc;
+}
+
+function initPieces() {
+    pieces = [];
+    // Remove old pieces
+    grid.querySelectorAll('.piece').forEach(function(el) { el.remove(); });
+    var sz = gridSize;
+    var frag = document.createDocumentFragment();
+    for (var r = 0; r < sz; r++) {
+        for (var c = 0; c < sz; c++) {
+            var p = { targetRow: r, targetCol: c, currentRow: r, currentCol: c, correct: true };
+            pieces.push(p);
+            var el = document.createElement('div');
+            el.className = 'piece correct';
+            el.dataset.index = pieces.length - 1;
+            el.style.width = (100 / sz) + '%';
+            el.style.height = (100 / sz) + '%';
+            el.style.backgroundImage = 'url(' + imgSrc + ')';
+            el.style.backgroundSize = (sz * 100) + '% ' + (sz * 100) + '%';
+            el.style.backgroundPosition = (-c * 100 / (sz - 1)) + '% ' + (-r * 100 / (sz - 1)) + '%';
+            frag.appendChild(el);
+        }
+    }
+    grid.appendChild(frag);
+    pieceEls = grid.querySelectorAll('.piece');
+}
+
+function shuffle() {
+    var sz = gridSize;
+    var total = sz * sz;
+    var cnt = shuffleCount();
+    for (var i = 0; i < cnt; i++) {
+        var a = Math.floor(Math.random() * total);
+        var b = Math.floor(Math.random() * total);
+        while (b === a) b = Math.floor(Math.random() * total);
+        var tmpR = pieces[a].currentRow, tmpC = pieces[a].currentCol;
+        pieces[a].currentRow = pieces[b].currentRow;
+        pieces[a].currentCol = pieces[b].currentCol;
+        pieces[b].currentRow = tmpR;
+        pieces[b].currentCol = tmpC;
+    }
+    // Double-check not accidentally solved
+    var allCorrect = true;
+    for (var j = 0; j < total; j++) {
+        if (pieces[j].currentRow !== pieces[j].targetRow || pieces[j].currentCol !== pieces[j].targetCol) {
+            allCorrect = false;
+            break;
+        }
+    }
+    if (allCorrect) {
+        for (var k = 0; k < 20; k++) {
+            var a2 = Math.floor(Math.random() * total);
+            var b2 = Math.floor(Math.random() * total);
+            while (b2 === a2) b2 = Math.floor(Math.random() * total);
+            var tr = pieces[a2].currentRow, tc = pieces[a2].currentCol;
+            pieces[a2].currentRow = pieces[b2].currentRow;
+            pieces[a2].currentCol = pieces[b2].currentCol;
+            pieces[b2].currentRow = tr;
+            pieces[b2].currentCol = tc;
+        }
+    }
+}
+
+restartBtn.addEventListener('click', startGame);
+changeImgBtn.addEventListener('click', function() {
+    randomImage();
+    previewImg.src = imgSrc;
+    startGame();
+});
+difficultySelect.addEventListener('change', startGame);
+
+playAgainBtn.addEventListener('click', function() {
+    victoryModal.classList.remove('show');
+    startGame();
+});
+
+challengeHarderBtn.addEventListener('click', function() {
+    victoryModal.classList.remove('show');
+    var sizes = [3, 5, 7, 9];
+    var cur = sizes.indexOf(gridSize);
+    if (cur < sizes.length - 1) difficultySelect.value = sizes[cur + 1];
+    startGame();
+});
+
+// Start
+randomImage();
+startGame();
+
+})();
+</script>
+
+<?php require("footer.php"); ?>

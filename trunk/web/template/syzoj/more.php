@@ -253,6 +253,11 @@
                 <div class="card-desc">挑战数学题，闯过一关又一关（适合2-4年级）</div>
             </a>
 
+            <a href="puzzle_game.php" class="card">
+                <div class="card-icon"><i class="puzzle piece icon"></i></div>
+                <div class="card-title">拼图游戏</div>
+                <div class="card-desc">拖动拼图碎片还原图片，训练观察力与空间思维（适合1-3年级）</div>
+            </a>
 
         </div>
     </div>
