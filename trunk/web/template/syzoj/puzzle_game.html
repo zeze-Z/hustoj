@@ -1,6 +1,8 @@
 <?php $show_title="拼图游戏 - $OJ_NAME"; ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
 <style>
 :root {
     --primary-color: #6366f1;
@@ -252,6 +254,7 @@ body { background-color: var(--bg-color); }
 <script>
 (function(){
 var TOTAL_IMAGES = 6;
+var IMAGE_FILES = ['01.jpg', '02.jpg', '03.jpg', '04.jpg', '05.jpg', '06.jpg'];
 var DRAG_THRESHOLD = 5;
 var SNAP_THRESHOLD = 0.4;
 
@@ -327,8 +330,8 @@ function startTimer() {
 function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
 
 function randomImage() {
-    imgIndex = Math.floor(Math.random() * TOTAL_IMAGES) + 1;
-    imgSrc = 'image/puzzle/' + String(imgIndex).padStart(2,'0') + '.jpg';
+    imgIndex = Math.floor(Math.random() * TOTAL_IMAGES);
+    imgSrc = 'image/puzzle/' + IMAGE_FILES[imgIndex];
 }
 
 function shuffleCount() {
@@ -377,6 +380,25 @@ function onVictory() {
     saveBest();
     hideHighlight();
     clearSelection();
+
+    // 礼花效果（CDN加载失败时静默跳过）
+    if (typeof confetti === 'function') {
+        var duration = 1500;
+        var end = Date.now() + duration;
+        (function frame() {
+            confetti({
+                particleCount: 5,
+                spread: 60,
+                origin: { y: 0.7 },
+                colors: ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444'],
+                disableForReducedMotion: true
+            });
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
+    }
+
     setTimeout(function(){
         victoryMovesEl.textContent = steps;
         victoryTimeEl.textContent = fmtTime(time);
@@ -709,7 +731,7 @@ function initPieces() {
             el.style.height = (100 / sz) + '%';
             el.style.backgroundImage = 'url(' + imgSrc + ')';
             el.style.backgroundSize = (sz * 100) + '% ' + (sz * 100) + '%';
-            el.style.backgroundPosition = (-c * 100 / (sz - 1)) + '% ' + (-r * 100 / (sz - 1)) + '%';
+            el.style.backgroundPosition = (c * 100 / (sz - 1)) + '% ' + (r * 100 / (sz - 1)) + '%';
             frag.appendChild(el);
         }
     }
