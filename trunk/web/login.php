@@ -76,17 +76,17 @@ if ($login) {
     $school_id = null;
     $school = "";
     
-    // 异地登录检测
+    // 异地登录检测（仅监控 admin 用户）
     $lastLogin = pdo_query("SELECT ip, time FROM loginlog WHERE user_id=? AND password='login ok' ORDER BY time DESC LIMIT 1", $login);
-    if (!empty($lastLogin)) {
+    if (!empty($lastLogin) && $login === 'admin') {
         $lastIp = $lastLogin[0]['ip'];
         $lastTime = $lastLogin[0]['time'];
-        
+
         // 简单异地检测：IP网段不同即视为异地（可替换为IP地理库实现更精确的城市级检测）
         $currentIpSegments = explode('.', $ip);
         $lastIpSegments = explode('.', $lastIp);
         $isRemoteLogin = ($currentIpSegments[0] != $lastIpSegments[0] || $currentIpSegments[1] != $lastIpSegments[1]);
-        
+
         // 异地登录检测：IP段不同即发送告警
         if ($isRemoteLogin) {
             $ua = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'unknown';
@@ -104,7 +104,7 @@ if ($login) {
             );
         }
     }
-    $group_row = pdo_query("select group_name,nick,school_id,school from users where user_id=?", $login);
+    $group_row = pdo_query("select group_name,nick,school_id,school,defunct,new_user_reward_claimed from users where user_id=?", $login);
     if (!empty($group_row)) {
         $group_name = $group_row[0]['group_name'];
         $school_id = $group_row[0]['school_id'];
@@ -155,6 +155,38 @@ if ($login) {
         setcookie($OJ_NAME . "_user", $login, $C_time);
         setcookie($OJ_NAME . "_check", $C_res . (strlen($C_res) * strlen($C_res)) % 7, $C_time);
     }
+    // 检测未领取新用户奖励（登录后补发场景）
+    if (!empty($group_row) && $group_row[0]['defunct'] == 'N' && $group_row[0]['new_user_reward_claimed'] == 0) {
+        // 标记已领取
+        pdo_query("UPDATE `users` SET `new_user_reward_claimed`=1 WHERE `user_id`=?", $login);
+        // 记录登录日志
+        $sql="INSERT INTO `loginlog`(user_id,password,ip,time) VALUES(?,'login ok',?,NOW())";
+        pdo_query($sql,$login,$ip);
+
+        // 发放20积分（如果当前积分为0，避免重复发放）
+        $current_points = point_get_balance($login);
+        if ($current_points == 0) {
+            $register_point_reward = 20;
+            point_tx_begin();
+            $point_result = point_apply_change(
+                $login,
+                $register_point_reward,
+                POINT_LOG_TYPE_SYSTEM,
+                null,
+                '新用户注册奖励（登录补发）'
+            );
+            if ($point_result['success']) {
+                point_tx_commit();
+            } else {
+                point_tx_rollback();
+                error_log("Login: failed to grant points to user {$login}: " . $point_result['message']);
+            }
+        }
+
+        header("Location: welcome.php?status=activated");
+        exit(0);
+    }
+
     echo "<script language='javascript'>\n";
     // 获取 redirect 参数，优先使用 POST，其次 GET
     $redirect = isset($_POST['redirect']) ? $_POST['redirect'] : (isset($_GET['redirect']) ? $_GET['redirect'] : '');

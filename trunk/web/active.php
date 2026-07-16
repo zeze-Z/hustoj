@@ -4,33 +4,68 @@ require_once('./include/setlang.php');
 require_once("./include/const.inc.php");
 require_once("./include/my_func.inc.php");
 
+session_start();
+
 /**
  * 用户账户激活功能
- * 通过激活码激活被禁用的用户账户
- *
- * 该脚本接收GET参数中的激活码，验证后将用户状态从禁用(Y)更新为启用(N)
- * 并清空激活码字段，完成账户激活流程
+ * 通过激活码激活被禁用的用户账户，激活成功后自动登录并发放积分
  */
 $code = trim($_GET['code']);
 
 // 检查是否开启邮件确认功能且激活码不为空
-if (isset($OJ_EMAIL_CONFIRM)) {
-    if ($OJ_EMAIL_CONFIRM && strlen($code) == 18 ) {
-        // 更新用户表，将指定激活码的禁用账户重新激活
-        $sql = "update `users` set defunct='N',activecode=''  WHERE `activecode`=? and `activecode`!='' and defunct='Y' ";
+if (isset($OJ_EMAIL_CONFIRM) && $OJ_EMAIL_CONFIRM && strlen($code) == 18) {
+    // 先查询用户信息
+    $sql = "SELECT `user_id`, `nick` FROM `users` WHERE `activecode`=? AND `activecode`!='' AND `defunct`='Y'";
+    $user_info = pdo_query($sql, $code);
+
+    if (count($user_info) > 0) {
+        $user_id = $user_info[0]['user_id'];
+        $nick = $user_info[0]['nick'];
+
+        // 激活账号
+        $sql = "UPDATE `users` SET `defunct`='N', `activecode`='' WHERE `activecode`=? AND `activecode`!='' AND `defunct`='Y'";
         $result = pdo_query($sql, $code);
+
+        if ($result > 0) {
+            // 发放 20 积分（新用户注册奖励）
+            $register_point_reward = 20;
+            point_tx_begin();
+            $point_result = point_apply_change(
+                $user_id,
+                $register_point_reward,
+                POINT_LOG_TYPE_SYSTEM,
+                null,
+                '新用户注册奖励'
+            );
+            if ($point_result['success']) {
+                point_tx_commit();
+            } else {
+                point_tx_rollback();
+                // 积分发放失败不阻断激活流程，仅记录日志
+                error_log("Active: failed to grant {$register_point_reward} points to user {$user_id}: " . $point_result['message']);
+            }
+
+            // 自动登录
+            $_SESSION[$OJ_NAME . '_' . 'user_id'] = $user_id;
+            $_SESSION[$OJ_NAME . '_' . 'nick'] = $nick;
+
+            // 查询用户权限
+            $sql = "SELECT `rightstr` FROM `privilege` WHERE `user_id`=?";
+            $priv_result = pdo_query($sql, $user_id);
+            foreach ($priv_result as $row) {
+                $_SESSION[$OJ_NAME . '_' . $row['rightstr']] = true;
+            }
+            $_SESSION[$OJ_NAME . '_' . 'ac'] = array();
+            $_SESSION[$OJ_NAME . '_' . 'sub'] = array();
+
+            // 跳转到 welcome.php
+            header("Location: welcome.php?status=activated");
+            exit(0);
+        }
     }
 }
 
-// 检查激活是否成功
-if (isset($result) && $result > 0) {
-    // 激活成功，显示弹窗提示
-    print "<script language='javascript'>\n";
-    print "alert('账号激活成功，请登录');\n";
-    print "window.location.href='loginpage.php';\n";
-    print "</script>";
-} else {
-    // 激活失败或已激活，直接跳转
-    header("location:loginpage.php");
-}
+// 激活失败
+header("Location: welcome.php?status=failed&reason=expired");
+exit(0);
 ?>

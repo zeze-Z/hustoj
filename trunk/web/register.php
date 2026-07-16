@@ -67,13 +67,8 @@ if (!is_valid_user_name($user_id)) {
     $err_cnt++;
 }
 
-// 处理昵称信息
-$nick = trim($_POST['nick']);
-$len = mb_strlen($nick);
-if ($len > 20) {
-    $err_str = $err_str . "$MSG_NICK $MSG_TOO_LONG !\\n";
-    $err_cnt++;
-} else if ($len == 0) $nick = $user_id;
+// 昵称自动使用用户名（简化注册流程，不再要求用户填写昵称）
+$nick = $user_id;
 
 // 检查用户名、学校、昵称是否包含不良词汇
 if (has_bad_words($user_id)) {
@@ -101,11 +96,13 @@ if (strlen($_POST['password']) < 6) {
     $err_str = $err_str . "$MSG_WARNING_PASSWORD_SHORT \\n";
 }
 
-// 验证学校名称长度
-$len = mb_strlen($_POST['school']);
-if ($len > 20) {
-    $err_str = $err_str . "$MSG_SCHOOL $MSG_TOO_LONG!\\n";
-    $err_cnt++;
+// 验证学校名称长度（仅在有旧文本输入时校验）
+if (!empty($_POST['school'])) {
+    $len = mb_strlen($_POST['school']);
+    if ($len > 20) {
+        $err_str = $err_str . "$MSG_SCHOOL $MSG_TOO_LONG!\\n";
+        $err_cnt++;
+    }
 }
 
 // 验证邮箱长度
@@ -223,6 +220,25 @@ if ($rows === -1 || $rows === false) {
     print "alert('数据库错误，注册失败，请联系客服！');\n";
     print "history.go(-1);\n</script>";
     exit(0);
+}
+
+// 注册成功，自动发放 20 积分（新用户注册奖励）
+// 积分系统使用 users.point 字段 + point_log 流水表（POINT_LOG_TYPE_SYSTEM=4）
+$register_point_reward = 20;
+point_tx_begin();
+$point_result = point_apply_change(
+    $user_id,
+    $register_point_reward,
+    POINT_LOG_TYPE_SYSTEM,
+    null,
+    '新用户注册奖励'
+);
+if ($point_result['success']) {
+    point_tx_commit();
+} else {
+    point_tx_rollback();
+    // 积分发放失败不阻断注册流程，仅记录日志
+    error_log("Register: failed to grant {$register_point_reward} points to user {$user_id}: " . $point_result['message']);
 }
 
 // 飞书通知：区分教师/学生
@@ -373,7 +389,7 @@ if (isset($OJ_EMAIL_CONFIRM) && $OJ_EMAIL_CONFIRM) {
     }
 
     print "<script language='javascript'>\n";
-    print "alert('注册成功！请前往邮箱激活账号');\n";
+    print "alert('注册成功！请前往邮箱激活账号，激活后即可获得20积分奖励。');\n";
     print "window.location.href='loginpage.php';\n";
     print "</script>";
     exit(0);
