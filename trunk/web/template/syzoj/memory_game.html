@@ -1,6 +1,9 @@
 <?php $show_title="卡片配对 - $OJ_NAME"; ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="game_confetti.js"></script>
+
 <div class="padding">
 <style>
         * {
@@ -460,8 +463,11 @@
             const totalTime = Math.floor((Date.now() - startTime) / 1000);
             const minutes = Math.floor(totalTime / 60).toString().padStart(2, '0');
             const seconds = (totalTime % 60).toString().padStart(2, '0');
-            
+
             gameWinMessage.textContent = `🎉 恭喜通关！用时 ${minutes}:${seconds}，翻了 ${flipCount} 次！`;
+
+            // 通关烟花效果
+            launchConfetti();
         }
 
         // 更新时间

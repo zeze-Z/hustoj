@@ -45,7 +45,7 @@
               <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
                   <div style="background:#f0f0ff;padding:12px 16px;border-radius:8px;margin-bottom:10px;">
                       <i class="info circle icon"></i>
-                      <a href="loginpage.php">登录</a> 或 <a href="registerpage.php">注册</a> 后可购买此课件
+                      <a href="javascript:void(0)" onclick="showLoginPrompt()">登录</a> 或 <a href="registerpage.php">注册</a> 后可购买此课件
                   </div>
               <?php endif; ?>
               <span style="margin: 0 15px; color: #ddd;">|</span>
@@ -68,7 +68,7 @@
         <div class="six wide column right aligned">
           <!-- 操作按钮 -->
           <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
-            <a class="ui teal button" href="loginpage.php">去登录购买</a>
+            <a class="ui teal button" href="javascript:void(0)" onclick="showLoginPrompt()">登录后购买</a>
           <?php elseif ($view_has_source_license): ?>
             <!-- 已拥有原文件版：显示已拥有完整权限 -->
             <!-- 已拥有原文件版：显示已拥有完整权限 -->
@@ -191,7 +191,7 @@
             <?php if ($view_is_full_preview_free): ?>
               <div class="extra content" style="padding: 10px 14px; background: #f8f9ff; border-radius: 0 0 8px 8px; text-align: center;">
                 <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
-                  <a class="ui small primary button" href="loginpage.php">去登录领取</a>
+                  <a class="ui small primary button" href="javascript:void(0)" onclick="showLoginPrompt()">登录后领取</a>
                 <?php else: ?>
                   <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1" class="ui small primary button">
                     <i class="gift icon"></i> 限时免费获取
@@ -201,7 +201,7 @@
             <?php elseif ($view_preview_price > 0): ?>
               <div class="extra content" style="padding: 10px 14px; background: #f8f9ff; border-radius: 0 0 8px 8px; text-align: center;">
                 <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
-                  <a class="ui small primary button" href="loginpage.php">去登录购买</a>
+                  <a class="ui small primary button" href="javascript:void(0)" onclick="showLoginPrompt()">登录后购买</a>
                 <?php else: ?>
                   <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1" class="ui small primary button">
                     <i class="shopping cart icon"></i> 立即购买
@@ -263,7 +263,7 @@
             <?php if ($view_has_only_preview): ?>
               <div class="extra content" style="padding: 10px 14px; background: #f0fff4; border-radius: 0 0 8px 8px; text-align: center;">
                 <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
-                  <a class="ui small positive button" href="loginpage.php">去登录升级</a>
+                  <a class="ui small positive button" href="javascript:void(0)" onclick="showLoginPrompt()">登录后升级</a>
                 <?php else: ?>
                   <?php if ($view_upgrade_price == 0): ?>
                     <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1" class="ui small positive button">
@@ -280,7 +280,7 @@
               <?php if ($view_is_source_free): ?>
                 <div class="extra content" style="padding: 10px 14px; background: #f0fff4; border-radius: 0 0 8px 8px; text-align: center;">
                   <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
-                    <a class="ui small positive button" href="loginpage.php">去登录领取</a>
+                    <a class="ui small positive button" href="javascript:void(0)" onclick="showLoginPrompt()">登录后领取</a>
                   <?php else: ?>
                     <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2" class="ui small positive button">
                       <i class="gift icon"></i> 限时免费获取
@@ -290,7 +290,7 @@
               <?php elseif ($view_source_price > 0): ?>
                 <div class="extra content" style="padding: 10px 14px; background: #f0fff4; border-radius: 0 0 8px 8px; text-align: center;">
                   <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
-                    <a class="ui small positive button" href="loginpage.php">去登录购买</a>
+                    <a class="ui small positive button" href="javascript:void(0)" onclick="showLoginPrompt()">登录后购买</a>
                   <?php else: ?>
                     <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2" class="ui small positive button">
                       <i class="shopping cart icon"></i> 立即购买
@@ -478,4 +478,11 @@
   </div>
 
 
+<script>
+function showLoginPrompt() {
+    if (confirm('登录后可购买/领取课件，是否立即登录？')) {
+        window.location.href = 'loginpage.php';
+    }
+}
+</script>
 <?php include("template/$OJ_TEMPLATE/footer.php");?>

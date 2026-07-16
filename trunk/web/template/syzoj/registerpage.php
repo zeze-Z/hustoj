@@ -2,14 +2,10 @@
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 <div class="padding">
   <h1><?php echo $MSG_REG_INFO?></h1>
-  <!-- 平台简介引导文案 -->
+  <!-- 欢迎文案 -->
   <div class="ui info message">
-    <div class="header">欢迎加入<?php echo $OJ_NAME?>教学平台</div>
-    <ul class="list">
-      <li>📚 教师专属：课件中心、作业系统、学生管理、收益分成</li>
-      <li>🎮 学生专属：海量题库、趣味编程、在线评测</li>
-      <li>📧 请填写真实邮箱，用于接收账号激活通知</li>
-    </ul>
+    <div class="header">🎉 欢迎来到 <?php echo $OJ_NAME?>！</div>
+    <p>注册即送 20 积分，开启您的编程教学之旅。</p>
   </div>
   <div class="ui error message" id="error" data-am-alert hidden>
     <p id="error_info"></p>
@@ -35,11 +31,7 @@
                 </div>
                 <div class="field">
                     <label for="username"><?php echo $MSG_USER_ID?>*</label>
-                    <input name="user_id" class="form-control" placeholder="教师请用自己手机号，学生请用家长手机号" type="text" required>
-                </div>
-                <div class="field">
-                    <label for="username"><?php echo $MSG_NICK?>*</label>
-                    <input name="nick" placeholder="教学系统建议用真名" type="text" required>
+                    <input name="user_id" class="form-control" placeholder="建议使用手机号" type="text" required>
                 </div>
                 <div class="two fields">
                     <div class="field">
@@ -52,7 +44,7 @@
                     </div>
                 </div>
                 <div class="field">
-                    <label for="school"><?php echo $MSG_SCHOOL?>*</label>
+                    <label for="school"><?php echo $MSG_SCHOOL?></label>
                     <?php 
                     // 引入学校函数库
                     if (file_exists("./include/school.php")) {
@@ -60,8 +52,8 @@
                         $school_list = getSchoolList(true);
                     }
                     ?>
-                    <select name="school_id" class="ui dropdown" required>
-                        <option value="">请选择学校，如果没有，请联系客服</option>
+                    <select name="school_id" class="ui dropdown">
+                        <option value="0">暂不选择</option>
                         <?php if (!empty($school_list)): ?>
                             <?php foreach ($school_list as $school): ?>
                                 <option value="<?php echo $school['id']; ?>"><?php echo htmlentities($school['name'], ENT_QUOTES, 'UTF-8'); ?></option>

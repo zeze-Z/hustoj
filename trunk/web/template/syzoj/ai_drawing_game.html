@@ -1,6 +1,9 @@
 <?php $show_title="AI猜猜画 - $OJ_NAME"; ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="game_confetti.js"></script>
+
 <div class="padding">
 <style>
     * {
@@ -1241,6 +1244,8 @@
             
             feedbackEl.textContent = `🎉 AI猜对了！得分：${score}`;
             feedbackEl.className = 'feedback success celebration';
+            // 通关烟花效果
+            launchConfetti();
             
             knowledgeContentEl.textContent = knowledgeBase[targetShape] || levels[currentLevel].knowledge;
         } else if (topGuess.confidence < 25) {

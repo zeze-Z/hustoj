@@ -139,8 +139,8 @@
             <div class="extra content" style="padding: 12px 15px; border-top: 1px solid #eee;">
               <div class="right aligned">
                 <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
-                  <a href="loginpage.php" class="ui small primary button">
-                    <?php echo $MSG_LOGIN; ?>
+                  <a href="course_info.php?id=<?php echo $course['id']; ?>" class="ui small primary button">
+                    查看详情
                   </a>
                 <?php elseif ($is_purchased): ?>
                   <a href="course_info.php?id=<?php echo $course['id']; ?>" class="ui small positive button">

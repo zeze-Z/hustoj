@@ -1,6 +1,9 @@
 <?php $show_title="数学闯关 - $OJ_NAME"; ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="game_confetti.js"></script>
+
 <div class="padding">
 <style>
         * {
@@ -453,6 +456,8 @@
             if (remaining === 0) {
                 if (correctCount >= 4) {
                     // 闯关成功
+                    // 通关烟花效果
+                    launchConfetti();
                     setTimeout(() => {
                         nextLevel();
                     }, 1500);

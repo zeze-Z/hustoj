@@ -1,6 +1,9 @@
 <?php $show_title="编程启蒙 - $OJ_NAME"; ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="game_confetti.js"></script>
+
 <div class="padding">
 <style>
         * {
@@ -1193,6 +1196,8 @@
                     updateLevelSelector();
                     feedbackEl.textContent = `🎉 恭喜你！第${currentLevel + 1}关通关！`;
                     feedbackEl.className = 'feedback success celebration';
+                    // 通关烟花效果
+                    launchConfetti();
                 } else {
                     feedbackEl.textContent = '❌ 还没到达终点哦，请调整程序再试。';
                     feedbackEl.className = 'feedback error';

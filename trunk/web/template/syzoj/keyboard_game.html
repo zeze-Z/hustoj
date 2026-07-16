@@ -1,6 +1,9 @@
 <?php $show_title="二年级汉字打字小乐园 - $OJ_NAME"; ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="game_confetti.js"></script>
+
 <div class="padding">
 <style>
     /* ========== 全局样式 ========== */
@@ -1222,6 +1225,9 @@
             正确率：<strong>${accuracy}%</strong><br>
             最高连击：<strong>${maxCombo}</strong> 次
         `;
+
+        // 通关烟花效果
+        launchConfetti();
     }
 
     // 检查输入

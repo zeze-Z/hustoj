@@ -388,7 +388,10 @@ if (isset($OJ_EMAIL_CONFIRM) && $OJ_EMAIL_CONFIRM) {
         email($email, $mail_subject, $mail_text, $mail_html);
     }
 
+    print "<script src='https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js'></script>\n";
+    print "<script src='template/$OJ_TEMPLATE/game_confetti.js'></script>\n";
     print "<script language='javascript'>\n";
+    print "launchConfetti();\n";
     print "alert('注册成功！请前往邮箱激活账号，激活后即可获得20积分奖励。');\n";
     print "window.location.href='loginpage.php';\n";
     print "</script>";
