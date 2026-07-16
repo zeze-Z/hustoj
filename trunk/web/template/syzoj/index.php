@@ -9,21 +9,18 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
 
     <!-- 游客友好提示 -->
     <?php if(!$is_logged_in) { ?>
-    <div class="ui message info" style="margin-bottom: 20px; border-radius: 8px; background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border: 1px solid #667eea;">
+    <div style="margin-bottom: 20px; border-radius: 8px; background: linear-gradient(135deg, #ff6b6b 0%, #ffa502 100%); padding: 16px 20px;">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
             <div style="display: flex; align-items: center;">
-                <i class="info circle icon" style="color: #667eea; font-size: 1.5em;"></i>
+                <i class="gift icon" style="color: white; font-size: 1.5em;"></i>
                 <div style="margin-left: 12px;">
-                    <strong style="color: #333; font-size: 1.05em;">欢迎来到 <?php echo $OJ_NAME; ?>！</strong>
-                    <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95em;">您当前以游客身份浏览，可以查看题目和新闻。如需提交代码，请先<a href="loginpage.php" style="color: #667eea; font-weight: 600;">登录</a>或<a href="registerpage.php" style="color: #667eea; font-weight: 600;">注册</a>。</p>
+                    <strong style="color: white; font-size: 1.1em;">🎉 新用户注册送 20 积分！</strong>
+                    <p style="margin: 5px 0 0 0; color: rgba(255,255,255,0.9); font-size: 0.95em;">免费浏览课件、体验编程游戏，开启教学新体验</p>
                 </div>
             </div>
             <div style="display: flex; gap: 10px;">
-                <a href="more.php" class="ui small button">更多功能</a>
-                <a href="loginpage.php" class="ui small blue button">登录</a>
-                <?php if(isset($OJ_REGISTER)&&$OJ_REGISTER){ ?>
-                <a href="registerpage.php" class="ui small primary button" style="background: #667eea; border-color: #667eea;">注册</a>
-                <?php } ?>
+                <a href="registerpage.php" class="ui small button" style="background: white; color: #ff6b6b; font-weight: 600;">立即注册</a>
+                <a href="course.php" class="ui small button" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">浏览课件</a>
             </div>
         </div>
     </div>
@@ -32,8 +29,17 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
     <!-- 功能介绍轮播图 -->
     <div style="margin-bottom: 25px;">
         <div class="carousel" id="featureCarousel" style="position: relative; width: 100%; height: 280px; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">
+            <!-- 轮播项 0: 新用户福利 -->
+            <div class="carousel-slide active" data-index="0" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ff6b6b 0%, #ffa502 100%); z-index: 1; pointer-events: none;">
+                <div style="text-align: center; color: white; padding: 40px;">
+                    <i class="gift icon" style="font-size: 5em; margin-bottom: 20px;"></i>
+                    <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">新用户福利</h2>
+                    <p style="font-size: 1.1em; opacity: 0.95; margin: 0 0 20px 0;">注册即送 20 积分，免费课件、编程游戏等你来体验</p>
+                    <a href="registerpage.php" class="ui button inverted">立即注册</a>
+                </div>
+            </div>
             <!-- 轮播项 1: 课件商城 -->
-            <div class="carousel-slide active" data-index="0" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); z-index: 1; pointer-events: none;">
+            <div class="carousel-slide" data-index="1" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); z-index: 1; pointer-events: none;">
                 <div style="text-align: center; color: white; padding: 40px;">
                     <i class="book icon" style="font-size: 5em; margin-bottom: 20px;"></i>
                     <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">课件商城</h2>
@@ -46,7 +52,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                 </div>
             </div>
             <!-- 轮播项 2: 趣味游戏 -->
-            <div class="carousel-slide" data-index="1" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%); z-index: 1; pointer-events: none;">
+            <div class="carousel-slide" data-index="2" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%); z-index: 1; pointer-events: none;">
                 <div style="text-align: center; color: white; padding: 40px;">
                     <i class="gamepad icon" style="font-size: 5em; margin-bottom: 20px;"></i>
                     <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">趣味游戏</h2>
@@ -54,8 +60,8 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                     <a href="more.php" class="ui button inverted">开始体验</a>
                 </div>
             </div>
-            <!-- 轮播项 3: 海量题库 -->
-            <div class="carousel-slide" data-index="3" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); z-index: 1; pointer-events: none;">
+            <!-- 轮播项 4: 海量题库 -->
+            <div class="carousel-slide" data-index="4" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); z-index: 1; pointer-events: none;">
                 <div style="text-align: center; color: white; padding: 40px;">
                     <i class="code icon" style="font-size: 5em; margin-bottom: 20px;"></i>
                     <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">海量题库</h2>
@@ -64,7 +70,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                 </div>
             </div>
             <!-- 轮播项 3: 秒级判题 -->
-            <div class="carousel-slide" data-index="2" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); z-index: 1; pointer-events: none;">
+            <div class="carousel-slide" data-index="3" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); z-index: 1; pointer-events: none;">
                 <div style="text-align: center; color: white; padding: 40px;">
                     <i class="rocket icon" style="font-size: 5em; margin-bottom: 20px;"></i>
                     <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">秒级判题</h2>
@@ -73,7 +79,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                 </div>
             </div>
             <!-- 轮播项 5: 竞赛活动 -->
-            <div class="carousel-slide" data-index="4" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); z-index: 1; pointer-events: none;">
+            <div class="carousel-slide" data-index="5" style="position: absolute; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); z-index: 1; pointer-events: none;">
                 <div style="text-align: center; color: white; padding: 40px;">
                     <i class="trophy icon" style="font-size: 5em; margin-bottom: 20px;"></i>
                     <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">竞赛活动</h2>
@@ -95,6 +101,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                 <div class="carousel-dot" data-index="2" style="width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s;"></div>
                 <div class="carousel-dot" data-index="3" style="width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s;"></div>
                 <div class="carousel-dot" data-index="4" style="width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s;"></div>
+                <div class="carousel-dot" data-index="5" style="width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s;"></div>
             </div>
         </div>
     </div>
