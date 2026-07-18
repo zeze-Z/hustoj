@@ -269,9 +269,9 @@ if (isset($OJ_EMAIL_CONFIRM) && $OJ_EMAIL_CONFIRM) {
             "🎮 趣味编程 — 游戏化教学工具，提升学生学习兴趣\n" .
             "💰 收益中心 — 课件销售数据透明，收益即时提现\n\n" .
             "⚠️ 重要提示：\n" .
-            "如需销售课件，需由管理员审核后开放。\n" .
+            "如需销售课件，请联系客服。\n" .
             "请点击以下链接激活账号：\n" . $link . "\n\n" .
-            "激活后即可登录，如有任何问题，欢迎联系我们。\n\n" .
+            "激活后即可登录，如有任何问题，欢迎联系客服QQ：2326077585。\n\n" .
             "$OJ_NAME" . "教学平台";
         
         // HTML邮件内容
@@ -296,7 +296,7 @@ if (isset($OJ_EMAIL_CONFIRM) && $OJ_EMAIL_CONFIRM) {
                     <div style='background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin: 20px 0; border-radius: 4px;'>
                         <h3 style='color: #856404; margin-top: 0;'>重要提示</h3>
                         <p style='color: #856404; line-height: 1.8; margin: 0;'>
-                            如需销售课件，需由管理员审核后开放。<br>
+                            如需销售课件，请联系客服。<br>
                             激活后即可登录，如有任何问题，欢迎联系客服QQ：2326077585。
                         </p>
                     </div>
