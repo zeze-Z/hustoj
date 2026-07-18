@@ -7,60 +7,30 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "微软雅黑", "幼圆", sans-serif;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
         }
 
         .game-container {
-            background-color: white;
-            border-radius: 25px;
-            padding: 30px;
-            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
-            width: 95%;
             max-width: 800px;
+            margin: 2rem auto;
+            background: #fff;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
             text-align: center;
-            border: 5px solid #4caf50;
             position: relative;
-            margin: 0 auto;
-            margin-top: 30px;
-        }
-
-        .game-container::before {
-            content: "💣";
-            font-size: 30px;
-            position: absolute;
-            top: -15px;
-            left: -15px;
-            background-color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid #4caf50;
-        }
-
-        .game-container::after {
-            content: "🚩";
-            font-size: 30px;
-            position: absolute;
-            bottom: -15px;
-            right: -15px;
-            background-color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid #4caf50;
         }
 
         h1 {
-            color: #2e7d32;
-            margin-bottom: 20px;
-            font-size: 2.2rem;
-            text-shadow: 2px 2px 4px rgba(76, 175, 80, 0.2);
+            font-size: 2rem;
+            font-weight: 700;
+            color: #4CAF50;
+            margin-bottom: 0.5rem;
         }
 
         .difficulty-selector {
@@ -68,64 +38,64 @@
         }
 
         .diff-btn {
-            padding: 10px 20px;
-            font-size: 1rem;
-            border: 2px solid #4caf50;
-            border-radius: 20px;
-            background-color: white;
-            color: #2e7d32;
+            padding: 8px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #fff;
+            color: #555;
+            font-size: 0.9rem;
+            font-weight: 600;
             cursor: pointer;
-            margin: 0 5px;
-            transition: all 0.3s;
-            font-weight: bold;
-        }
-
-        .diff-btn.active {
-            background-color: #4caf50;
-            color: white;
+            transition: all 0.3s ease;
+            margin: 0 4px;
         }
 
         .diff-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
+            border-color: #4CAF50;
+            color: #4CAF50;
+        }
+
+        .diff-btn.active {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            color: #fff;
         }
 
         .game-header {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
+            gap: 12px;
             align-items: center;
             margin-bottom: 20px;
-            padding: 15px;
-            background-color: #e8f5e9;
-            border-radius: 15px;
-            border: 2px solid #81c784;
             flex-wrap: wrap;
-            gap: 10px;
         }
 
         .stat-item {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #2e7d32;
-            min-width: 80px;
+            background: #E8F5E9;
+            border-radius: 12px;
+            padding: 12px 24px;
+            min-width: 100px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #4CAF50;
         }
 
         .restart-btn {
-            padding: 8px 20px;
-            font-size: 1rem;
             border: none;
-            border-radius: 15px;
-            background-color: #4caf50;
-            color: white;
+            border-radius: 12px;
+            padding: 12px 32px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #4CAF50, #388E3C);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
         }
 
         .restart-btn:hover {
-            background-color: #388e3c;
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.27);
         }
 
         .game-board {
@@ -133,8 +103,7 @@
             gap: 2px;
             background-color: #c8e6c9;
             padding: 5px;
-            border-radius: 10px;
-            border: 3px solid #81c784;
+            border-radius: 12px;
             overflow-x: auto;
             max-width: 100%;
         }
@@ -211,39 +180,97 @@
             50% { transform: scale(1.05); }
         }
 
+        /* 游戏结束弹窗 */
+        .game-over {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .game-over-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .game-over-card h2 {
+            font-size: 1.8rem;
+            color: #4CAF50;
+            margin-bottom: 1rem;
+        }
+
+        .game-over-card p {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-over-card strong {
+            color: #4CAF50;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50, #388E3C);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 32px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.27);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
         @media (max-width: 768px) {
-            h1 {
-                font-size: 1.8rem;
+            .game-container {
+                margin: 1rem;
+                padding: 1.5rem;
+                border-radius: 16px;
             }
-            
+            h1 {
+                font-size: 1.6rem;
+            }
             .cell {
                 width: 32px;
                 height: 32px;
                 font-size: 0.9rem;
             }
-            
             .stat-item {
-                font-size: 1rem;
+                padding: 10px 16px;
+                min-width: 80px;
+                font-size: 0.9rem;
             }
-
             .diff-btn {
                 padding: 8px 15px;
                 font-size: 0.9rem;
                 margin: 3px;
             }
-
-            .game-container::before,
-            .game-container::after {
-                width: 35px;
-                height: 35px;
-                font-size: 25px;
-            }
-
             .restart-btn {
-                padding: 6px 15px;
+                padding: 10px 24px;
                 font-size: 0.9rem;
             }
-
             .game-board {
                 padding: 3px;
             }
@@ -255,14 +282,13 @@
                 height: 28px;
                 font-size: 0.8rem;
             }
-            
             .game-container {
                 padding: 20px;
             }
         }
     </style>
     <div class="game-container">
-        <h1>💣 扫雷游戏 🚩</h1>
+        <h1>扫雷游戏</h1>
         
         <div class="difficulty-selector">
             <button class="diff-btn active" data-rows="9" data-cols="9" data-mines="10">简单 (9x9)</button>
@@ -279,6 +305,15 @@
         <div class="game-board" id="game-board"></div>
 
         <div class="game-message" id="game-message"></div>
+
+        <div class="game-over hidden" id="game-over-screen">
+            <div class="game-over-card">
+                <h2 id="game-over-title">🎉 游戏结束</h2>
+                <p id="game-over-msg"></p>
+                <p>用时：<strong id="final-time">0</strong> 秒</p>
+                <button class="btn-primary" id="overlay-restart-btn" style="margin-top:1rem;">再来一局</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -323,7 +358,8 @@
             timerEl.textContent = timer;
             gameMessageEl.textContent = '';
             gameMessageEl.className = 'game-message';
-            
+            document.getElementById('game-over-screen').classList.add('hidden');
+
             // 创建棋盘
             createBoard();
             
@@ -429,6 +465,12 @@
                 revealAllMines();
                 gameMessageEl.textContent = '💥 游戏结束！你踩到地雷了';
                 gameMessageEl.className = 'game-message game-lose';
+
+                // 显示游戏结束弹窗
+                document.getElementById('game-over-title').textContent = '💥 游戏结束';
+                document.getElementById('game-over-msg').textContent = '很遗憾，你踩到地雷了！';
+                document.getElementById('final-time').textContent = timer;
+                document.getElementById('game-over-screen').classList.remove('hidden');
                 return;
             }
             
@@ -511,6 +553,12 @@
                 stopTimer();
                 gameMessageEl.textContent = `🎉 恭喜你！胜利了！用时 ${timer} 秒`;
                 gameMessageEl.className = 'game-message game-win';
+
+                // 显示游戏结束弹窗
+                document.getElementById('game-over-title').textContent = '🎉 恭喜胜利！';
+                document.getElementById('game-over-msg').textContent = '你成功排除了所有地雷！';
+                document.getElementById('final-time').textContent = timer;
+                document.getElementById('game-over-screen').classList.remove('hidden');
                 
                 // 标记所有未标记的地雷
                 for (let i = 0; i < rows; i++) {
@@ -572,6 +620,12 @@
         diffBtns.forEach(btn => btn.addEventListener('click', changeDifficulty));
         restartBtn.addEventListener('click', initGame);
         
+        // 弹窗重新开始按钮
+        document.getElementById('overlay-restart-btn').addEventListener('click', function() {
+            document.getElementById('game-over-screen').classList.add('hidden');
+            initGame();
+        });
+
         // 初始化游戏
         initGame();
     </script>

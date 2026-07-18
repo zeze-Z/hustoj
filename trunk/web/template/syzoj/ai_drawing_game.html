@@ -2,80 +2,58 @@
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-<script src="game_confetti.js"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/game_confetti.js"></script>
 
 <div class="padding">
 <style>
+    /* ===== 统一游戏基础样式 ===== */
     * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
-        font-family: "微软雅黑", "幼圆", sans-serif;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: #f0f2f5;
+        min-height: 100vh;
     }
 
     .game-wrapper {
-        width: 100%;
         max-width: 1200px;
-        margin: 0 auto;
-        background-color: white;
-        border-radius: 25px;
-        padding: 25px;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        border: 5px solid #667eea;
+        margin: 2rem auto;
+        background: #fff;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        text-align: center;
         position: relative;
-        margin-top: 20px;
-    }
-
-    .game-wrapper::before {
-        content: "🤖";
-        font-size: 30px;
-        position: absolute;
-        top: -15px;
-        left: -15px;
-        background-color: #fff;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 3px solid #667eea;
-    }
-
-    .game-wrapper::after {
-        content: "🎨";
-        font-size: 30px;
-        position: absolute;
-        bottom: -15px;
-        right: -15px;
-        background-color: #fff;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 3px solid #667eea;
     }
 
     h1 {
         text-align: center;
-        color: #667eea;
-        margin-bottom: 20px;
-        font-size: 2.2rem;
-        text-shadow: 2px 2px 4px rgba(102, 126, 234, 0.2);
+        font-size: 2rem;
+        font-weight: 700;
+        color: #FF6B6B;
+        margin-bottom: 0.5rem;
+    }
+
+    .game-subtitle {
+        font-size: 1rem;
+        color: #666;
+        margin-bottom: 1.5rem;
     }
 
     .level-banner {
-        background: linear-gradient(135deg, #667eea, #764ba2);
+        background: linear-gradient(135deg, #FF6B6B, #E85555);
         color: white;
         padding: 15px 20px;
-        border-radius: 15px;
+        border-radius: 12px;
         margin-bottom: 20px;
         text-align: center;
-        font-size: 1.2rem;
-        font-weight: bold;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        font-size: 1.1rem;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
     }
 
     .game-content {
@@ -85,27 +63,31 @@
         margin-bottom: 20px;
     }
 
+    /* 面板统一 */
     .panel {
-        background-color: #f8f9fa;
-        border-radius: 15px;
-        padding: 20px;
-        border: 3px solid #667eea;
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #e8e8e8;
+        overflow: hidden;
+        padding: 0;
     }
 
     .panel-title {
-        font-size: 1.3rem;
-        color: #667eea;
-        margin-bottom: 15px;
+        background: #FFEBEE;
+        padding: 12px 16px;
+        font-weight: 600;
+        color: #FF6B6B;
+        font-size: 0.95rem;
+        border-bottom: 1px solid #e8e8e8;
         text-align: center;
-        font-weight: bold;
     }
 
     .task-info {
-        background: linear-gradient(135deg, #e8f0fe, #f3e8ff);
-        border: 2px solid #667eea;
+        background: linear-gradient(135deg, #FFEBEE, #fff5f5);
+        border: 1px solid #FFEBEE;
         border-radius: 12px;
         padding: 15px;
-        margin-bottom: 15px;
+        margin: 15px;
     }
 
     .task-label {
@@ -116,7 +98,7 @@
 
     .task-shape {
         font-size: 1.8rem;
-        color: #667eea;
+        color: #FF6B6B;
         font-weight: bold;
         text-align: center;
         margin: 10px 0;
@@ -135,7 +117,7 @@
         background: white;
         border-radius: 10px;
         padding: 15px;
-        margin-top: 15px;
+        margin: 15px;
     }
 
     .score-item {
@@ -152,7 +134,7 @@
 
     .score-value {
         font-weight: bold;
-        color: #667eea;
+        color: #FF6B6B;
         font-size: 1.2rem;
     }
 
@@ -171,7 +153,7 @@
 
     .progress-fill {
         height: 100%;
-        background: linear-gradient(135deg, #667eea, #764ba2);
+        background: linear-gradient(135deg, #FF6B6B, #E85555);
         transition: width 0.5s ease;
         border-radius: 10px;
     }
@@ -180,14 +162,15 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        padding: 15px;
     }
 
     #drawing-canvas {
-        border: 3px solid #667eea;
-        border-radius: 15px;
+        border: 2px solid #e8e8e8;
+        border-radius: 12px;
         background-color: white;
         cursor: crosshair;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
 
     .canvas-tools {
@@ -200,35 +183,36 @@
     .tool-btn {
         padding: 10px 20px;
         font-size: 1rem;
-        border: 2px solid #667eea;
+        border: 2px solid #e0e0e0;
         border-radius: 10px;
         background-color: white;
-        color: #667eea;
+        color: #555;
         cursor: pointer;
         transition: all 0.3s;
-        font-weight: bold;
+        font-weight: 600;
     }
 
     .tool-btn:hover {
-        background-color: #667eea;
-        color: white;
+        border-color: #FF6B6B;
+        color: #FF6B6B;
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        box-shadow: 0 4px 8px rgba(255, 107, 107, 0.15);
     }
 
     .tool-btn.primary {
-        background-color: #667eea;
+        background: linear-gradient(135deg, #FF6B6B, #E85555);
+        border-color: #FF6B6B;
         color: white;
+        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
     }
 
     .tool-btn.primary:hover {
-        background-color: #5568d8;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
     }
 
     .tool-btn:disabled {
-        background-color: #d3d3d3;
-        border-color: #999;
-        color: #666;
+        opacity: 0.5;
         cursor: not-allowed;
         transform: none;
     }
@@ -237,13 +221,13 @@
         background: white;
         border-radius: 12px;
         padding: 15px;
-        margin-bottom: 15px;
-        border: 2px solid #667eea;
+        margin: 15px;
+        border: 1px solid #e8e8e8;
     }
 
     .ai-status {
         font-size: 1.1rem;
-        color: #667eea;
+        color: #FF6B6B;
         text-align: center;
         margin-bottom: 10px;
         font-weight: bold;
@@ -283,7 +267,7 @@
 
     .guess-percent {
         font-weight: bold;
-        color: #667eea;
+        color: #FF6B6B;
     }
 
     .guess-bar {
@@ -301,7 +285,7 @@
     }
 
     .guess-bar-fill.rank1 {
-        background: linear-gradient(135deg, #667eea, #764ba2);
+        background: linear-gradient(135deg, #FF6B6B, #E85555);
     }
 
     .guess-bar-fill.rank2 {
@@ -314,10 +298,10 @@
 
     .knowledge-card {
         background: linear-gradient(135deg, #fff9e6, #fff3cc);
-        border: 2px solid #ffc107;
+        border: 1px solid #ffe082;
         border-radius: 12px;
         padding: 15px;
-        margin-top: 15px;
+        margin: 15px;
     }
 
     .knowledge-title {
@@ -373,26 +357,34 @@
     }
 
     .level-selector {
-        text-align: center;
-        margin-bottom: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
     }
 
     .level-btn {
-        padding: 10px 20px;
-        font-size: 1rem;
-        border: 2px solid #667eea;
-        border-radius: 20px;
-        background-color: white;
-        color: #667eea;
+        padding: 8px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        background: #fff;
+        color: #555;
+        font-size: 0.9rem;
+        font-weight: 600;
         cursor: pointer;
-        margin: 0 5px;
-        transition: all 0.3s;
-        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+
+    .level-btn:hover {
+        border-color: #FF6B6B;
+        color: #FF6B6B;
     }
 
     .level-btn.active {
-        background-color: #667eea;
-        color: white;
+        background: #FF6B6B;
+        border-color: #FF6B6B;
+        color: #fff;
     }
 
     .level-btn.completed::after {
@@ -402,15 +394,14 @@
         color: #4caf50;
     }
 
-    .level-btn:hover:not(.active) {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
-    }
-
     .shape-example {
         text-align: center;
         margin: 10px 0;
         font-size: 4rem;
+    }
+
+    .hidden {
+        display: none !important;
     }
 
     @media (max-width: 1024px) {
@@ -424,30 +415,28 @@
     }
 
     @media (max-width: 768px) {
+        .game-wrapper {
+            margin: 1rem;
+            padding: 1.5rem;
+            border-radius: 16px;
+        }
+
         .game-content {
             grid-template-columns: 1fr;
         }
 
         h1 {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
         }
 
         .level-btn {
             padding: 8px 15px;
             font-size: 0.9rem;
-            margin: 3px;
         }
 
         .tool-btn {
             padding: 8px 15px;
             font-size: 0.9rem;
-        }
-
-        .game-wrapper::before,
-        .game-wrapper::after {
-            width: 35px;
-            height: 35px;
-            font-size: 25px;
         }
     }
 </style>
@@ -455,7 +444,7 @@
 <div class="game-wrapper">
     <h1>🤖 AI猜猜画 - 认识人工智能</h1>
 
-    <div style="background:linear-gradient(135deg,#e8f0fe,#f3e8ff);border:2px solid #667eea;border-radius:12px;padding:12px 18px;margin-bottom:18px;font-size:0.95rem;color:#333;line-height:1.7;">
+    <div style="background:linear-gradient(135deg,#FFEBEE,#fff5f5);border:1px solid #ffcdd2;border-radius:12px;padding:12px 18px;margin-bottom:18px;font-size:0.95rem;color:#333;line-height:1.7;">
         <span style="font-weight:bold;font-size:1.05rem;">📖 玩法说明：</span>
         根据左侧任务提示，在画布上画出指定图形！AI会实时分析你的画作并猜测是什么。
         <br>• 画得越标准，AI猜的越准

@@ -3,123 +3,103 @@
 
 <div class="padding">
 <style>
+        /* ===== 统一游戏基础样式 ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "微软雅黑", "幼圆", sans-serif;
         }
 
         body {
-            background: linear-gradient(to bottom, #2196f3, #64b5f6, #bbdefb);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f0f2f5;
             min-height: 100vh;
         }
 
         .game-container {
-            background-color: rgba(255, 255, 255, 0.95);
-            border-radius: 25px;
-            padding: 30px;
-            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.3);
-            width: 90%;
             max-width: 800px;
+            margin: 2rem auto;
+            background: #fff;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
             text-align: center;
-            border: 5px solid #2196f3;
             position: relative;
-            margin: 0 auto;
-            margin-top: 30px;
         }
 
-        .game-container::before {
-            content: "🎈";
-            font-size: 30px;
-            position: absolute;
-            top: -15px;
-            left: -15px;
-            background-color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid #2196f3;
+        h1.game-title, .game-container > h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #FF5722;
+            margin-bottom: 0.5rem;
         }
 
-        .game-container::after {
-            content: "⌨️";
-            font-size: 30px;
-            position: absolute;
-            bottom: -15px;
-            right: -15px;
-            background-color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid #2196f3;
-        }
-
-        h1 {
-            color: #1976d2;
-            margin-bottom: 20px;
-            font-size: 2.2rem;
-            text-shadow: 2px 2px 4px rgba(33, 150, 243, 0.2);
+        .game-subtitle {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 1.5rem;
         }
 
         .difficulty-selector {
-            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
         }
 
         .diff-btn {
-            padding: 10px 20px;
-            font-size: 1rem;
-            border: 2px solid #2196f3;
-            border-radius: 20px;
-            background-color: white;
-            color: #1976d2;
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #fff;
+            color: #555;
+            font-size: 0.9rem;
+            font-weight: 600;
             cursor: pointer;
-            margin: 0 5px;
-            transition: all 0.3s;
-            font-weight: bold;
-        }
-
-        .diff-btn.active {
-            background-color: #2196f3;
-            color: white;
+            transition: all 0.3s ease;
         }
 
         .diff-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(33, 150, 243, 0.2);
+            border-color: #FF5722;
+            color: #FF5722;
+        }
+
+        .diff-btn.active {
+            background: #FF5722;
+            border-color: #FF5722;
+            color: #fff;
         }
 
         .stats {
             display: flex;
-            justify-content: space-around;
-            margin-bottom: 25px;
-            font-size: 1.2rem;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 1.5rem;
             flex-wrap: wrap;
-            gap: 10px;
         }
 
         .stat-item {
-            background-color: #e3f2fd;
-            padding: 12px 20px;
-            border-radius: 20px;
-            min-width: 120px;
-            border: 2px dashed #2196f3;
-            font-weight: bold;
-            color: #1976d2;
+            background: #FBE9E7;
+            border-radius: 12px;
+            padding: 12px 24px;
+            min-width: 100px;
+        }
+
+        .stat-item .stat-label {
+            font-size: 0.8rem;
+            color: #888;
+            display: block;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .game-area {
             width: 100%;
             height: 400px;
             background: linear-gradient(to bottom, #87ceeb 0%, #e0f6ff 100%);
-            border-radius: 20px;
-            border: 3px solid #2196f3;
+            border-radius: 16px;
             position: relative;
             overflow: hidden;
             margin-bottom: 20px;
@@ -209,8 +189,8 @@
             width: 100%;
             padding: 18px;
             font-size: 1.5rem;
-            border: 3px solid #2196f3;
-            border-radius: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
             margin-bottom: 20px;
             text-align: center;
             background-color: #fff;
@@ -219,36 +199,38 @@
 
         #input-area:focus {
             outline: none;
-            border-color: #1976d2;
-            box-shadow: 0 0 0 5px rgba(33, 150, 243, 0.1);
+            border-color: #FF5722;
+            box-shadow: 0 0 0 4px rgba(255, 87, 34, 0.1);
             transform: translateY(-2px);
         }
 
         .control-btn {
-            padding: 12px 35px;
-            font-size: 1.2rem;
+            background: linear-gradient(135deg, #FF5722, #E64A19);
             border: none;
-            border-radius: 20px;
-            background-color: #2196f3;
-            color: white;
+            border-radius: 12px;
+            padding: 12px 32px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
-            margin: 0 10px;
-            transition: all 0.3s;
-            font-weight: bold;
-            box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(255, 87, 34, 0.2);
+            margin: 0.5rem;
         }
 
         .control-btn:hover {
-            background-color: #1976d2;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(33, 150, 243, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 87, 34, 0.3);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
         }
 
         .control-btn:disabled {
-            background-color: #d3d3d3;
+            opacity: 0.5;
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
         }
 
         .feedback {
@@ -259,36 +241,63 @@
             color: #ef5350;
         }
 
+        /* 游戏结束弹窗 */
         .game-over {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 40px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .game-over-card {
+            background: #fff;
             border-radius: 20px;
-            border: 3px solid #ef5350;
+            padding: 2.5rem;
             text-align: center;
-            z-index: 100;
-            animation: slideIn 0.5s ease-out;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
         }
 
-        @keyframes slideIn {
-            from { transform: translate(-50%, -100px); opacity: 0; }
-            to { transform: translate(-50%, -50%); opacity: 1; }
+        .game-over-card h2 {
+            font-size: 1.8rem;
+            color: #FF5722;
+            margin-bottom: 1rem;
         }
 
-        .game-over h2 {
-            color: #ef5350;
-            font-size: 2rem;
-            margin-bottom: 20px;
+        .game-over-card p {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 0.5rem;
         }
 
-        .game-over .final-score {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            color: #1976d2;
-            font-weight: bold;
+        .game-over-card strong {
+            color: #FF5722;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #FF5722, #E64A19);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 32px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(255, 87, 34, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 87, 34, 0.3);
         }
 
         .hearts {
@@ -296,42 +305,46 @@
             font-size: 1.5rem;
         }
 
+        .hidden {
+            display: none !important;
+        }
+
         @media (max-width: 768px) {
+            .game-container {
+                margin: 1rem;
+                padding: 1.5rem;
+                border-radius: 16px;
+            }
+
             .game-area {
                 height: 300px;
             }
-            
-            h1 {
-                font-size: 1.8rem;
+
+            h1, .game-container > h1 {
+                font-size: 1.6rem;
             }
-            
+
             #input-area {
                 font-size: 1.2rem;
             }
-            
+
+            .stats {
+                gap: 8px;
+            }
+
             .stat-item {
-                padding: 8px 15px;
-                min-width: 100px;
-                font-size: 1rem;
+                padding: 10px 16px;
+                min-width: 80px;
             }
 
             .diff-btn {
                 padding: 8px 15px;
                 font-size: 0.9rem;
-                margin: 3px;
-            }
-
-            .game-container::before,
-            .game-container::after {
-                width: 35px;
-                height: 35px;
-                font-size: 25px;
             }
 
             .control-btn {
                 padding: 10px 25px;
                 font-size: 1rem;
-                margin: 5px;
             }
 
             .balloon-body {
@@ -358,11 +371,6 @@
         </div>
 
         <div class="game-area" id="game-area">
-            <div id="game-over" class="game-over" style="display: none;">
-                <h2>游戏结束！</h2>
-                <div class="final-score">最终得分: <span id="final-score">0</span></div>
-                <button class="control-btn" id="restart-btn">再来一局</button>
-            </div>
         </div>
         
         <input type="text" id="input-area" placeholder="输入气球上的字母/单词/短语，按回车提交" autocomplete="off">
@@ -372,6 +380,15 @@
         <div>
             <button class="control-btn" id="start-btn">开始游戏</button>
             <button class="control-btn" id="pause-btn">暂停</button>
+        </div>
+
+        <div class="game-over hidden" id="game-over-screen">
+            <div class="game-over-card">
+                <h2>🎈 游戏结束！</h2>
+                <p>最终得分：<strong id="final-score">0</strong></p>
+                <p>最高连击：<strong id="final-combo">0</strong> 次</p>
+                <button class="btn-primary" id="restart-btn" style="margin-top:1rem;">再来一局</button>
+            </div>
         </div>
     </div>
 
@@ -392,7 +409,7 @@
         const pauseBtn = document.getElementById('pause-btn');
         const restartBtn = document.getElementById('restart-btn');
         const feedbackEl = document.getElementById('feedback');
-        const gameOverEl = document.getElementById('game-over');
+        const gameOverEl = document.getElementById('game-over-screen');
         const finalScoreEl = document.getElementById('final-score');
 
         // 游戏状态变量
@@ -402,6 +419,7 @@
         let combo = 0;
         let gameRunning = false;
         let gamePaused = false;
+        let maxCombo = 0;
         let balloons = [];
         let spawnInterval = null;
         let cleanupInterval = null;
@@ -424,7 +442,8 @@
             clearBalloons();
             inputArea.value = '';
             feedbackEl.textContent = '';
-            gameOverEl.style.display = 'none';
+            gameOverEl.classList.add('hidden');
+            maxCombo = 0;
             inputArea.disabled = true;
             pauseBtn.disabled = true;
             startBtn.disabled = false;
@@ -509,11 +528,11 @@
                 duration: duration
             };
 
-            // transitionend 兜底：动画自然结束时标记 done
+            // transitionend：气球飘到顶部 = 玩家没接住，算作 miss（扣血）
             balloonEl.addEventListener('transitionend', function handler(e) {
-                if (e.propertyName === 'transform' && !balloon.popped) {
-                    balloon.done = true;
+                if (e.propertyName === 'transform' && !balloon.popped && !balloon.done) {
                     balloonEl.removeEventListener('transitionend', handler);
+                    balloonMissed(balloon);
                 }
             });
 
@@ -562,6 +581,7 @@
 
             // 更新得分
             combo++;
+            if (combo > maxCombo) maxCombo = combo;
             const baseScore = 10;
             const comboBonus = Math.floor(combo / 5) * 5;
             score += baseScore + comboBonus;
@@ -573,6 +593,7 @@
 
         // 气球到达顶部（标记 done，由 cleanupBalloons 统一清理）
         function balloonMissed(balloon) {
+            if (!gameRunning) return; // 游戏已结束，忽略在途气球的回调，避免重复扣血/负数生命
             balloon.done = true;
             lives--;
             combo = 0;
@@ -691,7 +712,8 @@
             pauseBtn.disabled = true;
 
             finalScoreEl.textContent = score;
-            gameOverEl.style.display = 'block';
+            document.getElementById('final-combo').textContent = maxCombo;
+            gameOverEl.classList.remove('hidden');
         }
 
         // 切换难度

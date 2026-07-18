@@ -2,205 +2,47 @@
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-<script src="game_confetti.js"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/game_confetti.js"></script>
 
 <div class="padding">
 <style>
     /* ========== 全局样式 ========== */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: #f0f2f5;
+        min-height: 100vh;
+    }
+
     .keyboard-game-wrapper {
         min-height: 100vh;
-        background: linear-gradient(135deg, #fff5f8 0%, #fff0f5 50%, #f0f8ff 100%);
         padding: 20px;
-        position: relative;
-        overflow: hidden;
-    }
-
-    /* 背景装饰 - 星星 */
-    .keyboard-game-wrapper::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-image: 
-            radial-gradient(circle at 10% 20%, #ffcc00 1px, transparent 1px),
-            radial-gradient(circle at 30% 80%, #ff69b4 2px, transparent 2px),
-            radial-gradient(circle at 70% 30%, #87ceeb 1.5px, transparent 1.5px),
-            radial-gradient(circle at 90% 70%, #98fb98 1px, transparent 1px),
-            radial-gradient(circle at 50% 50%, #ffa07a 1px, transparent 1px),
-            radial-gradient(circle at 20% 60%, #dda0dd 2px, transparent 2px),
-            radial-gradient(circle at 80% 90%, #ffb6c1 1.5px, transparent 1.5px);
-        background-size: 200px 200px;
-        animation: twinkle 4s ease-in-out infinite;
-        pointer-events: none;
-        opacity: 0.6;
-    }
-
-    @keyframes twinkle {
-        0%, 100% { opacity: 0.4; }
-        50% { opacity: 0.7; }
-    }
-
-    /* 云朵装饰 */
-    .cloud {
-        position: absolute;
-        background: white;
-        border-radius: 50px;
-        opacity: 0.8;
-        pointer-events: none;
-    }
-
-    .cloud::before, .cloud::after {
-        content: "";
-        position: absolute;
-        background: white;
-        border-radius: 50%;
-    }
-
-    .cloud-1 {
-        width: 100px;
-        height: 40px;
-        top: 5%;
-        left: 5%;
-        animation: float 20s ease-in-out infinite;
-    }
-
-    .cloud-1::before {
-        width: 50px;
-        height: 50px;
-        top: -25px;
-        left: 10px;
-    }
-
-    .cloud-1::after {
-        width: 40px;
-        height: 40px;
-        top: -20px;
-        right: 15px;
-    }
-
-    .cloud-2 {
-        width: 80px;
-        height: 30px;
-        top: 15%;
-        right: 10%;
-        animation: float 15s ease-in-out infinite reverse;
-    }
-
-    .cloud-2::before {
-        width: 40px;
-        height: 40px;
-        top: -20px;
-        left: 5px;
-    }
-
-    .cloud-2::after {
-        width: 30px;
-        height: 30px;
-        top: -15px;
-        right: 10px;
-    }
-
-    @keyframes float {
-        0%, 100% { transform: translateX(0) translateY(0); }
-        50% { transform: translateX(20px) translateY(-10px); }
     }
 
     /* ========== 游戏容器 ========== */
     .game-container {
-        background: linear-gradient(180deg, #ffffff 0%, #fff8fa 100%);
-        border-radius: 30px;
-        padding: 35px 30px;
-        box-shadow: 
-            0 10px 40px rgba(255, 105, 180, 0.15),
-            0 0 0 4px rgba(255, 182, 193, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.8);
-        width: 90%;
-        max-width: 720px;
+        max-width: 800px;
+        margin: 2rem auto;
+        background: #fff;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
         text-align: center;
         position: relative;
-        margin: 0 auto;
         z-index: 10;
-    }
-
-    /* 卡片装饰角标 */
-    .game-container::before {
-        content: "✨";
-        position: absolute;
-        top: -12px;
-        left: -12px;
-        font-size: 28px;
-        background: linear-gradient(135deg, #fff 0%, #fff0f5 100%);
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 3px 10px rgba(255, 105, 180, 0.3);
-        animation: bounce2 2s ease-in-out infinite;
-    }
-
-    .game-container::after {
-        content: "🌈";
-        position: absolute;
-        bottom: -12px;
-        right: -12px;
-        font-size: 28px;
-        background: linear-gradient(135deg, #fff 0%, #f0f8ff 100%);
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 3px 10px rgba(135, 206, 235, 0.3);
-        animation: bounce2 2s ease-in-out infinite 0.5s;
-    }
-
-    @keyframes bounce2 {
-        0%, 100% { transform: scale(1) rotate(0deg); }
-        50% { transform: scale(1.1) rotate(5deg); }
     }
 
     /* ========== 标题 ========== */
     h1 {
-        color: transparent;
-        background: linear-gradient(135deg, #ff69b4 0%, #ff1493 50%, #ff69b4 100%);
-        -webkit-background-clip: text;
-        background-clip: text;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #00BCD4;
         margin-bottom: 25px;
-        font-size: 2.2rem;
-        text-shadow: none;
-        position: relative;
-        display: inline-block;
-        padding: 0 50px;
-    }
-
-    h1::before {
-        content: "✏️";
-        position: absolute;
-        left: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 1.8rem;
-        animation: wiggle 3s ease-in-out infinite;
-    }
-
-    h1::after {
-        content: "📚";
-        position: absolute;
-        right: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 1.8rem;
-        animation: wiggle 3s ease-in-out infinite 0.5s;
-    }
-
-    @keyframes wiggle {
-        0%, 100% { transform: translateY(-50%) rotate(-5deg); }
-        50% { transform: translateY(-50%) rotate(5deg); }
     }
 
     /* ========== 难度选择器 ========== */
@@ -213,51 +55,27 @@
     }
 
     .diff-btn {
-        padding: 10px 24px;
-        font-size: 1rem;
-        border: none;
-        border-radius: 25px;
-        background: linear-gradient(180deg, #fff 0%, #f8f8f8 100%);
-        color: #ff69b4;
+        padding: 8px 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        background: #fff;
+        color: #555;
+        font-size: 0.9rem;
+        font-weight: 600;
         cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        font-weight: bold;
-        box-shadow: 
-            0 3px 8px rgba(255, 105, 180, 0.2),
-            inset 0 1px 0 rgba(255, 255, 255, 0.8);
-        position: relative;
-        overflow: hidden;
+        transition: all 0.3s ease;
+        margin: 0 4px;
     }
 
-    .diff-btn::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-        transition: left 0.5s;
-    }
-
-    .diff-btn:hover::before {
-        left: 100%;
+    .diff-btn:hover {
+        border-color: #00BCD4;
+        color: #00BCD4;
     }
 
     .diff-btn.active {
-        background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
-        color: white;
-        box-shadow: 
-            0 5px 15px rgba(255, 105, 180, 0.4),
-            inset 0 1px 0 rgba(255, 255, 255, 0.3);
-        transform: translateY(-2px);
-    }
-
-    .diff-btn:hover:not(.active) {
-        transform: translateY(-2px);
-        box-shadow: 
-            0 5px 15px rgba(255, 105, 180, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        background: #00BCD4;
+        border-color: #00BCD4;
+        color: #fff;
     }
 
     .diff-btn:disabled {
@@ -270,45 +88,34 @@
     .stats {
         display: flex;
         justify-content: center;
-        flex-wrap: wrap;
         gap: 12px;
-        margin-bottom: 20px;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
     }
 
     .stat-item {
-        background: linear-gradient(135deg, #fff 0%, #fff8fa 100%);
-        padding: 12px 20px;
-        border-radius: 20px;
-        min-width: 110px;
-        border: none;
+        background: #E0F7FA;
+        border-radius: 12px;
+        padding: 12px 24px;
+        min-width: 100px;
         font-weight: bold;
         font-size: 1rem;
-        box-shadow: 
-            0 4px 12px rgba(255, 105, 180, 0.15),
-            inset 0 1px 0 rgba(255, 255, 255, 0.8);
-        transition: all 0.3s ease;
-        position: relative;
-    }
-
-    .stat-item:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 18px rgba(255, 105, 180, 0.25);
+        color: #333;
     }
 
     .stat-item span {
-        color: #ff69b4;
+        color: #00BCD4;
         font-size: 1.2rem;
     }
 
     .combo-display {
-        background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
+        background: #00BCD4;
         color: white;
-        animation: none;
     }
 
     .combo-display span {
-        color: #ffd700;
-        text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        color: #fff;
+        font-weight: 700;
     }
 
     .combo-display.active {
@@ -316,50 +123,26 @@
     }
 
     @keyframes pulse2 {
-        0%, 100% { transform: scale(1); box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3); }
-        50% { transform: scale(1.05); box-shadow: 0 6px 20px rgba(255, 105, 180, 0.5); }
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
     }
 
     /* ========== 进度条 ========== */
     .progress-container {
         width: 100%;
         height: 10px;
-        background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 100%);
+        background: #e0e0e0;
         border-radius: 10px;
         margin-bottom: 25px;
         overflow: hidden;
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .progress-bar {
         height: 100%;
-        background: linear-gradient(90deg, #ff9eb1 0%, #ff69b4 50%, #ff1493 100%);
+        background: linear-gradient(90deg, #80DEEA 0%, #00BCD4 50%, #0097A7 100%);
         border-radius: 10px;
         transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         width: 0%;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .progress-bar::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(
-            90deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0.4) 50%,
-            transparent 100%
-        );
-        animation: shimmer 2s infinite;
-    }
-
-    @keyframes shimmer {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
     }
 
     /* ========== 词语显示区 ========== */
@@ -367,40 +150,15 @@
         font-size: 2.8rem;
         margin: 25px 0;
         padding: 30px 25px;
-        background: linear-gradient(135deg, #f0fff4 0%, #fafffa 50%, #fff8f0 100%);
-        border-radius: 25px;
+        background: #E0F7FA;
+        border-radius: 16px;
         min-height: 140px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        border: 3px solid transparent;
-        background-clip: padding-box;
+        border: 2px solid rgba(0, 188, 212, 0.2);
         position: relative;
-        box-shadow: 
-            0 8px 25px rgba(34, 139, 34, 0.15),
-            inset 0 1px 0 rgba(255, 255, 255, 0.8);
-    }
-
-    /* 边框渐变效果 */
-    .word-display::before {
-        content: "";
-        position: absolute;
-        top: -3px;
-        left: -3px;
-        right: -3px;
-        bottom: -3px;
-        background: linear-gradient(135deg, #98fb98, #ff69b4, #87ceeb, #98fb98);
-        border-radius: 28px;
-        z-index: -1;
-        background-size: 300% 300%;
-        animation: gradientBorder 5s ease infinite;
-    }
-
-    @keyframes gradientBorder {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
     }
 
     .word-char {
@@ -420,12 +178,11 @@
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         font-size: 2.2rem;
         font-weight: bold;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
     }
 
     .word-char .char.correct {
         color: #fff;
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        background: #28a745;
         transform: scale(1.1);
         box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
         animation: charPop 0.4s ease;
@@ -433,22 +190,22 @@
 
     .word-char .char.wrong {
         color: #fff;
-        background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+        background: #dc3545;
         transform: scale(1.05);
         box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
         animation: shake 0.4s ease;
     }
 
     .word-char .char.pending {
-        color: #228b22;
+        color: #0097A7;
         background: rgba(255, 255, 255, 0.8);
-        border: 2px dashed #98fb98;
+        border: 2px dashed #80DEEA;
     }
 
     .word-char .char.current {
-        color: #ff69b4;
-        background: rgba(255, 105, 180, 0.15);
-        border: 3px solid #ff69b4;
+        color: #00BCD4;
+        background: rgba(0, 188, 212, 0.1);
+        border: 3px solid #00BCD4;
         animation: currentPulse 1s ease-in-out infinite;
     }
 
@@ -459,18 +216,17 @@
     }
 
     @keyframes currentPulse {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(255, 105, 180, 0.4); }
-        50% { box-shadow: 0 0 0 8px rgba(255, 105, 180, 0); }
+        0%, 100% { box-shadow: 0 0 0 0 rgba(0, 188, 212, 0.4); }
+        50% { box-shadow: 0 0 0 8px rgba(0, 188, 212, 0); }
     }
 
     .word-pinyin {
         font-size: 1.3rem;
         color: #fff;
         letter-spacing: 3px;
-        background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
+        background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%);
         padding: 8px 25px;
         border-radius: 20px;
-        box-shadow: 0 3px 10px rgba(255, 105, 180, 0.3);
     }
 
     /* ========== 输入区域 ========== */
@@ -478,28 +234,23 @@
         width: 100%;
         padding: 20px;
         font-size: 1.6rem;
-        border: 3px solid #ffb6c1;
-        border-radius: 25px;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
         margin-bottom: 15px;
         text-align: center;
-        background: linear-gradient(180deg, #fff 0%, #fff8fa 100%);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: inset 0 2px 4px rgba(255, 105, 180, 0.1);
+        background: #fff;
+        transition: all 0.3s ease;
         color: #333;
     }
 
     #input-area:focus {
         outline: none;
-        border-color: #ff69b4;
-        box-shadow: 
-            0 0 0 5px rgba(255, 105, 180, 0.15),
-            inset 0 2px 4px rgba(255, 105, 180, 0.05);
-        transform: translateY(-2px);
+        border-color: #00BCD4;
+        box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.15);
     }
 
     #input-area.error {
         border-color: #dc3545;
-        background: linear-gradient(180deg, #fff 0%, #fff5f5 100%);
         animation: inputShake 0.3s ease;
     }
 
@@ -510,7 +261,7 @@
     }
 
     #input-area::placeholder {
-        color: #ffb6c1;
+        color: #bbb;
         font-weight: normal;
     }
 
@@ -519,74 +270,53 @@
         color: #888;
         margin-bottom: 15px;
         min-height: 24px;
-        font-style: italic;
     }
 
     /* ========== 控制按钮 ========== */
     .control-btn {
-        padding: 14px 35px;
-        font-size: 1.1rem;
         border: none;
-        border-radius: 25px;
-        color: white;
+        border-radius: 12px;
+        padding: 12px 32px;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 600;
         cursor: pointer;
-        margin: 0 8px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        font-weight: bold;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .control-btn::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        transition: left 0.5s;
-    }
-
-    .control-btn:hover::before {
-        left: 100%;
+        transition: all 0.3s ease;
+        margin: 0.5rem;
     }
 
     #start-btn {
-        background: linear-gradient(135deg, #ff9eb1 0%, #ff69b4 100%);
-        box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
+        background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%);
+        box-shadow: 0 4px 12px rgba(0, 188, 212, 0.2);
     }
 
     #start-btn:hover:not(:disabled) {
-        background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
-        transform: translateY(-4px);
-        box-shadow: 0 8px 25px rgba(255, 105, 180, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 188, 212, 0.27);
     }
 
     #pause-btn {
-        background: linear-gradient(135deg, #87ceeb 0%, #4169e1 100%);
-        box-shadow: 0 4px 15px rgba(65, 105, 225, 0.3);
+        background: linear-gradient(135deg, #42A5F5 0%, #1976D2 100%);
+        box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
     }
 
     #pause-btn:hover:not(:disabled) {
-        background: linear-gradient(135deg, #4169e1 0%, #1e3a8a 100%);
-        transform: translateY(-4px);
-        box-shadow: 0 8px 25px rgba(65, 105, 225, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(25, 118, 210, 0.27);
     }
 
     #reset-btn {
-        background: linear-gradient(135deg, #98fb98 0%, #32cd32 100%);
-        box-shadow: 0 4px 15px rgba(50, 205, 50, 0.3);
+        background: linear-gradient(135deg, #66BB6A 0%, #388E3C 100%);
+        box-shadow: 0 4px 12px rgba(56, 142, 60, 0.2);
     }
 
     #reset-btn:hover:not(:disabled) {
-        background: linear-gradient(135deg, #32cd32 0%, #228b22 100%);
-        transform: translateY(-4px);
-        box-shadow: 0 8px 25px rgba(50, 205, 50, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(56, 142, 60, 0.27);
     }
 
     .control-btn:disabled {
-        background: linear-gradient(135deg, #d3d3d3 0%, #a9a9a9 100%);
+        background: #ccc;
         cursor: not-allowed;
         transform: none !important;
         box-shadow: none;
@@ -602,44 +332,88 @@
 
     .feedback.correct {
         color: #28a745;
-        text-shadow: 0 0 10px rgba(40, 167, 69, 0.3);
     }
 
     .feedback.wrong {
         color: #dc3545;
-        text-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
     }
 
+    /* 游戏结束弹窗 */
     .game-over {
-        font-size: 1.6rem;
-        color: #ff69b4;
-        margin: 25px 0;
-        font-weight: bold;
-        padding: 20px;
-        background: linear-gradient(135deg, rgba(255, 105, 180, 0.1) 0%, rgba(255, 182, 193, 0.1) 100%);
-        border-radius: 20px;
-        line-height: 1.8;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(8px);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
     }
 
-    .game-over strong {
-        color: #ff1493;
-        font-size: 1.3rem;
+    .game-over-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 2.5rem;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        max-width: 400px;
+        width: 90%;
+    }
+
+    .game-over-card h2 {
+        font-size: 1.8rem;
+        color: #00BCD4;
+        margin-bottom: 1rem;
+    }
+
+    .game-over-card p {
+        font-size: 1.1rem;
+        color: #555;
+        margin-bottom: 0.5rem;
+    }
+
+    .game-over-card strong {
+        color: #00BCD4;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 12px 32px;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 188, 212, 0.2);
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 188, 212, 0.27);
+    }
+
+    .hidden {
+        display: none !important;
     }
 
     /* ========== 学习模式 ========== */
     .learn-mode {
-        background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
-        border: 2px solid #ffc107;
-        border-radius: 20px;
+        background: #FFF8E1;
+        border: 2px solid #FFC107;
+        border-radius: 12px;
         padding: 20px;
         margin: 15px 0;
         display: none;
-        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2);
     }
 
     .learn-mode .answer {
         font-size: 1.8rem;
-        color: #f57c00;
+        color: #F57C00;
         margin: 10px 0;
         font-weight: bold;
     }
@@ -654,15 +428,14 @@
         position: absolute;
         top: 10px;
         right: 10px;
-        background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
-        border: 2px solid #ffc107;
+        background: #FFF8E1;
+        border: 2px solid #FFC107;
         border-radius: 8px;
         padding: 4px 12px;
         font-size: 0.85rem;
         color: #856404;
         display: none;
         font-weight: bold;
-        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
     }
 
     .ime-indicator.active {
@@ -676,100 +449,63 @@
     }
 
     /* ========== 响应式 ========== */
+    @media (max-width: 768px) {
+        .game-container {
+            margin: 1rem;
+            padding: 1.5rem;
+            border-radius: 16px;
+        }
+        h1 {
+            font-size: 1.6rem;
+        }
+        .stats {
+            gap: 8px;
+        }
+        .stat-item {
+            padding: 10px 16px;
+            min-width: 80px;
+        }
+    }
+
     @media (max-width: 600px) {
         .keyboard-game-wrapper {
             padding: 10px;
         }
-        
-        .game-container {
-            padding: 25px 20px;
-            border-radius: 25px;
-        }
-        
-        h1 {
-            font-size: 1.6rem;
-            padding: 0 40px;
-        }
-        
-        h1::before, h1::after {
-            font-size: 1.4rem;
-        }
-        
         .word-display {
             font-size: 2rem;
             min-height: 110px;
             padding: 20px;
         }
-        
         .word-char .char {
             min-width: 2.5rem;
             height: 3rem;
             font-size: 1.8rem;
         }
-        
         .word-pinyin {
             font-size: 1.1rem;
             padding: 6px 18px;
         }
-        
         #input-area {
             font-size: 1.3rem;
             padding: 15px;
         }
-        
-        .stat-item {
-            padding: 10px 15px;
-            min-width: 90px;
-            font-size: 0.9rem;
-        }
-        
         .control-btn {
-            padding: 12px 25px;
-            font-size: 1rem;
-            margin: 5px;
-        }
-
-        .game-container::before,
-        .game-container::after {
-            width: 36px;
-            height: 36px;
-            font-size: 22px;
-        }
-
-        .game-container::before {
-            top: -10px;
-            left: -10px;
-        }
-
-        .game-container::after {
-            bottom: -10px;
-            right: -10px;
+            padding: 10px 24px;
+            font-size: 0.9rem;
         }
     }
 
     @media (max-width: 400px) {
-        h1 {
-            font-size: 1.3rem;
-            padding: 0 30px;
-        }
-        
-        h1::before, h1::after {
-            font-size: 1.2rem;
-        }
-        
         .difficulty-selector {
             gap: 8px;
         }
-        
         .diff-btn {
             padding: 8px 16px;
             font-size: 0.9rem;
         }
-        
         .stats {
             gap: 8px;
         }
-        
         .stat-item {
             padding: 8px 12px;
             min-width: 75px;
@@ -779,26 +515,22 @@
 </style>
 
 <div class="keyboard-game-wrapper">
-    <!-- 云朵装饰 -->
-    <div class="cloud cloud-1"></div>
-    <div class="cloud cloud-2"></div>
-
     <div class="game-container">
         <h1>二年级汉字打字小乐园</h1>
         
         <div class="ime-indicator" id="ime-indicator">正在输入拼音...</div>
         
         <div class="difficulty-selector" id="difficulty-selector">
-            <button class="diff-btn active" data-diff="easy">🌟 简单 (2字)</button>
-            <button class="diff-btn" data-diff="medium">⭐ 中等 (3字)</button>
-            <button class="diff-btn" data-diff="hard">💫 困难 (全部)</button>
+            <button class="diff-btn active" data-diff="easy">简单 (2字)</button>
+            <button class="diff-btn" data-diff="medium">中等 (3字)</button>
+            <button class="diff-btn" data-diff="hard">困难 (全部)</button>
         </div>
 
         <div class="stats">
-            <div class="stat-item">⏱️ <span id="timer">600</span>秒</div>
-            <div class="stat-item">⭐ <span id="score">0</span>分</div>
-            <div class="stat-item">🎯 <span id="accuracy">100</span>%</div>
-            <div class="stat-item combo-display" id="combo-display">🔥 连击: <span id="combo">0</span></div>
+            <div class="stat-item"><span id="timer">600</span>秒</div>
+            <div class="stat-item"><span id="score">0</span>分</div>
+            <div class="stat-item"><span id="accuracy">100</span>%</div>
+            <div class="stat-item combo-display" id="combo-display">连击: <span id="combo">0</span></div>
         </div>
 
         <div class="progress-container">
@@ -816,18 +548,28 @@
 
         <div class="learn-mode" id="learn-mode">
             <div class="answer">正确答案：<span id="correct-answer"></span></div>
-            <div class="instruction">请再输入一次加深记忆 💪</div>
+            <div class="instruction">请再输入一次加深记忆</div>
         </div>
         
         <div class="feedback" id="feedback"></div>
         
         <div>
-            <button class="control-btn" id="start-btn">🎮 开始游戏</button>
-            <button class="control-btn" id="pause-btn" disabled>⏸️ 暂停</button>
-            <button class="control-btn" id="reset-btn" disabled>🔄 重来</button>
+            <button class="control-btn" id="start-btn">开始游戏</button>
+            <button class="control-btn" id="pause-btn" disabled>暂停</button>
+            <button class="control-btn" id="reset-btn" disabled>重来</button>
         </div>
         
-        <div id="game-over-message" class="game-over"></div>
+        <div id="game-over-message"></div>
+
+        <div class="game-over hidden" id="game-over-screen">
+            <div class="game-over-card">
+                <h2>🎉 游戏结束！</h2>
+                <p>最终得分：<strong id="final-score">0</strong> 分</p>
+                <p>正确率：<strong id="final-accuracy">0%</strong></p>
+                <p>最高连击：<strong id="final-max-combo">0</strong> 次</p>
+                <button class="btn-primary" id="overlay-restart-btn" style="margin-top:1rem;">再来一局</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1160,7 +902,7 @@
     // 暂停/继续
     function togglePause() {
         isPaused = !isPaused;
-        pauseBtn.textContent = isPaused ? '▶️ 继续' : '⏸️ 暂停';
+        pauseBtn.textContent = isPaused ? '继续' : '暂停';
         inputArea.disabled = isPaused;
         
         if (isPaused) {
@@ -1178,7 +920,7 @@
         
         startBtn.disabled = false;
         pauseBtn.disabled = true;
-        pauseBtn.textContent = '⏸️ 暂停';
+        pauseBtn.textContent = '暂停';
         resetBtn.disabled = true;
         inputArea.disabled = true;
         inputArea.value = '';
@@ -1200,6 +942,7 @@
         inputHint.textContent = '';
         feedbackEl.textContent = '';
         gameOverMessage.textContent = '';
+        document.getElementById('game-over-screen').classList.add('hidden');
         learnMode.style.display = 'none';
         progressBar.style.width = '0%';
         
@@ -1219,12 +962,12 @@
         diffBtns.forEach(btn => btn.disabled = false);
         
         const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 100;
-        gameOverMessage.innerHTML = `
-            🎉 游戏结束！<br>
-            最终得分：<strong>${score}</strong> 分<br>
-            正确率：<strong>${accuracy}%</strong><br>
-            最高连击：<strong>${maxCombo}</strong> 次
-        `;
+
+        // 显示游戏结束弹窗
+        document.getElementById('final-score').textContent = score;
+        document.getElementById('final-accuracy').textContent = accuracy + '%';
+        document.getElementById('final-max-combo').textContent = maxCombo;
+        document.getElementById('game-over-screen').classList.remove('hidden');
 
         // 通关烟花效果
         launchConfetti();
@@ -1339,6 +1082,12 @@
     pauseBtn.addEventListener('click', togglePause);
     resetBtn.addEventListener('click', resetGame);
     inputArea.addEventListener('input', checkInput);
+
+    // 弹窗重新开始按钮
+    document.getElementById('overlay-restart-btn').addEventListener('click', function() {
+        document.getElementById('game-over-screen').classList.add('hidden');
+        resetGame();
+    });
 
     // 键盘快捷键
     document.addEventListener('keydown', (e) => {

@@ -3,197 +3,192 @@
 
 <div class="padding">
 <style>
+        /* ===== 统一游戏基础样式 ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "微软雅黑", "幼圆", sans-serif;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
         }
 
         .game-container {
-            background-color: white;
-            border-radius: 25px;
-            padding: 30px;
-            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.3);
-            width: 90%;
-            max-width: 600px;
+            max-width: 800px;
+            margin: 2rem auto;
+            background: #fff;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
             text-align: center;
-            border: 5px solid #4ecdc4;
             position: relative;
-            margin: 0 auto;
-            margin-top: 30px;
         }
 
-        .game-container::before {
-            content: "🎮";
-            font-size: 30px;
-            position: absolute;
-            top: -15px;
-            left: -15px;
-            background-color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+        .game-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #4ECDC4;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-subtitle {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        /* 统计栏 */
+        .stats-bar {
             display: flex;
-            align-items: center;
             justify-content: center;
-            border: 3px solid #4ecdc4;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
         }
 
-        .game-container::after {
-            content: "🎯";
-            font-size: 30px;
-            position: absolute;
-            bottom: -15px;
-            right: -15px;
-            background-color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid #4ecdc4;
+        .stat-item {
+            background: #E8FAF9;
+            border-radius: 12px;
+            padding: 12px 24px;
+            min-width: 100px;
         }
 
-        h1 {
-            color: #26a69a;
-            margin-bottom: 20px;
-            font-size: 2.2rem;
-            text-shadow: 2px 2px 4px rgba(78, 205, 196, 0.2);
+        .stat-label {
+            font-size: 0.8rem;
+            color: #888;
+            display: block;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4ECDC4;
+        }
+
+        /* 主按钮 */
+        .btn-primary {
+            background: linear-gradient(135deg, #4ECDC4, #3BB5AD);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 32px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(78, 205, 196, 0.33);
+            margin: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.44);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 难度选择器 */
         .difficulty-selector {
-            margin-bottom: 25px;
+            margin-bottom: 1.5rem;
         }
 
         .diff-btn {
             padding: 10px 20px;
-            font-size: 1rem;
-            border: 2px solid #4ecdc4;
-            border-radius: 20px;
-            background-color: white;
-            color: #26a69a;
-            cursor: pointer;
             margin: 0 5px;
-            transition: all 0.3s;
-            font-weight: bold;
+            border: 2px solid #4ECDC4;
+            background: #fff;
+            color: #4ECDC4;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
         .diff-btn.active {
-            background-color: #4ecdc4;
-            color: white;
+            background: linear-gradient(135deg, #4ECDC4, #3BB5AD);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(78, 205, 196, 0.33);
         }
 
         .diff-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(78, 205, 196, 0.2);
+            box-shadow: 0 4px 12px rgba(78, 205, 196, 0.2);
         }
 
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 25px;
-            font-size: 1.2rem;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .stat-item {
-            background-color: #f0fdfa;
-            padding: 12px 20px;
-            border-radius: 20px;
-            min-width: 120px;
-            border: 2px dashed #4ecdc4;
-            font-weight: bold;
-            color: #26a69a;
-        }
-
+        /* 范围展示 */
         .range-display {
-            font-size: 1.5rem;
-            margin: 20px 0;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 20px;
-            border: 3px solid #81d4fa;
-            background-image: linear-gradient(to right, #f0f9ff, #f5fcff);
-            color: #0288d1;
-            font-weight: bold;
+            font-size: 1.4rem;
+            margin: 1.5rem 0;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px solid #e8e8e8;
+            color: #555;
+            font-weight: 600;
         }
 
+        /* 输入框 */
         #input-area {
             width: 100%;
-            padding: 18px;
+            padding: 16px;
             font-size: 1.5rem;
-            border: 3px solid #4ecdc4;
-            border-radius: 20px;
-            margin-bottom: 20px;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
             text-align: center;
-            background-color: #fff;
-            transition: all 0.3s;
+            background: #fff;
+            transition: all 0.3s ease;
+            outline: none;
         }
 
         #input-area:focus {
-            outline: none;
-            border-color: #26a69a;
-            box-shadow: 0 0 0 5px rgba(78, 205, 196, 0.1);
-            transform: translateY(-2px);
+            border-color: #4ECDC4;
+            box-shadow: 0 0 0 4px rgba(78, 205, 196, 0.15);
         }
 
-        .control-btn {
-            padding: 12px 35px;
-            font-size: 1.2rem;
-            border: none;
-            border-radius: 20px;
-            background-color: #4ecdc4;
-            color: white;
-            cursor: pointer;
-            margin: 0 10px;
-            transition: all 0.3s;
-            font-weight: bold;
-            box-shadow: 0 4px 8px rgba(78, 205, 196, 0.3);
-        }
-
-        .control-btn:hover {
-            background-color: #26a69a;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(78, 205, 196, 0.4);
-        }
-
-        .control-btn:disabled {
-            background-color: #d3d3d3;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
+        /* 反馈区 */
         .feedback {
             height: 35px;
-            font-size: 1.5rem;
-            margin: 15px 0;
-            font-weight: bold;
+            font-size: 1.3rem;
+            margin: 1rem 0;
+            font-weight: 600;
         }
 
         .too-high {
-            color: #ef5350;
+            color: #ef4444;
             animation: shake 0.5s ease;
         }
 
         .too-low {
-            color: #ffa726;
+            color: #f59e0b;
             animation: shake 0.5s ease;
         }
 
         .correct {
-            color: #66bb6a;
+            color: #10b981;
             animation: bounce 0.5s ease;
         }
 
         .game-win {
-            font-size: 2rem;
-            color: #4ecdc4;
-            margin: 20px 0;
-            font-weight: bold;
+            font-size: 1.8rem;
+            color: #4ECDC4;
+            margin: 1.5rem 0;
+            font-weight: 700;
             animation: celebration 1s ease infinite;
         }
 
@@ -205,82 +200,141 @@
 
         @keyframes bounce {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
+            50% { transform: scale(1.15); }
         }
 
         @keyframes celebration {
             0%, 100% { transform: rotate(0deg) scale(1); }
-            25% { transform: rotate(-5deg) scale(1.05); }
-            75% { transform: rotate(5deg) scale(1.05); }
+            25% { transform: rotate(-3deg) scale(1.03); }
+            75% { transform: rotate(3deg) scale(1.03); }
         }
 
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 1.8rem;
+        /* 游戏结束弹窗 */
+        .game-over {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .game-over-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .game-over-card h2 {
+            font-size: 1.8rem;
+            color: #4ECDC4;
+            margin-bottom: 1rem;
+        }
+
+        .game-over-card p {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-over-card strong {
+            color: #4ECDC4;
+        }
+
+        /* 隐藏类 */
+        .hidden {
+            display: none !important;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .game-container {
+                margin: 1rem;
+                padding: 1.5rem;
+                border-radius: 16px;
             }
-            
+            .game-title {
+                font-size: 1.6rem;
+            }
             .range-display {
                 font-size: 1.2rem;
             }
-            
             #input-area {
                 font-size: 1.2rem;
             }
-            
+            .stats-bar {
+                gap: 8px;
+            }
             .stat-item {
-                padding: 8px 15px;
-                min-width: 100px;
-                font-size: 1rem;
+                padding: 10px 16px;
+                min-width: 80px;
             }
-
+            .stat-value {
+                font-size: 1.2rem;
+            }
             .diff-btn {
-                padding: 8px 15px;
-                font-size: 0.9rem;
-                margin: 3px;
+                padding: 8px 14px;
+                font-size: 0.85rem;
             }
-
-            .game-container::before,
-            .game-container::after {
-                width: 35px;
-                height: 35px;
-                font-size: 25px;
-            }
-
-            .control-btn {
-                padding: 10px 25px;
-                font-size: 1rem;
-                margin: 5px;
+            .btn-primary {
+                padding: 10px 24px;
+                font-size: 0.95rem;
             }
         }
     </style>
     <div class="game-container">
-        <h1>🎮 猜数字游戏 🎯</h1>
-        
+        <h1 class="game-title">猜数字游戏</h1>
+
         <div class="difficulty-selector">
             <button class="diff-btn active" data-min="1" data-max="50">简单 (1-50)</button>
             <button class="diff-btn" data-min="1" data-max="100">普通 (1-100)</button>
             <button class="diff-btn" data-min="1" data-max="500">困难 (1-500)</button>
         </div>
 
-        <div class="stats">
-            <div class="stat-item">🔢 猜测次数: <span id="guess-count">0</span></div>
-            <div class="stat-item">🎯 当前范围: <span id="current-range">1-100</span></div>
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">猜测次数</span>
+                <span class="stat-value" id="guess-count">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">当前范围</span>
+                <span class="stat-value" id="current-range">1-100</span>
+            </div>
         </div>
 
         <div class="range-display" id="range-hint">
             请猜一个1到100之间的数字
         </div>
-        
+
         <input type="number" id="input-area" placeholder="请输入你猜的数字" min="1" max="100">
-        
+
         <div class="feedback" id="feedback"></div>
-        
+
         <div>
-            <button class="control-btn" id="guess-btn">猜一下</button>
-            <button class="control-btn" id="reset-btn">重新开始</button>
+            <button class="btn-primary" id="guess-btn">猜一下</button>
+            <button class="btn-primary" id="reset-btn">重新开始</button>
         </div>
-        
+
         <div id="game-win-message" class="game-win"></div>
+
+        <div class="game-over hidden" id="game-over-screen">
+            <div class="game-over-card">
+                <h2>🎉 恭喜你猜对了！</h2>
+                <p>猜测次数：<strong id="final-guess-count">0</strong> 次</p>
+                <p>最终得分：<strong id="final-score">0</strong></p>
+                <p>正确率：<strong id="final-accuracy">0%</strong></p>
+                <button class="btn-primary" id="overlay-restart-btn" style="margin-top:1rem;">再来一局</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -308,7 +362,7 @@
             targetNum = Math.floor(Math.random() * (maxNum - minNum + 1)) + minNum;
             guessCount = 0;
             gameWon = false;
-            
+
             // 更新UI
             guessCountEl.textContent = guessCount;
             currentRangeEl.textContent = `${minNum}-${maxNum}`;
@@ -319,6 +373,7 @@
             feedbackEl.textContent = '';
             feedbackEl.className = 'feedback';
             gameWinMessage.textContent = '';
+            document.getElementById('game-over-screen').classList.add('hidden');
             inputArea.disabled = false;
             guessBtn.disabled = false;
             inputArea.focus();
@@ -334,15 +389,15 @@
 
             // 移除所有active类
             diffBtns.forEach(btn => btn.classList.remove('active'));
-            
+
             // 添加当前active类
             const btn = e.target;
             btn.classList.add('active');
-            
+
             // 更新范围
             minNum = parseInt(btn.dataset.min);
             maxNum = parseInt(btn.dataset.max);
-            
+
             // 重新初始化游戏
             initGame();
         }
@@ -350,9 +405,9 @@
         // 处理猜测
         function handleGuess() {
             if (gameWon) return;
-            
+
             const guess = parseInt(inputArea.value.trim());
-            
+
             // 验证输入
             if (isNaN(guess) || guess < minNum || guess > maxNum) {
                 feedbackEl.textContent = `请输入${minNum}到${maxNum}之间的有效数字！`;
@@ -380,9 +435,18 @@
                 feedbackEl.textContent = '恭喜你！猜对了 🎉';
                 feedbackEl.className = 'feedback correct';
                 gameWon = true;
-                gameWinMessage.textContent = `太棒了！你用了${guessCount}次就猜对了！`;
                 inputArea.disabled = true;
                 guessBtn.disabled = true;
+
+                // 显示游戏结束弹窗
+                const activeDiffBtn = document.querySelector('.diff-btn.active');
+                const rangeSize = parseInt(activeDiffBtn.dataset.max) - parseInt(activeDiffBtn.dataset.min) + 1;
+                const optimalGuesses = Math.ceil(Math.log2(rangeSize));
+                const finalScore = Math.max(10, Math.round(100 * optimalGuesses / guessCount));
+                document.getElementById('final-guess-count').textContent = guessCount;
+                document.getElementById('final-score').textContent = finalScore;
+                document.getElementById('final-accuracy').textContent = '100%';
+                document.getElementById('game-over-screen').classList.remove('hidden');
                 return;
             }
 
@@ -397,12 +461,18 @@
         diffBtns.forEach(btn => btn.addEventListener('click', changeDifficulty));
         guessBtn.addEventListener('click', handleGuess);
         resetBtn.addEventListener('click', initGame);
-        
+
         // 回车键提交
         inputArea.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 handleGuess();
             }
+        });
+
+        // 弹窗重新开始按钮
+        document.getElementById('overlay-restart-btn').addEventListener('click', function() {
+            document.getElementById('game-over-screen').classList.add('hidden');
+            initGame();
         });
 
         // 初始化游戏

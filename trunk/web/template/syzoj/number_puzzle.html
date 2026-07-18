@@ -1,52 +1,34 @@
 <?php $show_title="数字华容道 - $OJ_NAME"; ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/game_confetti.js"></script>
+
 <style>
-:root {
-    --primary-color: #6366f1;
-    --secondary-color: #8b5cf6;
-    --bg-color: #f8fafc;
-    --tile-bg: #ffffff;
-    --tile-text: #1e293b;
-    --empty-bg: #e2e8f0;
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --border-radius: 12px;
-}
-
-body {
-    background-color: var(--bg-color);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
-
 .puzzle-container {
-    max-width: 500px;
+    max-width: 480px;
     margin: 2rem auto;
-    padding: 0 1rem;
-}
-
-.puzzle-header {
+    background: #fff;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
     text-align: center;
-    margin-bottom: 2rem;
 }
 
 .puzzle-header h1 {
-    color: var(--primary-color);
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
+    color: #3498DB;
+    font-size: 2rem;
     font-weight: 700;
+    margin-bottom: 0.5rem;
 }
 
 .puzzle-intro {
-    background: #eff6ff;
-    border-left: 4px solid #3b82f6;
+    background: #EBF5FB;
+    border-left: 4px solid #3498DB;
     padding: 1rem;
-    border-radius: 8px;
+    border-radius: 12px;
     margin: 1rem 0;
     text-align: left;
-}
-
-.puzzle-intro p {
-    margin: 0;
     color: #374151;
     font-size: 0.95rem;
     line-height: 1.6;
@@ -54,174 +36,160 @@ body {
 
 .puzzle-stats {
     display: flex;
-    justify-content: space-between;
-    background: white;
-    padding: 1rem 1.5rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
+    justify-content: center;
+    gap: 12px;
     margin-bottom: 1.5rem;
+    flex-wrap: wrap;
 }
 
 .stat-item {
+    background: #EBF5FB;
+    border-radius: 12px;
+    padding: 12px 24px;
+    min-width: 90px;
     text-align: center;
 }
 
 .stat-label {
-    font-size: 0.875rem;
-    color: #64748b;
-    margin-bottom: 0.25rem;
+    font-size: 0.8rem;
+    color: #888;
     display: block;
+    margin-bottom: 4px;
 }
 
 .stat-value {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--primary-color);
+    color: #3498DB;
 }
 
 .puzzle-controls {
     display: flex;
     gap: 1rem;
     margin-bottom: 1.5rem;
-    flex-wrap: wrap;
     justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
-.difficulty-select {
-    padding: 0.75rem 1rem;
-    border: 2px solid #e2e8f0;
-    border-radius: var(--border-radius);
-    font-size: 1rem;
-    background: white;
+.diff-btns {
+    display: flex;
+    background: #f0f2f5;
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+}
+
+.diff-btn {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    background: transparent;
     cursor: pointer;
-    transition: border-color 0.2s;
+    font-weight: 600;
+    color: #888;
+    transition: all 0.2s;
 }
 
-.difficulty-select:focus {
-    outline: none;
-    border-color: var(--primary-color);
+.diff-btn:hover { color: #555; }
+
+.diff-btn.active {
+    background: #fff;
+    color: #3498DB;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .btn {
-    padding: 0.75rem 1.5rem;
     border: none;
-    border-radius: var(--border-radius);
+    border-radius: 12px;
+    padding: 12px 32px;
+    color: #fff;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: var(--shadow);
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: white;
+    background: linear-gradient(135deg, #3498DB, #2980B9);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
 }
 
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px -2px rgba(99, 102, 241, 0.3);
-}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52,152,219,0.27); }
+.btn-primary:active { transform: translateY(0); }
 
-.btn-primary:active {
-    transform: translateY(0);
-}
-
+/* 核心：CSS Grid 自然布局 */
 .puzzle-grid {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    background: white;
-    border-radius: var(--border-radius);
-    padding: 1rem;
-    box-shadow: var(--shadow);
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(4, 1fr);
-    gap: 0.75rem;
-    position: relative;
+    gap: 8px;
+    background: #f0f2f5;
+    border-radius: 12px;
+    padding: 8px;
     touch-action: manipulation;
+    user-select: none;
 }
 
 .tile {
-    background: linear-gradient(135deg, var(--tile-bg), #f1f5f9);
-    border-radius: var(--border-radius);
+    aspect-ratio: 1;
+    background: linear-gradient(135deg, #fff, #f1f5f9);
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    font-size: clamp(1.4rem, 5vw, 2.2rem);
     font-weight: 700;
-    color: var(--tile-text);
-    box-shadow: var(--shadow);
+    color: #1e293b;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     cursor: pointer;
-    transition: transform 0.2s ease;
-    user-select: none;
-    position: absolute;
-    width: calc(25% - 0.75rem);
-    height: calc(25% - 0.75rem);
-    will-change: transform;
+    transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
-.tile:hover {
-    transform: scale(1.05);
-}
+.tile:hover { transform: scale(1.05); }
 
 .tile.empty {
-    background: var(--empty-bg);
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: #e2e8f0;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
     cursor: default;
 }
 
-.tile.sliding {
-    transition: transform 0.15s ease-out;
-}
+.tile.empty:hover { transform: none; }
 
 .puzzle-footer {
     margin-top: 2rem;
-    text-align: center;
-    color: #64748b;
+    color: #999;
     font-size: 0.875rem;
 }
 
 .victory-modal {
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
     display: flex;
-    align-items: center;
     justify-content: center;
-    z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
+    align-items: center;
+    z-index: 100000;
 }
 
-.victory-modal.show {
-    opacity: 1;
-    visibility: visible;
+.victory-modal.hidden {
+    display: none !important;
 }
 
 .victory-content {
     background: white;
-    padding: 2rem 3rem;
-    border-radius: var(--border-radius);
+    padding: 2.5rem 3rem;
+    border-radius: 20px;
     text-align: center;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    transform: scale(0.9);
-    transition: transform 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    max-width: 400px;
+    width: 90%;
 }
-
-.victory-modal.show .victory-content {
-    transform: scale(1);
-}
-
-.victory-content h2 {
-    color: var(--primary-color);
-    font-size: 2rem;
-    margin-bottom: 1rem;
-}
+.victory-content h2 { color: #3498DB; font-size: 1.8rem; margin-bottom: 1rem; }
 
 .victory-stats {
     margin: 1.5rem 0;
@@ -230,32 +198,21 @@ body {
     justify-content: center;
 }
 
-@media (max-width: 640px) {
-    .puzzle-container {
-        margin: 1rem auto;
-    }
-    
-    .puzzle-header h1 {
-        font-size: 2rem;
-    }
-    
-    .puzzle-grid {
-        padding: 0.75rem;
-        gap: 0.5rem;
-    }
-    
-    .tile {
-        font-size: clamp(1.25rem, 6vw, 2rem);
-    }
+@media (max-width: 768px) {
+    .puzzle-container { margin: 1rem; padding: 1.5rem; }
+    .puzzle-header h1 { font-size: 1.6rem; }
+    .stat-item { padding: 10px 16px; min-width: 70px; }
+    .stat-value { font-size: 1.2rem; }
+    .puzzle-grid { gap: 6px; padding: 6px; }
 }
 </style>
 
 <div class="puzzle-container">
     <div class="puzzle-header">
         <h1>数字华容道</h1>
-        <p class="text-gray-600">将数字按1-15顺序排列，锻炼逻辑思维能力</p>
-        <div class="puzzle-intro bg-blue-50 border-l-4 border-blue-500 p-4 rounded my-4">
-            <p class="text-gray-700">🎮 <strong>玩法说明：</strong>滑动方块，将数字按1-15的顺序排列，空格在右下角即为胜利。支持鼠标点击、触屏滑动和键盘方向键操作。</p>
+        <p style="color:#666;margin-bottom:0.5rem;">将数字按1-15顺序排列，锻炼逻辑思维能力</p>
+        <div class="puzzle-intro">
+            <p>🎮 <strong>玩法说明：</strong>滑动方块，将数字按1-15的顺序排列，空格在右下角即为胜利。支持鼠标点击、触屏滑动和键盘方向键操作。</p>
         </div>
     </div>
 
@@ -275,24 +232,23 @@ body {
     </div>
 
     <div class="puzzle-controls">
-        <select id="difficulty" class="difficulty-select">
-            <option value="easy">简单</option>
-            <option value="medium" selected>中等</option>
-            <option value="hard">困难</option>
-        </select>
+        <div class="diff-btns" id="diffBtns">
+            <button class="diff-btn" data-diff="easy">简单</button>
+            <button class="diff-btn active" data-diff="medium">中等</button>
+            <button class="diff-btn" data-diff="hard">困难</button>
+        </div>
         <button id="restart" class="btn btn-primary">重新开始</button>
     </div>
 
-    <div class="puzzle-grid" id="grid">
-        <!-- 数字块将通过JS动态生成 -->
-    </div>
+    <div class="puzzle-grid" id="grid"></div>
 
     <div class="puzzle-footer">
+        <p id="diffHint" style="margin-bottom:0.5rem;color:#666;">💡 简单模式：1-8已排好，只需完成最后两行（至少3步）</p>
         <p>适合小学3-6年级学生，点击与空格相邻的数字块进行滑动</p>
     </div>
 </div>
 
-<div class="victory-modal" id="victoryModal">
+<div class="victory-modal hidden" id="victoryModal">
     <div class="victory-content">
         <h2>🎉 恭喜你赢了！</h2>
         <div class="victory-stats">
@@ -316,7 +272,7 @@ class NumberPuzzle {
         this.movesEl = document.getElementById('moves');
         this.timeEl = document.getElementById('time');
         this.bestEl = document.getElementById('best');
-        this.difficultySelect = document.getElementById('difficulty');
+        this.diffBtns = document.getElementById('diffBtns');
         this.restartBtn = document.getElementById('restart');
         this.victoryModal = document.getElementById('victoryModal');
         this.playAgainBtn = document.getElementById('playAgain');
@@ -324,195 +280,261 @@ class NumberPuzzle {
         this.victoryTimeEl = document.getElementById('victoryTime');
 
         this.size = 4;
-        this.tiles = [];
-        this.emptyPos = { x: 3, y: 3 };
+        this.total = this.size * this.size;
+        this.board = [];   // 一维数组，0=空格，1-15=数字
+        this.emptyIdx = 0; // 空格在一维数组中的索引
         this.moves = 0;
         this.time = 0;
         this.timer = null;
-        this.isAnimating = false;
         this.isWon = false;
-        this.isDragging = false; // 全局拖拽状态
+        this.isAnimating = false;
 
         this.bestTime = localStorage.getItem('puzzleBestTime');
-        if (this.bestTime) {
-            this.bestEl.textContent = this.formatTime(parseInt(this.bestTime));
-        }
+        if (this.bestTime) this.bestEl.textContent = this.fmtTime(+this.bestTime);
 
-        this.init();
         this.bindEvents();
+        this.init();
     }
 
+    /* ---------- 初始化 ---------- */
+
     init() {
-        this.grid.innerHTML = '';
-        this.tiles = [];
+        this.updateDiffHint();
+        this.board = [];
         this.moves = 0;
         this.time = 0;
         this.isWon = false;
+        this.isAnimating = false;
+        if (this.timer) { clearInterval(this.timer); this.timer = null; }
         this.updateMoves();
         this.updateTime();
-        
-        if (this.timer) {
-            clearInterval(this.timer);
-            this.timer = null;
-        }
 
-        // 初始化完成状态
-        let num = 1;
-        for (let y = 0; y < this.size; y++) {
-            for (let x = 0; x < this.size; x++) {
-                if (x === 3 && y === 3) {
-                    // 空格
-                    const tile = document.createElement('div');
-                    tile.className = 'tile empty';
-                    tile.dataset.x = x;
-                    tile.dataset.y = y;
-                    this.grid.appendChild(tile);
-                    this.tiles.push(null);
-                } else {
-                    const tile = document.createElement('div');
-                    tile.className = 'tile';
-                    tile.textContent = num;
-                    tile.dataset.x = x;
-                    tile.dataset.y = y;
-                    tile.dataset.value = num;
-                    this.grid.appendChild(tile);
-                    this.tiles.push(num);
-                    num++;
-                }
-            }
-        }
+        // 生成已完成状态 [1,2,...,15,0]
+        for (let i = 1; i < this.total; i++) this.board.push(i);
+        this.board.push(0);
+        this.emptyIdx = this.total - 1;
 
-        this.emptyPos = { x: 3, y: 3 };
         this.shuffle();
+        this.render();
         this.startTimer();
     }
 
     shuffle() {
-        const difficulty = this.difficultySelect.value;
-        let moves = 0;
-        
-        switch (difficulty) {
-            case 'easy': moves = 20; break;
-            case 'medium': moves = 100; break;
-            case 'hard': moves = 300; break;
-        }
+        const diff = this.getDifficulty();
 
-        // 从完成状态随机移动，保证可解
-        for (let i = 0; i < moves; i++) {
-            const possibleMoves = this.getPossibleMoves();
-            const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
-            this.moveTile(randomMove.x, randomMove.y, false);
-        }
-
-        this.moves = 0;
-        this.updateMoves();
-    }
-
-    getPossibleMoves() {
-        const { x, y } = this.emptyPos;
-        const moves = [];
-
-        if (x > 0) moves.push({ x: x - 1, y }); // 左
-        if (x < 3) moves.push({ x: x + 1, y }); // 右
-        if (y > 0) moves.push({ x, y: y - 1 }); // 上
-        if (y < 3) moves.push({ x, y: y + 1 }); // 下
-
-        return moves;
-    }
-
-    moveTile(x, y, animate = true) {
-        const tileIndex = y * this.size + x;
-        const emptyIndex = this.emptyPos.y * this.size + this.emptyPos.x;
-
-        // 交换位置
-        [this.tiles[tileIndex], this.tiles[emptyIndex]] = [this.tiles[emptyIndex], this.tiles[tileIndex]];
-
-        // 更新DOM位置
-        const tile = this.getTileAt(x, y);
-        const emptyTile = this.getTileAt(this.emptyPos.x, this.emptyPos.y);
-
-        if (animate) {
-            tile.classList.add('sliding');
-        }
-
-        const pos = this.getTilePosition(this.emptyPos.x, this.emptyPos.y);
-        tile.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
-
-        if (animate) {
-            setTimeout(() => {
-                tile.classList.remove('sliding');
-            }, 150);
+        if (diff === 'easy') {
+            // 简单：1-8已排好，只打乱最后两行（位置8-15），BFS保证最优解>=3步
+            // 注：4格最后一行最多只有3步且3步题唯一，故扩大到最后两行以获得多样且>=3步的题目
+            const MIN_STEPS = 3;
+            let attempts = 0;
+            let ok = false;
+            do {
+                // 重置最后两行为完成态 [9..15, 0]
+                for (let i = 8; i < this.total - 1; i++) this.board[i] = i + 1;
+                this.board[15] = 0;
+                this.emptyIdx = 15;
+                // 空格限制在最后两行内随机移动，保证1-8不动
+                let last = -1;
+                for (let i = 0; i < 60; i++) {
+                    let neighbors = this.getNeighbors(this.emptyIdx).filter(n => n >= 8);
+                    let choices = neighbors.filter(n => n !== last);
+                    if (choices.length === 0) choices = neighbors;
+                    if (choices.length === 0) break; // 安全兜底
+                    const pick = choices[Math.floor(Math.random() * choices.length)];
+                    last = this.emptyIdx;
+                    this.swap(this.emptyIdx, pick);
+                    this.emptyIdx = pick;
+                }
+                // BFS 求当前状态到完成态的最短步数，不达标则重洗
+                if (this.easyMinSteps() >= MIN_STEPS) { ok = true; break; }
+                attempts++;
+            } while (attempts < 100);
+            // 兜底：若100次仍不达标（极小概率），强制扰动确保非平凡
+            if (!ok) { this.swap(8, 12); this.swap(9, 13); }
         } else {
-            tile.style.transition = 'none';
-            setTimeout(() => {
-                tile.style.transition = '';
-            }, 0);
-        }
-
-        // 更新dataset
-        tile.dataset.x = this.emptyPos.x;
-        tile.dataset.y = this.emptyPos.y;
-        emptyTile.dataset.x = x;
-        emptyTile.dataset.y = y;
-
-        // 更新空格位置
-        this.emptyPos = { x, y };
-
-        if (animate) {
-            this.moves++;
-            this.updateMoves();
-            this.checkWin();
-        }
-    }
-
-    getTileAt(x, y) {
-        return this.grid.querySelector(`.tile:not(.empty)[data-x="${x}"][data-y="${y}"]`);
-    }
-
-    getTilePosition(x, y) {
-        const gridRect = this.grid.getBoundingClientRect();
-        const tileSize = gridRect.width / this.size - parseFloat(getComputedStyle(this.grid).gap) * 3 / 4;
-        const gap = parseFloat(getComputedStyle(this.grid).gap) || 12;
-        const padding = parseFloat(getComputedStyle(this.grid).padding) || 16;
-        
-        return {
-            x: x * (tileSize + gap) + padding,
-            y: y * (tileSize + gap) + padding
-        };
-    }
-
-    isAdjacent(x, y) {
-        const { x: ex, y: ey } = this.emptyPos;
-        return (Math.abs(x - ex) === 1 && y === ey) || (Math.abs(y - ey) === 1 && x === ex);
-    }
-
-    checkWin() {
-        if (this.isWon) return;
-
-        for (let i = 0; i < this.tiles.length - 1; i++) {
-            if (this.tiles[i] !== i + 1) {
-                return;
+            // 中等/困难：全面打乱（从完成状态随机移动，保证可解）
+            const steps = diff === 'medium' ? 150 : 400;
+            for (let i = 0; i < steps; i++) {
+                const neighbors = this.getNeighbors(this.emptyIdx);
+                const pick = neighbors[Math.floor(Math.random() * neighbors.length)];
+                this.swap(this.emptyIdx, pick);
+                this.emptyIdx = pick;
             }
         }
 
-        // 胜利
+        // 统一校正：emptyIdx 必须指向 board 中 0 的真实位置
+        this.emptyIdx = this.board.indexOf(0);
+    }
+
+    /* ---------- 简单模式难度评估（2x4 子棋盘 BFS） ---------- */
+
+    // 将最后两行 board[8..15] 视为 2行4列子棋盘，求当前状态到完成态的最短步数。
+    // 滑块每步可逆，故从完成态 BFS 一次即可得到所有可达状态的最短距离（懒加载缓存）。
+    easyMinSteps() {
+        const W = 4, H = 2;
+        const TARGET = [9, 10, 11, 12, 13, 14, 15, 0];
+        const key = arr => arr.join(',');
+        if (!this._easyDist) {
+            const dist = new Map();
+            const queue = [TARGET.slice()];
+            dist.set(key(TARGET), 0);
+            let head = 0;
+            const neigh = idx => {
+                const r = Math.floor(idx / W), c = idx % W;
+                const res = [];
+                if (r > 0) res.push(idx - W);
+                if (r < H - 1) res.push(idx + W);
+                if (c > 0) res.push(idx - 1);
+                if (c < W - 1) res.push(idx + 1);
+                return res;
+            };
+            while (head < queue.length) {
+                const cur = queue[head++];
+                const d = dist.get(key(cur));
+                const ei = cur.indexOf(0);
+                for (const ni of neigh(ei)) {
+                    const nxt = cur.slice();
+                    [nxt[ei], nxt[ni]] = [nxt[ni], nxt[ei]];
+                    const k = key(nxt);
+                    if (!dist.has(k)) { dist.set(k, d + 1); queue.push(nxt); }
+                }
+            }
+            this._easyDist = dist;
+        }
+        const state8 = this.board.slice(8, 16);
+        return this._easyDist.get(key(state8));
+    }
+
+    /* ---------- 核心逻辑 ---------- */
+
+    // 获取某索引的相邻索引（上下左右）
+    getNeighbors(idx) {
+        const r = Math.floor(idx / this.size);
+        const c = idx % this.size;
+        const result = [];
+        if (r > 0) result.push(idx - this.size); // 上
+        if (r < this.size - 1) result.push(idx + this.size); // 下
+        if (c > 0) result.push(idx - 1); // 左
+        if (c < this.size - 1) result.push(idx + 1); // 右
+        return result;
+    }
+
+    // 判断两个索引是否相邻
+    isAdjacent(a, b) {
+        const ar = Math.floor(a / this.size), ac = a % this.size;
+        const br = Math.floor(b / this.size), bc = b % this.size;
+        return (Math.abs(ar - br) + Math.abs(ac - bc)) === 1;
+    }
+
+    // 交换数组中两个位置的值
+    swap(i, j) {
+        [this.board[i], this.board[j]] = [this.board[j], this.board[i]];
+    }
+
+    // 尝试移动指定索引处的瓷砖
+    tryMove(idx) {
+        if (this.isWon || this.isAnimating) return;
+        if (this.board[idx] === 0) return; // 点的是空格
+        if (!this.isAdjacent(idx, this.emptyIdx)) return; // 不相邻
+
+        this.isAnimating = true;
+
+        // 交换数组
+        this.swap(idx, this.emptyIdx);
+        this.emptyIdx = idx;
+
+        // 重绘整个棋盘（最可靠，无不同步问题）
+        this.render();
+
+        // 更新步数
+        this.moves++;
+        this.updateMoves();
+        this.checkWin();
+        this.isAnimating = false;
+    }
+
+    // 交换两个 DOM 元素的位置（在父容器中）
+    swapDOM(a, b) {
+        const parent = a.parentNode;
+        const aNext = a.nextSibling;
+        const bNext = b.nextSibling;
+        if (aNext === b) {
+            parent.insertBefore(b, a);
+        } else if (bNext === a) {
+            parent.insertBefore(a, b);
+        } else {
+            parent.insertBefore(a, bNext);
+            parent.insertBefore(b, aNext);
+        }
+        // 同步更新 dataset.idx，保持与网格位置一致
+        const tmpIdx = a.dataset.idx;
+        a.dataset.idx = b.dataset.idx;
+        b.dataset.idx = tmpIdx;
+    }
+
+    // 简单的交换动画
+    animateSwap(tileA, tileB, callback) {
+        const rectA = tileA.getBoundingClientRect();
+        const rectB = tileB.getBoundingClientRect();
+        const dx = rectB.left - rectA.left;
+        const dy = rectB.top - rectA.top;
+
+        tileA.style.transition = 'transform 0.15s ease';
+        tileB.style.transition = 'transform 0.15s ease';
+        tileA.style.transform = `translate(${dx}px, ${dy}px)`;
+        tileB.style.transform = `translate(${-dx}px, ${-dy}px)`;
+        tileA.style.zIndex = '10';
+        tileB.style.zIndex = '10';
+
+        setTimeout(() => {
+            tileA.style.transition = '';
+            tileB.style.transition = '';
+            tileA.style.transform = '';
+            tileB.style.transform = '';
+            tileA.style.zIndex = '';
+            tileB.style.zIndex = '';
+            callback();
+        }, 155);
+    }
+
+    /* ---------- 渲染 ---------- */
+
+    render() {
+        this.grid.innerHTML = '';
+        for (let i = 0; i < this.total; i++) {
+            const val = this.board[i];
+            const tile = document.createElement('div');
+            tile.className = val === 0 ? 'tile empty' : 'tile';
+            tile.textContent = val === 0 ? '' : val;
+            tile.dataset.idx = i;
+            this.grid.appendChild(tile);
+        }
+    }
+
+    /* ---------- 胜利检测 ---------- */
+
+    checkWin() {
+        for (let i = 0; i < this.total - 1; i++) {
+            if (this.board[i] !== i + 1) return;
+        }
         this.isWon = true;
         clearInterval(this.timer);
 
-        // 保存最佳记录
-        if (!this.bestTime || this.time < parseInt(this.bestTime)) {
+        if (!this.bestTime || this.time < +this.bestTime) {
             this.bestTime = this.time;
-            localStorage.setItem('puzzleBestTime', this.time.toString());
-            this.bestEl.textContent = this.formatTime(this.time);
+            localStorage.setItem('puzzleBestTime', String(this.time));
+            this.bestEl.textContent = this.fmtTime(this.time);
         }
 
-        // 显示胜利弹窗
         setTimeout(() => {
             this.victoryMovesEl.textContent = this.moves;
-            this.victoryTimeEl.textContent = this.formatTime(this.time);
-            this.victoryModal.classList.add('show');
+            this.victoryTimeEl.textContent = this.fmtTime(this.time);
+            this.victoryModal.classList.remove('hidden');
+            launchConfetti();
         }, 300);
     }
+
+    /* ---------- 计时 ---------- */
 
     startTimer() {
         this.timer = setInterval(() => {
@@ -521,329 +543,148 @@ class NumberPuzzle {
         }, 1000);
     }
 
-    updateMoves() {
-        this.movesEl.textContent = this.moves;
+    updateMoves() { this.movesEl.textContent = this.moves; }
+    updateTime() { this.timeEl.textContent = this.fmtTime(this.time); }
+
+    getDifficulty() {
+        const active = this.diffBtns.querySelector('.diff-btn.active');
+        return active ? active.dataset.diff : 'medium';
     }
 
-    updateTime() {
-        this.timeEl.textContent = this.formatTime(this.time);
+    updateDiffHint() {
+        const hints = {
+            easy: '💡 简单模式：1-8已排好，只需完成最后两行（至少3步）',
+            medium: '💡 中等模式：全面打乱，适合有基础的同学',
+            hard: '💡 困难模式：深度打乱，挑战你的极限！'
+        };
+        document.getElementById('diffHint').textContent = hints[this.getDifficulty()] || '';
     }
 
-    formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    fmtTime(s) {
+        return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
     }
+
+    /* ---------- 事件绑定 ---------- */
 
     bindEvents() {
+        // 点击
+        this.grid.addEventListener('click', (e) => {
+            const tile = e.target.closest('.tile');
+            if (!tile) return;
+            this.tryMove(+tile.dataset.idx);
+        });
 
+        // 键盘
+        document.addEventListener('keydown', (e) => {
+            if (this.isWon || this.isAnimating) return;
+            let target = -1;
+            const r = Math.floor(this.emptyIdx / this.size);
+            const c = this.emptyIdx % this.size;
+            switch (e.key) {
+                case 'ArrowLeft':  if (c < this.size - 1) target = this.emptyIdx + 1; break;
+                case 'ArrowRight': if (c > 0) target = this.emptyIdx - 1; break;
+                case 'ArrowUp':    if (r < this.size - 1) target = this.emptyIdx + this.size; break;
+                case 'ArrowDown':  if (r > 0) target = this.emptyIdx - this.size; break;
+            }
+            if (target >= 0) { e.preventDefault(); this.tryMove(target); }
+        });
 
-        // 支持触摸滑动和拖拽
-        let touchStartX, touchStartY, draggedTile = null, initialX, initialY, tileStartX, tileStartY;
-        
+        // 触摸滑动
+        let touchStartX, touchStartY, touchIdx = -1;
         this.grid.addEventListener('touchstart', (e) => {
-            if (this.isAnimating || this.isWon) return;
-            
-            const touch = e.touches[0];
             const tile = e.target.closest('.tile:not(.empty)');
             if (!tile) return;
-            
-            const x = parseInt(tile.dataset.x);
-            const y = parseInt(tile.dataset.y);
-            
-            if (!this.isAdjacent(x, y)) return;
-            
-            draggedTile = tile;
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
-            
-            const transform = window.getComputedStyle(tile).transform;
-            const matrix = new DOMMatrix(transform);
-            tileStartX = matrix.e;
-            tileStartY = matrix.f;
-            
-            initialX = tileStartX;
-            initialY = tileStartY;
-            
-            tile.style.transition = 'none';
-            tile.style.zIndex = '10';
-        }, { passive: true });
-
-        this.grid.addEventListener('touchmove', (e) => {
-            if (!draggedTile || this.isAnimating || this.isWon) return;
-            
-            const touch = e.touches[0];
-            const deltaX = touch.clientX - touchStartX;
-            const deltaY = touch.clientY - touchStartY;
-            
-            const x = parseInt(draggedTile.dataset.x);
-            const y = parseInt(draggedTile.dataset.y);
-            
-            // 限制拖动方向只能向空格方向
-            let finalX = tileStartX + deltaX;
-            let finalY = tileStartY + deltaY;
-            
-            if (x > this.emptyPos.x) { // 空格在左边，只能向左拖
-                finalX = Math.min(initialX, Math.max(initialX - (tileStartX - this.getTilePosition(this.emptyPos.x, this.emptyPos.y).x), finalX));
-                finalY = initialY;
-            } else if (x < this.emptyPos.x) { // 空格在右边，只能向右拖
-                finalX = Math.max(initialX, Math.min(initialX + (this.getTilePosition(this.emptyPos.x, this.emptyPos.y).x - tileStartX), finalX));
-                finalY = initialY;
-            } else if (y > this.emptyPos.y) { // 空格在上边，只能向上拖
-                finalY = Math.min(initialY, Math.max(initialY - (tileStartY - this.getTilePosition(this.emptyPos.x, this.emptyPos.y).y), finalY));
-                finalX = initialX;
-            } else if (y < this.emptyPos.y) { // 空格在下边，只能向下拖
-                finalY = Math.max(initialY, Math.min(initialY + (this.getTilePosition(this.emptyPos.x, this.emptyPos.y).y - tileStartY), finalY));
-                finalX = initialX;
-            }
-            
-            draggedTile.style.transform = `translate(${finalX}px, ${finalY}px)`;
+            touchIdx = +tile.dataset.idx;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
         }, { passive: true });
 
         this.grid.addEventListener('touchend', (e) => {
-            if (!draggedTile || this.isAnimating || this.isWon) {
-                draggedTile = null;
-                return;
-            }
-
-            const touch = e.changedTouches[0];
-            const deltaX = touch.clientX - touchStartX;
-            const deltaY = touch.clientY - touchStartY;
-
+            if (touchIdx < 0) return;
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            const dy = e.changedTouches[0].clientY - touchStartY;
             const threshold = 30;
-            const x = parseInt(draggedTile.dataset.x);
-            const y = parseInt(draggedTile.dataset.y);
-            
-            // 检查是否拖动到足够距离
-            let shouldMove = false;
-            
-            if (x > this.emptyPos.x && deltaX < -threshold) { // 向左拖到空格
-                shouldMove = true;
-            } else if (x < this.emptyPos.x && deltaX > threshold) { // 向右拖到空格
-                shouldMove = true;
-            } else if (y > this.emptyPos.y && deltaY < -threshold) { // 向上拖到空格
-                shouldMove = true;
-            } else if (y < this.emptyPos.y && deltaY > threshold) { // 向下拖到空格
-                shouldMove = true;
-            }
-            
-            draggedTile.style.transition = '';
-            draggedTile.style.zIndex = '';
-            
-            if (shouldMove) {
-                this.isAnimating = true;
-                this.moveTile(x, y);
-                setTimeout(() => {
-                    this.isAnimating = false;
-                }, 150);
+            if (Math.abs(dx) < threshold && Math.abs(dy) < threshold) { touchIdx = -1; return; }
+
+            // 判断滑动方向，找到该方向上离空格最近的同行/列瓷砖
+            let target = -1;
+            const tr = Math.floor(touchIdx / this.size), tc = touchIdx % this.size;
+            const er = Math.floor(this.emptyIdx / this.size), ec = this.emptyIdx % this.size;
+
+            if (Math.abs(dx) > Math.abs(dy)) {
+                // 水平滑动
+                if (dx > 0 && tr === er && tc < ec) { // 向右滑，空格在右边
+                    target = this.emptyIdx - 1;
+                } else if (dx < 0 && tr === er && tc > ec) { // 向左滑，空格在左边
+                    target = this.emptyIdx + 1;
+                }
             } else {
-                // 回弹到原位
-                draggedTile.style.transform = `translate(${initialX}px, ${initialY}px)`;
+                // 垂直滑动
+                if (dy > 0 && tc === ec && tr < er) { // 向下滑，空格在下边
+                    target = this.emptyIdx - this.size;
+                } else if (dy < 0 && tc === ec && tr > er) { // 向上滑，空格在上边
+                    target = this.emptyIdx + this.size;
+                }
             }
-            
-            draggedTile = null;
+            if (target >= 0) this.tryMove(target);
+            touchIdx = -1;
         }, { passive: true });
 
-        this.restartBtn.addEventListener('click', () => {
-            this.init();
-        });
-
-        this.playAgainBtn.addEventListener('click', () => {
-            this.victoryModal.classList.remove('show');
-            this.init();
-        });
-
-        this.difficultySelect.addEventListener('change', () => {
-            this.init();
-        });
-
-        // 键盘支持
-        document.addEventListener('keydown', (e) => {
-            if (this.isAnimating || this.isWon) return;
-
-            let moveX = this.emptyPos.x;
-            let moveY = this.emptyPos.y;
-
-            switch (e.key) {
-                case 'ArrowLeft':
-                    if (this.emptyPos.x < 3) moveX++;
-                    break;
-                case 'ArrowRight':
-                    if (this.emptyPos.x > 0) moveX--;
-                    break;
-                case 'ArrowUp':
-                    if (this.emptyPos.y < 3) moveY++;
-                    break;
-                case 'ArrowDown':
-                    if (this.emptyPos.y > 0) moveY--;
-                    break;
-                default:
-                    return;
-            }
-
-            e.preventDefault();
-            this.isAnimating = true;
-            this.moveTile(moveX, moveY);
-            setTimeout(() => {
-                this.isAnimating = false;
-            }, 150);
-        });
-
-        // 响应式调整位置
-        window.addEventListener('resize', () => {
-            if (!this.isAnimating) {
-                this.updateTilePositions();
-            }
-        });
-        
-        // 鼠标拖拽支持
-        let mouseStartX, mouseStartY, mouseDraggedTile = null, mouseTileStartX, mouseTileStartY, mouseInitialX, mouseInitialY;
-        
+        // 鼠标拖拽
+        let dragStartX, dragStartY, dragIdx = -1;
         this.grid.addEventListener('mousedown', (e) => {
-            if (this.isAnimating || this.isWon || e.button !== 0) return;
-            
+            if (e.button !== 0) return;
             const tile = e.target.closest('.tile:not(.empty)');
             if (!tile) return;
-            
-            const x = parseInt(tile.dataset.x);
-            const y = parseInt(tile.dataset.y);
-            
-            if (!this.isAdjacent(x, y)) return;
-            
-            this.isDragging = true;
-            mouseDraggedTile = tile;
-            mouseStartX = e.clientX;
-            mouseStartY = e.clientY;
-            
-            const transform = window.getComputedStyle(tile).transform;
-            const matrix = new DOMMatrix(transform);
-            mouseTileStartX = matrix.e;
-            mouseTileStartY = matrix.f;
-            
-            mouseInitialX = mouseTileStartX;
-            mouseInitialY = mouseTileStartY;
-            
-            tile.style.transition = 'none';
-            tile.style.zIndex = '10';
-            e.preventDefault();
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!this.isDragging || !mouseDraggedTile || this.isAnimating || this.isWon) return;
-            
-            const deltaX = e.clientX - mouseStartX;
-            const deltaY = e.clientY - mouseStartY;
-            
-            const x = parseInt(mouseDraggedTile.dataset.x);
-            const y = parseInt(mouseDraggedTile.dataset.y);
-            
-            // 限制拖动方向只能向空格方向
-            let finalX = mouseTileStartX + deltaX;
-            let finalY = mouseTileStartY + deltaY;
-            
-            if (x > this.emptyPos.x) { // 空格在左边，只能向左拖
-                finalX = Math.min(mouseInitialX, Math.max(mouseInitialX - (mouseTileStartX - this.getTilePosition(this.emptyPos.x, this.emptyPos.y).x), finalX));
-                finalY = mouseInitialY;
-            } else if (x < this.emptyPos.x) { // 空格在右边，只能向右拖
-                finalX = Math.max(mouseInitialX, Math.min(mouseInitialX + (this.getTilePosition(this.emptyPos.x, this.emptyPos.y).x - mouseTileStartX), finalX));
-                finalY = mouseInitialY;
-            } else if (y > this.emptyPos.y) { // 空格在上边，只能向上拖
-                finalY = Math.min(mouseInitialY, Math.max(mouseInitialY - (mouseTileStartY - this.getTilePosition(this.emptyPos.x, this.emptyPos.y).y), finalY));
-                finalX = mouseInitialX;
-            } else if (y < this.emptyPos.y) { // 空格在下边，只能向下拖
-                finalY = Math.max(mouseInitialY, Math.min(mouseInitialY + (this.getTilePosition(this.emptyPos.x, this.emptyPos.y).y - mouseTileStartY), finalY));
-                finalX = mouseInitialX;
-            }
-            
-            mouseDraggedTile.style.transform = `translate(${finalX}px, ${finalY}px)`;
+            dragIdx = +tile.dataset.idx;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
             e.preventDefault();
         });
 
         document.addEventListener('mouseup', (e) => {
-            if (!this.isDragging || !mouseDraggedTile || this.isAnimating || this.isWon) {
-                this.isDragging = false;
-                mouseDraggedTile = null;
-                return;
-            }
-
-            const deltaX = e.clientX - mouseStartX;
-            const deltaY = e.clientY - mouseStartY;
-
+            if (dragIdx < 0) return;
+            const dx = e.clientX - dragStartX;
+            const dy = e.clientY - dragStartY;
             const threshold = 30;
-            const x = parseInt(mouseDraggedTile.dataset.x);
-            const y = parseInt(mouseDraggedTile.dataset.y);
-            
-            // 检查是否拖动到足够距离
-            let shouldMove = false;
-            
-            if (x > this.emptyPos.x && deltaX < -threshold) { // 向左拖到空格
-                shouldMove = true;
-            } else if (x < this.emptyPos.x && deltaX > threshold) { // 向右拖到空格
-                shouldMove = true;
-            } else if (y > this.emptyPos.y && deltaY < -threshold) { // 向上拖到空格
-                shouldMove = true;
-            } else if (y < this.emptyPos.y && deltaY > threshold) { // 向下拖到空格
-                shouldMove = true;
-            }
-            
-            mouseDraggedTile.style.transition = '';
-            mouseDraggedTile.style.zIndex = '';
-            
-            if (shouldMove) {
-                this.isAnimating = true;
-                this.moveTile(x, y);
-                setTimeout(() => {
-                    this.isAnimating = false;
-                }, 150);
+            if (Math.abs(dx) < threshold && Math.abs(dy) < threshold) { dragIdx = -1; return; }
+
+            let target = -1;
+            const tr = Math.floor(dragIdx / this.size), tc = dragIdx % this.size;
+            const er = Math.floor(this.emptyIdx / this.size), ec = this.emptyIdx % this.size;
+
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 0 && tr === er && tc < ec) target = this.emptyIdx - 1;
+                else if (dx < 0 && tr === er && tc > ec) target = this.emptyIdx + 1;
             } else {
-                // 回弹到原位
-                mouseDraggedTile.style.transform = `translate(${mouseInitialX}px, ${mouseInitialY}px)`;
+                if (dy > 0 && tc === ec && tr < er) target = this.emptyIdx - this.size;
+                else if (dy < 0 && tc === ec && tr > er) target = this.emptyIdx + this.size;
             }
-            
-            this.isDragging = false;
-            mouseDraggedTile = null;
+            if (target >= 0) this.tryMove(target);
+            dragIdx = -1;
         });
 
-        // 防止拖拽时选中文字
-        this.grid.addEventListener('selectstart', (e) => {
-            e.preventDefault();
+        // 按钮
+        this.restartBtn.addEventListener('click', () => this.init());
+        this.playAgainBtn.addEventListener('click', () => {
+            this.victoryModal.classList.add('hidden');
+            this.init();
         });
-        
-        // 修复点击事件与拖拽冲突
-        this.grid.addEventListener('click', (e) => {
-            if (this.isAnimating || this.isWon || this.isDragging) return;
-
-            const tile = e.target.closest('.tile:not(.empty)');
-            if (!tile) return;
-
-            const x = parseInt(tile.dataset.x);
-            const y = parseInt(tile.dataset.y);
-
-            if (this.isAdjacent(x, y)) {
-                this.isAnimating = true;
-                this.moveTile(x, y);
-                setTimeout(() => {
-                    this.isAnimating = false;
-                }, 150);
-            }
+        this.diffBtns.addEventListener('click', (e) => {
+            const btn = e.target.closest('.diff-btn');
+            if (!btn) return;
+            this.diffBtns.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            this.updateDiffHint();
+            this.init();
         });
-    }
 
-    updateTilePositions() {
-        const tiles = this.grid.querySelectorAll('.tile:not(.empty)');
-        tiles.forEach(tile => {
-            const x = parseInt(tile.dataset.x);
-            const y = parseInt(tile.dataset.y);
-            const pos = this.getTilePosition(x, y);
-            tile.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
-        });
+        // 防止文字选中
+        this.grid.addEventListener('selectstart', (e) => e.preventDefault());
     }
 }
 
-// 初始化游戏
-document.addEventListener('DOMContentLoaded', () => {
-    new NumberPuzzle();
-});
+document.addEventListener('DOMContentLoaded', () => new NumberPuzzle());
 </script>
 
 <?php require("footer.php"); ?>

@@ -235,6 +235,11 @@ $point_result = point_apply_change(
 );
 if ($point_result['success']) {
     point_tx_commit();
+    // 标记已领取，防止登录时重复发放
+    $update_result = pdo_query("UPDATE `users` SET `new_user_reward_claimed`=1 WHERE `user_id`=?", $user_id);
+    if ($update_result === -1) {
+        error_log("Register: failed to mark new_user_reward_claimed for user {$user_id}");
+    }
 } else {
     point_tx_rollback();
     // 积分发放失败不阻断注册流程，仅记录日志

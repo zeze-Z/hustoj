@@ -2,61 +2,112 @@
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 
 <style>
-:root {
-    --color-red: #e74c3c;
-    --color-yellow: #f1c40f;
-    --color-blue: #3498db;
-    --color-green: #2ecc71;
-    --color-dark: #2c3e50;
-    --color-light: #ecf0f1;
-    --color-glow: rgba(255, 255, 255, 0.8);
-}
-
-.game-page * {
+/* ===== 统一游戏基础样式 ===== */
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-.game-page {
-    background-color: var(--color-dark);
-    font-family: 'Arial', sans-serif;
-    min-height: calc(100vh - 120px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 40px 20px;
-    margin: 0 !important;
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f0f2f5;
+    min-height: 100vh;
 }
 
 .game-container {
-    max-width: 500px;
-    width: 100%;
+    max-width: 800px;
+    margin: 2rem auto;
+    background: #fff;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
     text-align: center;
+    position: relative;
 }
 
-.game-header {
-    color: var(--color-light);
-    margin-bottom: 30px;
+.game-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #9B59B6;
+    margin-bottom: 0.5rem;
 }
 
-.game-header h1 {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
+.game-subtitle {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 1.5rem;
 }
 
-.stats {
+.stats-bar {
     display: flex;
-    justify-content: space-around;
-    margin-bottom: 20px;
-    font-size: 1.2rem;
-    font-weight: bold;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
 }
 
 .stat-item {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 10px 20px;
-    border-radius: 10px;
+    background: #F3E8FF;
+    border-radius: 12px;
+    padding: 12px 24px;
+    min-width: 100px;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #888;
+    display: block;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #9B59B6;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #9B59B6, #8A45A5);
+    border: none;
+    border-radius: 12px;
+    padding: 12px 32px;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px #9B59B633;
+    margin: 0.5rem;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px #9B59B644;
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* 序列记忆特有样式 */
+.instruction {
+    color: #666;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    line-height: 1.6;
 }
 
 .game-board {
@@ -88,7 +139,7 @@
     right: 0;
     bottom: 0;
     border-radius: 30px;
-    box-shadow: 0 0 30px var(--color-glow);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
     opacity: 0;
     transition: opacity 0.2s ease;
 }
@@ -110,156 +161,99 @@
     cursor: not-allowed;
 }
 
-.red { background-color: var(--color-red); }
-.yellow { background-color: var(--color-yellow); }
-.blue { background-color: var(--color-blue); }
-.green { background-color: var(--color-green); }
+.red { background-color: #e74c3c; }
+.yellow { background-color: #f1c40f; }
+.blue { background-color: #3498db; }
+.green { background-color: #2ecc71; }
 
-.control-area {
-    margin-top: 30px;
-}
-
-.start-button {
-    background-color: var(--color-green);
-    color: white;
-    border: none;
-    padding: 15px 40px;
-    font-size: 1.5rem;
-    font-weight: bold;
-    border-radius: 50px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
-}
-
-.start-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
-}
-
-.start-button:active {
-    transform: translateY(0);
-}
-
-.start-button:disabled {
-    background-color: #95a5a6;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
+/* 游戏结束 overlay */
 .game-over {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
     position: fixed;
-    top: 60px;
+    top: 0;
     left: 0;
-    width: 100%;
-    height: calc(100% - 60px);
-    background-color: rgba(0, 0, 0, 0.8);
-    display: flex;
+    right: 0;
+    bottom: 0;
+    display: none;
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    display: none;
 }
 
 .game-over-content {
-    background-color: var(--color-light);
-    padding: 40px;
+    background: #fff;
     border-radius: 20px;
+    padding: 2.5rem;
     text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
     max-width: 400px;
     width: 90%;
 }
 
 .game-over-content h2 {
-    color: var(--color-red);
-    font-size: 2rem;
-    margin-bottom: 20px;
+    font-size: 1.8rem;
+    color: #9B59B6;
+    margin-bottom: 1rem;
 }
 
 .game-over-content p {
-    font-size: 1.2rem;
-    margin-bottom: 10px;
-    color: var(--color-dark);
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 0.5rem;
 }
 
 .game-over-content .final-score {
     font-size: 1.5rem;
     font-weight: bold;
     margin: 20px 0;
-    color: var(--color-blue);
+    color: #9B59B6;
 }
 
-.play-again-button {
-    background-color: var(--color-blue);
-    color: white;
-    border: none;
-    padding: 12px 30px;
-    font-size: 1.2rem;
-    border-radius: 30px;
-    cursor: pointer;
-    margin-top: 20px;
-    transition: all 0.3s ease;
-}
-
-.play-again-button:hover {
-    background-color: #2980b9;
-}
-
-.instruction {
-    color: var(--color-light);
-    margin-bottom: 20px;
-    font-size: 1.1rem;
-    line-height: 1.5;
-}
-
-@media (max-width: 600px) {
-    .game-header h1 {
-        font-size: 2rem;
+@media (max-width: 768px) {
+    .game-container {
+        margin: 1rem;
+        padding: 1.5rem;
+        border-radius: 16px;
     }
-    
-    .stats {
-        font-size: 1rem;
+    .game-title {
+        font-size: 1.6rem;
     }
-    
+    .stats-bar {
+        gap: 8px;
+    }
     .stat-item {
-        padding: 8px 15px;
+        padding: 10px 16px;
+        min-width: 80px;
     }
-    
+    .stat-value {
+        font-size: 1.2rem;
+    }
     .game-board {
         gap: 15px;
         max-width: 350px;
     }
-    
-    .color-button {
-        border-radius: 25px;
-    }
-    
-    .start-button {
-        padding: 12px 30px;
-        font-size: 1.2rem;
-    }
 }
 </style>
 
-<div class="game-page">
-    <div class="game-container">
-    <div class="game-header">
-        <h1>🧠 序列记忆</h1>
-        <div class="instruction">
-            记住颜色亮灯的顺序，然后按相同顺序点击按钮<br>
-            每过一关，序列长度会增加，挑战你的记忆力！
+<div class="game-container">
+    <h1 class="game-title">🧠 序列记忆</h1>
+    <p class="game-subtitle">
+        记住颜色亮灯的顺序，然后按相同顺序点击按钮<br>
+        每过一关，序列长度会增加，挑战你的记忆力！
+    </p>
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-label">关卡</span>
+            <span class="stat-value" id="level">1</span>
         </div>
-        <div class="stats">
-            <div class="stat-item">
-                关卡: <span id="level">1</span>
-            </div>
-            <div class="stat-item">
-                得分: <span id="score">0</span>
-            </div>
-            <div class="stat-item">
-                最高记录: <span id="high-score">0</span>
-            </div>
+        <div class="stat-item">
+            <span class="stat-label">得分</span>
+            <span class="stat-value" id="score">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">最高记录</span>
+            <span class="stat-value" id="high-score">0</span>
         </div>
     </div>
 
@@ -270,22 +264,20 @@
         <button class="color-button green" data-color="green" disabled></button>
     </div>
 
-    <div class="control-area">
-        <button id="start-button" class="start-button">开始游戏</button>
-    </div>
-    </div>
+    <button id="start-button" class="btn-primary">开始游戏</button>
+</div>
 
-    <div class="game-over" id="game-over-modal">
-        <div class="game-over-content">
-            <h2>游戏结束 😢</h2>
-            <p>你点击了错误的颜色</p>
-            <div class="final-score">
-                最终得分: <span id="final-score">0</span><br>
-                达到关卡: <span id="final-level">1</span>
-            </div>
-            <button class="play-again-button" id="play-again-button">再来一局</button>
+<div class="game-over" id="game-over-modal">
+    <div class="game-over-content">
+        <h2>游戏结束</h2>
+        <p>你点击了错误的颜色</p>
+        <div class="final-score">
+            最终得分: <span id="final-score">0</span><br>
+            达到关卡: <span id="final-level">1</span>
         </div>
+        <button class="btn-primary" id="play-again-button">再来一局</button>
     </div>
+</div>
 
 <script>
 const colors = ['red', 'yellow', 'blue', 'green'];

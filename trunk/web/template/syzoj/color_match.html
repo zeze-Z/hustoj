@@ -2,224 +2,243 @@
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 
 <style>
-:root {
-  --primary-pink: #FF9BB3;
-  --primary-blue: #A3D8F4;
-  --bg-gradient: linear-gradient(135deg, var(--primary-pink) 0%, var(--primary-blue) 100%);
-  --card-bg: rgba(255, 255, 255, 0.95);
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  --border-radius: 20px;
-  --button-radius: 16px;
-}
-
+/* ===== 统一游戏基础样式 ===== */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Comic Sans MS', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-  background: var(--bg-gradient);
-  min-height: 100vh;
-  padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f0f2f5;
+    min-height: 100vh;
 }
 
 .game-container {
-  max-width: 800px;
-  margin: 0 auto;
-  background: var(--card-bg);
-  border-radius: var(--border-radius);
-  padding: 40px 20px;
-  box-shadow: var(--shadow);
-  text-align: center;
+    max-width: 800px;
+    margin: 2rem auto;
+    background: #fff;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    text-align: center;
+    position: relative;
 }
 
 .game-title {
-  font-size: 2.5rem;
-  color: #FF6B9C;
-  margin-bottom: 10px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 2rem;
+    font-weight: 700;
+    color: #FF6B9C;
+    margin-bottom: 0.5rem;
 }
 
 .game-subtitle {
-  font-size: 1.2rem;
-  color: #666;
-  margin-bottom: 30px;
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 1.5rem;
 }
 
+/* 统计栏 */
 .stats-bar {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 30px;
-  flex-wrap: wrap;
-  gap: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
 }
 
 .stat-item {
-  background: linear-gradient(135deg, #B5EAD7 0%, #E2F0CB 100%);
-  padding: 15px 30px;
-  border-radius: var(--button-radius);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  min-width: 120px;
+    background: #FFF0F5;
+    border-radius: 12px;
+    padding: 12px 24px;
+    min-width: 100px;
 }
 
 .stat-label {
-  font-size: 0.9rem;
-  color: #555;
-  display: block;
-  margin-bottom: 5px;
+    font-size: 0.8rem;
+    color: #888;
+    display: block;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .stat-value {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #2E8B57;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #FF6B9C;
 }
 
+/* 色块展示区 */
 .color-display {
-  width: 280px;
-  height: 280px;
-  margin: 0 auto 40px;
-  border-radius: var(--border-radius);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease;
-  border: 8px solid white;
+    width: 280px;
+    height: 280px;
+    margin: 0 auto 2rem;
+    border-radius: 20px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease;
+    border: 6px solid #fff;
+    outline: 3px solid rgba(255, 107, 156, 0.2);
 }
 
 .color-display:hover {
-  transform: scale(1.05);
+    transform: scale(1.03);
 }
 
+/* 选项网格 */
 .options-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-.option-button {
-  padding: 25px 20px;
-  font-size: 1.3rem;
-  font-weight: bold;
-  border: none;
-  border-radius: var(--button-radius);
-  background: linear-gradient(135deg, var(--primary-blue) 0%, #C9E7FF 100%);
-  color: #2C7CAF;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 20px rgba(163, 216, 244, 0.4);
+/* 选项按钮 */
+.btn-option {
+    padding: 16px 20px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: 2px solid #e8e8e8;
+    border-radius: 12px;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-.option-button:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 25px rgba(163, 216, 244, 0.6);
-  background: linear-gradient(135deg, #88C8F0 0%, var(--primary-blue) 100%);
+.btn-option:hover {
+    border-color: #FF6B9C;
+    background: #FFF0F5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-.option-button:active {
-  transform: translateY(-2px);
+.btn-option.correct {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-color: #10b981;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-.option-button.correct {
-  background: linear-gradient(135deg, #90EE90 0%, #32CD32 100%);
-  color: white;
-  box-shadow: 0 6px 20px rgba(50, 205, 50, 0.4);
+.btn-option.incorrect {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-color: #ef4444;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
-.option-button.incorrect {
-  background: linear-gradient(135deg, #FFB6C1 0%, #FF6961 100%);
-  color: white;
-  box-shadow: 0 6px 20px rgba(255, 105, 97, 0.4);
+/* 主按钮 */
+.btn-primary {
+    background: linear-gradient(135deg, #FF6B9C, #E85585);
+    border: none;
+    border-radius: 12px;
+    padding: 12px 32px;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(255, 107, 156, 0.33);
+    margin: 0.5rem;
 }
 
-.control-button {
-  padding: 18px 50px;
-  font-size: 1.3rem;
-  font-weight: bold;
-  border: none;
-  border-radius: var(--button-radius);
-  background: linear-gradient(135deg, var(--primary-pink) 0%, #FFC0CB 100%);
-  color: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 20px rgba(255, 155, 179, 0.4);
-  margin: 0 10px 20px;
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 156, 0.44);
 }
 
-.control-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 25px rgba(255, 155, 179, 0.6);
+.btn-primary:active {
+    transform: translateY(0);
 }
 
-.control-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
 }
 
+/* 游戏结束弹窗 */
 .game-over {
-  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-  padding: 30px;
-  border-radius: var(--border-radius);
-  margin: 20px auto;
-  max-width: 500px;
-  box-shadow: 0 10px 30px rgba(255, 165, 0, 0.3);
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
 }
 
-.game-over h2 {
-  color: white;
-  font-size: 2rem;
-  margin-bottom: 15px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+.game-over-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 2.5rem;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    width: 90%;
 }
 
-.game-over p {
-  color: #8B4513;
-  font-size: 1.2rem;
-  margin-bottom: 10px;
+.game-over-card h2 {
+    font-size: 1.8rem;
+    color: #FF6B9C;
+    margin-bottom: 1rem;
 }
 
+.game-over-card p {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+
+.game-over-card strong {
+    color: #FF6B9C;
+}
+
+/* 隐藏类 */
 .hidden {
-  display: none;
+    display: none !important;
 }
 
+/* 响应式 */
 @media (max-width: 768px) {
-  .game-title {
-    font-size: 2rem;
-  }
-  
-  .color-display {
-    width: 220px;
-    height: 220px;
-  }
-  
-  .options-container {
-    grid-template-columns: 1fr;
-    max-width: 300px;
-  }
-  
-  .option-button {
-    font-size: 1.1rem;
-    padding: 20px 15px;
-  }
-  
-  .stat-item {
-    padding: 12px 20px;
-    min-width: 100px;
-  }
-  
-  .stat-value {
-    font-size: 1.5rem;
-  }
-  
-  .control-button {
-    padding: 15px 30px;
-    font-size: 1.1rem;
-  }
+    .game-container {
+        margin: 1rem;
+        padding: 1.5rem;
+        border-radius: 16px;
+    }
+    .game-title {
+        font-size: 1.6rem;
+    }
+    .color-display {
+        width: 220px;
+        height: 220px;
+    }
+    .options-container {
+        grid-template-columns: 1fr;
+        max-width: 300px;
+    }
+    .btn-option {
+        font-size: 1rem;
+        padding: 14px 16px;
+    }
+    .stats-bar {
+        gap: 8px;
+    }
+    .stat-item {
+        padding: 10px 16px;
+        min-width: 80px;
+    }
+    .stat-value {
+        font-size: 1.2rem;
+    }
 }
 </style>
 
@@ -249,15 +268,18 @@ body {
   </div>
   
   <div class="controls">
-    <button class="control-button" id="start-button">开始游戏</button>
-    <button class="control-button hidden" id="restart-button">再来一局</button>
+    <button class="btn-primary" id="start-button">开始游戏</button>
+    <button class="btn-primary hidden" id="restart-button">再来一局</button>
   </div>
   
   <div class="game-over hidden" id="game-over-screen">
-    <h2>🎉 游戏结束！</h2>
-    <p>最终得分：<strong id="final-score">0</strong></p>
-    <p>总答题数：<strong id="total-questions">0</strong></p>
-    <p>正确率：<strong id="final-accuracy">0%</strong></p>
+    <div class="game-over-card">
+      <h2>游戏结束！</h2>
+      <p>最终得分：<strong id="final-score">0</strong></p>
+      <p>总答题数：<strong id="total-questions">0</strong></p>
+      <p>正确率：<strong id="final-accuracy">0%</strong></p>
+      <button class="btn-primary" id="restart-button-2" style="margin-top:1rem;">再来一局</button>
+    </div>
   </div>
 </div>
 
@@ -311,7 +333,7 @@ function generateQuestion() {
   optionsContainer.innerHTML = '';
   colors.forEach(color => {
     const button = document.createElement('button');
-    button.className = 'option-button';
+    button.className = 'btn-option';
     button.textContent = color.name;
     button.dataset.colorName = color.name;
     button.addEventListener('click', () => checkAnswer(color.name, button));
@@ -337,7 +359,7 @@ function checkAnswer(selectedName, button) {
   } else {
     button.classList.add('incorrect');
     
-    const correctButtons = optionsContainer.querySelectorAll('.option-button');
+    const correctButtons = optionsContainer.querySelectorAll('.btn-option');
     correctButtons.forEach(btn => {
       if (btn.dataset.colorName === currentColor.name) {
         btn.classList.add('correct');
@@ -404,6 +426,7 @@ function endGame() {
 
 startButton.addEventListener('click', startGame);
 restartButton.addEventListener('click', startGame);
+document.getElementById('restart-button-2').addEventListener('click', startGame);
 </script>
 
 <?php require("footer.php"); ?>

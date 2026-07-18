@@ -68,6 +68,7 @@
             'memory_game.php',
             'sequence_memory.php',
             'math_game.php',
+            'puzzle_game.php',      // 拼图游戏
             // AI体验
             'AI_experience.php',
             'ai_drawing_game.php',

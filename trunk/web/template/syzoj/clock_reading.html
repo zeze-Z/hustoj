@@ -2,18 +2,19 @@
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 
 <style>
+/* ===== CSS Custom Properties (used by JS via getComputedStyle) ===== */
 :root {
-    --primary-color: #ff7a00;
-    --secondary-color: #ffb700;
-    --background-color: #fff8e6;
-    --text-color: #333333;
-    --success-color: #4caf50;
-    --error-color: #f44336;
+    --primary-color: #5B86E5;
+    --secondary-color: #4A6FD4;
     --clock-face: #ffffff;
+    --text-color: #333333;
     --hour-hand: #333333;
-    --minute-hand: #ff7a00;
+    --minute-hand: #5B86E5;
+    --success-color: #10b981;
+    --error-color: #ef4444;
 }
 
+/* ===== 统一游戏基础样式 ===== */
 * {
     margin: 0;
     padding: 0;
@@ -21,89 +22,162 @@
 }
 
 body {
-    background-color: var(--background-color);
-    font-family: 'Arial', sans-serif;
-    color: var(--text-color);
-    line-height: 1.6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f0f2f5;
+    min-height: 100vh;
 }
 
 .game-container {
     max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
+    margin: 2rem auto;
+    background: #fff;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
     text-align: center;
-}
-
-.game-header {
-    margin-bottom: 20px;
+    position: relative;
 }
 
 .game-title {
-    color: var(--primary-color);
-    font-size: 2.5rem;
-    margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 2rem;
+    font-weight: 700;
+    color: #5B86E5;
+    margin-bottom: 0.5rem;
 }
 
-.game-stats {
+.game-subtitle {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 1.5rem;
+}
+
+/* 统计栏 */
+.stats-bar {
     display: flex;
-    justify-content: space-around;
-    background-color: white;
-    padding: 15px;
-    border-radius: 15px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 1.5rem;
     flex-wrap: wrap;
-    gap: 10px;
 }
 
 .stat-item {
-    flex: 1;
+    background: #EEF2FF;
+    border-radius: 12px;
+    padding: 12px 24px;
     min-width: 100px;
 }
 
 .stat-label {
-    font-size: 0.9rem;
-    color: #666;
+    font-size: 0.8rem;
+    color: #888;
     display: block;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .stat-value {
     font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--primary-color);
+    font-weight: 700;
+    color: #5B86E5;
 }
 
+/* 主按钮 */
+.btn-primary {
+    background: linear-gradient(135deg, #5B86E5, #4A6FD4);
+    border: none;
+    border-radius: 12px;
+    padding: 12px 32px;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(91, 134, 229, 0.33);
+    margin: 0.5rem;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(91, 134, 229, 0.44);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* 选项按钮 */
+.btn-option {
+    padding: 16px 20px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: 2px solid #e8e8e8;
+    border-radius: 12px;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-option:hover {
+    border-color: #5B86E5;
+    background: #EEF2FF;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.btn-option.correct {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-color: #10b981;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-option.incorrect {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-color: #ef4444;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* 难度选择器 */
 .difficulty-selector {
-    margin-bottom: 20px;
+    margin-bottom: 1.5rem;
 }
 
 .difficulty-btn {
     padding: 10px 20px;
     margin: 0 5px;
-    border: 2px solid var(--primary-color);
-    background-color: white;
-    color: var(--primary-color);
-    border-radius: 25px;
-    font-size: 1rem;
-    font-weight: bold;
+    border: 2px solid #5B86E5;
+    background: #fff;
+    color: #5B86E5;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    will-change: transform;
+    transition: all 0.3s ease;
 }
 
 .difficulty-btn.active {
-    background-color: var(--primary-color);
-    color: white;
+    background: linear-gradient(135deg, #5B86E5, #4A6FD4);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(91, 134, 229, 0.33);
 }
 
 .difficulty-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(255, 122, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(91, 134, 229, 0.2);
 }
 
+/* 时钟容器 - 游戏特有样式 */
 .clock-container {
-    margin: 30px auto;
+    margin: 2rem auto;
     width: 300px;
     height: 300px;
     position: relative;
@@ -112,86 +186,43 @@ body {
 #clock-canvas {
     width: 100%;
     height: 100%;
-    background-color: var(--clock-face);
+    background-color: #ffffff;
     border-radius: 50%;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1), 0 0 0 8px var(--primary-color);
-    will-change: transform;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 0 0 8px #5B86E5;
 }
 
+/* 选项容器 */
 .options-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-    margin: 30px 0;
+    gap: 16px;
+    margin: 2rem 0;
 }
 
-.option-btn {
-    padding: 20px;
-    background-color: white;
-    border: 3px solid var(--secondary-color);
-    border-radius: 15px;
-    font-size: 1.3rem;
-    font-weight: bold;
-    color: var(--text-color);
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    will-change: transform;
+/* 计时条 - 游戏特有样式 */
+.timer-bar {
+    width: 100%;
+    height: 10px;
+    background-color: #e8e8e8;
+    border-radius: 5px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
 }
 
-.option-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(255, 183, 0, 0.3);
+.timer-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #5B86E5, #ef4444);
+    width: 100%;
+    transition: width 0.3s ease;
 }
 
-.option-btn.correct {
-    background-color: var(--success-color);
-    border-color: var(--success-color);
-    color: white;
-}
-
-.option-btn.incorrect {
-    background-color: var(--error-color);
-    border-color: var(--error-color);
-    color: white;
-}
-
-.game-controls {
-    margin-top: 20px;
-}
-
-.control-btn {
-    padding: 12px 30px;
-    margin: 0 10px;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 25px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    will-change: transform;
-}
-
-.control-btn:hover {
-    background-color: #e66f00;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(255, 122, 0, 0.4);
-}
-
-.control-btn:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
+/* 反馈区 */
 .feedback {
-    margin: 20px 0;
-    padding: 15px;
-    border-radius: 10px;
-    font-size: 1.2rem;
-    font-weight: bold;
+    margin: 1.5rem 0;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
@@ -201,50 +232,93 @@ body {
 }
 
 .feedback.correct {
-    background-color: rgba(76, 175, 80, 0.1);
-    color: var(--success-color);
-    border: 2px solid var(--success-color);
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    border: 2px solid #10b981;
 }
 
 .feedback.incorrect {
-    background-color: rgba(244, 67, 54, 0.1);
-    color: var(--error-color);
-    border: 2px solid var(--error-color);
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border: 2px solid #ef4444;
 }
 
-.timer-bar {
-    width: 100%;
-    height: 10px;
-    background-color: #e0e0e0;
-    border-radius: 5px;
-    margin-bottom: 20px;
-    overflow: hidden;
+/* 游戏结束弹窗 */
+.game-over {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
 }
 
-.timer-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--success-color), var(--secondary-color), var(--error-color));
-    width: 100%;
-    will-change: width;
+.game-over-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 2.5rem;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    width: 90%;
 }
 
-@media (max-width: 600px) {
-    .game-title {
-        font-size: 2rem;
+.game-over-card h2 {
+    font-size: 1.8rem;
+    color: #5B86E5;
+    margin-bottom: 1rem;
+}
+
+.game-over-card p {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+
+.game-over-card strong {
+    color: #5B86E5;
+}
+
+/* 隐藏类 */
+.hidden {
+    display: none !important;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .game-container {
+        margin: 1rem;
+        padding: 1.5rem;
+        border-radius: 16px;
     }
-    
+    .game-title {
+        font-size: 1.6rem;
+    }
     .clock-container {
         width: 250px;
         height: 250px;
     }
-    
     .options-container {
         grid-template-columns: repeat(2, 1fr);
     }
-    
-    .option-btn {
-        padding: 15px;
-        font-size: 1.1rem;
+    .btn-option {
+        padding: 14px 16px;
+        font-size: 1rem;
+    }
+    .stats-bar {
+        gap: 8px;
+    }
+    .stat-item {
+        padding: 10px 16px;
+        min-width: 80px;
+    }
+    .stat-value {
+        font-size: 1.2rem;
     }
 }
 </style>
@@ -252,14 +326,14 @@ body {
 <div class="game-container">
     <div class="game-header">
         <h1 class="game-title">⏰ 时钟认读小游戏</h1>
-        <p>小朋友，看看时钟上的时间，选择正确的答案吧！</p>
+        <p class="game-subtitle">小朋友，看看时钟上的时间，选择正确的答案吧！</p>
     </div>
 
     <div class="timer-bar">
         <div class="timer-fill" id="timer-fill"></div>
     </div>
 
-    <div class="game-stats">
+    <div class="stats-bar">
         <div class="stat-item">
             <span class="stat-label">得分</span>
             <span class="stat-value" id="score">0</span>
@@ -293,8 +367,20 @@ body {
     <div class="options-container" id="options-container"></div>
 
     <div class="game-controls">
-        <button class="control-btn" id="start-btn">开始游戏</button>
-        <button class="control-btn" id="reset-btn">重新开始</button>
+        <button class="btn-primary" id="start-btn">开始游戏</button>
+        <button class="btn-primary" id="reset-btn">重新开始</button>
+    </div>
+
+    <!-- 游戏结束弹窗 -->
+    <div class="game-over hidden" id="game-over-screen">
+        <div class="game-over-card">
+            <h2>🎉 游戏结束！</h2>
+            <p>最终得分：<strong id="final-score">0</strong></p>
+            <p>回答正确：<strong id="final-correct">0</strong>/<strong id="final-total">0</strong></p>
+            <p>正确率：<strong id="final-accuracy">0%</strong></p>
+            <p>达到关卡：<strong id="final-level">1</strong></p>
+            <button class="btn-primary" id="restart-btn" style="margin-top:1rem;">再来一局</button>
+        </div>
     </div>
 </div>
 
@@ -328,7 +414,12 @@ class ClockReadingGame {
     initializeEventListeners() {
         document.getElementById('start-btn').addEventListener('click', () => this.startGame());
         document.getElementById('reset-btn').addEventListener('click', () => this.resetGame());
-        
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            document.getElementById('game-over-screen').classList.add('hidden');
+            this.resetGame();
+            this.startGame();
+        });
+
         document.querySelectorAll('.difficulty-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
@@ -366,7 +457,8 @@ class ClockReadingGame {
             cancelAnimationFrame(this.animationId);
             this.animationId = null;
         }
-        
+
+        document.getElementById('game-over-screen').classList.add('hidden');
         this.score = 0;
         this.level = 1;
         this.totalQuestions = 0;
@@ -411,17 +503,16 @@ class ClockReadingGame {
             cancelAnimationFrame(this.animationId);
             this.animationId = null;
         }
-        
+
         const accuracy = this.totalQuestions > 0 ? Math.round((this.correctAnswers / this.totalQuestions) * 100) : 0;
-        
-        let message = `游戏结束！\n\n`;
-        message += `最终得分: ${this.score}\n`;
-        message += `回答正确: ${this.correctAnswers}/${this.totalQuestions}\n`;
-        message += `正确率: ${accuracy}%\n`;
-        message += `达到关卡: ${this.level}`;
-        
-        alert(message);
-        document.getElementById('start-btn').disabled = false;
+
+        document.getElementById('final-score').textContent = this.score;
+        document.getElementById('final-correct').textContent = this.correctAnswers;
+        document.getElementById('final-total').textContent = this.totalQuestions;
+        document.getElementById('final-accuracy').textContent = accuracy + '%';
+        document.getElementById('final-level').textContent = this.level;
+
+        document.getElementById('game-over-screen').classList.remove('hidden');
     }
 
     generateNewQuestion() {
@@ -482,7 +573,7 @@ class ClockReadingGame {
 
         options.forEach(option => {
             const btn = document.createElement('button');
-            btn.className = 'option-btn';
+            btn.className = 'btn-option';
             btn.textContent = option;
             btn.addEventListener('click', () => this.checkAnswer(option, btn));
             container.appendChild(btn);
@@ -515,9 +606,6 @@ class ClockReadingGame {
 
             if (this.correctAnswers % 5 === 0) {
                 this.level++;
-                setTimeout(() => {
-                    alert(`恭喜你升到 ${this.level} 级！继续加油！`);
-                }, 700);
             }
         } else {
             feedback.textContent = `❌ 答错了，正确答案是 ${correctTime}`;
@@ -526,7 +614,7 @@ class ClockReadingGame {
 
             this.animateShake(selectedBtn);
 
-            document.querySelectorAll('.option-btn').forEach(btn => {
+            document.querySelectorAll('.btn-option').forEach(btn => {
                 if (btn.textContent === correctTime) {
                     btn.classList.add('correct');
                     this.animatePulse(btn);

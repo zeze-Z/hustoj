@@ -24,7 +24,7 @@
     <div class="footer">
         <div class="ui center aligned container">
             <div>欢迎广大师生使用，问题咨询，商务合作，请联系客服QQ：2326077585</div>
-            <div style="margin-top: 8px; color: #aaa;">📱 关注小红书：@子昂老师 ITlizhi888 ｜ 👥 加入教师交流群，获取更多教学资源</div>
+            <div style="margin-top: 8px; color: #aaa;">📱 关注小红书：@子昂老师 ITlizhi888 ｜ 获取更多教学资源动态</div>
             <!-- <div><?php echo $domain==$DOMAIN?$OJ_NAME:ucwords($OJ_NAME)."'s OJ"?> is powered by <a style="color: inherit !important;" class=" " title="GitHub"
                     target="_blank" rel="noreferrer noopener" href="https://github.com/zhblue/hustoj">HUSTOJ</a>, Theme
                 by <a style="color: inherit !important;" href="https://github.com/syzoj">SYZOJ</a></div> -->

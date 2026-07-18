@@ -13,100 +13,159 @@ include("template/$OJ_TEMPLATE/header.php");
 
 <?php if ($status === 'activated'): ?>
 <!-- ========== 激活成功 ========== -->
-<div class="padding">
-    <div class="ui success message">
-        <div class="header">🎉 账号激活成功！</div>
-        <p>欢迎加入 <?php echo $OJ_NAME; ?>，您的编程教学之旅即将开始。</p>
+
+<!-- 新手福利内容（弹窗关闭后显示） -->
+<div id="welcome-content" style="display: none;">
+    <!-- Hero区域 -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 50px 40px; text-align: center; margin-bottom: 40px; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%); animation: pulse 4s ease-in-out infinite;"></div>
+        <div style="font-size: 64px; margin-bottom: 20px; position: relative;">🎓</div>
+        <h1 style="color: #fff; font-size: 32px; margin: 0 0 12px; font-weight: 700; position: relative;">欢迎加入 <?php echo $OJ_NAME; ?></h1>
+        <p style="color: rgba(255,255,255,0.9); font-size: 18px; margin: 0; position: relative;">您的编程教学之旅，从这里启航</p>
     </div>
 
-    <!-- 积分动画弹窗 -->
-    <div id="points-modal" class="ui modal" style="display: block; position: relative; margin-top: 30px; border-radius: .28571429rem; box-shadow: 0 1px 3px 0 #d4d4d5, 0 0 0 1px #d4d4d5; background: #fff; overflow: hidden;">
-        <div class="header" style="padding: 1.25rem 1.5rem; font-size: 1.28571429em; font-weight: 700; border-bottom: 1px solid rgba(34,36,38,.15);">积分奖励</div>
-        <div class="content" style="text-align: center; padding: 40px;">
-            <div id="points-display" style="font-size: 72px; font-weight: bold; color: #21ba45;">0</div>
-            <div id="points-message" style="font-size: 18px; margin-top: 20px;">积分正在发放中...</div>
+    <!-- 功能入口 -->
+    <div style="max-width: 900px; margin: 0 auto;">
+        <h2 style="text-align: center; font-size: 24px; color: #333; margin-bottom: 30px; font-weight: 600;">
+            <span style="display: inline-block; border-bottom: 3px solid #667eea; padding-bottom: 8px;">探索平台功能</span>
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+            <!-- 课件中心 -->
+            <a href="course.php" style="text-decoration: none; color: inherit;">
+                <div style="background: #fff; border-radius: 16px; padding: 32px 24px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: all 0.3s ease; cursor: pointer; border: 1px solid #f0f0f0;" onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 40px rgba(102,126,234,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)'">
+                    <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
+                    <div style="font-size: 18px; font-weight: 600; color: #333; margin-bottom: 8px;">课件中心</div>
+                    <div style="font-size: 14px; color: #888; line-height: 1.6;">海量精品课件<br>即点即学</div>
+                </div>
+            </a>
+            <!-- 积分中心 -->
+            <a href="point_index.php" style="text-decoration: none; color: inherit;">
+                <div style="background: #fff; border-radius: 16px; padding: 32px 24px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: all 0.3s ease; cursor: pointer; border: 1px solid #f0f0f0;" onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 40px rgba(245,166,35,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)'">
+                    <div style="font-size: 48px; margin-bottom: 16px;">💎</div>
+                    <div style="font-size: 18px; font-weight: 600; color: #333; margin-bottom: 8px;">积分中心</div>
+                    <div style="font-size: 14px; color: #888; line-height: 1.6;">查看积分<br>兑换课程</div>
+                </div>
+            </a>
+            <!-- 趣味游戏 -->
+            <a href="more.php" style="text-decoration: none; color: inherit;">
+                <div style="background: #fff; border-radius: 16px; padding: 32px 24px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: all 0.3s ease; cursor: pointer; border: 1px solid #f0f0f0;" onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 40px rgba(16,185,129,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)'">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🎮</div>
+                    <div style="font-size: 18px; font-weight: 600; color: #333; margin-bottom: 8px;">趣味游戏</div>
+                    <div style="font-size: 14px; color: #888; line-height: 1.6;">边玩边学<br>轻松入门</div>
+                </div>
+            </a>
+            <!-- 竞赛真题 -->
+            <a href="contest.php?my" style="text-decoration: none; color: inherit;">
+                <div style="background: #fff; border-radius: 16px; padding: 32px 24px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: all 0.3s ease; cursor: pointer; border: 1px solid #f0f0f0;" onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 40px rgba(59,130,246,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)'">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🏆</div>
+                    <div style="font-size: 18px; font-weight: 600; color: #333; margin-bottom: 8px;">竞赛真题</div>
+                    <div style="font-size: 14px; color: #888; line-height: 1.6;">实战演练<br>提升技能</div>
+                </div>
+            </a>
         </div>
-        <div class="actions" style="text-align: center; padding: 20px; border-top: 1px solid rgba(34,36,38,.15);">
-            <button id="confirm-btn" class="ui primary button" style="display: none;">确认</button>
+        <!-- 底部按钮 -->
+        <div style="text-align: center; margin-top: 50px;">
+            <a href="index.php" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 14px 48px; border-radius: 8px; font-size: 16px; font-weight: 600; text-decoration: none; box-shadow: 0 4px 15px rgba(102,126,234,0.4); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102,126,234,0.5)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102,126,234,0.4)'">
+                开始探索 →
+            </a>
         </div>
     </div>
 
-    <!-- 新手福利内容（弹窗关闭后显示） -->
-    <div id="welcome-content" style="display: none;">
-        <h2>新手福利</h2>
-        <div class="ui four cards">
-            <div class="card">
-                <div class="content">
-                    <div class="header">📚 免费浏览课件</div>
-                    <div class="description">海量教学课件，即点即看</div>
-                </div>
-                <div class="extra content">
-                    <a href="course.php" class="ui button">去浏览</a>
-                </div>
-            </div>
-            <div class="card">
-                <div class="content">
-                    <div class="header">💎 积分兑换课程</div>
-                    <div class="description">使用积分兑换精品课程</div>
-                </div>
-                <div class="extra content">
-                    <a href="course.php" class="ui button">去兑换</a>
-                </div>
-            </div>
-            <div class="card">
-                <div class="content">
-                    <div class="header">🎮 趣味编程游戏</div>
-                    <div class="description">边玩边学，轻松入门</div>
-                </div>
-                <div class="extra content">
-                    <a href="puzzle_game.php" class="ui button">去玩游戏</a>
-                </div>
-            </div>
-            <div class="card">
-                <div class="content">
-                    <div class="header">👨‍🏫 创建班级</div>
-                    <div class="description">管理学生，布置作业</div>
-                </div>
-                <div class="extra content">
-                    <a href="class.php" class="ui button">去创建</a>
-                </div>
-            </div>
+    <style>
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+    </style>
+</div>
+</div>
+
+<!-- 半透明遮罩层 -->
+<div id="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; backdrop-filter: blur(3px);"></div>
+
+<!-- 积分动画弹窗 -->
+<div id="points-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background: rgba(255,255,255,0.92); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; min-width: 380px; max-width: 90vw; backdrop-filter: blur(10px);">
+    <div style="background: linear-gradient(135deg, rgba(102,126,234,0.9) 0%, rgba(118,75,162,0.9) 100%); padding: 30px; text-align: center;">
+        <div style="font-size: 48px; margin-bottom: 10px;">🎉</div>
+        <div style="font-size: 20px; color: #fff; font-weight: 600;">恭喜获得新手积分奖励</div>
+    </div>
+    <div style="text-align: center; padding: 40px 30px;">
+        <div style="position: relative; display: inline-block;">
+            <span style="font-size: 14px; color: #999; vertical-align: top;">+</span>
+            <span id="points-display" style="font-size: 80px; font-weight: bold; color: #f5a623; line-height: 1; text-shadow: 0 2px 4px rgba(245,166,35,0.3);">0</span>
+            <span style="font-size: 24px; color: #666; vertical-align: bottom; margin-left: 4px;">积分</span>
         </div>
+        <div id="points-message" style="font-size: 16px; margin-top: 15px; color: #666;">积分正在发放中...</div>
+    </div>
+    <div style="text-align: center; padding: 0 30px 30px;">
+        <button id="confirm-btn" class="ui primary button" style="display: none; padding: 12px 60px; font-size: 16px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; cursor: pointer;">太棒了，去看看</button>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="template/<?php echo $OJ_TEMPLATE; ?>/game_confetti.js"></script>
 <script>
-// 积分动画
+// 积分动画（匀速递增，每50ms +1，共1秒）
 function animatePoints() {
     var current = 0;
     var target = 20;
-    var duration = 1500; // 1.5秒
-    var startTime = Date.now();
+    var interval = 50; // 每50ms递增一次
+    var display = document.getElementById('points-display');
+    var message = document.getElementById('points-message');
+    var btn = document.getElementById('confirm-btn');
 
-    function update() {
-        var elapsed = Date.now() - startTime;
-        var progress = Math.min(elapsed / duration, 1);
-        current = Math.floor(progress * target);
-        document.getElementById('points-display').textContent = current;
-
-        if (progress < 1) {
-            requestAnimationFrame(update);
-        } else {
-            document.getElementById('points-display').textContent = target;
-            document.getElementById('points-message').textContent = '您已获得 20 积分奖励！';
-            document.getElementById('confirm-btn').style.display = 'inline-block';
+    var timer = setInterval(function() {
+        current++;
+        display.textContent = current;
+        if (current >= target) {
+            clearInterval(timer);
+            message.textContent = '您已获得 20 积分奖励！';
+            btn.style.display = 'inline-block';
         }
-    }
-    update();
+    }, interval);
 }
 
 // 页面加载后启动动画
 $(document).ready(function() {
-    animatePoints();
+    // 显示弹窗和遮罩
+    $('#modal-overlay').fadeIn(200);
+    $('#points-modal').fadeIn(300);
+
+    // 延迟启动积分动画和礼花
+    setTimeout(function() {
+        animatePoints();
+        // 礼花置于顶层（z-index: 10000）
+        if (typeof confetti === 'function') {
+            var duration = 1000;
+            var end = Date.now() + duration;
+            (function frame() {
+                confetti({
+                    particleCount: 5,
+                    spread: 60,
+                    origin: { y: 0.6 },
+                    colors: ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444'],
+                    disableForReducedMotion: true,
+                    zIndex: 10000
+                });
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+    }, 300);
 
     // 确认按钮点击事件
     $('#confirm-btn').click(function() {
-        $('#points-modal').fadeOut(300, function() {
+        $('#points-modal').fadeOut(300);
+        $('#modal-overlay').fadeOut(300, function() {
+            $('#welcome-content').fadeIn(300);
+        });
+    });
+
+    // 点击遮罩层也可关闭
+    $('#modal-overlay').click(function() {
+        $('#points-modal').fadeOut(300);
+        $('#modal-overlay').fadeOut(300, function() {
             $('#welcome-content').fadeIn(300);
         });
     });

@@ -2,103 +2,89 @@
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-<script src="game_confetti.js"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/game_confetti.js"></script>
 
 <div class="padding">
 <style>
+        /* ===== 统一游戏基础样式 ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "微软雅黑", "幼圆", sans-serif;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
         }
 
         .game-wrapper {
-            width: 100%;
             max-width: 1200px;
-            margin: 0 auto;
-            background-color: white;
-            border-radius: 25px;
-            padding: 25px;
-            box-shadow: 0 8px 25px rgba(139, 195, 74, 0.3);
-            border: 5px solid #8bc34a;
+            margin: 2rem auto;
+            background: #fff;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            text-align: center;
             position: relative;
-            margin-top: 20px;
-        }
-
-        .game-wrapper::before {
-            content: "🐱";
-            font-size: 30px;
-            position: absolute;
-            top: -15px;
-            left: -15px;
-            background-color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid #8bc34a;
-        }
-
-        .game-wrapper::after {
-            content: "🎯";
-            font-size: 30px;
-            position: absolute;
-            bottom: -15px;
-            right: -15px;
-            background-color: #fff;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid #8bc34a;
         }
 
         h1 {
             text-align: center;
-            color: #558b2f;
-            margin-bottom: 20px;
-            font-size: 2.2rem;
-            text-shadow: 2px 2px 4px rgba(139, 195, 74, 0.2);
+            font-size: 2rem;
+            font-weight: 700;
+            color: #6C5CE7;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-subtitle {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 1.5rem;
         }
 
         .level-banner {
-            background: linear-gradient(135deg, #8bc34a, #689f38);
+            background: linear-gradient(135deg, #6C5CE7, #5B4BD5);
             color: white;
             padding: 15px 20px;
-            border-radius: 15px;
+            border-radius: 12px;
             margin-bottom: 20px;
             text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            box-shadow: 0 4px 12px rgba(139, 195, 74, 0.3);
+            font-size: 1.1rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.2);
         }
 
         .level-selector {
-            text-align: center;
-            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
         }
 
         .level-btn {
-            padding: 10px 20px;
-            font-size: 1rem;
-            border: 2px solid #8bc34a;
-            border-radius: 20px;
-            background-color: white;
-            color: #558b2f;
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #fff;
+            color: #555;
+            font-size: 0.9rem;
+            font-weight: 600;
             cursor: pointer;
-            margin: 0 5px;
-            transition: all 0.3s;
-            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .level-btn:hover {
+            border-color: #6C5CE7;
+            color: #6C5CE7;
         }
 
         .level-btn.active {
-            background-color: #8bc34a;
-            color: white;
+            background: #6C5CE7;
+            border-color: #6C5CE7;
+            color: #fff;
         }
 
         .level-btn.completed {
@@ -121,11 +107,6 @@
             justify-content: center;
         }
 
-        .level-btn:hover:not(.active) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(139, 195, 74, 0.2);
-        }
-
         .game-content {
             display: grid;
             grid-template-columns: 250px 1fr 300px;
@@ -133,19 +114,23 @@
             margin-bottom: 20px;
         }
 
+        /* 面板统一 */
         .panel {
-            background-color: #f8f9fa;
-            border-radius: 15px;
-            padding: 15px;
-            border: 3px solid #8bc34a;
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e8e8e8;
+            overflow: hidden;
+            padding: 0;
         }
 
         .panel-title {
-            font-size: 1.3rem;
-            color: #558b2f;
-            margin-bottom: 15px;
+            background: #EDE7F6;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: #6C5CE7;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #e8e8e8;
             text-align: center;
-            font-weight: bold;
         }
 
         /* 积木样式 */
@@ -177,13 +162,13 @@
         .block-left { background-color: #2196f3; }
         .block-right { background-color: #ff9800; }
         .block-loop { background-color: #9c27b0; }
-        
 
         .block-hint {
             font-size: 0.7rem;
             color: #666;
             margin: 2px 0 8px 0;
             line-height: 1.2;
+            padding: 0 15px;
         }
 
         /* 编程区 */
@@ -192,7 +177,7 @@
             background-color: white;
             border-radius: 10px;
             padding: 10px;
-            border: 2px dashed #8bc34a;
+            border: 2px dashed #e0e0e0;
         }
 
         .code-block {
@@ -243,8 +228,6 @@
             background-color: rgba(156, 39, 176, 0.05);
         }
 
-        
-
         .container-header {
             display: flex;
             justify-content: space-between;
@@ -259,8 +242,6 @@
         .container-header-loop {
             background-color: #9c27b0;
         }
-
-        
 
         .container-content {
             min-height: 50px;
@@ -306,7 +287,7 @@
             background-color: #e0e0e0;
             padding: 2px;
             border-radius: 10px;
-            border: 3px solid #8bc34a;
+            border: 2px solid #e8e8e8;
         }
 
         .grid-cell {
@@ -343,30 +324,32 @@
         }
 
         .control-btn {
-            padding: 12px 35px;
-            font-size: 1.2rem;
+            background: linear-gradient(135deg, #6C5CE7, #5B4BD5);
             border: none;
-            border-radius: 20px;
-            background-color: #8bc34a;
-            color: white;
+            border-radius: 12px;
+            padding: 12px 32px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
-            margin: 0 10px;
-            transition: all 0.3s;
-            font-weight: bold;
-            box-shadow: 0 4px 8px rgba(139, 195, 74, 0.3);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.2);
+            margin: 0.5rem;
         }
 
         .control-btn:hover {
-            background-color: #558b2f;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(139, 195, 74, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.3);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
         }
 
         .control-btn:disabled {
-            background-color: #d3d3d3;
+            opacity: 0.5;
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
         }
 
         .feedback {
@@ -406,13 +389,17 @@
         }
 
         .celebration {
-            animation: celebration 0.5s ease-in-out 3; /* 播放3次后停止 */
+            animation: celebration 0.5s ease-in-out 3;
         }
 
         /* 拖拽状态 */
         .drag-over {
-            background-color: #e8f5e9 !important;
-            border-color: #8bc34a !important;
+            background-color: #EDE7F6 !important;
+            border-color: #6C5CE7 !important;
+        }
+
+        .hidden {
+            display: none !important;
         }
 
         /* 响应式适配 */
@@ -433,12 +420,27 @@
         }
 
         @media (max-width: 768px) {
+            .game-wrapper {
+                margin: 1rem;
+                padding: 1.5rem;
+                border-radius: 16px;
+            }
+
             .game-content {
                 grid-template-columns: 1fr;
             }
 
             h1 {
-                font-size: 1.8rem;
+                font-size: 1.6rem;
+            }
+
+            .stats {
+                gap: 8px;
+            }
+
+            .stat-item {
+                padding: 10px 16px;
+                min-width: 80px;
             }
 
             .grid-cell {
@@ -452,23 +454,9 @@
                 font-size: 1rem;
             }
 
-            .control-btn {
-                padding: 10px 25px;
-                font-size: 1rem;
-                margin: 5px;
-            }
-
             .level-btn {
                 padding: 8px 15px;
                 font-size: 0.9rem;
-                margin: 3px;
-            }
-
-            .game-wrapper::before,
-            .game-wrapper::after {
-                width: 35px;
-                height: 35px;
-                font-size: 25px;
             }
         }
     </style>
@@ -477,7 +465,7 @@
         <h1>🐱 编程启蒙乐园 🎮</h1>
 
         <!-- 玩法介绍 -->
-        <div style="background:linear-gradient(135deg,#e8f5e9,#f1f8e9);border:2px solid #8bc34a;border-radius:12px;padding:12px 18px;margin-bottom:18px;font-size:0.95rem;color:#33691e;line-height:1.7;">
+        <div style="background:linear-gradient(135deg,#EDE7F6,#f5f3ff);border:1px solid #d1c4e9;border-radius:12px;padding:12px 18px;margin-bottom:18px;font-size:0.95rem;color:#333;line-height:1.7;">
             <span style="font-weight:bold;font-size:1.05rem;">📖 玩法说明：</span>
             从左侧<b>拖拽积木</b>到右侧「你的程序」区，拼出让小猫走到🏁的指令序列！
             <br>• <b>循环积木</b>可以把多个积木拖进去，整体重复执行N次
