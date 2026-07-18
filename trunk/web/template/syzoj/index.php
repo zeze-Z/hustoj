@@ -15,7 +15,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                 <i class="gift icon" style="color: white; font-size: 1.5em;"></i>
                 <div style="margin-left: 12px;">
                     <strong style="color: white; font-size: 1.1em;">🎉 新用户注册送 20 积分！</strong>
-                    <p style="margin: 5px 0 0 0; color: rgba(255,255,255,0.9); font-size: 0.95em;">免费浏览课件、体验编程游戏，开启教学新体验</p>
+                    <p style="margin: 5px 0 0 0; color: rgba(255,255,255,0.9); font-size: 0.95em;">海量免费课件、体验编程游戏，开启教学新体验</p>
                 </div>
             </div>
             <div style="display: flex; gap: 10px;">
