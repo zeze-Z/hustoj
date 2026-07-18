@@ -157,12 +157,6 @@ if ($login) {
     }
     // 检测未领取新用户奖励（登录后补发场景）
     if (!empty($group_row) && $group_row[0]['defunct'] == 'N' && $group_row[0]['new_user_reward_claimed'] == 0) {
-        // 标记已领取
-        pdo_query("UPDATE `users` SET `new_user_reward_claimed`=1 WHERE `user_id`=?", $login);
-        // 记录登录日志
-        $sql="INSERT INTO `loginlog`(user_id,password,ip,time) VALUES(?,'login ok',?,NOW())";
-        pdo_query($sql,$login,$ip);
-
         // 发放20积分（如果当前积分为0，避免重复发放）
         $current_points = point_get_balance($login);
         if ($current_points == 0) {
@@ -182,6 +176,8 @@ if ($login) {
                 error_log("Login: failed to grant points to user {$login}: " . $point_result['message']);
             }
         }
+        // 标记已领取（无论积分是否发放，都标记为已处理，避免每次登录重复进入此分支）
+        pdo_query("UPDATE `users` SET `new_user_reward_claimed`=1 WHERE `user_id`=?", $login);
 
         header("Location: welcome.php?status=activated");
         exit(0);

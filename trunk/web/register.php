@@ -222,29 +222,9 @@ if ($rows === -1 || $rows === false) {
     exit(0);
 }
 
-// 注册成功，自动发放 20 积分（新用户注册奖励）
-// 积分系统使用 users.point 字段 + point_log 流水表（POINT_LOG_TYPE_SYSTEM=4）
-$register_point_reward = 20;
-point_tx_begin();
-$point_result = point_apply_change(
-    $user_id,
-    $register_point_reward,
-    POINT_LOG_TYPE_SYSTEM,
-    null,
-    '新用户注册奖励'
-);
-if ($point_result['success']) {
-    point_tx_commit();
-    // 标记已领取，防止登录时重复发放
-    $update_result = pdo_query("UPDATE `users` SET `new_user_reward_claimed`=1 WHERE `user_id`=?", $user_id);
-    if ($update_result === -1) {
-        error_log("Register: failed to mark new_user_reward_claimed for user {$user_id}");
-    }
-} else {
-    point_tx_rollback();
-    // 积分发放失败不阻断注册流程，仅记录日志
-    error_log("Register: failed to grant {$register_point_reward} points to user {$user_id}: " . $point_result['message']);
-}
+// 新用户注册奖励（20 积分）改在邮箱激活成功后发放，避免「注册 + 激活」重复发放。
+// 发放入口见 active.php；login.php 保留登录补发作为兜底。
+// registerpage 提示语"激活后即可获得20积分奖励"与此处语义一致。
 
 // 飞书通知：区分教师/学生
 require_once(dirname(__FILE__)."/include/feishu_notify.php");
@@ -283,14 +263,13 @@ if (isset($OJ_EMAIL_CONFIRM) && $OJ_EMAIL_CONFIRM) {
         $mail_text = "亲爱的老师，您好！\n\n" .
             "恭喜您完成注册，欢迎加入$OJ_NAME教学平台！\n\n" .
             "您的专属功能：\n" .
-            "📚 课件中心 — 上传、管理、销售您的教学课件\n" .
+            "📚 课件中心 — 预览、下载、销售您的教学课件\n" .
             "📝 作业系统 — 在线布置编程作业，自动评测学生代码\n" .
             "📊 学生管理 — 查看学生学习进度和作业提交情况\n" .
             "🎮 趣味编程 — 游戏化教学工具，提升学生学习兴趣\n" .
             "💰 收益中心 — 课件销售数据透明，收益即时提现\n\n" .
             "⚠️ 重要提示：\n" .
-            "目前课件上传功能需由管理员审核后开放。\n" .
-            "激活账号后，请联系客服 QQ：2326077585 申请教师权限。\n\n" .
+            "如需销售课件，需由管理员审核后开放。\n" .
             "请点击以下链接激活账号：\n" . $link . "\n\n" .
             "激活后即可登录，如有任何问题，欢迎联系我们。\n\n" .
             "$OJ_NAME" . "教学平台";
@@ -307,7 +286,7 @@ if (isset($OJ_EMAIL_CONFIRM) && $OJ_EMAIL_CONFIRM) {
                     <div style='background: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 4px;'>
                         <h3 style='color: #667eea; margin-top: 0;'>您的专属功能</h3>
                         <ul style='color: #555; line-height: 2; margin: 0; padding-left: 20px;'>
-                            <li>📚 课件中心 — 上传、管理、销售您的教学课件</li>
+                            <li>📚 课件中心 — 预览、下载、销售您的教学课件</li>
                             <li>📝 作业系统 — 在线布置编程作业，自动评测学生代码</li>
                             <li>📊 学生管理 — 查看学生学习进度和作业提交情况</li>
                             <li>🎮 趣味编程 — 游戏化教学工具，提升学生学习兴趣</li>
@@ -317,8 +296,8 @@ if (isset($OJ_EMAIL_CONFIRM) && $OJ_EMAIL_CONFIRM) {
                     <div style='background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; margin: 20px 0; border-radius: 4px;'>
                         <h3 style='color: #856404; margin-top: 0;'>重要提示</h3>
                         <p style='color: #856404; line-height: 1.8; margin: 0;'>
-                            目前课件上传功能需由管理员审核后开放。<br>
-                            激活账号后，请联系客服 QQ：2326077585 申请教师权限。
+                            如需销售课件，需由管理员审核后开放。<br>
+                            激活后即可登录，如有任何问题，欢迎联系客服QQ：2326077585。
                         </p>
                     </div>
                     <div style='text-align: center; margin: 30px 0;'>
