@@ -20,6 +20,8 @@
 | V1.7 | 2026-05-12 | 成都TOP50中小学数据入库 |
 | V1.8 | 2026-05-16 | 课件列表页添加课程下载次数展示 |
 | V1.9 | 2026-06-07 | 平台积分充值与课件积分支付体系 |
+| V2.1 | 2026-07-16 | 新用户注册奖励字段 new_user_reward_claimed |
+| V2.2 | 2026-07-18 | 修复存量用户被误判为新用户跳转 welcome |
 
 ---
 
@@ -71,6 +73,12 @@ mysql -u root -p jol < db/V1.8_20260516_course_download_count.sql
 
 # 10. 平台积分充值与课件积分支付体系（V1.9）
 mysql -u root -p jol < db/V1.9_20260607_point_payment.sql
+
+# 11. 新用户注册奖励字段（V2.1）
+mysql -u root -p jol < db/V2.1_20260716_add_new_user_reward_claimed.sql
+
+# 12. 修复存量用户被误判为新用户跳转 welcome（V2.2）
+mysql -u root -p jol < db/V2.2_20260718_fix_existing_users_reward_claimed.sql
 ```
 
 **验证：**
@@ -157,6 +165,13 @@ SELECT TABLE_NAME, ENGINE, TABLE_COLLATION
   FROM information_schema.TABLES
  WHERE TABLE_SCHEMA='jol' AND TABLE_NAME IN ('point_card','point_log');
 -- 预期：ENGINE=InnoDB, TABLE_COLLATION=utf8mb4_*
+
+-- 修复存量用户误跳 welcome（V2.2）
+-- 执行迁移后，功能上线前注册的存量用户应全部标记为已领取（1），不再触发 login.php 补发分支
+SELECT COUNT(*) FROM jol.users
+ WHERE new_user_reward_claimed=0
+   AND (reg_time < '2026-07-16 00:00:00' OR reg_time IS NULL);
+-- 预期：0
 ```
 
 ---
