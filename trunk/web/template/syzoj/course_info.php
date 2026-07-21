@@ -310,11 +310,11 @@
         <?php endif; ?>
       </div>
 
-      <!-- ===== 右列：资源访问（无价格/无购买/无提示） ===== -->
+      <!-- ===== 右列：资源访问（中性卡片 + 状态小标签，不与左侧定价卡抢色） ===== -->
       <?php if ($has_resource): ?>
       <div class="eight wide column" style="padding: 6px;">
         <div style="font-size: 0.85em; color: #999; margin-bottom: 6px; padding-left: 2px;">
-          <i class="file text icon"></i> 课程资源
+          <i class="file text icon"></i> 课程资源 · 点击查看/下载
         </div>
 
         <!-- 课件资源行 -->
@@ -324,17 +324,15 @@
             <div style="display: flex; align-items: center; margin-bottom: 6px;">
               <i class="file alternate outline icon" style="color: #667eea; margin-right: 6px;"></i>
               <span style="font-weight: 600; font-size: 1em;"><?php echo $MSG_COURSEWARE; ?></span>
-              <span style="color: #999; font-size: 0.8em; margin-left: 8px;">
-                <?php if ($view_has_source_license): ?>
-                  完整预览 + 可下载
-                <?php elseif ($view_has_preview_license): ?>
-                  完整预览
-                <?php elseif (!empty($view_courseware_url)): ?>
-                  部分内容免费预览
-                <?php else: ?>
-                  仅支持下载
-                <?php endif; ?>
-              </span>
+              <?php if ($view_has_source_license): ?>
+                <div class="ui mini green label" style="margin-left: auto;"><i class="checkmark icon"></i>已解锁 · 可下载</div>
+              <?php elseif ($view_has_preview_license): ?>
+                <div class="ui mini blue label" style="margin-left: auto;"><i class="checkmark icon"></i>已解锁 · 仅预览</div>
+              <?php elseif (!empty($view_courseware_url)): ?>
+                <div class="ui mini orange label" style="margin-left: auto;">试看版</div>
+              <?php else: ?>
+                <div class="ui mini grey label" style="margin-left: auto;"><i class="lock icon"></i>未解锁</div>
+              <?php endif; ?>
             </div>
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
               <?php if ($view_has_source_license): ?>
@@ -342,13 +340,13 @@
                 <?php if (!empty($view_courseware_full_preview_url)): ?>
                   <a href="<?php echo htmlspecialchars($view_courseware_full_preview_url, ENT_QUOTES, 'UTF-8'); ?>"
                      target="_blank" rel="noopener noreferrer" class="ui small primary button">
-                    <i class="eye icon"></i> 查看完整预览
+                    <i class="eye icon"></i> ✓ 查看完整预览
                   </a>
                 <?php endif; ?>
                 <?php if (!empty($view_course['courseware_link'])): ?>
                   <a href="<?php echo htmlspecialchars($view_course['courseware_link'], ENT_QUOTES, 'UTF-8'); ?>"
                      target="_blank" rel="noopener noreferrer" class="ui small positive button">
-                    <i class="download icon"></i> 下载原文件
+                    <i class="download icon"></i> ✓ 下载原文件
                   </a>
                 <?php endif; ?>
               <?php elseif ($view_has_preview_license): ?>
@@ -356,18 +354,26 @@
                 <?php if (!empty($view_courseware_full_preview_url)): ?>
                   <a href="<?php echo htmlspecialchars($view_courseware_full_preview_url, ENT_QUOTES, 'UTF-8'); ?>"
                      target="_blank" rel="noopener noreferrer" class="ui small primary button">
-                    <i class="eye icon"></i> 查看完整预览
+                    <i class="eye icon"></i> ✓ 查看完整预览
                   </a>
                 <?php else: ?>
                   <span style="color: #52c41a; font-size: 0.9em;"><i class="checkmark icon"></i> 已拥有完整预览</span>
+                <?php endif; ?>
+                <?php if (!empty($view_course['courseware_link'])): ?>
+                  <div style="width: 100%; margin-top: 4px; color: #999; font-size: 0.8em;">
+                    <i class="lock icon"></i> 下载原文件需升级原文件版
+                  </div>
                 <?php endif; ?>
               <?php else: ?>
                 <!-- 未购：仅部分内容预览 -->
                 <?php if (!empty($view_courseware_url)): ?>
                   <a href="<?php echo htmlspecialchars($view_courseware_url, ENT_QUOTES, 'UTF-8'); ?>"
                      target="_blank" rel="noopener noreferrer" class="ui small basic primary button">
-                    <i class="external alternate icon"></i> 查看部分内容
+                    <i class="external alternate icon"></i> 查看免费试看
                   </a>
+                  <div style="width: 100%; margin-top: 4px; color: #999; font-size: 0.8em;">
+                    <i class="lock icon"></i> 完整内容需在左侧解锁
+                  </div>
                 <?php else: ?>
                   <span style="color: #999; font-size: 0.9em;"><i class="lock icon"></i> 购买后可访问</span>
                 <?php endif; ?>
@@ -384,47 +390,53 @@
             <div style="display: flex; align-items: center; margin-bottom: 6px;">
               <i class="book outline icon" style="color: #52c41a; margin-right: 6px;"></i>
               <span style="font-weight: 600; font-size: 1em;"><?php echo $MSG_LESSON_PLAN; ?></span>
-              <span style="color: #999; font-size: 0.8em; margin-left: 8px;">
-                <?php if ($view_has_source_license): ?>
-                  完整预览 + 可下载
-                <?php elseif ($view_has_preview_license): ?>
-                  完整预览
-                <?php elseif (!empty($view_lesson_plan_url)): ?>
-                  部分内容免费预览
-                <?php else: ?>
-                  仅支持下载
-                <?php endif; ?>
-              </span>
+              <?php if ($view_has_source_license): ?>
+                <div class="ui mini green label" style="margin-left: auto;"><i class="checkmark icon"></i>已解锁 · 可下载</div>
+              <?php elseif ($view_has_preview_license): ?>
+                <div class="ui mini blue label" style="margin-left: auto;"><i class="checkmark icon"></i>已解锁 · 仅预览</div>
+              <?php elseif (!empty($view_lesson_plan_url)): ?>
+                <div class="ui mini orange label" style="margin-left: auto;">试看版</div>
+              <?php else: ?>
+                <div class="ui mini grey label" style="margin-left: auto;"><i class="lock icon"></i>未解锁</div>
+              <?php endif; ?>
             </div>
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
               <?php if ($view_has_source_license): ?>
                 <?php if (!empty($view_lesson_plan_full_preview_url)): ?>
                   <a href="<?php echo htmlspecialchars($view_lesson_plan_full_preview_url, ENT_QUOTES, 'UTF-8'); ?>"
                      target="_blank" rel="noopener noreferrer" class="ui small primary button">
-                    <i class="eye icon"></i> 查看完整预览
+                    <i class="eye icon"></i> ✓ 查看完整预览
                   </a>
                 <?php endif; ?>
                 <?php if (!empty($view_course['lesson_plan_link'])): ?>
                   <a href="<?php echo htmlspecialchars($view_course['lesson_plan_link'], ENT_QUOTES, 'UTF-8'); ?>"
                      target="_blank" rel="noopener noreferrer" class="ui small positive button">
-                    <i class="download icon"></i> 下载原文件
+                    <i class="download icon"></i> ✓ 下载原文件
                   </a>
                 <?php endif; ?>
               <?php elseif ($view_has_preview_license): ?>
                 <?php if (!empty($view_lesson_plan_full_preview_url)): ?>
                   <a href="<?php echo htmlspecialchars($view_lesson_plan_full_preview_url, ENT_QUOTES, 'UTF-8'); ?>"
                      target="_blank" rel="noopener noreferrer" class="ui small primary button">
-                    <i class="eye icon"></i> 查看完整预览
+                    <i class="eye icon"></i> ✓ 查看完整预览
                   </a>
                 <?php else: ?>
                   <span style="color: #52c41a; font-size: 0.9em;"><i class="checkmark icon"></i> 已拥有完整预览</span>
+                <?php endif; ?>
+                <?php if (!empty($view_course['lesson_plan_link'])): ?>
+                  <div style="width: 100%; margin-top: 4px; color: #999; font-size: 0.8em;">
+                    <i class="lock icon"></i> 下载原文件需升级原文件版
+                  </div>
                 <?php endif; ?>
               <?php else: ?>
                 <?php if (!empty($view_lesson_plan_url)): ?>
                   <a href="<?php echo htmlspecialchars($view_lesson_plan_url, ENT_QUOTES, 'UTF-8'); ?>"
                      target="_blank" rel="noopener noreferrer" class="ui small basic primary button">
-                    <i class="external alternate icon"></i> 查看部分内容
+                    <i class="external alternate icon"></i> 查看免费试看
                   </a>
+                  <div style="width: 100%; margin-top: 4px; color: #999; font-size: 0.8em;">
+                    <i class="lock icon"></i> 完整内容需在左侧解锁
+                  </div>
                 <?php else: ?>
                   <span style="color: #999; font-size: 0.9em;"><i class="lock icon"></i> 购买后可访问</span>
                 <?php endif; ?>
@@ -480,9 +492,10 @@
 
 <script>
 function showLoginPrompt() {
-    if (confirm('登录后可购买/领取课件，是否立即登录？')) {
-        window.location.href = 'loginpage.php';
-    }
+    // 与「注册」按钮一致，直接跳转登录页（不再弹确认框）
+    // 登录成功后回到当前课件详情页继续购买
+    var returnUrl = window.location.pathname + window.location.search;
+    window.location.href = 'loginpage.php?redirect=' + encodeURIComponent(returnUrl);
 }
 </script>
 <?php include("template/$OJ_TEMPLATE/footer.php");?>

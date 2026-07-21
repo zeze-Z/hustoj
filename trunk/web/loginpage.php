@@ -13,8 +13,8 @@ $view_title = "LOGIN";
 // 验证 redirect 参数，防止开放重定向
 $redirect = isset($_GET['redirect']) ? $_GET['redirect'] : '';
 if ($redirect) {
-    // 只允许相对路径或绝对路径，禁止外部域名
-    if (strpos($redirect, '://') !== false || !preg_match('/^[\/a-zA-Z0-9._-]+$/', $redirect)) {
+    // 只允许相对路径或绝对路径（含查询参数），禁止外部域名
+    if (strpos($redirect, '://') !== false || !preg_match('/^[\/a-zA-Z0-9._?=&-]+$/', $redirect)) {
         $redirect = '';
     }
 }

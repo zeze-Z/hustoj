@@ -187,8 +187,8 @@ if ($login) {
     // 获取 redirect 参数，优先使用 POST，其次 GET
     $redirect = isset($_POST['redirect']) ? $_POST['redirect'] : (isset($_GET['redirect']) ? $_GET['redirect'] : '');
     if ($redirect) {
-        // 验证 redirect 参数，防止开放重定向
-        if (strpos($redirect, '://') !== false || !preg_match('/^[\/a-zA-Z0-9._-]+$/', $redirect)) {
+        // 验证 redirect 参数，防止开放重定向（允许查询参数 ?=;&）
+        if (strpos($redirect, '://') !== false || !preg_match('/^[\/a-zA-Z0-9._?=&-]+$/', $redirect)) {
             $redirect = '';
         }
     }

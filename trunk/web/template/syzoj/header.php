@@ -73,6 +73,7 @@
             'AI_experience.php',
             'ai_drawing_game.php',
             'course.php',           // 课件列表
+            'course_info.php',      // 课件详情（游客可查看，购买时再要求登录）
         ];
 
         // 游客模式访问限制
