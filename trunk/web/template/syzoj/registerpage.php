@@ -322,6 +322,7 @@
       </div>
 
       <form action="register.php" method="post" role="form" id="registerForm">
+        <input type="hidden" name="register_fingerprint" id="registerFingerprint" value="">
         <!-- 角色选择 -->
         <div class="form-group">
           <label>注册角色 <span class="required">*</span></label>
@@ -413,6 +414,65 @@
 
 <script>
 $(document).ready(function(){
+    // 生成设备指纹：UA + 屏幕分辨率 + 语言 + 时区 + Canvas哈希（SHA-256，不支持时降级）
+    async function generateFingerprint() {
+        var components = [
+            navigator.userAgent,
+            screen.width + 'x' + screen.height,
+            navigator.language || navigator.browserLanguage,
+            Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+        ];
+
+        try {
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            if (ctx) {
+                canvas.width = 200;
+                canvas.height = 30;
+                ctx.textBaseline = 'alphabetic';
+                ctx.fillStyle = '#f60';
+                ctx.fillRect(2, 2, 120, 20);
+                ctx.fillStyle = '#069';
+                ctx.font = '14px Arial';
+                ctx.fillText('fp:' + components.join('|'), 2, 18);
+                components.push(canvas.toDataURL('image/png'));
+            } else {
+                components.push('no-canvas');
+            }
+        } catch (e) {
+            components.push('canvas-error');
+        }
+
+        var raw = components.join('###');
+
+        // 优先使用 SHA-256，不支持时降级为 32-bit hash
+        if (window.crypto && crypto.subtle) {
+            try {
+                var encoder = new TextEncoder();
+                var data = encoder.encode(raw);
+                var hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                var hashArray = Array.from(new Uint8Array(hashBuffer));
+                var hashHex = hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+                return 'fp_' + hashHex.substring(0, 32);
+            } catch (e) {
+                // SHA-256 失败，降级
+            }
+        }
+
+        // 降级方案：32-bit hash
+        var hash = 0;
+        for (var i = 0; i < raw.length; i++) {
+            var chr = raw.charCodeAt(i);
+            hash = ((hash << 5) - hash) + chr;
+            hash |= 0;
+        }
+        return 'fp_' + Math.abs(hash).toString(16);
+    }
+
+    generateFingerprint().then(function(fingerprint) {
+        $('#registerFingerprint').val(fingerprint);
+    });
+
     // 表单提交前的验证
     $('#registerForm').on('submit', function(e){
         var pwd = $('input[name="password"]').val();

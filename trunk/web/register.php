@@ -178,6 +178,40 @@ if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && !empty(trim($_SERVER['HTTP_X_FORW
     $ip = (htmlentities($tmp_ip[0], ENT_QUOTES, "UTF-8"));
 }
 
+// 注册设备指纹：同指纹限制（清Cookie仍可识别同一浏览器/设备）
+// 配置项 $OJ_FINGERPRINT_DAYS：限制天数，默认7天；$OJ_FINGERPRINT_MAX：同指纹最大账号数，默认3个
+$fingerprint_days = isset($OJ_FINGERPRINT_DAYS) ? intval($OJ_FINGERPRINT_DAYS) : 7;
+$fingerprint_max = isset($OJ_FINGERPRINT_MAX) ? intval($OJ_FINGERPRINT_MAX) : 3;
+if ($fingerprint_days < 1) $fingerprint_days = 7;
+if ($fingerprint_max < 1) $fingerprint_max = 3;
+$register_fingerprint = isset($_POST['register_fingerprint']) ? trim($_POST['register_fingerprint']) : '';
+
+// 空指纹直接拦截：客户端未生成指纹时禁止注册，避免绕过设备重复注册校验
+if (empty($register_fingerprint)) {
+    print "<script language='javascript'>\n";
+    print "alert('设备指纹获取失败，请刷新页面重试');\n";
+    print "history.go(-1);\n</script>";
+    exit(0);
+}
+
+// 校验指纹格式：非法格式直接拦截，防止伪造绕过
+if (!preg_match('/^[A-Za-z0-9_\-]{4,128}$/', $register_fingerprint)) {
+    print "<script language='javascript'>\n";
+    print "alert('设备指纹格式异常，请刷新页面重试');\n";
+    print "history.go(-1);\n</script>";
+    exit(0);
+}
+
+$sql = "SELECT COUNT(*) FROM `users` WHERE `register_fingerprint` = ? AND `reg_time` > DATE_SUB(NOW(), INTERVAL ? DAY)";
+$result = pdo_query($sql, $register_fingerprint, $fingerprint_days);
+$fp_count = intval($result[0][0]);
+if ($fp_count >= $fingerprint_max) {
+    print "<script language='javascript'>\n";
+    print "alert('该设备近期注册账号数已达上限(" . $fingerprint_max . "个)');\n";
+    print "history.go(-1);\n</script>";
+    exit(0);
+}
+
 // 检查IP是否已经注册过
 if (isset($OJ_REG_SPEED) && $OJ_REG_SPEED > 0) {
 
@@ -208,11 +242,11 @@ else
 if (isset($OJ_REG_NEED_CONFIRM) && $OJ_REG_NEED_CONFIRM) $defunct = "Y";
 else $defunct = "N";
 
-// 插入新用户到数据库（包含 school_id 和 role）
+// 插入新用户到数据库（包含 school_id 和 role，以及设备指纹和注册IP）
 $sql = "INSERT INTO `users`("
-        . "`user_id`,`email`,`ip`,`accesstime`,`password`,`reg_time`,`nick`,`school`,`school_id`,`role`,`group_name`,`defunct`,activecode)"
-        . "VALUES(?,?,?,NOW(),?,NOW(),?,?,?,?,?,?,?)";
-$rows = pdo_query($sql, $user_id, $email, $ip, $password, $nick, $school, $school_id, $role, getMappedSpecial($user_id), $defunct, $_SESSION[$OJ_NAME . '_' . 'activecode']);
+        . "`user_id`,`email`,`ip`,`accesstime`,`password`,`reg_time`,`nick`,`school`,`school_id`,`role`,`group_name`,`defunct`,activecode,`register_fingerprint`,`reg_ip`)"
+        . "VALUES(?,?,?,NOW(),?,NOW(),?,?,?,?,?,?,?,?,?)";
+$rows = pdo_query($sql, $user_id, $email, $ip, $password, $nick, $school, $school_id, $role, getMappedSpecial($user_id), $defunct, $_SESSION[$OJ_NAME . '_' . 'activecode'], $register_fingerprint, $ip);
 
 // 检查数据库插入是否成功
 if ($rows === -1 || $rows === false) {
