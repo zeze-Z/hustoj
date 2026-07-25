@@ -3,18 +3,47 @@ require_once('./include/db_info.inc.php');
 require_once('./include/setlang.php');
 require_once("./include/const.inc.php");
 require_once("./include/my_func.inc.php");
+require_once("./include/login_reward.php");
 
 $status = isset($_GET['status']) ? trim($_GET['status']) : '';
 $reason = isset($_GET['reason']) ? trim($_GET['reason']) : '';
+
+$reward_points = 6; // 注册/激活奖励积分
+$cur_user_id = isset($_SESSION[$OJ_NAME.'_'.'user_id']) ? $_SESSION[$OJ_NAME.'_'.'user_id'] : '';
+$streak_info = get_login_reward_info($cur_user_id);
+
+// 弹窗参数：activated=新手6分；streak=连续登录2分
+$show_modal = false;
+$modal_points = 0;
+$modal_title  = '';
+$modal_btn    = '太棒了，去看看';
+$modal_onclose_js = ''; // 弹窗关闭后执行的 JS
+
+if ($status === 'activated') {
+    $show_modal = true;
+    $modal_points = $reward_points;
+    $modal_title  = '恭喜获得新手积分奖励';
+    $modal_onclose_js = "$('#welcome-content').fadeIn(300);"; // 关闭后展示新手福利内容
+} elseif ($status === 'streak') {
+    $show_modal = true;
+    $modal_points = isset($_GET['points']) ? max(1, intval($_GET['points'])) : 2;
+    $modal_title  = '连续登录奖励';
+    $modal_btn    = '继续';
+    // 关闭后跳转到 redirect（校验防开放重定向）或首页
+    $sr = isset($_GET['redirect']) ? trim($_GET['redirect']) : '';
+    if ($sr !== '' && (strpos($sr, '://') !== false || !preg_match('#^[\/a-zA-Z0-9._?=&-]+$#', $sr))) {
+        $sr = '';
+    }
+    $streak_target = $sr !== '' ? $sr : 'index.php';
+    $modal_onclose_js = "window.top.location.href='" . htmlspecialchars($streak_target, ENT_QUOTES, 'UTF-8') . "';";
+}
 
 $show_title = "欢迎加入 - $OJ_NAME";
 include("template/$OJ_TEMPLATE/header.php");
 ?>
 
 <?php if ($status === 'activated'): ?>
-<!-- ========== 激活成功 ========== -->
-
-<!-- 新手福利内容（弹窗关闭后显示） -->
+<!-- ========== 新手福利内容（激活弹窗关闭后显示） ========== -->
 <div id="welcome-content" style="display: none;">
     <!-- Hero区域 -->
     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 50px 40px; text-align: center; margin-bottom: 40px; position: relative; overflow: hidden;">
@@ -23,6 +52,44 @@ include("template/$OJ_TEMPLATE/header.php");
         <h1 style="color: #fff; font-size: 32px; margin: 0 0 12px; font-weight: 700; position: relative;">欢迎加入 <?php echo $OJ_NAME; ?></h1>
         <p style="color: rgba(255,255,255,0.9); font-size: 18px; margin: 0; position: relative;">您的编程教学之旅，从这里启航</p>
     </div>
+
+    <!-- 签到进度卡 -->
+    <?php if (!empty($streak_info)):
+        $s_streak = intval($streak_info['login_streak']);
+        $s_status = intval($streak_info['login_reward_status']);
+        $s_today  = ($streak_info['last_login_reward_date'] !== null
+                     && $streak_info['last_login_reward_date'] === $streak_info['today']);
+        if ($s_status === 1) {           // 已完成
+            $s_title = '🎉 7天签到完成';
+            $s_desc  = '14积分已全部领取，感谢你的持续陪伴！';
+            $s_pct   = 100;
+        } elseif ($s_status === 2) {      // 断签
+            $s_title = '⚠️ 签到已中断';
+            $s_desc  = '连续登录中断，后续不再发放奖励。';
+            $s_pct   = min(100, $s_streak * 100 / 7);
+        } else {                          // 进行中
+            $s_pct = min(100, $s_streak * 100 / 7);
+            if ($s_streak === 0) {
+                $s_title = '🎁 注册奖励 ' . $reward_points . ' 积分已到账';
+                $s_desc  = $s_today ? '明天起连续登录每天 +2 积分，连签7天共得14积分'
+                                    : '今日登录即可领2积分，连签7天共得14积分';
+            } else {
+                $s_title = $s_today ? '✅ 今日已签到 +2 积分' : '🔥 今日登录可领 +2 积分';
+                $s_desc  = '已连续 ' . $s_streak . '/7 天，' . ($s_today ? '明天记得继续哦' : '今日登录即可累计');
+            }
+        }
+    ?>
+    <div style="max-width: 700px; margin: 0 auto 40px; background: #fff; border-radius: 16px; padding: 28px 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #f0f0f0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <div style="font-size: 18px; font-weight: 600; color: #333;"><?php echo htmlspecialchars($s_title); ?></div>
+            <div style="font-size: 14px; color: #888;"><?php echo $s_streak; ?>/7 天</div>
+        </div>
+        <div style="background: #f0f0f5; border-radius: 8px; height: 10px; overflow: hidden; margin-bottom: 12px;">
+            <div style="width: <?php echo $s_pct; ?>%; height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); transition: width .6s ease;"></div>
+        </div>
+        <div style="font-size: 14px; color: #888; line-height: 1.6;"><?php echo htmlspecialchars($s_desc); ?></div>
+    </div>
+    <?php endif; ?>
 
     <!-- 功能入口 -->
     <div style="max-width: 900px; margin: 0 auto;">
@@ -66,7 +133,7 @@ include("template/$OJ_TEMPLATE/header.php");
         <!-- 底部按钮 -->
         <div style="text-align: center; margin-top: 50px;">
             <a href="index.php" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 14px 48px; border-radius: 8px; font-size: 16px; font-weight: 600; text-decoration: none; box-shadow: 0 4px 15px rgba(102,126,234,0.4); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102,126,234,0.5)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102,126,234,0.4)'">
-                开始探索 →
+                开始探索 ->
             </a>
         </div>
     </div>
@@ -78,8 +145,10 @@ include("template/$OJ_TEMPLATE/header.php");
         }
     </style>
 </div>
-</div>
+<?php endif; ?>
 
+<?php if ($show_modal): ?>
+<!-- ========== 积分发放弹窗（注册6分 / 连续登录2分 共用，礼花效果） ========== -->
 <!-- 半透明遮罩层 -->
 <div id="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; backdrop-filter: blur(3px);"></div>
 
@@ -87,7 +156,7 @@ include("template/$OJ_TEMPLATE/header.php");
 <div id="points-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background: rgba(255,255,255,0.92); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; min-width: 380px; max-width: 90vw; backdrop-filter: blur(10px);">
     <div style="background: linear-gradient(135deg, rgba(102,126,234,0.9) 0%, rgba(118,75,162,0.9) 100%); padding: 30px; text-align: center;">
         <div style="font-size: 48px; margin-bottom: 10px;">🎉</div>
-        <div style="font-size: 20px; color: #fff; font-weight: 600;">恭喜获得新手积分奖励</div>
+        <div style="font-size: 20px; color: #fff; font-weight: 600;"><?php echo htmlspecialchars($modal_title); ?></div>
     </div>
     <div style="text-align: center; padding: 40px 30px;">
         <div style="position: relative; display: inline-block;">
@@ -98,7 +167,7 @@ include("template/$OJ_TEMPLATE/header.php");
         <div id="points-message" style="font-size: 16px; margin-top: 15px; color: #666;">积分正在发放中...</div>
     </div>
     <div style="text-align: center; padding: 0 30px 30px;">
-        <button id="confirm-btn" class="ui primary button" style="display: none; padding: 12px 60px; font-size: 16px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; cursor: pointer;">太棒了，去看看</button>
+        <button id="confirm-btn" class="ui primary button" style="display: none; padding: 12px 60px; font-size: 16px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; cursor: pointer;"><?php echo htmlspecialchars($modal_btn); ?></button>
     </div>
 </div>
 
@@ -108,7 +177,7 @@ include("template/$OJ_TEMPLATE/header.php");
 // 积分动画（匀速递增，每50ms +1，共1秒）
 function animatePoints() {
     var current = 0;
-    var target = 20;
+    var target = <?php echo intval($modal_points); ?>;
     var interval = 50; // 每50ms递增一次
     var display = document.getElementById('points-display');
     var message = document.getElementById('points-message');
@@ -119,7 +188,7 @@ function animatePoints() {
         display.textContent = current;
         if (current >= target) {
             clearInterval(timer);
-            message.textContent = '您已获得 20 积分奖励！';
+            message.textContent = '您已获得 ' + target + ' 积分奖励！';
             btn.style.display = 'inline-block';
         }
     }, interval);
@@ -158,7 +227,7 @@ $(document).ready(function() {
     $('#confirm-btn').click(function() {
         $('#points-modal').fadeOut(300);
         $('#modal-overlay').fadeOut(300, function() {
-            $('#welcome-content').fadeIn(300);
+            <?php echo $modal_onclose_js; ?>
         });
     });
 
@@ -166,7 +235,7 @@ $(document).ready(function() {
     $('#modal-overlay').click(function() {
         $('#points-modal').fadeOut(300);
         $('#modal-overlay').fadeOut(300, function() {
-            $('#welcome-content').fadeIn(300);
+            <?php echo $modal_onclose_js; ?>
         });
     });
 });

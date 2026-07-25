@@ -22,6 +22,7 @@
 | V1.9 | 2026-06-07 | 平台积分充值与课件积分支付体系 |
 | V2.1 | 2026-07-16 | 新用户注册奖励字段 new_user_reward_claimed |
 | V2.2 | 2026-07-18 | 修复存量用户被误判为新用户跳转 welcome |
+| V2.4 | 2026-07-24 | 新客连续登录分批奖励（20积分分批发放） |
 
 ---
 
@@ -79,6 +80,10 @@ mysql -u root -p jol < db/V2.1_20260716_add_new_user_reward_claimed.sql
 
 # 12. 修复存量用户被误判为新用户跳转 welcome（V2.2）
 mysql -u root -p jol < db/V2.2_20260718_fix_existing_users_reward_claimed.sql
+
+# 13. 新客连续登录分批奖励（V2.4）
+#     ⚠️ 强制执行：存量 UPDATE 必须跑，否则存量用户下次登录被误发2分
+mysql -u root -p jol < db/V2.4_20260724_login_streak.sql
 ```
 
 **验证：**
@@ -172,6 +177,14 @@ SELECT COUNT(*) FROM jol.users
  WHERE new_user_reward_claimed=0
    AND (reg_time < '2026-07-16 00:00:00' OR reg_time IS NULL);
 -- 预期：0
+
+-- 新客连续登录分批奖励（V2.4）
+DESCRIBE jol.users login_streak;              -- int, NOT NULL, Default: 0
+DESCRIBE jol.users last_login_reward_date;   -- date, NULL
+DESCRIBE jol.users login_reward_status;      -- tinyint(1), NOT NULL, Default: 0
+-- 存量用户全部排除：迁移后 login_reward_status=0 的记录应为 0
+SELECT COUNT(*) FROM jol.users WHERE login_reward_status = 0;
+-- 预期：0（迁移后存量全部为2；功能上线后新注册用户才为0）
 ```
 
 ---

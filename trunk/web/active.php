@@ -3,6 +3,7 @@ require_once('./include/db_info.inc.php');
 require_once('./include/setlang.php');
 require_once("./include/const.inc.php");
 require_once("./include/my_func.inc.php");
+require_once("./include/login_reward.php");
 
 session_start();
 
@@ -28,9 +29,9 @@ if (isset($OJ_EMAIL_CONFIRM) && $OJ_EMAIL_CONFIRM && strlen($code) == 18) {
         $result = pdo_query($sql, $code);
 
         if ($result > 0) {
-            // 发放 20 积分（新用户注册奖励）-- 仅在未领取时发放，防止重复
+            // 发放 6 积分（新用户注册奖励）-- 仅在未领取时发放，防止重复
             if ($reward_claimed == 0) {
-                $register_point_reward = 20;
+                $register_point_reward = 6;
                 point_tx_begin();
                 $point_result = point_apply_change(
                     $user_id,
@@ -40,9 +41,9 @@ if (isset($OJ_EMAIL_CONFIRM) && $OJ_EMAIL_CONFIRM && strlen($code) == 18) {
                     '新用户注册奖励'
                 );
                 if ($point_result['success']) {
+                    // 播种签到基线（含 new_user_reward_claimed=1 + 3个签到字段），与6分发放同事务保证原子
+                    seed_login_reward($user_id);
                     point_tx_commit();
-                    // 标记已领取，防止登录补发重复
-                    pdo_query("UPDATE `users` SET `new_user_reward_claimed`=1 WHERE `user_id`=?", $user_id);
                 } else {
                     point_tx_rollback();
                     // 积分发放失败不阻断激活流程，仅记录日志
@@ -62,6 +63,12 @@ if (isset($OJ_EMAIL_CONFIRM) && $OJ_EMAIL_CONFIRM && strlen($code) == 18) {
             }
             $_SESSION[$OJ_NAME . '_' . 'ac'] = array();
             $_SESSION[$OJ_NAME . '_' . 'sub'] = array();
+
+            // 记录登录日志（与 login.php 同格式）。
+            // 必须写：init.php 的 IP 一致性检查($OJ_LIMIT_TO_1_IP)会取 loginlog 最新 IP 比对，
+            // 激活自动登录若不写 loginlog，lastip 为空 != 当前 IP，welcome.php 会被 init.php 自动登出。
+            $login_ip = isset($ip) ? $ip : $_SERVER['REMOTE_ADDR'];
+            pdo_query("INSERT INTO `loginlog`(user_id,password,ip,time) VALUES(?,'login ok',?,NOW())", $user_id, $login_ip);
 
             // 跳转到 welcome.php
             header("Location: welcome.php?status=activated");

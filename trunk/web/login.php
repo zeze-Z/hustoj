@@ -1,6 +1,7 @@
 <?php
 require_once("./include/db_info.inc.php");
 require_once("./include/my_func.inc.php");
+require_once("./include/login_reward.php");
 require_once('./include/setlang.php');
 require_once(dirname(__FILE__)."/include/feishu_notify.php");
 if (isset($OJ_CSRF) && $OJ_CSRF) require_once("./include/csrf_check.php");
@@ -155,12 +156,13 @@ if ($login) {
         setcookie($OJ_NAME . "_user", $login, $C_time);
         setcookie($OJ_NAME . "_check", $C_res . (strlen($C_res) * strlen($C_res)) % 7, $C_time);
     }
-    // 检测未领取新用户奖励（登录后补发场景）
+    // 检测未领取新用户奖励（登录后补发场景）：发放6分并播种签到基线
     if (!empty($group_row) && $group_row[0]['defunct'] == 'N' && $group_row[0]['new_user_reward_claimed'] == 0) {
-        // 发放20积分（如果当前积分为0，避免重复发放）
+        // 仅当前积分为0时发放6分，避免重复发放
         $current_points = point_get_balance($login);
+        $reward_granted = false;
         if ($current_points == 0) {
-            $register_point_reward = 20;
+            $register_point_reward = 6;
             point_tx_begin();
             $point_result = point_apply_change(
                 $login,
@@ -170,18 +172,26 @@ if ($login) {
                 '新用户注册奖励（登录补发）'
             );
             if ($point_result['success']) {
+                // 播种签到基线（含 new_user_reward_claimed=1 + 3个签到字段），与6分发放同事务保证原子
+                seed_login_reward($login);
                 point_tx_commit();
+                $reward_granted = true;
             } else {
                 point_tx_rollback();
                 error_log("Login: failed to grant points to user {$login}: " . $point_result['message']);
             }
         }
-        // 标记已领取（无论积分是否发放，都标记为已处理，避免每次登录重复进入此分支）
-        pdo_query("UPDATE `users` SET `new_user_reward_claimed`=1 WHERE `user_id`=?", $login);
+        // 无论6分是否发放，都标记已处理+播种签到基线，避免每次登录重复进入此分支并保证签到流程可用
+        if (!$reward_granted) {
+            seed_login_reward($login);
+        }
 
         header("Location: welcome.php?status=activated");
         exit(0);
     }
+
+    // 普通登录：发放每日连续登录奖励（仅进行中且当日未领时发2分；失败/异常不阻断登录）
+    $streak_result = grant_login_streak_reward($login);
 
     echo "<script language='javascript'>\n";
     // 获取 redirect 参数，优先使用 POST，其次 GET
@@ -191,6 +201,18 @@ if ($login) {
         if (strpos($redirect, '://') !== false || !preg_match('/^[\/a-zA-Z0-9._?=&-]+$/', $redirect)) {
             $redirect = '';
         }
+    }
+
+    // 若本日发放了连续登录奖励，先经 welcome 弹窗展示礼花效果，再由弹窗跳到目标页
+    if (!empty($streak_result['granted'])) {
+        $final_target = $redirect;
+        if (!$final_target) {
+            if (isset($_SESSION[$OJ_NAME . "_administrator"])) $final_target = 'admin';
+            else if (isset($_SESSION[$OJ_NAME . "_contest_creator"])) $final_target = 'contest.php?my';
+            else $final_target = 'index.php';
+        }
+        $redirect = 'welcome.php?status=streak&points=' . intval($streak_result['points'])
+                  . '&redirect=' . rawurlencode($final_target);
     }
 
     if ($redirect) {
