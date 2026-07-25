@@ -8,6 +8,7 @@
 require_once('./include/db_info.inc.php');
 require_once('./include/const.inc.php');
 require_once('./include/my_func.inc.php');
+require_once("./include/login_reward.php");
 require_once('./include/cache_start.php');
 require_once('./include/setlang.php');
 require_once('./include/set_post_key.php');
@@ -18,6 +19,10 @@ if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
 }
 
 $user_id = $_SESSION[$OJ_NAME . '_' . 'user_id'];
+
+// 签到进度（积分中心常驻展示，供后续登录的用户随时查看签到状态）
+$view_streak_info   = get_login_reward_info($user_id);
+$view_reward_points = 6;
 
 // flash 信息（兑换结果回跳后展示）
 $view_flash_type = isset($_GET['msg_type']) ? trim($_GET['msg_type']) : '';

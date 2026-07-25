@@ -19,6 +19,9 @@
     </div>
   <?php endif; ?>
 
+  <!-- 签到进度卡（常驻入口，后续登录也能看到签到状态） -->
+  <?php echo login_reward_streak_card_html($view_streak_info, $view_reward_points); ?>
+
   <!-- 我的积分 + 充值卡兑换：左右并排 -->
   <div class="ui two column stackable grid">
     <div class="column">

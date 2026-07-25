@@ -54,42 +54,7 @@ include("template/$OJ_TEMPLATE/header.php");
     </div>
 
     <!-- 签到进度卡 -->
-    <?php if (!empty($streak_info)):
-        $s_streak = intval($streak_info['login_streak']);
-        $s_status = intval($streak_info['login_reward_status']);
-        $s_today  = ($streak_info['last_login_reward_date'] !== null
-                     && $streak_info['last_login_reward_date'] === $streak_info['today']);
-        if ($s_status === 1) {           // 已完成
-            $s_title = '🎉 7天签到完成';
-            $s_desc  = '14积分已全部领取，感谢你的持续陪伴！';
-            $s_pct   = 100;
-        } elseif ($s_status === 2) {      // 断签
-            $s_title = '⚠️ 签到已中断';
-            $s_desc  = '连续登录中断，后续不再发放奖励。';
-            $s_pct   = min(100, $s_streak * 100 / 7);
-        } else {                          // 进行中
-            $s_pct = min(100, $s_streak * 100 / 7);
-            if ($s_streak === 0) {
-                $s_title = '🎁 注册奖励 ' . $reward_points . ' 积分已到账';
-                $s_desc  = $s_today ? '明天起连续登录每天 +2 积分，连签7天共得14积分'
-                                    : '今日登录即可领2积分，连签7天共得14积分';
-            } else {
-                $s_title = $s_today ? '✅ 今日已签到 +2 积分' : '🔥 今日登录可领 +2 积分';
-                $s_desc  = '已连续 ' . $s_streak . '/7 天，' . ($s_today ? '明天记得继续哦' : '今日登录即可累计');
-            }
-        }
-    ?>
-    <div style="max-width: 700px; margin: 0 auto 40px; background: #fff; border-radius: 16px; padding: 28px 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #f0f0f0;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-            <div style="font-size: 18px; font-weight: 600; color: #333;"><?php echo htmlspecialchars($s_title); ?></div>
-            <div style="font-size: 14px; color: #888;"><?php echo $s_streak; ?>/7 天</div>
-        </div>
-        <div style="background: #f0f0f5; border-radius: 8px; height: 10px; overflow: hidden; margin-bottom: 12px;">
-            <div style="width: <?php echo $s_pct; ?>%; height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); transition: width .6s ease;"></div>
-        </div>
-        <div style="font-size: 14px; color: #888; line-height: 1.6;"><?php echo htmlspecialchars($s_desc); ?></div>
-    </div>
-    <?php endif; ?>
+    <?php echo login_reward_streak_card_html($streak_info, $reward_points); ?>
 
     <!-- 功能入口 -->
     <div style="max-width: 900px; margin: 0 auto;">

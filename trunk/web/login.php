@@ -172,7 +172,8 @@ if ($login) {
                 '新用户注册奖励（登录补发）'
             );
             if ($point_result['success']) {
-                // 播种签到基线（含 new_user_reward_claimed=1 + 3个签到字段），与6分发放同事务保证原子
+                // 播种签到基线（与6分同事务保证原子）；seed 内部按 status 判定：
+                // status=0 真正新用户进入签到，status=2 存量/灰区仅标记已领取、不进签到
                 seed_login_reward($login);
                 point_tx_commit();
                 $reward_granted = true;
