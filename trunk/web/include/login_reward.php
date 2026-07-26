@@ -223,11 +223,11 @@ function login_reward_streak_card_html($streak_info, $reward_points = 6) {
 
     if ($s_status === 1) {           // 已完成
         $title = "🎉 {$target}天签到完成";
-        $desc  = "🎉七天签到任务达成，恭喜获得{$total}积分奖励！";
+        $desc  = "七天签到任务达成，恭喜获得{$total}积分奖励！";
         $pct   = 100;
     } elseif ($s_status === 2) {      // 断签
         $title = '⚠️ 签到已中断';
-        $desc  = "⚠️连续签到遗憾中断了，快去关注小红书解锁更多福利吧！";
+        $desc  = "连续签到遗憾中断了，快去关注小红书解锁更多福利吧！";
         $pct   = min(100, $s_streak * 100 / $target);
     } else {                          // 进行中
         $pct = min(100, $s_streak * 100 / $target);
