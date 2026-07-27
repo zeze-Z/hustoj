@@ -52,8 +52,8 @@ if (isset($_GET['id'])) {
     $debug_free_practice = $OJ_FREE_PRACTICE ? 'yes' : 'no';
     error_log("DEBUG problem.php: user_id=$debug_user_id, school_id=$debug_school_id, is_admin=$debug_is_admin, free_practice=$debug_free_practice, school_filter=$school_filter");
 
-    $sql = "select c.contest_id,c.title from contest c inner join contest_problem cp on c.contest_id=cp.contest_id and cp.problem_id=?  WHERE ( c.`end_time`>'$now' and c.defunct='N' ) or c.`private`='1' $contest_filter ";
-    $used_in_contests = pdo_query($sql, $id);
+    $sql = "select c.contest_id,c.title from contest c inner join contest_problem cp on c.contest_id=cp.contest_id and cp.problem_id=?  WHERE ( c.`end_time`>? and c.defunct='N' ) or c.`private`='1' $contest_filter ";
+    $used_in_contests = pdo_query($sql, $id, $now);
     // 用于显示题目关联的比赛列表，也需要过滤
 
     if (isset($_SESSION[$OJ_NAME . '_' . 'administrator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_verifiter']) || isset($_SESSION[$OJ_NAME . '_' . 'contest_creator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_editor']))
@@ -63,7 +63,7 @@ if (isset($_GET['id'])) {
     else
         $sql = "SELECT * FROM `problem` A WHERE `problem_id`=? AND `defunct`='N' $school_filter AND `problem_id` NOT IN (
 				SELECT `problem_id` FROM `contest_problem` WHERE `contest_id` IN (
-					SELECT `contest_id` FROM `contest` c WHERE ( c.`end_time`>'$now' and c.defunct='N' ) $contest_filter or c.`private`='1'
+					SELECT `contest_id` FROM `contest` c WHERE ( c.`end_time`>? and c.defunct='N' ) $contest_filter or c.`private`='1'
 				)
 			)";        //////////  people should not see the problem used in contest before they end by modifying url in browser address bar
     /////////   if you give students opportunities to test their result out side the contest ,they can bypass the penalty time of 20 mins for
@@ -71,8 +71,8 @@ if (isset($_GET['id'])) {
     /////////   code for them in advance, if you want to share private contest problem to practice you should modify the contest into public
 
     $pr_flag = true;
-    error_log("DEBUG problem.php SQL: $sql, id=$id");
-    $result = pdo_query($sql, $id);
+    error_log("DEBUG problem.php SQL: $sql, id=$id, now=$now");
+    $result = pdo_query($sql, $id, $now);
     error_log("DEBUG problem.php result count: " . count($result));
 } else if (isset($_GET['cid']) && isset($_GET['pid'])) {
     //contest
@@ -91,9 +91,9 @@ if (isset($_GET['id'])) {
     if (isset($_SESSION[$OJ_NAME . '_' . 'administrator']) || isset($_SESSION[$OJ_NAME . '_' . 'contest_creator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_editor']))
         $sql = "SELECT langmask,private,defunct FROM `contest` WHERE `contest_id`=?";
     else
-        $sql = "SELECT langmask,private,defunct FROM `contest` WHERE `defunct`='N' AND `contest_id`=? AND (`start_time`<='$now' AND ('$now'<`end_time` or private='N') ) $contest_filter";
+        $sql = "SELECT langmask,private,defunct FROM `contest` WHERE `defunct`='N' AND `contest_id`=? AND (`start_time`<=? AND (?<`end_time` or private='N') ) $contest_filter";
 
-    $result = pdo_query($sql, $cid);
+    $result = pdo_query($sql, $cid, $now, $now);
     $rows_cnt = empty($result) ? 0 : count($result);
     if (empty($result) && !$OJ_FREE_PRACTICE && !isset($_SESSION[$OJ_NAME . '_administrator']) && !isset($_SESSION[$OJ_NAME . "_c" . $cid])) {
         $view_errors = "<title>$MSG_CONTEST</title><h2>No such Contest!</h2>";
@@ -178,12 +178,21 @@ if (count($result) != 1) {
             if (!(isset($OJ_EXAM_CONTEST_ID) || isset($OJ_ON_SITE_CONTEST_ID))) {
                 $contest_name = htmlentities($used_in_contests[0][1], ENT_QUOTES, 'UTF-8');
                 $contest_url = "contest.php?cid=" . intval($used_in_contests[0][0]);
+                $other_contests_html = '';
+                if (count($used_in_contests) > 1) {
+                    $other_contests_html = "<div style='margin-top:20px; color:#888; font-size:0.9em; text-align:center;'>该题目还出现在以下比赛：";
+                    for ($ci = 1; $ci < count($used_in_contests); $ci++) {
+                        $other_cid = intval($used_in_contests[$ci][0]);
+                        $other_name = htmlentities($used_in_contests[$ci][1], ENT_QUOTES, 'UTF-8');
+                        $other_contests_html .= "<a href='contest.php?cid=" . $other_cid . "' class='label label-warning' style='margin:0 3px;'>" . $other_name . "</a>";
+                    }
+                    $other_contests_html .= "</div>";
+                }
                 $view_errors = "
                     <div style='text-align:center; max-width:600px; margin:0 auto; padding:30px 20px;'>
                         <i class='lock icon' style='font-size:4em; color:#e74c3c; margin-bottom:20px;'></i>
-                        <h2 style='color:#333; margin-bottom:15px;'>这道题正在比赛中</h2>
+                        <h2 style='color:#333; margin-bottom:15px;'>该题目正在比赛中，暂时无法单独练习。</h2>
                         <p style='color:#666; font-size:1.1em; line-height:1.6; margin-bottom:25px;'>
-                            该题目已经用于私有比赛 <strong>\"" . $contest_name . "\"</strong>，暂时无法单独练习。<br>
                             你可以进入比赛页面，在对应比赛中查看和作答。
                         </p>
                         <div style='display:flex; gap:15px; justify-content:center; flex-wrap:wrap;'>
@@ -194,6 +203,7 @@ if (count($result) != 1) {
                                 <i class='list icon'></i> 浏览题单
                             </a>
                         </div>
+                        " . $other_contests_html . "
                     </div>";
             }
 

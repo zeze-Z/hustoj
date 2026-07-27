@@ -118,7 +118,7 @@ if(isset($_GET['keyword']) && $_GET['keyword']!=""){
       }
         echo "<td><a class='label label-warning' href=changepass.php?uid=".$row['user_id']."&getkey=".$_SESSION[$OJ_NAME.'_'.'getkey'].">".$MSG_RESET."</a></td>";
         echo "<td><a class='label label-success' href=privilege_add.php?uid=".$row['user_id']."&getkey=".$_SESSION[$OJ_NAME.'_'.'getkey'].">".$MSG_ADD."</a></td>";
-        echo "<td><a class='label label-info' href=user_action_log.php?user_id=".$row['user_id']."&getkey=".$_SESSION[$OJ_NAME.'_'.'getkey']." title='查看用户操作记录'>审计</a></td>";
+        echo "<td><a class='label label-info' href=user_action_log.php?user_id=".htmlentities(urlencode($row['user_id']))."&getkey=".$_SESSION[$OJ_NAME.'_'.'getkey']." title='查看用户操作记录'>审计</a></td>";
       echo "</tr>";
     } ?>
   </table>

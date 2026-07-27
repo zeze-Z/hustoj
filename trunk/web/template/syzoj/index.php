@@ -119,9 +119,9 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
         $problem_count_result = mysql_query_cache("select count(*) as count from `problem` p where p.defunct='N' and p.problem_id>0
             and p.problem_id not in (
                 select problem_id from contest_problem where contest_id in (
-                    select contest_id from contest c where (c.end_time>'$now' and c.defunct='N') or c.private='1'
+                    select contest_id from contest c where (c.end_time>? and c.defunct='N') or c.private='1'
                 )
-            )");
+            )", $now);
         $total_problems = $problem_count_result[0]['count'] ?? 0;
 
         $daily_problem = null;
@@ -136,11 +136,11 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                 where p.defunct='N' and p.problem_id>0
                 and p.problem_id not in (
                     select problem_id from contest_problem where contest_id in (
-                        select contest_id from contest c where (c.end_time>'$now' and c.defunct='N') or c.private='1'
+                        select contest_id from contest c where (c.end_time>? and c.defunct='N') or c.private='1'
                     )
                 )
                 order by p.problem_id
-                limit 1 offset " . intval($offset));
+                limit 1 offset ?", $now, intval($offset));
 
             if (!empty($daily_problem_result)) {
                 $daily_problem = $daily_problem_result[0];
