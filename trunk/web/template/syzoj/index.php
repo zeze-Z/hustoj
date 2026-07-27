@@ -114,8 +114,14 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
         $today = date('Y-m-d');
         $seed = crc32($today);
 
-        // 获取可用题目总数（排除已禁用的题目）
-        $problem_count_result = mysql_query_cache("select count(*) as count from `problem` where defunct='N' and problem_id>0");
+        // 获取可用题目总数（排除已禁用、已用于未结束或私有比赛的题目）
+        $now = date("Y-m-d H:i", time());
+        $problem_count_result = mysql_query_cache("select count(*) as count from `problem` p where p.defunct='N' and p.problem_id>0
+            and p.problem_id not in (
+                select problem_id from contest_problem where contest_id in (
+                    select contest_id from contest c where (c.end_time>'$now' and c.defunct='N') or c.private='1'
+                )
+            )");
         $total_problems = $problem_count_result[0]['count'] ?? 0;
 
         $daily_problem = null;
@@ -128,17 +134,13 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
             $daily_problem_result = mysql_query_cache("select p.problem_id, p.title, p.accepted, p.submit, p.source
                 from problem p
                 where p.defunct='N' and p.problem_id>0
+                and p.problem_id not in (
+                    select problem_id from contest_problem where contest_id in (
+                        select contest_id from contest c where (c.end_time>'$now' and c.defunct='N') or c.private='1'
+                    )
+                )
                 order by p.problem_id
                 limit 1 offset " . intval($offset));
-
-            if (empty($daily_problem_result)) {
-                // 如果偏移量获取失败，直接获取偏移量对应的题目
-                $daily_problem_result = mysql_query_cache("select p.problem_id, p.title, p.accepted, p.submit, p.source
-                    from problem p
-                    where p.defunct='N' and p.problem_id>0
-                    order by p.problem_id
-                    limit 1 offset " . intval($offset));
-            }
 
             if (!empty($daily_problem_result)) {
                 $daily_problem = $daily_problem_result[0];

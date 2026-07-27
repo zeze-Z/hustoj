@@ -176,12 +176,25 @@ if (count($result) != 1) {
         if (count($used_in_contests) > 0) {
 
             if (!(isset($OJ_EXAM_CONTEST_ID) || isset($OJ_ON_SITE_CONTEST_ID))) {
-                $view_errors .= "<hr><br>$MSG_PROBLEM_USED_IN:";
-                foreach ($used_in_contests as $contests) {
-                    $view_errors .= "<a class='label label-warning' href='contest.php?cid=" . $contests[0] . "'>" . $contests[1] . " </a><br>";
-
-                }
-                //echo "</div>";
+                $contest_name = htmlentities($used_in_contests[0][1], ENT_QUOTES, 'UTF-8');
+                $contest_url = "contest.php?cid=" . intval($used_in_contests[0][0]);
+                $view_errors = "
+                    <div style='text-align:center; max-width:600px; margin:0 auto; padding:30px 20px;'>
+                        <i class='lock icon' style='font-size:4em; color:#e74c3c; margin-bottom:20px;'></i>
+                        <h2 style='color:#333; margin-bottom:15px;'>这道题正在比赛中</h2>
+                        <p style='color:#666; font-size:1.1em; line-height:1.6; margin-bottom:25px;'>
+                            该题目已经用于私有比赛 <strong>\"" . $contest_name . "\"</strong>，暂时无法单独练习。<br>
+                            你可以进入比赛页面，在对应比赛中查看和作答。
+                        </p>
+                        <div style='display:flex; gap:15px; justify-content:center; flex-wrap:wrap;'>
+                            <a href='" . $contest_url . "' class='ui button large' style='background:#e74c3c; color:white;'>
+                                <i class='trophy icon'></i> 前往比赛
+                            </a>
+                            <a href='problemset.php' class='ui button large basic'>
+                                <i class='list icon'></i> 浏览题单
+                            </a>
+                        </div>
+                    </div>";
             }
 
         } else {
