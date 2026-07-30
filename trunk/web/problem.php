@@ -56,23 +56,28 @@ if (isset($_GET['id'])) {
     $used_in_contests = pdo_query($sql, $id, $now);
     // 用于显示题目关联的比赛列表，也需要过滤
 
-    if (isset($_SESSION[$OJ_NAME . '_' . 'administrator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_verifiter']) || isset($_SESSION[$OJ_NAME . '_' . 'contest_creator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_editor']))
+    if (isset($_SESSION[$OJ_NAME . '_' . 'administrator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_verifiter']) || isset($_SESSION[$OJ_NAME . '_' . 'contest_creator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_editor'])) {
         $sql = "SELECT * FROM `problem` A WHERE `problem_id`=?";
-    else if ($OJ_FREE_PRACTICE)
+        $params = array($id);
+    } else if ($OJ_FREE_PRACTICE) {
         $sql = "SELECT * FROM `problem` A WHERE defunct='N' and `problem_id`=? $school_filter ";
-    else
+        $params = array($id);
+    } else {
         $sql = "SELECT * FROM `problem` A WHERE `problem_id`=? AND `defunct`='N' $school_filter AND `problem_id` NOT IN (
 				SELECT `problem_id` FROM `contest_problem` WHERE `contest_id` IN (
 					SELECT `contest_id` FROM `contest` c WHERE ( c.`end_time`>? and c.defunct='N' ) $contest_filter or c.`private`='1'
 				)
-			)";        //////////  people should not see the problem used in contest before they end by modifying url in browser address bar
+			)";
+        $params = array($id, $now);
+    }
+    //////////  people should not see the problem used in contest before they end by modifying url in browser address bar
     /////////   if you give students opportunities to test their result out side the contest ,they can bypass the penalty time of 20 mins for
     /////////   each non-AC sumbission in contest. if you give them opportunities to view problems before exam ,they will ask classmates to write
     /////////   code for them in advance, if you want to share private contest problem to practice you should modify the contest into public
 
     $pr_flag = true;
     error_log("DEBUG problem.php SQL: $sql, id=$id, now=$now");
-    $result = pdo_query($sql, $id, $now);
+    $result = pdo_query($sql, $params);
     error_log("DEBUG problem.php result count: " . count($result));
 } else if (isset($_GET['cid']) && isset($_GET['pid'])) {
     //contest
@@ -88,12 +93,15 @@ if (isset($_GET['id'])) {
             exit(0);
         }
     }
-    if (isset($_SESSION[$OJ_NAME . '_' . 'administrator']) || isset($_SESSION[$OJ_NAME . '_' . 'contest_creator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_editor']))
+    if (isset($_SESSION[$OJ_NAME . '_' . 'administrator']) || isset($_SESSION[$OJ_NAME . '_' . 'contest_creator']) || isset($_SESSION[$OJ_NAME . '_' . 'problem_editor'])) {
         $sql = "SELECT langmask,private,defunct FROM `contest` WHERE `contest_id`=?";
-    else
+        $params = array($cid);
+    } else {
         $sql = "SELECT langmask,private,defunct FROM `contest` WHERE `defunct`='N' AND `contest_id`=? AND (`start_time`<=? AND (?<`end_time` or private='N') ) $contest_filter";
+        $params = array($cid, $now, $now);
+    }
 
-    $result = pdo_query($sql, $cid, $now, $now);
+    $result = pdo_query($sql, $params);
     $rows_cnt = empty($result) ? 0 : count($result);
     if (empty($result) && !$OJ_FREE_PRACTICE && !isset($_SESSION[$OJ_NAME . '_administrator']) && !isset($_SESSION[$OJ_NAME . "_c" . $cid])) {
         $view_errors = "<title>$MSG_CONTEST</title><h2>No such Contest!</h2>";
