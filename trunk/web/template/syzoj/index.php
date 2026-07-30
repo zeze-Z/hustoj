@@ -461,11 +461,16 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                                          from problem p
                                          left join solution s on p.problem_id=s.problem_id and s.result=4
                                          where p.defunct='N' and p.problem_id>0
+                                         and p.problem_id not in (
+                                             select problem_id from contest_problem where contest_id in (
+                                                 select contest_id from contest c where (c.end_time>? and c.defunct='N') or c.private='1'
+                                             )
+                                         )
                                          group by p.problem_id,p.title
                                          having ac>0
                                          order by ac desc
                                          LIMIT 5";
-                            $result_hot = mysql_query_cache( $sql_hot );
+                            $result_hot = mysql_query_cache( $sql_hot, $now );
                             if ( !empty($result_hot) ) {
                                 foreach ( $result_hot as $row ) {
                                     echo "<tr>"."<td style='text-align: left;'>"
