@@ -14,7 +14,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
             <div style="display: flex; align-items: center;">
                 <i class="gift icon" style="color: white; font-size: 1.5em;"></i>
                 <div style="margin-left: 12px;">
-                    <strong style="color: white; font-size: 1.1em;">🎉 新用户注册送 20 积分！</strong>
+                    <strong style="color: white; font-size: 1.1em;">🎉 新用户注册送 6 积分，连登 7 天再得 14 积分！</strong>
                     <p style="margin: 5px 0 0 0; color: rgba(255,255,255,0.9); font-size: 0.95em;">海量免费课件、体验编程游戏，开启教学新体验</p>
                 </div>
             </div>
@@ -34,7 +34,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                 <div style="text-align: center; color: white; padding: 40px;">
                     <i class="gift icon" style="font-size: 5em; margin-bottom: 20px;"></i>
                     <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">新用户福利</h2>
-                    <p style="font-size: 1.1em; opacity: 0.95; margin: 0 0 20px 0;">注册即送 20 积分，免费课件、编程游戏等你来体验</p>
+                    <p style="font-size: 1.1em; opacity: 0.95; margin: 0 0 20px 0;">注册且连续登录送 20 积分，免费课件、编程游戏等你来体验</p>
                     <a href="registerpage.php" class="ui button inverted">立即注册</a>
                 </div>
             </div>
@@ -114,14 +114,11 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
         $today = date('Y-m-d');
         $seed = crc32($today);
 
-        // 获取可用题目总数（排除已禁用、已用于未结束或私有比赛的题目）
+        // 获取可用题目总数（排除已禁用、选择题/判断题、以及挂过任意竞赛的题目）
         $now = date("Y-m-d H:i", time());
         $problem_count_result = mysql_query_cache("select count(*) as count from `problem` p where p.defunct='N' and p.problem_id>0
-            and p.problem_id not in (
-                select problem_id from contest_problem where contest_id in (
-                    select contest_id from contest c where (c.end_time>? and c.defunct='N') or c.private='1'
-                )
-            )", $now);
+            and p.problem_type not in ('choice_single','choice_multi','judge')
+            and p.problem_id not in (select problem_id from contest_problem)");
         $total_problems = $problem_count_result[0]['count'] ?? 0;
 
         $daily_problem = null;
@@ -131,16 +128,15 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
             $offset = mt_rand(0, max(0, $total_problems - 1));
 
             // 获取当日题目，用日期种子取对应偏移量的题目
+            // offset 直接内联：pdo_query 用 execute($args) 会把绑定参数当字符串，
+            // OFFSET '155' 在 MySQL 下会语法报错，故 intval 后内联（与 contest.php 分页写法一致）
             $daily_problem_result = mysql_query_cache("select p.problem_id, p.title, p.accepted, p.submit, p.source
                 from problem p
                 where p.defunct='N' and p.problem_id>0
-                and p.problem_id not in (
-                    select problem_id from contest_problem where contest_id in (
-                        select contest_id from contest c where (c.end_time>? and c.defunct='N') or c.private='1'
-                    )
-                )
+                and p.problem_type not in ('choice_single','choice_multi','judge')
+                and p.problem_id not in (select problem_id from contest_problem)
                 order by p.problem_id
-                limit 1 offset ?", $now, intval($offset));
+                limit 1 offset " . intval($offset));
 
             if (!empty($daily_problem_result)) {
                 $daily_problem = $daily_problem_result[0];
@@ -438,13 +434,10 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                             $user_id=$_SESSION[$OJ_NAME."_user_id"];
                             $sql_problems = "select p.problem_id,title,max_in_date from (select problem_id,min(result) best,max(in_date) max_in_date from solution
                                     where user_id=? and result>=4 and problem_id>0 group by problem_id ) s inner join problem p on s.problem_id=p.problem_id
-                                 where s.best>4 and p.problem_id not in (
-                                        select problem_id from contest_problem where contest_id in (
-                                            select contest_id from contest c where (c.end_time>? and c.defunct='N') or c.private='1'
-                                        )
-                                    )
+                                 where s.best>4 and p.problem_type not in ('choice_single','choice_multi','judge')
+                                 and p.problem_id not in (select problem_id from contest_problem)
                                  order by max_in_date desc  LIMIT 5";
-                            $result_problems = mysql_query_cache( $sql_problems, $user_id, $now );
+                            $result_problems = mysql_query_cache( $sql_problems, $user_id );
                             if ( !empty($result_problems) ) {
                                 $i = 1;
                                 foreach ( $result_problems as $row ) {
@@ -461,16 +454,13 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                                          from problem p
                                          left join solution s on p.problem_id=s.problem_id and s.result=4
                                          where p.defunct='N' and p.problem_id>0
-                                         and p.problem_id not in (
-                                             select problem_id from contest_problem where contest_id in (
-                                                 select contest_id from contest c where (c.end_time>? and c.defunct='N') or c.private='1'
-                                             )
-                                         )
+                                         and p.problem_type not in ('choice_single','choice_multi','judge')
+                                         and p.problem_id not in (select problem_id from contest_problem)
                                          group by p.problem_id,p.title
                                          having ac>0
                                          order by ac desc
                                          LIMIT 5";
-                            $result_hot = mysql_query_cache( $sql_hot, $now );
+                            $result_hot = mysql_query_cache( $sql_hot );
                             if ( !empty($result_hot) ) {
                                 foreach ( $result_hot as $row ) {
                                     echo "<tr>"."<td style='text-align: left;'>"
@@ -501,13 +491,10 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                     <tbody>
                     <?php
                         $sql_new = "select problem_id,title,in_date from problem p where p.defunct='N' and p.problem_id>0
-                            and p.problem_id not in (
-                                select problem_id from contest_problem where contest_id in (
-                                    select contest_id from contest c where (c.end_time>? and c.defunct='N') or c.private='1'
-                                )
-                            )
+                            and p.problem_type not in ('choice_single','choice_multi','judge')
+                            and p.problem_id not in (select problem_id from contest_problem)
                             order by p.problem_id desc LIMIT 5";
-                        $result_new = mysql_query_cache( $sql_new, $now );
+                        $result_new = mysql_query_cache( $sql_new );
                         if ( !empty($result_new) ) {
                             foreach ( $result_new as $row ) {
                                 echo "<tr>"."<td style='text-align: left;'>"
