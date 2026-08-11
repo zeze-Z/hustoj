@@ -316,9 +316,6 @@ body {
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(8px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
     z-index: 1000;
     opacity: 0;
     visibility: hidden;
@@ -331,19 +328,22 @@ body {
 }
 
 .victory-content {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
     background: white;
     padding: 2.5rem;
     border-radius: 20px;
     text-align: center;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-    transform: scale(0.9);
     transition: transform 0.3s ease;
     max-width: 400px;
     width: 90%;
 }
 
 .victory-modal.show .victory-content {
-    transform: scale(1);
+    transform: translate(-50%, -50%) scale(1);
 }
 
 .victory-content h2 {

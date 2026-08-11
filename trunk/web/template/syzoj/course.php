@@ -170,7 +170,7 @@
         🎁 有优质课件资源，欢迎联系我们，助您变现！
       </div>
       <div style="color: #555; margin-bottom: 6px; font-size: 0.9em;">
-        平台优质流量➕垂直精准客群🟰课件精准投放。
+        平台优质流量 + 垂直精准客群 = 课件精准投放。
       </div>
       <div style="font-size: 1em;">
         <i class="qq icon" style="color: #12b7f5;"></i>
