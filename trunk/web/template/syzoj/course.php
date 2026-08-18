@@ -63,7 +63,12 @@
                onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.12)';"
                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)';">
             <!-- 课程封面（使用图标占位） -->
-            <div class="image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 140px; display: flex; align-items: center; justify-content: center;">
+            <div class="image" style="position: relative; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 140px; display: flex; align-items: center; justify-content: center;">
+              <?php if (!empty($course['is_new'])): ?>
+              <span style="position: absolute; top: 10px; right: 10px; background: #ff4d4f; color: #fff; font-size: 0.75em; font-weight: 600; padding: 2px 10px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 1;">
+                上新
+              </span>
+              <?php endif; ?>
               <i class="book icon" style="font-size: 4em; color: rgba(255,255,255,0.9);"></i>
             </div>
 

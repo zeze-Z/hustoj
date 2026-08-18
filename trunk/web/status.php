@@ -191,18 +191,14 @@ $outer_school_filter = '';
 
 $has_school_filter = isset($_GET['school']) && trim($_GET['school']) != "";
 $has_group_filter = isset($_GET['group_name']) && trim($_GET['group_name']) != "";
+// $param 仅对应内层子查询的占位符，$outer_param 对应外层查询的占位符，最后按顺序合并
+$outer_param = array();
 if ($has_school_filter || $has_group_filter) {
-    if (!empty($param)) {
-        $values = array_values($param);
-        foreach ($values as $v) {
-            array_push($param, $v);
-        }
-    }
     if (isset($_GET['school']) && trim($_GET['school']) != "") {
         // 用户明确指定学校名称，按名称过滤
         $school = trim($_GET['school']);
         $outer_school_filter = " and users.school=? ";
-        array_push($param, trim($_GET['school']));
+        array_push($outer_param, trim($_GET['school']));
         $str2 = $str2 . "&school=" . htmlentities(trim($_GET['school']), ENT_QUOTES);
     } else {
         // 用户未指定学校时，应用系统权限过滤
@@ -223,7 +219,7 @@ if ($has_school_filter || $has_group_filter) {
                 $school_id = getCurrentUserSchoolId();
                 if ($school_id) {
                     $outer_school_filter = " AND users.school_id = ?";
-                    array_push($param, $school_id);
+                    array_push($outer_param, $school_id);
                 } else {
                     $outer_school_filter = ' AND 1=0'; // 学校管理员/教师无学校时看不到任何提交
                 }
@@ -232,7 +228,7 @@ if ($has_school_filter || $has_group_filter) {
                 $current_user_id = isset($_SESSION[$OJ_NAME.'_'.'user_id']) ? $_SESSION[$OJ_NAME.'_'.'user_id'] : '';
                 if (!empty($current_user_id) && $current_user_id !== 'guest') {
                     $outer_school_filter = " AND solution.user_id = ?";
-                    array_push($param, $current_user_id);
+                    array_push($outer_param, $current_user_id);
                 } else {
                     $outer_school_filter = ' AND 1=0'; // 无用户时看不到任何提交
                 }
@@ -245,7 +241,7 @@ if ($has_school_filter || $has_group_filter) {
     if (isset($_GET['group_name']) && trim($_GET['group_name']) != "") {
         $group_name = trim($_GET['group_name']);
         $outer_school_filter .= " and users.group_name=? ";
-        array_push($param, trim($_GET['group_name']));
+        array_push($outer_param, trim($_GET['group_name']));
         $str2 = $str2 . "&group_name=" . htmlentities(trim($_GET['group_name']), ENT_QUOTES);
     }
     $topwhere = $sql;
@@ -258,12 +254,6 @@ if ($has_school_filter || $has_group_filter) {
         $outer_school_filter = $system_school_filter ? $system_school_filter : '';
     }
     $topwhere = $sql;
-    if (!empty($param)) {
-        $values = array_values($param);
-        foreach ($values as $v) {
-            array_push($param, $v);
-        }
-    }
     // 再添加权限过滤参数（只在外层查询需要）
     if (function_exists('getCurrentUserRole') && function_exists('getCurrentUserSchoolId')) {
         $role = getCurrentUserRole();
@@ -275,7 +265,7 @@ if ($has_school_filter || $has_group_filter) {
             $school_id = getCurrentUserSchoolId();
             if ($school_id) {
                 $outer_school_filter = " AND users.school_id = ?";
-                array_push($param, $school_id);
+                array_push($outer_param, $school_id);
             } else {
                 $outer_school_filter = ' AND 1=0';
             }
@@ -284,7 +274,7 @@ if ($has_school_filter || $has_group_filter) {
             $current_user_id = isset($_SESSION[$OJ_NAME.'_'.'user_id']) ? $_SESSION[$OJ_NAME.'_'.'user_id'] : '';
             if ($current_user_id && $current_user_id !== 'guest') {
                 $outer_school_filter = " AND solution.user_id = ?";
-                array_push($param, $current_user_id);
+                array_push($outer_param, $current_user_id);
             } else {
                 $outer_school_filter = ' AND 1=0';
             }
@@ -311,8 +301,11 @@ if ($OJ_SIM & $showsim > 0) {
 $sql = $sql . $order_str . " LIMIT 50";
 
 
-if (!empty($param)) {
-    $result = pdo_query($sql, $param);
+// 合并内层子查询参数与外层查询参数，顺序必须与SQL中占位符出现的顺序一致（内层在前，外层在后）
+$all_param = array_merge($param, $outer_param);
+
+if (!empty($all_param)) {
+    $result = pdo_query($sql, $all_param);
 } else {
     $result = pdo_query($sql);
 }

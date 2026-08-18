@@ -47,8 +47,9 @@ if (!empty($search_keyword)) {
 
 $where_sql = implode(" AND ", $where_conditions);
 
-// 查询课程列表
-$sql = "SELECT c.*, s.name as subject_name
+// 查询课程列表（is_new 标记近30天内上架的课件）
+$sql = "SELECT c.*, s.name as subject_name,
+        (c.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)) AS is_new
         FROM course c
         INNER JOIN course_subject s ON c.subject_id = s.id
         WHERE $where_sql
