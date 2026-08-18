@@ -51,26 +51,40 @@ function _point_feishu_summary_ids($ids, $limit = 20) {
 }
 
 /**
- * 课件积分订单飞书通知。
+ * 课件订单飞书通知（支持积分购买和免费获取）。
  */
 function send_order_feishu_notify($course, $user_id, $order_no, $license_type, $amount, $pay_channel, $is_upgrade = false, $preview_price = 0, $source_price = 0) {
-    if ($pay_channel !== 'point') {
+    // 仅处理积分支付和免费获取，第三方支付由回调流程处理
+    if ($pay_channel !== 'point' && $pay_channel !== 'free') {
         return false;
     }
     $course_id = isset($course['course_id']) ? intval($course['course_id']) : (isset($course['id']) ? intval($course['id']) : 0);
     $course_title = isset($course['title']) ? mb_substr((string)$course['title'], 0, 120) : ('课程#' . $course_id);
     $license_text = intval($license_type) === 2 ? '原文件版' : '完整预览版';
-    $title = '课件积分购买成功';
-    $content = implode("\n", [
-        _point_feishu_line('用户', $user_id),
-        _point_feishu_line('订单号', $order_no),
-        _point_feishu_line('课件', $course_title . ' #' . $course_id),
-        _point_feishu_line('权限', $license_text),
-        _point_feishu_line('消耗积分', intval($amount)),
-        _point_feishu_line('支付渠道', '积分支付'),
-        _point_feishu_line('是否升级', $is_upgrade ? '是' : '否'),
-        _point_feishu_line('预览价/原文件价', $preview_price . ' / ' . $source_price),
-    ]);
+
+    if ($pay_channel === 'free') {
+        $title = '课件免费获取成功';
+        $content = implode("\n", [
+            _point_feishu_line('用户', $user_id),
+            _point_feishu_line('订单号', $order_no),
+            _point_feishu_line('课件', $course_title . ' #' . $course_id),
+            _point_feishu_line('权限', $license_text),
+            _point_feishu_line('获取方式', '免费获取'),
+            _point_feishu_line('预览价/原文件价', $preview_price . ' / ' . $source_price),
+        ]);
+    } else {
+        $title = '课件积分购买成功';
+        $content = implode("\n", [
+            _point_feishu_line('用户', $user_id),
+            _point_feishu_line('订单号', $order_no),
+            _point_feishu_line('课件', $course_title . ' #' . $course_id),
+            _point_feishu_line('权限', $license_text),
+            _point_feishu_line('消耗积分', intval($amount)),
+            _point_feishu_line('支付渠道', '积分支付'),
+            _point_feishu_line('是否升级', $is_upgrade ? '是' : '否'),
+            _point_feishu_line('预览价/原文件价', $preview_price . ' / ' . $source_price),
+        ]);
+    }
     return _point_feishu_notify($title, $content, 'info');
 }
 
