@@ -340,6 +340,6 @@ function getSolutionSchoolFilter() {
         return " AND users.school_id IS NULL";
     }
     
-    // 过滤：本校用户
-    return " AND users.school_id = $school_id";
+    // 过滤：本校用户（school_id 强转 int，防止拼接注入）
+    return " AND users.school_id = " . intval($school_id);
 }

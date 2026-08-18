@@ -193,7 +193,9 @@ $has_school_filter = isset($_GET['school']) && trim($_GET['school']) != "";
 $has_group_filter = isset($_GET['group_name']) && trim($_GET['group_name']) != "";
 // $param 仅对应内层子查询的占位符，$outer_param 对应外层查询的占位符，最后按顺序合并
 $outer_param = array();
-if ($has_school_filter || $has_group_filter) {
+// school/group_name 搜索仅对超级管理员开放，其他角色传入参数也一律按系统权限过滤（防跨校查看）
+$can_search = function_exists('getCurrentUserRole') && getCurrentUserRole() === 'super_admin';
+if (($has_school_filter || $has_group_filter) && $can_search) {
     if (isset($_GET['school']) && trim($_GET['school']) != "") {
         // 用户明确指定学校名称，按名称过滤
         $school = trim($_GET['school']);
@@ -245,7 +247,7 @@ if ($has_school_filter || $has_group_filter) {
         $str2 = $str2 . "&group_name=" . htmlentities(trim($_GET['group_name']), ENT_QUOTES);
     }
     $topwhere = $sql;
-    $sql0 = "select $fields from (select * from solution $topwhere $order_str LIMIT 1500) solution inner join users users on solution.user_id=users.user_id  and users.defunct='N' $outer_school_filter ";
+    $sql0 = "select $fields from (select * from solution $topwhere $order_str LIMIT 50) solution inner join users users on solution.user_id=users.user_id  and users.defunct='N' $outer_school_filter ";
 } else {
     // 用户没有指定任何过滤条件，应用系统权限过滤
     if (!function_exists('getCurrentUserRole') || !function_exists('getCurrentUserSchoolId')) {
@@ -285,7 +287,8 @@ if ($has_school_filter || $has_group_filter) {
     }
 
     // if ($_SESSION[$OJ_NAME."_user_id"]=='zhblue')echo $sql;
-    $sql0 = "select $fields from ( select * from solution $topwhere $order_str limit 50 )solution inner join users on solution.user_id=users.user_id  and users.defunct='N' $outer_school_filter ";
+    // 子查询取样范围与学校/组筛选分支保持一致（LIMIT 50），降低服务器负载
+    $sql0 = "select $fields from ( select * from solution $topwhere $order_str LIMIT 50 )solution inner join users on solution.user_id=users.user_id  and users.defunct='N' $outer_school_filter ";
 }
 
 if ($OJ_SIM & $showsim > 0) {
