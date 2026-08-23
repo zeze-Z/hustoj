@@ -118,7 +118,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
         $now = date("Y-m-d H:i", time());
         $problem_count_result = mysql_query_cache("select count(*) as count from `problem` p where p.defunct='N' and p.problem_id>0
             and p.problem_type not in ('choice_single','choice_multi','judge')
-            and p.problem_id not in (select problem_id from contest_problem)");
+            and p.problem_id not in (select problem_id from contest_problem cp join contest c on cp.contest_id=c.contest_id where c.title like '%真题%')");
         $total_problems = $problem_count_result[0]['count'] ?? 0;
 
         $daily_problem = null;
@@ -134,7 +134,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                 from problem p
                 where p.defunct='N' and p.problem_id>0
                 and p.problem_type not in ('choice_single','choice_multi','judge')
-                and p.problem_id not in (select problem_id from contest_problem)
+                and p.problem_id not in (select problem_id from contest_problem cp join contest c on cp.contest_id=c.contest_id where c.title like '%真题%')
                 order by p.problem_id
                 limit 1 offset " . intval($offset));
 
@@ -435,7 +435,7 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                             $sql_problems = "select p.problem_id,title,max_in_date from (select problem_id,min(result) best,max(in_date) max_in_date from solution
                                     where user_id=? and result>=4 and problem_id>0 group by problem_id ) s inner join problem p on s.problem_id=p.problem_id
                                  where s.best>4 and p.problem_type not in ('choice_single','choice_multi','judge')
-                                 and p.problem_id not in (select problem_id from contest_problem)
+                                 and p.problem_id not in (select problem_id from contest_problem cp join contest c on cp.contest_id=c.contest_id where c.title like '%真题%')
                                  order by max_in_date desc  LIMIT 5";
                             $result_problems = mysql_query_cache( $sql_problems, $user_id );
                             if ( !empty($result_problems) ) {
@@ -455,7 +455,7 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                                          left join solution s on p.problem_id=s.problem_id and s.result=4
                                          where p.defunct='N' and p.problem_id>0
                                          and p.problem_type not in ('choice_single','choice_multi','judge')
-                                         and p.problem_id not in (select problem_id from contest_problem)
+                                         and p.problem_id not in (select problem_id from contest_problem cp join contest c on cp.contest_id=c.contest_id where c.title like '%真题%')
                                          group by p.problem_id,p.title
                                          having ac>0
                                          order by ac desc
@@ -492,7 +492,7 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                     <?php
                         $sql_new = "select problem_id,title,in_date from problem p where p.defunct='N' and p.problem_id>0
                             and p.problem_type not in ('choice_single','choice_multi','judge')
-                            and p.problem_id not in (select problem_id from contest_problem)
+                            and p.problem_id not in (select problem_id from contest_problem cp join contest c on cp.contest_id=c.contest_id where c.title like '%真题%')
                             order by p.problem_id desc LIMIT 5";
                         $result_new = mysql_query_cache( $sql_new );
                         if ( !empty($result_new) ) {
