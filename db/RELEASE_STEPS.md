@@ -23,6 +23,7 @@
 | V2.1 | 2026-07-16 | 新用户注册奖励字段 new_user_reward_claimed |
 | V2.2 | 2026-07-18 | 修复存量用户被误判为新用户跳转 welcome |
 | V2.4 | 2026-07-24 | 新客连续登录分批奖励（20积分分批发放） |
+| V2.5 | 2026-08-23 | 课件学科Tab重命名（美术→新课标解读，音乐→小学电子教材） |
 
 ---
 
@@ -84,6 +85,10 @@ mysql -u root -p jol < db/V2.2_20260718_fix_existing_users_reward_claimed.sql
 # 13. 新客连续登录分批奖励（V2.4）
 #     ⚠️ 强制执行：存量 UPDATE 必须跑，否则存量用户下次登录被误发2分
 mysql -u root -p jol < db/V2.4_20260724_login_streak.sql
+
+# 14. 课件学科Tab重命名（V2.5）
+#     美术->新课标解读，音乐->小学电子教材
+mysql -u root -p jol < db/V2.5_20260823_rename_course_subject.sql
 ```
 
 **验证：**
