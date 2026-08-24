@@ -1,10 +1,8 @@
 -- V2.0_20260417_problem_score_analysis.sql
--- 选择题分值、解析字段、答案、竞赛来源、竞赛题目分值
+-- 选择题分值、解析字段、竞赛来源、竞赛题目分值
+-- 注意：answer 字段由 V1.1（选择题功能）新增，本脚本不再重复添加
 
--- 1. 添加答案字段（V1.0遗漏）
-ALTER TABLE `problem` ADD COLUMN `answer` VARCHAR(500) DEFAULT NULL COMMENT '正确答案（选择题）/ OJ配置（编程题）' AFTER `source`;
-
--- 2. 添加分值字段
+-- 1. 添加分值字段
 ALTER TABLE `problem` ADD COLUMN `score` INT(11) NOT NULL DEFAULT 0 COMMENT '题目分值' AFTER `options`;
 
 -- 2. 添加解析字段
@@ -21,5 +19,4 @@ ALTER TABLE `contest_problem` ADD COLUMN `score` INT(11) DEFAULT 0 COMMENT '竞�
 -- ALTER TABLE `problem` DROP COLUMN `contest_source`;
 -- ALTER TABLE `problem` DROP COLUMN `analysis`;
 -- ALTER TABLE `problem` DROP COLUMN `score`;
--- ALTER TABLE `problem` DROP COLUMN `answer`;
 -- DROP TABLE IF EXISTS `db_version`;

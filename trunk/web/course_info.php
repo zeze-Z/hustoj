@@ -51,17 +51,11 @@ $is_free = ($preview_price == 0 && $source_price == 0);
 $user_id = isset($_SESSION[$OJ_NAME . '_' . 'user_id']) ? $_SESSION[$OJ_NAME . '_' . 'user_id'] : 0;
 $permission = get_user_course_permission($user_id, $course_id);
 
-// 管理员自动拥有所有课件的全部权限
+// 管理员豁免（自动拥有全部权限）统一在 get_user_course_permission() 中处理
 $has_preview_license = $permission['has_full_preview'];
 $has_source_license = $permission['has_source'];
 $has_only_preview = $permission['has_full_preview'] && !$permission['has_source'];
 $upgrade_price = $permission['upgrade_price'];
-
-if (isset($_SESSION['administrator'])) {
-    $has_preview_license = true;
-    $has_source_license = true;
-    $has_only_preview = false;
-}
 
 // 根据权限返回对应预览URL
 if ($has_preview_license && !empty($course['courseware_full_preview_url'])) {

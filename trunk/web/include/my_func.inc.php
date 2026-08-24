@@ -907,6 +907,15 @@ function get_user_course_permission($user_id, $course_id) {
     $permission['is_source_free'] = $permission['source_price'] == 0;
     $permission['has_source_resource'] = !empty($course['courseware_link']) || !empty($course['lesson_plan_link']);
 
+    // 管理员自动拥有所有课件的全部权限（无需购买，避免生成订单污染统计）
+    if (isset($_SESSION[$OJ_NAME.'_administrator'])) {
+        $permission['has_full_preview'] = true;
+        $permission['has_source'] = true;
+        $permission['can_upgrade'] = false;
+        $permission['upgrade_price'] = 0;
+        return $permission;
+    }
+
     // 未登录用户不查询权限
     if (!$permission['is_login']) {
         return $permission;

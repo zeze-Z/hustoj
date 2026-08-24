@@ -56,6 +56,7 @@ mysql -u root -p jol < db/V1.0_20260411_school_mode.sql
 mysql -u root -p jol < db/V1.1_20260419_choice_and_exam.sql
 
 # 4.1 选择题分值/解析/竞赛来源字段（补充归档）
+#     注意：answer 字段已由 V1.1（选择题功能）新增，V2.0 不再重复添加，须在 V1.1 之后执行
 mysql -u root -p jol < db/V2.0_20260417_problem_score_analysis.sql
 
 # 5. 课件预览付费改造

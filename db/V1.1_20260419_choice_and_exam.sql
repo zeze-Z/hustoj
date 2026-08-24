@@ -4,7 +4,7 @@
 -- 1. 选择题功能
 ALTER TABLE problem ADD COLUMN `problem_type` ENUM('programming','choice_single','choice_multi','judge') NOT NULL DEFAULT 'programming' COMMENT '题目类型' AFTER title;
 ALTER TABLE problem ADD COLUMN `options` LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '选择题/判断题选项，JSON格式' AFTER source;
-ALTER TABLE problem MODIFY COLUMN answer VARCHAR(500) DEFAULT NULL COMMENT '正确答案（选择题）/ OJ配置（编程题）';
+ALTER TABLE problem ADD COLUMN `answer` VARCHAR(500) DEFAULT NULL COMMENT '正确答案（选择题）/ OJ配置（编程题）' AFTER source;
 ALTER TABLE solution MODIFY COLUMN pass_rate DECIMAL(5,2) NOT NULL DEFAULT 0.00 COMMENT '通过率百分比';
 ALTER TABLE problem MODIFY COLUMN title TEXT NOT NULL;
 
@@ -77,5 +77,6 @@ ALTER TABLE solution ADD COLUMN `exam_id` INT(11) DEFAULT 0 COMMENT '所属考�
 -- DROP TABLE IF EXISTS exam;
 -- ALTER TABLE problem MODIFY COLUMN title VARCHAR(200) NOT NULL;
 -- ALTER TABLE solution MODIFY COLUMN pass_rate DECIMAL(4,3) UNSIGNED NOT NULL DEFAULT 0;
+-- ALTER TABLE problem DROP COLUMN answer;
 -- ALTER TABLE problem DROP COLUMN options;
 -- ALTER TABLE problem DROP COLUMN problem_type;
