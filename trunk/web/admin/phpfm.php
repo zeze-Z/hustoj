@@ -123,11 +123,17 @@ if (!(isset($_SESSION[$OJ_NAME.'_'.'administrator'])
 	$doc_root = str_replace('//','/',str_replace(DIRECTORY_SEPARATOR,'/',$_SERVER["DOCUMENT_ROOT"]));
     $fm_self = $doc_root.$_SERVER["PHP_SELF"];
     $path_info = pathinfo($fm_self);
-	// Register Globals
-	$blockKeys = array('_SERVER','_SESSION','_GET','_POST','_COOKIE','charset','ip','islinux','url','url_info','doc_root','fm_self','path_info');
-    foreach ($_GET as $key => $val) if (array_search($key,$blockKeys) === false) $$key=$val;
-    foreach ($_POST as $key => $val) if (array_search($key,$blockKeys) === false) $$key=$val;
-    foreach ($_COOKIE as $key => $val) if (array_search($key,$blockKeys) === false) $$key=$val;
+	// 安全加固：移除 register_globals 模拟（$$key=$val 任意变量注入），改为显式白名单提取
+	// 仅导入文件管理器操作所需的请求参数；鉴权/配置相关变量（auth_pass/erro/pid/current_dir 等）不从此处注入
+	$fm_request_keys = array('action','frame','dir','dir_before','current_dir','dir_dest','filename','file_data','save_file','passthru','cmd_arg','chmod_arg','zip_dir','cmd_name','new_name','old_name','new_file','selected_file_list','selected_dir_list','file2','files','config_action','newpass','newlang','newerror','newfm_root','sort','or_by','order_dir_list_by','expand','setflag','resolveIDs','set_resolveIDs','set_fm_current_root','fm_current_root','fm_root','expanded_dir_list','upload','leftFrameWidth');
+    foreach ($fm_request_keys as $k) {
+        if (isset($_GET[$k]))      $$k = $_GET[$k];
+        elseif (isset($_POST[$k])) $$k = $_POST[$k];
+        elseif (isset($_COOKIE[$k])) $$k = $_COOKIE[$k];
+    }
+    // 登录表单密码（$pass）与文件管理器会话标记（$loggedon，仅COOKIE）按原逻辑保留，不接受 GET/POST 注入
+    if (isset($_POST['pass']))       $pass      = $_POST['pass'];
+    if (isset($_COOKIE['loggedon'])) $loggedon  = $_COOKIE['loggedon'];
 // +--------------------------------------------------
 // | Config
 // +--------------------------------------------------

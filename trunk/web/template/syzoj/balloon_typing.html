@@ -3,109 +3,409 @@
 
 <div class="padding">
 <style>
-        /* ===== 统一游戏基础样式 ===== */
+        /* ===== 统一游戏基础样式（清新天空蓝） ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        /* 覆盖 syzoj 模板 .padding 的白玻璃效果（white.css 会给内容区垫 rgba(255,255,255,0.55) 半透明白底），
+           否则暗色霓虹主题的文字（白色按钮文字等）会落在白底上看不见 */
+        .padding {
+            background: transparent !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            overflow: visible !important;
+            padding: 0 !important;
+            color: inherit !important;
+            transition: none !important;
+        }
+        .padding::before,
+        .padding::after {
+            display: none !important;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
-            background: #f0f2f5;
             min-height: 100vh;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 40%, #c7d2fe 70%, #e0f2fe 100%);
+            background-size: 400% 400%;
+            animation: bgShift 20s ease infinite;
         }
 
+        @keyframes bgShift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 背景漂浮光斑 */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(1px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .particle-1 {
+            width: 320px;
+            height: 320px;
+            left: -120px;
+            top: 18%;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.22), transparent 70%);
+            animation: drift 12s ease-in-out infinite;
+        }
+        .particle-2 {
+            width: 380px;
+            height: 380px;
+            right: -140px;
+            bottom: 8%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.18), transparent 70%);
+            animation: drift 16s ease-in-out infinite reverse;
+        }
+        @keyframes drift {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50%      { transform: translateY(-34px) scale(1.12); }
+        }
+
+        /* 全屏自适应：容器纵向排布，标题在顶部 + 下方左右两栏 */
         .game-container {
-            max-width: 800px;
-            margin: 2rem auto;
-            background: #fff;
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            max-width: 1100px;
+            width: 100%;
+            min-height: calc(100vh - 60px - 2rem);
+            margin: 1rem auto;
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: 24px;
+            padding: 1.5rem 1.75rem;
+            box-shadow: 0 8px 32px rgba(2, 132, 199, 0.12), 0 20px 60px rgba(59, 130, 246, 0.15);
             text-align: center;
             position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
         }
 
-        h1.game-title, .game-container > h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #FF5722;
-            margin-bottom: 0.5rem;
+        /* 左右两栏布局 */
+        .main-row {
+            flex: 1;
+            display: flex;
+            gap: 1.5rem;
+            align-items: stretch;
+            margin-top: 0.5rem;
+            min-height: 0;
+        }
+        /* 左侧：难度/统计/输入/反馈/按钮 操作面板 */
+        .panel-left {
+            flex: 0 0 360px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.9rem;
+            min-width: 0;
+        }
+        /* 右侧：气球游戏区卡片 */
+        .panel-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        /* 左栏内用 flex gap 控制间距，去掉各组件自带的 margin-bottom */
+        .panel-left .difficulty-selector,
+        .panel-left .stats,
+        .panel-left #input-area {
+            margin-bottom: 0;
+        }
+
+        /* 系统自带可爱字体回退链（中文+英文+emoji，零外部依赖）
+         *  优先级：Windows 华文琥珀 / 幼圆 → macOS 圆体-简/Hiragino丸 → 英文 Chalkboard/Comic Sans → 通用 PingFang/微软雅黑
+         */
+        :root {
+            --font-cute:
+                "STHupo", "华文琥珀",
+                "STXingkai", "华文行楷",
+                "YouYuan", "幼圆",
+                "Yuanti SC", "圆体-简",
+                "Hiragino Maru Gothic ProN", "HiraMaruProN-W4",
+                "Chalkboard SE", "ChalkboardSE-Bold",
+                "Comic Sans MS", "Comic Sans",
+                "Marker Felt",
+                "PingFang SC", "Microsoft YaHei",
+                -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        /* 游戏标题：纯色可爱风，去掉之前土味的蓝色流光渐变（background-clip:text 等已删除） */
+        h1.game-title {
+            font-family: var(--font-cute);
+            font-size: 2.2rem;
+            font-weight: 700;               /* 降一级，琥珀/幼圆本就粗壮，800 会糊 */
+            letter-spacing: 0.04em;
+            line-height: 1.3;
+            margin-bottom: 0.35rem;
+            color: #ec4899;                 /* 粉色主色：可爱、活力、和气球粉色同家族 */
+            text-shadow:
+                0 2px 0   rgba(255, 255, 255, 0.9),          /* 下方 2px 白边勾字，儿童/气球常见立体字效果 */
+                0 4px 10px rgba(236, 72, 153, 0.28);          /* 粉色柔光阴影，柔和不锐利 */
         }
 
         .game-subtitle {
-            font-size: 1rem;
-            color: #666;
-            margin-bottom: 1.5rem;
+            font-family: var(--font-cute);
+            font-size: 1.02rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            color: #a855f7;                 /* 薰衣草紫，和粉色主色形成可爱对比 */
+            margin-bottom: 0.85rem;
+            text-shadow:
+                0 1px 0   rgba(255, 255, 255, 0.9),
+                0 2px 6px rgba(168, 85, 247, 0.18);
         }
 
         .difficulty-selector {
             display: flex;
             justify-content: center;
-            gap: 8px;
-            margin-bottom: 1.5rem;
+            gap: 10px;
+            margin-bottom: 1rem;
             flex-wrap: wrap;
         }
 
         .diff-btn {
-            padding: 8px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            background: #fff;
-            color: #555;
+            padding: 9px 20px;
+            border: 1px solid #cbd5e1;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #334155;
             font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
         }
-
         .diff-btn:hover {
-            border-color: #FF5722;
-            color: #FF5722;
+            border-color: #38bdf8;
+            color: #0284c7;
+            box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+            transform: translateY(-1px);
         }
-
         .diff-btn.active {
-            background: #FF5722;
-            border-color: #FF5722;
+            background: linear-gradient(135deg, #38bdf8, #0284c7);
+            border-color: transparent;
             color: #fff;
+            box-shadow: 0 4px 20px rgba(56, 189, 248, 0.45);
         }
 
         .stats {
             display: flex;
             justify-content: center;
+            align-items: stretch;
             gap: 12px;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
+            margin-bottom: 1rem;
+            /* 根因修复：去掉 flex-wrap: wrap（原来只要 3 个 item 总宽超 360px 就折成两行）
+             * 改 nowrap 强制一行；给每个 item flex:1 平分空间，不再依赖 min-width 卡阈值 */
+            flex-wrap: nowrap;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .stat-item {
-            background: #FBE9E7;
-            border-radius: 12px;
-            padding: 12px 24px;
-            min-width: 100px;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 14px;
+            padding: 12px 16px;            /* 左右 padding 从 26→16，给平分后的小卡片多留点文字空间 */
+            /* 关键：用 flex:1 让 3 个卡片严格平分 .stats 宽度，不再用固定 min-width 撑爆容器导致换行 */
+            flex: 1 1 0;
+            min-width: 0;                    /* 允许 flex 子项缩小到比内容还小，防个别长文本撑开 */
+            box-shadow: 0 4px 16px rgba(2, 132, 199, 0.08);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-
         .stat-item .stat-label {
             font-size: 0.8rem;
-            color: #888;
+            color: #64748b;
             display: block;
             margin-bottom: 4px;
-            text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
-        .game-area {
-            width: 100%;
-            height: 400px;
-            background: linear-gradient(to bottom, #87ceeb 0%, #e0f6ff 100%);
-            border-radius: 16px;
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 20px;
-            cursor: none;
+        .stat-item .stat-value {
+            color: #0f172a;
+            font-weight: 700;
+            font-size: 1.15rem;
+            display: inline-block;
+        }
+        .stat-value.bump { animation: popScore 0.3s ease; }
+        @keyframes popScore {
+            0%   { transform: scale(1); }
+            50%  { transform: scale(1.35); color: #0284c7; }
+            100% { transform: scale(1); }
         }
 
+        /* 蓝天游戏区（右侧卡片，撑满右栏高度） */
+        .game-area {
+            width: 100%;
+            flex: 1;
+            min-height: 280px;
+            border-radius: 18px;
+            position: relative;
+            overflow: hidden;
+            cursor: none;
+            background:
+                radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.5), transparent 50%),
+                linear-gradient(to bottom, #38bdf8 0%, #7dd3fc 55%, #bae6fd 100%);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.35), 0 8px 30px rgba(2, 132, 199, 0.15);
+        }
+
+        /* 底部飘云 */
+        .game-area::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                radial-gradient(60px 30px at 15% 78%, rgba(255, 255, 255, 0.95), transparent 100%),
+                radial-gradient(85px 36px at 32% 88%, rgba(255, 255, 255, 0.9), transparent 100%),
+                radial-gradient(70px 30px at 55% 82%, rgba(255, 255, 255, 0.95), transparent 100%),
+                radial-gradient(95px 42px at 78% 90%, rgba(255, 255, 255, 0.9), transparent 100%),
+                radial-gradient(60px 28px at 92% 80%, rgba(255, 255, 255, 0.95), transparent 100%),
+                radial-gradient(50px 24px at 40% 70%, rgba(255, 255, 255, 0.55), transparent 100%);
+            animation: drift 14s ease-in-out infinite;
+            opacity: 0.9;
+        }
+
+        /* 角落太阳 */
+        .game-area::after {
+            content: "☀️";
+            position: absolute;
+            top: 14px;
+            right: 22px;
+            font-size: 2.2rem;
+            filter: drop-shadow(0 0 14px rgba(253, 224, 71, 0.8));
+            pointer-events: none;
+        }
+
+        /* 自定义准星光标 */
+        .reticle {
+            position: absolute;
+            width: 34px;
+            height: 34px;
+            border: 2px solid #0284c7;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 50;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+            transition: opacity 0.2s;
+        }
+        .reticle::before,
+        .reticle::after {
+            content: "";
+            position: absolute;
+            background: #0284c7;
+        }
+        .reticle::before {
+            left: 50%;
+            top: -7px;
+            width: 2px;
+            height: 48px;
+            transform: translateX(-50%);
+        }
+        .reticle::after {
+            top: 50%;
+            left: -7px;
+            height: 2px;
+            width: 48px;
+            transform: translateY(-50%);
+        }
+
+        /* ===== 游戏开始前的 3-2-1-GO 倒计时覆盖层 ===== */
+        .countdown-overlay {
+            position: absolute;
+            inset: 0;                    /* 填满整个气球游戏区 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                radial-gradient(ellipse at center, rgba(236, 72, 153, 0.22) 0%, rgba(168, 85, 247, 0.22) 55%, rgba(2, 132, 199, 0.55) 100%);
+            backdrop-filter: blur(3px) saturate(1.15);
+            -webkit-backdrop-filter: blur(3px) saturate(1.15);
+            z-index: 900;               /* 覆盖在气球之上，低于全局模态 1000 */
+            overflow: hidden;
+            animation: overlayFadeIn 0.3s ease-out;
+        }
+        @keyframes overlayFadeIn {
+            0%   { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .countdown-card {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: clamp(160px, 34%, 240px);
+            aspect-ratio: 1 / 1;          /* 正圆卡 */
+            border-radius: 50%;
+            /* 根因修复：不再纯白底，改成柔和浅粉→浅紫渐变，避免数字透不到色时"白字+白底"完全看不见 */
+            background: linear-gradient(135deg, #fff0f7 0%, #fae8ff 50%, #ede9fe 100%);
+            border: 4px solid #fff;
+            box-shadow:
+                0 0 0 10px rgba(236, 72, 153, 0.28),
+                0 0 40px rgba(168, 85, 247, 0.45),
+                0 20px 60px rgba(2, 132, 199, 0.35);
+        }
+
+        .countdown-num {
+            font-family: var(--font-cute);
+            font-size: clamp(5.5rem, 13vw, 9rem);
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -0.02em;
+            /* 根因修复：彻底去掉 background-clip:text + color:transparent ——
+             * 这个技巧在华文琥珀/幼圆等彩色字体下，某些浏览器（尤其是带 emoji 字体 fallback 的）
+             * 会直接把 glyph 当白字画 + color:transparent 透不出底色 → 最终显示"白字+白卡"看不见。
+             * 改为：深紫实色 + 4px 粉色描边 + 双层 drop-shadow（粉光 + 深紫轮廓），三重保障对比。
+             */
+            color: #a855f7;                              /* 薰衣草紫实色字心 */
+            -webkit-text-stroke: 3.5px #ec4899;          /* WebKit/Chrome/Edge：4px 粉色外描边（幼圆粗体字 3.5 刚好不糊） */
+            text-stroke: 3.5px #ec4899;
+            /* 再叠两层文字阴影做"厚描边+发光"，text-stroke 不支持的 Firefox 也靠这两层兜底 */
+            text-shadow:
+                -3px  0   0 #ec4899,
+                 3px  0   0 #ec4899,
+                 0   -3px 0 #ec4899,
+                 0    3px 0 #ec4899,
+                -2px -2px 0 #ec4899,
+                 2px -2px 0 #ec4899,
+                -2px  2px 0 #ec4899,
+                 2px  2px 0 #ec4899,
+                 0    2px 0 rgba(255, 255, 255, 0.95);   /* 下方 2px 白高光，卡通立体字 */
+            filter:
+                drop-shadow(0 6px 16px rgba(236, 72, 153, 0.55))   /* 粉色柔光 */
+                drop-shadow(0 2px 4px  rgba(168, 85, 247, 0.6));   /* 深紫轮廓钩字 */
+        }
+        /* 重启动画的实际类：每次"倒计时换字"时由 JS remove/add，强制浏览器重新播放 keyframes。
+         * 故意不写在原 .countdown-num 上，否则 CSS 中声明的 forwards 动画只能播放一次、没法在 3→2→1→GO 换字时重放 */
+        .countdown-num_play {
+            animation: countdownPop 0.9s cubic-bezier(0.22, 1.3, 0.36, 1) forwards;
+        }
+        @keyframes countdownPop {
+            0%   { transform: scale(0.25); opacity: 0; }
+            30%  { transform: scale(1.25); opacity: 1; }
+            55%  { transform: scale(1.0);  opacity: 1; }
+            100% { transform: scale(0.55); opacity: 0; }
+        }
+
+        /* 霓虹发光气球 */
         .balloon {
             position: absolute;
             display: flex;
@@ -113,6 +413,7 @@
             align-items: center;
             will-change: transform, opacity;
             transform: translateY(100px); /* 初始位置：gameArea 底部下方 */
+            z-index: 1;
         }
 
         .balloon-body {
@@ -122,129 +423,416 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+            font-weight: 400;
             font-size: 1.3rem;
             color: white;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
             position: relative;
             padding: 0 12px;
+            background: radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 45%), var(--balloon-color, #ff6ec4);
+            box-shadow: 0 0 18px var(--balloon-glow, var(--balloon-color)), inset 0 -8px 14px rgba(0, 0, 0, 0.18);
+            animation: balloonIn 0.25s ease-out;
         }
 
+        /* 高光 */
+        .balloon-body::before {
+            content: "";
+            position: absolute;
+            top: 10%;
+            left: 14%;
+            width: 42%;
+            height: 28%;
+            border-radius: 50%;
+            background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0));
+            transform: rotate(-18deg);
+            pointer-events: none;
+        }
+
+        /* 气球底部三角 */
         .balloon-body::after {
             content: "";
             position: absolute;
             bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 6px solid transparent;
-            border-right: 6px solid transparent;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-top: 10px solid var(--balloon-color);
+            filter: drop-shadow(0 0 4px var(--balloon-glow));
         }
 
         .balloon-string {
             width: 2px;
             height: 30px;
-            background-color: #666;
+            background: linear-gradient(to bottom, var(--balloon-color, #888), rgba(255, 255, 255, 0.15));
+            box-shadow: 0 0 4px var(--balloon-glow, transparent);
             margin-top: 2px;
         }
 
-        /* Balloon colors */
-        .balloon-red .balloon-body { background-color: #ef5350; }
-        .balloon-red .balloon-body::after { border-top: 10px solid #ef5350; }
-        .balloon-blue .balloon-body { background-color: #42a5f5; }
-        .balloon-blue .balloon-body::after { border-top: 10px solid #42a5f5; }
-        .balloon-green .balloon-body { background-color: #66bb6a; }
-        .balloon-green .balloon-body::after { border-top: 10px solid #66bb6a; }
-        .balloon-yellow .balloon-body { background-color: #ffa726; }
-        .balloon-yellow .balloon-body::after { border-top: 10px solid #ffa726; }
-        .balloon-purple .balloon-body { background-color: #ab47bc; }
-        .balloon-purple .balloon-body::after { border-top: 10px solid #ab47bc; }
-        .balloon-pink .balloon-body { background-color: #ec407a; }
-        .balloon-pink .balloon-body::after { border-top: 10px solid #ec407a; }
+        @keyframes balloonIn {
+            0%   { transform: scale(0.4); opacity: 0; }
+            60%  { transform: scale(1.12); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 气球霓虹配色（CSS 变量驱动发光）—— 避开蓝色，与天空背景形成对比 */
+        .balloon-red    { --balloon-color: #f65a5a; --balloon-glow: rgba(246, 90, 90, 0.75); }
+        .balloon-orange { --balloon-color: #fb923c; --balloon-glow: rgba(251, 146, 60, 0.75); }
+        .balloon-green  { --balloon-color: #22c55e; --balloon-glow: rgba(34, 197, 94, 0.75); }
+        .balloon-yellow { --balloon-color: #f59e0b; --balloon-glow: rgba(245, 158, 11, 0.75); }
+        .balloon-purple { --balloon-color: #a855f7; --balloon-glow: rgba(168, 85, 247, 0.75); }
+        .balloon-pink   { --balloon-color: #ec4899; --balloon-glow: rgba(236, 72, 153, 0.75); }
+
+        /* ===== 强化版气球爆炸视觉（全部走 transform / opacity，GPU Compositor，不触发 Layout/Paint） ===== */
 
         @keyframes pop {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.3); opacity: 0.8; }
-            100% { transform: scale(0); opacity: 0; }
+            0%   { transform: scale(1); opacity: 1; }
+            18%  { transform: scale(1.22) rotate(-2deg); opacity: 1; }  /* 先膨胀撕裂（squash） */
+            35%  { transform: scale(1.45) rotate(3deg); opacity: 0.85; } /* 继续撑开，半透 */
+            60%  { transform: scale(1.25) rotate(-1deg); opacity: 0.4; } /* 开始爆散、淡出 */
+            100% { transform: scale(0.2) rotate(0deg); opacity: 0; }    /* 缩到中心消失 */
         }
 
         .balloon.pop {
-            animation: pop 0.3s ease-out forwards;
+            animation: pop 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
             transition: none !important; /* 击破时停止浮动动画 */
+            will-change: transform, opacity;
         }
 
+        /* 双环冲击波：从气球中心向外扩两圈半透明色环，模拟"嘭"的空气震动 */
+        .shockwave {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0);
+            border-style: solid;
+            z-index: 60;
+            will-change: transform, opacity;
+            mix-blend-mode: screen;
+        }
+        .shockwave.ring-1 {
+            width: 60px;
+            height: 60px;
+            border-width: 4px;
+            border-color: var(--sw-color, rgba(255,255,255,0.9));
+            animation: shockwaveExpand 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .shockwave.ring-2 {
+            width: 60px;
+            height: 60px;
+            border-width: 2px;
+            border-color: var(--sw-color, rgba(255,255,255,0.75));
+            animation: shockwaveExpand 0.7s 0.06s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0; /* 由动画开头恢复 */
+        }
+        @keyframes shockwaveExpand {
+            0%   { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+            40%  { opacity: 0.95; }
+            100% { transform: translate(-50%, -50%) scale(5.2); opacity: 0; }
+        }
+
+        /* 中心强光闪白： radial-gradient 白光层瞬间爆亮再淡出，制造"一闪"的冲击感 */
+        .burst-flash {
+            position: absolute;
+            width: 160px;
+            height: 160px;
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0.1);
+            background: radial-gradient(circle, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.75) 22%, rgba(255,255,255,0.2) 52%, transparent 72%);
+            border-radius: 50%;
+            mix-blend-mode: screen;
+            z-index: 61;
+            will-change: transform, opacity;
+            animation: flashPop 0.42s ease-out forwards;
+        }
+        @keyframes flashPop {
+            0%   { transform: translate(-50%, -50%) scale(0.12); opacity: 1; }
+            30%  { transform: translate(-50%, -50%) scale(1);   opacity: 1; } /* 最亮瞬间 */
+            100% { transform: translate(-50%, -50%) scale(1.35); opacity: 0; }
+        }
+
+        /* ===== 升级版 emoji 爆闪：💥 锚点 + 4 层 CSS 光芒包裹（仍全部 transform / opacity，GPU 合成） ===== */
+
+        /* 爆闪容器：居中定位，所有子层以它为原点展开 */
+        .boom-wrap {
+            position: absolute;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+            z-index: 62;
+            will-change: transform, opacity;
+        }
+
+        /* (1) 内层过曝金光圈：瞬间从中心放大，1 帧到最大亮度，制造"咔"的过曝一闪 */
+        .boom-core {
+            position: absolute;
+            left: 0; top: 0;
+            width: 180px; height: 180px;
+            transform: translate(-50%, -50%) scale(0.05);
+            background: radial-gradient(circle,
+                rgba(255, 255, 220, 1) 0%,
+                rgba(255, 235, 150, 0.95) 18%,
+                var(--boom-core, rgba(255, 200, 120, 0.85)) 38%,
+                rgba(255, 255, 255, 0.0) 70%);
+            border-radius: 50%;
+            mix-blend-mode: screen;
+            animation: boomCore 0.38s cubic-bezier(0.12, 1, 0.25, 1) forwards;
+        }
+        @keyframes boomCore {
+            0%   { transform: translate(-50%, -50%) scale(0.05); opacity: 0; }
+            10%  { transform: translate(-50%, -50%) scale(0.85); opacity: 1; } /* 瞬间点亮  */
+            28%  { transform: translate(-50%, -50%) scale(1.1);  opacity: 0.95; }
+            100% { transform: translate(-50%, -50%) scale(1.8);  opacity: 0; }
+        }
+
+        /* (2) 4 向锯齿星芒：clip-path 8 角星，模拟爆炸的尖角喷射 */
+        .boom-spikes {
+            position: absolute;
+            left: 0; top: 0;
+            width: 160px; height: 160px;
+            transform: translate(-50%, -50%) scale(0.08) rotate(0deg);
+            background: radial-gradient(circle,
+                var(--boom-spike, #ffd166) 0%,
+                var(--boom-spike2, #ff9f40) 45%,
+                rgba(255, 150, 60, 0.15) 72%,
+                transparent 85%);
+            /* 8 角星 clip-path（正四角 + 斜四角交替凹陷），爆炸锯齿形状 */
+            clip-path: polygon(
+                50% 0%,  58% 28%,  90% 10%, 72% 40%, 100% 50%, 72% 60%,
+                90% 90%, 58% 72%,  50% 100%, 42% 72%, 10% 90%, 28% 60%,
+                0% 50%,  28% 40%,  10% 10%, 42% 28%
+            );
+            filter: drop-shadow(0 0 8px var(--boom-spike2, #ff9f40));
+            animation: boomSpikes 0.52s cubic-bezier(0.2, 0.95, 0.3, 1) forwards;
+        }
+        @keyframes boomSpikes {
+            0%   { transform: translate(-50%, -50%) scale(0.08) rotate(-8deg); opacity: 0; }
+            18%  { transform: translate(-50%, -50%) scale(0.72) rotate(4deg);  opacity: 1; }
+            55%  { transform: translate(-50%, -50%) scale(1.02) rotate(-2deg); opacity: 0.9; }
+            100% { transform: translate(-50%, -50%) scale(1.6)  rotate(8deg);  opacity: 0; }
+        }
+
+        /* (3) 锥形光环（conic-gradient）：旋转向外扩散，像光脉冲扫过 */
+        .boom-conic {
+            position: absolute;
+            left: 0; top: 0;
+            width: 200px; height: 200px;
+            transform: translate(-50%, -50%) scale(0.05) rotate(0deg);
+            background: conic-gradient(
+                from 0deg,
+                transparent 0deg,
+                var(--boom-conic1, rgba(255,220,120,0.85)) 20deg,
+                transparent 55deg,
+                var(--boom-conic2, rgba(255,160,60,0.75)) 110deg,
+                transparent 150deg,
+                var(--boom-conic1, rgba(255,220,120,0.85)) 200deg,
+                transparent 240deg,
+                var(--boom-conic2, rgba(255,160,60,0.75)) 295deg,
+                transparent 340deg
+            );
+            border-radius: 50%;
+            mix-blend-mode: screen;
+            animation: boomConic 0.55s linear forwards;
+        }
+        @keyframes boomConic {
+            0%   { transform: translate(-50%, -50%) scale(0.05) rotate(0deg);   opacity: 0; }
+            12%  { opacity: 0.9; }
+            100% { transform: translate(-50%, -50%) scale(1.8)  rotate(160deg); opacity: 0; }
+        }
+
+        /* (4) 底层外环扩散：细圈光环，强化冲击波的视觉锚点（和 shockwave 环呼应但更柔和） */
+        .boom-ring {
+            position: absolute;
+            left: 0; top: 0;
+            width: 60px; height: 60px;
+            transform: translate(-50%, -50%) scale(0.2);
+            border-radius: 50%;
+            border: 3px solid var(--boom-ring, rgba(255, 225, 170, 0.95));
+            box-shadow: 0 0 18px var(--boom-ring, rgba(255, 225, 170, 0.95));
+            mix-blend-mode: screen;
+            animation: boomRing 0.58s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes boomRing {
+            0%   { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+            75%  { opacity: 0.75; }
+            100% { transform: translate(-50%, -50%) scale(4.2); opacity: 0; }
+        }
+
+        /* (5) 💥 emoji 本体：缩小尺寸、夹在中心金光和锯齿之间，作为语义锚点而非主体 */
+        .boom-emoji {
+            position: absolute;
+            left: 0; top: 0;
+            font-size: 44px;
+            line-height: 1;
+            transform: translate(-50%, -50%) scale(0.2);
+            filter: drop-shadow(0 0 6px rgba(255, 200, 100, 0.9));
+            animation: boomEmoji 0.48s cubic-bezier(0.22, 1.2, 0.36, 1) forwards;
+            z-index: 1; /* 让 emoji 夹在中心层和锯齿层之间（不是最上面，避免黑边 emoji 破坏光感） */
+        }
+        @keyframes boomEmoji {
+            0%   { transform: translate(-50%, -50%) scale(0.2) rotate(-12deg); opacity: 0; }
+            22%  { transform: translate(-50%, -50%) scale(1.3) rotate(6deg);   opacity: 1; } /* 弹性过冲 */
+            45%  { transform: translate(-50%, -50%) scale(1.0) rotate(-3deg);  opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.6) rotate(0deg);   opacity: 0; }
+        }
+
+        /* 旧版单一 emoji 容器（.explosion）保留——但新版不再使用，仅为未来回退留路径 */
         .explosion {
             position: absolute;
             width: 100px;
             height: 100px;
             pointer-events: none;
             animation: explode 0.5s ease-out forwards;
+            z-index: 60;
+        }
+        @keyframes explode {
+            0%   { transform: scale(0); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
         }
 
-        @keyframes explode {
-            0% { transform: scale(0); opacity: 1; }
-            100% { transform: scale(1.5); opacity: 0; }
+        /* 击破火花粒子（圆点）：
+         *  - 基础尺寸保留 9px，JS 会用 SPARK_BOOST 独立放大（避免两端耦合——经验 1507452）
+         *  - box-shadow 发光半径改为 CSS 变量 --spark-glow，方便 JS 端同步放大
+         *  - 末态 scale 从 0.15 → 0.45（不再缩成一个小点消失）
+         *  - 不透明保持到 65% 帧
+         *  - z-index 提到 63 层，和碎片同层更协调
+         */
+        .spark {
+            position: absolute;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            animation: sparkFly 0.82s cubic-bezier(0.14, 0.82, 0.32, 1) forwards;
+            /* 外层柔光晕 + 内层白心高光（双层盒阴影可叠加，不需要多元素） */
+            box-shadow:
+                0 0 var(--spark-glow, 14px) var(--spark-color, #fff),
+                0 0 2px    rgba(255,255,255,0.95) inset;
+            border: 1px solid rgba(255, 255, 255, 0.75);
+            z-index: 63;
+            will-change: transform, opacity;
+        }
+        @keyframes sparkFly {
+            0%   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            65%  { transform: translate(calc(-50% + var(--dx) * 0.72), calc(-50% + var(--dy) * 0.72 + (var(--dy2, 0px) * 0.55))) scale(1.08); opacity: 1; } /* 中段微膨胀 + 保持可见 */
+            100% { transform: translate(calc(-50% + var(--dx)),        calc(-50% + var(--dy)        + (var(--dy2, 0px))))        scale(0.45); opacity: 0; } /* 末态不再缩太小 */
+        }
+
+        /* 气球碎片（长条矩形）：强化可见性 —— 放大尺寸、加厚、更长不透明、加描边、z-index 提到 63 压在爆闪之上 */
+        .shard {
+            position: absolute;
+            pointer-events: none;
+            transform: translate(-50%, -50%) rotate(0deg) scale(1);
+            background: var(--shard-color, #ff6ec4);
+            border-radius: 3px;
+            /* 三层叠加：外层柔光晕 + 内层强发光描边 + 1px 白边提升对比度 */
+            box-shadow:
+                0 0 14px var(--shard-glow, rgba(255,110,196,0.85)),
+                0 0 4px  rgba(255,255,255,0.9) inset,
+                0 0 1px  rgba(0,0,0,0.25);
+            border: 1px solid rgba(255, 255, 255, 0.65);
+            z-index: 63;
+            will-change: transform, opacity;
+            animation: shardFly 1.0s cubic-bezier(0.2, 0.85, 0.3, 1) forwards;
+        }
+        @keyframes shardFly {
+            0%   { transform: translate(-50%, -50%) rotate(0deg) scale(1);   opacity: 1; }
+            65%  { transform: translate(calc(-50% + var(--sdx) * 0.72), calc(-50% + var(--sdy) * 0.72 + var(--sdy2, 0px) * 0.55)) rotate(calc(var(--srot, 360deg) * 0.65)) scale(1.05); opacity: 1; } /* 到 65% 还保持清晰 */
+            100% { transform: translate(calc(-50% + var(--sdx)),        calc(-50% + var(--sdy)        + var(--sdy2, 0px)))        rotate(var(--srot, 360deg))                  scale(0.65); opacity: 0; } /* 末态只缩到 0.65，不是 0.3 */
         }
 
         #input-area {
             width: 100%;
-            padding: 18px;
-            font-size: 1.5rem;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            margin-bottom: 20px;
+            box-sizing: border-box;
+            padding: 12px 16px;              /* 左右 padding 从 20→16，给文字腾空间 */
+            font-size: 1.35rem;              /* 输入字体从 1.5 缩到 1.35，视觉不影响输入但显著减少占位 */
+            line-height: 1.35;
+            border: 2px solid #bae6fd;
+            border-radius: 14px;
+            margin-bottom: 12px;
             text-align: center;
-            background-color: #fff;
+            background: #f0f9ff;
+            color: #1e293b;
             transition: all 0.3s;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            /* Chrome/Safari/Firefox 统一：输入框原生支持从右向左删减，避免超长时看不到光标 */
+            direction: ltr;
         }
-
+        /* placeholder 单独字号（经验 1095715：主诉是文字溢出时优先独立设置占位字号，避免影响输入正文） */
+        #input-area::placeholder {
+            color: #94a3b8;
+            font-size: 0.95rem;              /* placeholder 明显比输入字小，一行内稳稳放下 */
+            line-height: 1.2;
+            letter-spacing: 0.01em;
+            opacity: 1;                      /* 覆盖 Firefox 默认 0.54 的淡透明度 */
+        }
+        /* 跨浏览器前缀兜底（Edge、旧 Chromium 会吃 -webkit 前缀） */
+        #input-area::-webkit-input-placeholder {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.2;
+            opacity: 1;
+        }
+        #input-area::-moz-placeholder {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.2;
+            opacity: 1;
+        }
         #input-area:focus {
             outline: none;
-            border-color: #FF5722;
-            box-shadow: 0 0 0 4px rgba(255, 87, 34, 0.1);
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15), 0 0 28px rgba(56, 189, 248, 0.25);
             transform: translateY(-2px);
+            background: #ffffff;
         }
 
         .control-btn {
-            background: linear-gradient(135deg, #FF5722, #E64A19);
+            background: linear-gradient(135deg, #38bdf8, #0284c7);
             border: none;
-            border-radius: 12px;
-            padding: 12px 32px;
+            border-radius: 999px;
+            padding: 12px 34px;
             color: #fff;
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
+            letter-spacing: 1px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(255, 87, 34, 0.2);
-            margin: 0.5rem;
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.35);
+            margin: 0.25rem 0.5rem;
         }
-
         .control-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 87, 34, 0.3);
+            box-shadow: 0 10px 30px rgba(2, 132, 199, 0.45);
         }
-
         .control-btn:active {
             transform: translateY(0);
         }
-
         .control-btn:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
         .feedback {
-            height: 35px;
-            font-size: 1.2rem;
-            margin: 15px 0;
-            font-weight: bold;
-            color: #ef5350;
+            height: 22px;
+            min-height: 1.5em;
+            font-size: 1.05rem;
+            margin: 6px 0;
+            font-weight: 700;
+            color: #0284c7;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
         }
 
         /* 游戏结束弹窗 */
         .game-over {
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(8px);
+            background: rgba(2, 132, 199, 0.35);
             position: fixed;
             top: 0;
             left: 0;
@@ -257,52 +845,98 @@
         }
 
         .game-over-card {
-            background: #fff;
-            border-radius: 20px;
-            padding: 2.5rem;
+            background: #ffffff;
+            border: 1px solid #bae6fd;
+            border-radius: 24px;
+            padding: 2.8rem;
             text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(2, 132, 199, 0.2);
+            max-width: 420px;
             width: 90%;
+            animation: cardIn 0.4s ease-out;
+        }
+        @keyframes cardIn {
+            0%   { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         .game-over-card h2 {
-            font-size: 1.8rem;
-            color: #FF5722;
+            font-size: 2rem;
+            font-weight: 800;
             margin-bottom: 1rem;
+            /* 关键：h2 自身不再挂 background-clip:text，否则连 emoji 一起被 clip 成蓝紫色渐变蒙版 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            line-height: 1.2;
+        }
+        /* 渐变只套在纯文字 span 上，保留彩色 emoji 原生颜色不被剥离 */
+        .game-over-card h2 .title-text {
+            background: linear-gradient(90deg, #0284c7, #38bdf8, #6366f1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+        }
+        /* emoji 抗渐变剥离：强制禁用 text-fill / text-clip 的继承，让浏览器按彩色 emoji 正常渲染 */
+        .game-over-card h2 .emoji-keep {
+            display: inline-flex;
+            font-size: 1em;          /* 与标题等高，尺寸够大 */
+            background: none !important;
+            -webkit-background-clip: border-box !important;
+            background-clip: border-box !important;
+            -webkit-text-fill-color: initial !important;
+            color: initial !important;
+            filter: drop-shadow(0 2px 6px rgba(251, 191, 36, 0.45)); /* 独立暖色光晕，避免整段看起来"蓝" */
         }
 
         .game-over-card p {
             font-size: 1.1rem;
-            color: #555;
+            color: #475569;
             margin-bottom: 0.5rem;
         }
 
         .game-over-card strong {
-            color: #FF5722;
+            color: #0284c7;
+            font-size: 1.3rem;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #FF5722, #E64A19);
+            background: linear-gradient(135deg, #4ade80, #22d3ee);
             border: none;
-            border-radius: 12px;
-            padding: 12px 32px;
-            color: #fff;
+            border-radius: 999px;
+            padding: 12px 34px;
+            color: #0b1026;
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: 800;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(255, 87, 34, 0.2);
+            box-shadow: 0 6px 24px rgba(74, 222, 128, 0.4);
         }
-
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 87, 34, 0.3);
+            box-shadow: 0 10px 32px rgba(74, 222, 128, 0.55);
         }
 
         .hearts {
-            color: #ef5350;
-            font-size: 1.5rem;
+            color: #ff5c7a;
+            text-shadow: 0 0 10px rgba(255, 92, 122, 0.8);
+            letter-spacing: 2px;
+        }
+
+        /* 结束庆祝彩带 */
+        .confetti {
+            position: fixed;
+            top: -20px;
+            z-index: 9999;
+            pointer-events: none;
+            animation: confettiFall linear forwards;
+        }
+        @keyframes confettiFall {
+            0%   { transform: translateY(0) rotate(0); opacity: 1; }
+            100% { transform: translateY(105vh) rotate(720deg); opacity: 0.6; }
         }
 
         .hidden {
@@ -311,30 +945,65 @@
 
         @media (max-width: 768px) {
             .game-container {
-                margin: 1rem;
-                padding: 1.5rem;
-                border-radius: 16px;
+                width: auto;
+                min-height: calc(100vh - 60px - 1rem);
+                margin: 0.5rem;
+                padding: 1.1rem;
+                border-radius: 18px;
             }
 
+            h1.game-title {
+                font-size: 1.75rem;
+                letter-spacing: 0.03em;
+            }
+
+            .game-subtitle {
+                font-size: 0.95rem;
+                margin-bottom: 0.6rem;
+            }
+
+            /* 手机上改纵向：气球区在上、操作面板在下 */
+            .main-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .panel-right {
+                order: -1;
+            }
+            .panel-left {
+                flex: none;
+                width: 100%;
+            }
             .game-area {
-                height: 300px;
-            }
-
-            h1, .game-container > h1 {
-                font-size: 1.6rem;
+                min-height: 220px;
+                height: clamp(220px, 40vh, 340px);
             }
 
             #input-area {
-                font-size: 1.2rem;
+                font-size: 1.15rem;
+                padding: 10px 14px;
+            }
+            #input-area::placeholder,
+            #input-area::-webkit-input-placeholder,
+            #input-area::-moz-placeholder {
+                font-size: 0.82rem;
             }
 
             .stats {
                 gap: 8px;
+                flex-wrap: nowrap;       /* 移动端同步：强制一行不分 */
             }
 
             .stat-item {
-                padding: 10px 16px;
-                min-width: 80px;
+                padding: 9px 10px;
+                flex: 1 1 0;              /* 移动端同步：平分空间 */
+                min-width: 0;
+            }
+            .stat-item .stat-label {
+                font-size: 0.75rem;       /* 移动稍缩小标签字，保证不下行 */
+            }
+            .stat-item .stat-value {
+                font-size: 1.05rem;
             }
 
             .diff-btn {
@@ -355,48 +1024,101 @@
             }
         }
     </style>
+
+    <!-- 背景装饰光斑 -->
+    <div class="particle particle-1"></div>
+    <div class="particle particle-2"></div>
+
     <div class="game-container">
-        <h1>🎈 气球打字游戏 ⌨️</h1>
-        
-        <div class="difficulty-selector">
-            <button class="diff-btn active" data-mode="easy">简单 (字母)</button>
-            <button class="diff-btn" data-mode="normal">普通 (单词)</button>
-            <button class="diff-btn" data-mode="hard">困难 (多单词)</button>
-        </div>
+        <h1 class="game-title">🎈 气球打字游戏 🎈</h1>
+        <p class="game-subtitle">✨ 快速打出气球上的内容，全部击破赢取高分！✨</p>
 
-        <div class="stats">
-            <div class="stat-item">🏆 得分: <span id="score">0</span></div>
-            <div class="stat-item">❤️ 生命: <span id="lives" class="hearts">❤️❤️❤️</span></div>
-            <div class="stat-item">🔥 连击: <span id="combo">0</span></div>
-        </div>
+        <div class="main-row">
+            <!-- 左侧：操作面板 -->
+            <div class="panel-left">
+                <div class="difficulty-selector">
+                    <button class="diff-btn active" data-mode="easy">简单 (字母)</button>
+                    <button class="diff-btn" data-mode="normal">普通 (单词)</button>
+                    <button class="diff-btn" data-mode="hard">困难 (多单词)</button>
+                </div>
 
-        <div class="game-area" id="game-area">
-        </div>
-        
-        <input type="text" id="input-area" placeholder="输入气球上的字母/单词/短语，按回车提交" autocomplete="off">
-        
-        <div class="feedback" id="feedback"></div>
-        
-        <div>
-            <button class="control-btn" id="start-btn">开始游戏</button>
-            <button class="control-btn" id="pause-btn">暂停</button>
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-label">🏆 得分</span>
+                        <span class="stat-value" id="score">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">❤️ 生命</span>
+                        <span class="stat-value hearts" id="lives">❤️❤️❤️</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">🔥 连击</span>
+                        <span class="stat-value" id="combo">0</span>
+                    </div>
+                </div>
+
+                <input type="text" id="input-area" placeholder="输入气球上的字母或单词，回车提交" autocomplete="off">
+
+                <div class="feedback" id="feedback"></div>
+
+                <div class="controls">
+                    <button class="control-btn" id="start-btn">▶ 开始游戏</button>
+                    <button class="control-btn" id="pause-btn">⏸ 暂停</button>
+                </div>
+            </div>
+
+            <!-- 右侧：气球游戏区 -->
+            <div class="panel-right">
+                <div class="game-area" id="game-area">
+                    <div class="reticle" id="reticle"></div>
+                    <!-- 3-2-1-GO 倒计时覆盖层：默认隐藏，点击开始后显示，倒计时结束自动隐藏 -->
+                    <div class="countdown-overlay hidden" id="countdown-overlay">
+                        <div class="countdown-card">
+                            <span class="countdown-num" id="countdown-num">3</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="game-over hidden" id="game-over-screen">
             <div class="game-over-card">
-                <h2>🎈 游戏结束！</h2>
+                <h2><span class="emoji-keep" aria-hidden="true">🎉</span><span class="title-text">游戏结束！</span></h2>
                 <p>最终得分：<strong id="final-score">0</strong></p>
                 <p>最高连击：<strong id="final-combo">0</strong> 次</p>
-                <button class="btn-primary" id="restart-btn" style="margin-top:1rem;">再来一局</button>
+                <button class="btn-primary" id="restart-btn" style="margin-top:1rem;">🔄 再来一局</button>
             </div>
         </div>
     </div>
 
     <script>
+        // ===== 颜色工具（供爆闪、碎片等特效动态调色）=====
+        // #RRGGBB → rgba(R, G, B, a)
+        function hexToRgba(hex, a = 1) {
+            const m = hex.replace('#', '');
+            const v = m.length === 3 ? m.split('').map(c => c + c).join('') : m;
+            const r = parseInt(v.slice(0, 2), 16);
+            const g = parseInt(v.slice(2, 4), 16);
+            const b = parseInt(v.slice(4, 6), 16);
+            return `rgba(${r}, ${g}, ${b}, ${a})`;
+        }
+        // 将 #RRGGBB 按 amount (0~1) 向白色方向提亮（简单线性插值即可）
+        function lighten(hex, amount = 0.3) {
+            const m = hex.replace('#', '');
+            const v = m.length === 3 ? m.split('').map(c => c + c).join('') : m;
+            let r = parseInt(v.slice(0, 2), 16);
+            let g = parseInt(v.slice(2, 4), 16);
+            let b = parseInt(v.slice(4, 6), 16);
+            r = Math.round(r + (255 - r) * amount);
+            g = Math.round(g + (255 - g) * amount);
+            b = Math.round(b + (255 - b) * amount);
+            return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+        }
+
         // 单词库
         const wordList = ['cat', 'dog', 'sun', 'red', 'run', 'hot', 'big', 'fun', 'top', 'cup', 'hat', 'pen', 'box', 'sit', 'win', 'fly', 'sky', 'map', 'car', 'bus', 'key', 'ice', 'egg', 'fan', 'bed', 'day', 'old', 'new', 'boy', 'girl', 'fish', 'book', 'play', 'star', 'hand', 'tree', 'bird', 'cake', 'ball', 'rain', 'home', 'snow', 'apple', 'green', 'happy', 'water', 'light', 'music', 'dance', 'smile', 'color', 'plant'];
         const phraseList = ['big cat', 'red sun', 'hot dog', 'blue sky', 'old tree', 'new book', 'fun game', 'top hat', 'ice cream', 'green leaf', 'happy dog', 'cold water', 'warm day', 'dark night', 'fast car', 'small fish', 'tall tree', 'long road', 'nice bird', 'white snow', 'rain bow', 'gold star', 'pink cake', 'black cat', 'brown bear', 'red apple', 'sweet home', 'good boy', 'nice girl', 'loud music'];
-        const balloonColors = ['balloon-red', 'balloon-blue', 'balloon-green', 'balloon-yellow', 'balloon-purple', 'balloon-pink'];
+        const balloonColors = ['balloon-red', 'balloon-orange', 'balloon-green', 'balloon-yellow', 'balloon-purple', 'balloon-pink'];
 
         // 获取DOM元素
         const diffBtns = document.querySelectorAll('.diff-btn');
@@ -411,6 +1133,10 @@
         const feedbackEl = document.getElementById('feedback');
         const gameOverEl = document.getElementById('game-over-screen');
         const finalScoreEl = document.getElementById('final-score');
+        const reticle = document.getElementById('reticle');
+        // 3-2-1-GO 倒计时相关 DOM
+        const countdownOverlay = document.getElementById('countdown-overlay');
+        const countdownNum = document.getElementById('countdown-num');
 
         // 游戏状态变量
         let gameMode = 'easy';
@@ -423,12 +1149,21 @@
         let balloons = [];
         let spawnInterval = null;
         let cleanupInterval = null;
+        let countdownTimer = null;   // 倒计时当前 setInterval（清理用）
+        let countdownPending = false; // 正在倒计时中：防重复点击"开始"
         let currentDifficulty = {
             spawnRate: 2000,
             floatDuration: 8000,
             maxBalloons: 1,
             wordType: 'letter'
         };
+
+        // 自定义准星光标跟随
+        gameArea.addEventListener('mousemove', (e) => {
+            const rect = gameArea.getBoundingClientRect();
+            reticle.style.left = `${e.clientX - rect.left}px`;
+            reticle.style.top = `${e.clientY - rect.top}px`;
+        });
 
         // 初始化游戏
         function initGame() {
@@ -437,7 +1172,7 @@
             combo = 0;
             gameRunning = false;
             gamePaused = false;
-            
+
             updateStats();
             clearBalloons();
             inputArea.value = '';
@@ -447,6 +1182,45 @@
             inputArea.disabled = true;
             pauseBtn.disabled = true;
             startBtn.disabled = false;
+            reticle.style.opacity = '0';
+
+            // 倒计时清理（重置 / 再来一局按钮 按后立刻取消倒计时）
+            if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+            countdownPending = false;
+            countdownOverlay.classList.add('hidden');
+        }
+
+        // ===== 3-2-1-GO 倒计时：点击开始后先运行 3 秒倒计时，结束后再真正启动气球生成 =====
+        // 用"重启动画 class"技巧重新触发 .countdown-num 每次换字的 pop 动画（经验：改 animation-name/remove-add class）
+        function triggerCountdownAnim(el) {
+            el.classList.remove('countdown-num_play');
+            // 强制回流（reflow）让下一行 add 被浏览器当成全新状态重新触发 keyframes
+            void el.offsetWidth;
+            el.classList.add('countdown-num_play');
+        }
+        function startCountdownThen(onDone) {
+            const sequence = ['3', '2', '1', 'GO!'];
+            let idx = 0;
+            // 先隐藏，避免切换场景下的闪烁
+            countdownOverlay.classList.remove('hidden');
+            countdownPending = true;
+            // 立刻显示第一个数字
+            countdownNum.textContent = sequence[0];
+            triggerCountdownAnim(countdownNum);
+            // 每 900ms 换下一个数（配合 CSS countdownPop 0.9s，刚好一个动画完整播完）
+            countdownTimer = setInterval(() => {
+                idx += 1;
+                if (idx >= sequence.length) {
+                    clearInterval(countdownTimer);
+                    countdownTimer = null;
+                    countdownOverlay.classList.add('hidden');
+                    countdownPending = false;
+                    onDone && onDone();
+                    return;
+                }
+                countdownNum.textContent = sequence[idx];
+                triggerCountdownAnim(countdownNum);
+            }, 900);
         }
 
         // 更新统计显示
@@ -454,6 +1228,10 @@
             scoreEl.textContent = score;
             livesEl.textContent = '❤️'.repeat(lives);
             comboEl.textContent = combo;
+            // 得分跳动动画
+            scoreEl.classList.remove('bump');
+            void scoreEl.offsetWidth;
+            scoreEl.classList.add('bump');
         }
 
         // 清空所有气球
@@ -536,35 +1314,179 @@
                 }
             });
 
-            // 设置 CSS transition 并触发浮动（从 100px → -500px）
+            // 浮动距离 = 游戏区高度 + 100px（让气球从底部下方飘到顶部上方，铺满全屏）
+            const floatDist = gameArea.clientHeight + 100;
+            // 设置 CSS transition 并触发浮动
             balloonEl.style.transition = `transform ${duration}s linear`;
             // 强制 reflow 确保初始位置生效
             balloonEl.offsetHeight; // eslint-disable-line no-unused-expressions
-            balloonEl.style.transform = 'translateY(-500px)';
+            balloonEl.style.transform = `translateY(-${floatDist}px)`;
 
             balloons.push(balloon);
         }
 
-        // 爆炸动画（animationend 事件清理，无需 setTimeout）
-        function createExplosion(x, y) {
-            const explosion = document.createElement('div');
-            explosion.className = 'explosion';
-            explosion.style.left = `${x - 50}px`;
-            explosion.style.top = `${y - 50}px`;
-            explosion.innerHTML = '💥';
-            explosion.style.fontSize = '50px';
+        // 爆炸动画：双环冲击波 + 强光闪白 + 圆点火花 + 气球碎片（全部 transform/opacity，GPU 合成）
+        function createExplosion(x, y, balloonColorClass) {
+            // 根据气球类读取配色，保证碎片/冲击波与气球色系一致（视觉统一）
+            const colorMap = {
+                'balloon-red':    { c: '#f65a5a', g: 'rgba(246, 90, 90, 0.75)',  sw: 'rgba(255, 200, 200, 0.85)' },
+                'balloon-orange': { c: '#fb923c', g: 'rgba(251, 146, 60, 0.75)', sw: 'rgba(255, 220, 180, 0.85)' },
+                'balloon-green':  { c: '#22c55e', g: 'rgba(34, 197, 94, 0.75)',  sw: 'rgba(200, 255, 215, 0.85)' },
+                'balloon-yellow': { c: '#f59e0b', g: 'rgba(245, 158, 11, 0.75)', sw: 'rgba(255, 240, 200, 0.85)' },
+                'balloon-purple': { c: '#a855f7', g: 'rgba(168, 85, 247, 0.75)', sw: 'rgba(230, 210, 255, 0.85)' },
+                'balloon-pink':   { c: '#ec4899', g: 'rgba(236, 72, 153, 0.75)', sw: 'rgba(255, 215, 235, 0.85)' },
+            };
+            const palette = colorMap[balloonColorClass] || colorMap['balloon-pink'];
 
-            explosion.addEventListener('animationend', () => explosion.remove());
-            // 兜底：万一 animationend 未触发（概率极低），800ms 后清理
-            setTimeout(() => { if (explosion.parentNode) explosion.remove(); }, 800);
+            // ===== 两个独立"旋钮"：碎片稍小 / 圆点火花稍大（经验 1507452：对比型需求必须做成互不叠乘的独立参数）=====
+            const SHARD_SHRINK = 0.78;   // 碎片尺寸倍率：比上一版小 22%（"稍微小一点点"）
+            const SPARK_BOOST  = 0.85;   // 圆点火花尺寸倍率：降到比默认 9px 还小 15%（约 7.7px），与长条碎片的形状+尺寸双维度区分，避免混淆
 
-            gameArea.appendChild(explosion);
+            // 爆闪专用调色：金色基础 + 气球色点缀，既保持"金色爆闪"的冲击感又呼应气球色
+            const Boom = {
+                core:   palette.c.startsWith('#') ? hexToRgba(palette.c, 0.55) : palette.g,
+                spike:  lighten(palette.c, 0.35),
+                spike2: palette.c,
+                conic1: palette.c.startsWith('#') ? hexToRgba(lighten(palette.c, 0.4), 0.88) : palette.sw,
+                conic2: palette.c.startsWith('#') ? hexToRgba(palette.c, 0.78)             : palette.g,
+                ring:   palette.c.startsWith('#') ? hexToRgba(lighten(palette.c, 0.55), 0.92) : palette.sw,
+            };
+            const sparkPalette = ['#fff3b0', palette.c, '#ffffff',
+                Object.values(colorMap)[Math.floor(Math.random()*6)].c,
+                Object.values(colorMap)[Math.floor(Math.random()*6)].c];
+
+            /* --- 1) 双环冲击波（2 个元素，不同延迟/粗细） --- */
+            for (let r = 1; r <= 2; r++) {
+                const ring = document.createElement('div');
+                ring.className = `shockwave ring-${r}`;
+                ring.style.left = `${x}px`;
+                ring.style.top = `${y}px`;
+                ring.style.setProperty('--sw-color', palette.sw);
+                ring.addEventListener('animationend', () => ring.remove());
+                gameArea.appendChild(ring);
+            }
+
+            /* --- 2) 中心强光闪白 --- */
+            const burst = document.createElement('div');
+            burst.className = 'burst-flash';
+            burst.style.left = `${x}px`;
+            burst.style.top = `${y}px`;
+            burst.addEventListener('animationend', () => burst.remove());
+            gameArea.appendChild(burst);
+
+            /* --- 3) 圆点火花（18 颗，球面均匀采样 + 重力下坠 + 每粒子随机相位）—— 应用 SPARK_BOOST 放大基础尺寸 --- */
+            const sparkCount = 18;
+            for (let i = 0; i < sparkCount; i++) {
+                const spark = document.createElement('div');
+                spark.className = 'spark';
+                // 球面均匀采样（避免 1157477 提到的"对角聚团/整齐同步"）
+                const u = Math.random();
+                const v = Math.random();
+                const angle = 2 * Math.PI * u;
+                const radial = 1 - Math.sqrt(v); // 中心更密、外围稀疏，像真实爆炸
+                const dist = 38 + radial * 78 + Math.random() * 18;
+                const gravityY = 38 + Math.random() * 46; // 独立重力参数
+                const color = sparkPalette[Math.floor(Math.random() * sparkPalette.length)];
+                spark.style.left = `${x}px`;
+                spark.style.top  = `${y}px`;
+                spark.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
+                spark.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
+                spark.style.setProperty('--dy2', `${gravityY}px`);
+                spark.style.setProperty('--spark-color', color);
+                spark.style.background = color;
+                // 用 SPARK_BOOST 放大每颗火花的基础尺寸 + 发光半径
+                spark.style.width  = `${9  * SPARK_BOOST}px`;
+                spark.style.height = `${9  * SPARK_BOOST}px`;
+                spark.style.setProperty('--spark-glow', `${14 * SPARK_BOOST}px`);
+                // 独立起始动画延迟，打破"齐爆"感
+                const delayMs = Math.random() * 40;
+                if (delayMs > 0) spark.style.animationDelay = `${delayMs}ms`;
+                spark.addEventListener('animationend', () => spark.remove());
+                gameArea.appendChild(spark);
+            }
+
+            /* --- 4) 气球碎片长条（14 条，随机宽高+旋转）—— 应用 SHARD_SHRINK 稍微收窄尺寸 --- */
+            const shardCount = 14;
+            for (let i = 0; i < shardCount; i++) {
+                const shard = document.createElement('div');
+                shard.className = 'shard';
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 62 + Math.random() * 95;
+                const gravityY = 75 + Math.random() * 80;
+                // 上版基础宽高范围：w 6~19 / h 14~42 → 乘 SHARD_SHRINK（0.78）后约 5~15 / 11~33，即"稍微小一点点"
+                const w = (6  + Math.random() * 13) * SHARD_SHRINK;
+                const h = (14 + Math.random() * 28) * SHARD_SHRINK;
+                const rot = (Math.random() * 1080 - 540) + 'deg';
+                shard.style.left = `${x}px`;
+                shard.style.top  = `${y}px`;
+                shard.style.width  = `${w}px`;
+                shard.style.height = `${h}px`;
+                shard.style.setProperty('--sdx', `${Math.cos(angle) * dist}px`);
+                shard.style.setProperty('--sdy', `${Math.sin(angle) * dist}px`);
+                shard.style.setProperty('--sdy2', `${gravityY}px`);
+                shard.style.setProperty('--srot', rot);
+                shard.style.setProperty('--shard-color', palette.c);
+                shard.style.setProperty('--shard-glow', palette.g);
+                const delayMs = Math.random() * 35;
+                if (delayMs > 0) shard.style.animationDelay = `${delayMs}ms`;
+                shard.addEventListener('animationend', () => shard.remove());
+                gameArea.appendChild(shard);
+            }
+
+            /* --- 5) 升级版爆闪（💥 锚点 + 4 层 CSS 光芒包裹）—— 临时关闭，方便对比碎片单独的视觉效果（后续把 "// TEMP_DISABLED:" 去掉即可恢复）
+            // TEMP_DISABLED: (function createBoom() {
+                const wrap = document.createElement('div');
+                wrap.className = 'boom-wrap';
+                wrap.style.left = `${x}px`;
+                wrap.style.top  = `${y}px`;
+
+                const core = document.createElement('div');
+                core.className = 'boom-core';
+                core.style.setProperty('--boom-core', Boom.core);
+
+                const spikes = document.createElement('div');
+                spikes.className = 'boom-spikes';
+                spikes.style.setProperty('--boom-spike',  Boom.spike);
+                spikes.style.setProperty('--boom-spike2', Boom.spike2);
+
+                const conic = document.createElement('div');
+                conic.className = 'boom-conic';
+                conic.style.setProperty('--boom-conic1', Boom.conic1);
+                conic.style.setProperty('--boom-conic2', Boom.conic2);
+
+                const ring = document.createElement('div');
+                ring.className = 'boom-ring';
+                ring.style.setProperty('--boom-ring', Boom.ring);
+
+                const emoji = document.createElement('div');
+                emoji.className = 'boom-emoji';
+                emoji.textContent = '💥';
+
+                // 层级（从下到上）：ring → conic → spikes → emoji → core（金光叠在最上方，盖在 emoji 上模拟过曝）
+                wrap.appendChild(ring);
+                wrap.appendChild(conic);
+                wrap.appendChild(spikes);
+                wrap.appendChild(emoji);
+                wrap.appendChild(core);
+
+                // 子层中动画最长的是 boom-ring (0.58s)，以最长的为基准清理 wrap
+                const longestChild = ring;
+                longestChild.addEventListener('animationend', () => { if (wrap.parentNode) wrap.remove(); }, { once: true });
+                // 兜底清理，防止 animationend 偶发不触发
+                setTimeout(() => { if (wrap.parentNode) wrap.remove(); }, 900);
+
+                gameArea.appendChild(wrap);
+            // TEMP_DISABLED: })();
+            --- */
         }
 
-        // 击破气球（标记 popped，由 cleanupBalloons 统一清理）
+        // 击破气球（主体爆开动画 + 装饰特效同帧启动，主体结束后才 remove DOM，避免割裂感）
         function popBalloon(balloon) {
             balloon.popped = true;
             const el = balloon.element;
+
+            // 读取气球颜色类，让爆炸特效与气球色系一致
+            const colorClass = Array.from(el.classList).find(c => c.startsWith('balloon-') && c !== 'balloon');
 
             // 停止浮动 transition，锁定当前位置
             const rect = el.getBoundingClientRect();
@@ -572,12 +1494,14 @@
             el.style.transition = 'none';
             el.style.transform = `translateY(${rect.top - gameRect.top - 100}px)`;
 
-            // 播放击破动画
+            // 主体命中关键帧 + 所有装饰特效在同一帧启动
+            const cx = rect.left - gameRect.left + (rect.width / 2);
+            const cy = rect.top - gameRect.top + (rect.height / 2);
             el.classList.add('pop');
-            el.addEventListener('animationend', () => el.remove());
+            createExplosion(cx, cy, colorClass);  // 同步启动装饰特效，无时间差
 
-            // 爆炸效果
-            createExplosion(rect.left - gameRect.left + 30, rect.top - gameRect.top + 35);
+            // 主体动画结束后再移除 DOM，保证视觉衔接自然（经验 1549261）
+            el.addEventListener('animationend', () => { if (el.parentNode) el.remove(); }, { once: true });
 
             // 更新得分
             combo++;
@@ -588,7 +1512,7 @@
 
             updateStats();
             feedbackEl.textContent = `+${baseScore + comboBonus}分！连击×${combo} 🔥`;
-            feedbackEl.style.color = '#66bb6a';
+            feedbackEl.style.color = '#4ade80';
         }
 
         // 气球到达顶部（标记 done，由 cleanupBalloons 统一清理）
@@ -600,7 +1524,7 @@
 
             updateStats();
             feedbackEl.textContent = '气球飞走了 😢';
-            feedbackEl.style.color = '#ef5350';
+            feedbackEl.style.color = '#f87171';
 
             if (balloon.element.parentNode) {
                 balloon.element.remove();
@@ -638,25 +1562,52 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // 开始游戏
+        // 游戏结束彩带庆祝
+        function spawnConfetti() {
+            const confettiColors = ['#ff6ec4', '#7873f5', '#4ade80', '#fbbf24', '#38bdf8', '#fb7185', '#f97316'];
+            for (let i = 0; i < 90; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti';
+                piece.style.left = `${Math.random() * 100}%`;
+                piece.style.background = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+                piece.style.animationDelay = `${Math.random() * 0.6}s`;
+                piece.style.animationDuration = `${2.2 + Math.random() * 2}s`;
+                piece.style.width = `${6 + Math.random() * 7}px`;
+                piece.style.height = `${10 + Math.random() * 6}px`;
+                piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                document.body.appendChild(piece);
+                setTimeout(() => piece.remove(), 5000);
+            }
+        }
+
+        // 点击"开始游戏"按钮：
+        // 1）防重复：正在运行 / 正在倒计时 中都直接 return
+        // 2）跑 3 → 2 → 1 → GO! 倒计时（≈ 2.7s）
+        // 3）倒计时结束后才真正执行气球生成
         function startGame() {
             if (gameRunning) return;
-            
-            gameRunning = true;
-            gamePaused = false;
-            inputArea.disabled = false;
-            pauseBtn.disabled = false;
+            if (countdownPending) return;          // 已经在倒计时，忽略重入点击
+
+            // 锁定"开始"按钮，倒计时期间再点也不会多开一轮
             startBtn.disabled = true;
-            inputArea.focus();
-            
-            // 开始生成气球
-            spawnInterval = setInterval(createBalloon, currentDifficulty.spawnRate);
 
-            // 定期清理已结束的气球（1秒一次，替代每帧 splice）
-            cleanupInterval = setInterval(cleanupBalloons, 1000);
+            startCountdownThen(() => {
+                gameRunning = true;
+                gamePaused = false;
+                inputArea.disabled = false;
+                pauseBtn.disabled = false;
+                reticle.style.opacity = '1';
+                inputArea.focus();
 
-            // 启动兜底检查循环
-            requestAnimationFrame(gameLoop);
+                // 开始生成气球
+                spawnInterval = setInterval(createBalloon, currentDifficulty.spawnRate);
+
+                // 定期清理已结束的气球（1秒一次，替代每帧 splice）
+                cleanupInterval = setInterval(cleanupBalloons, 1000);
+
+                // 启动兜底检查循环
+                requestAnimationFrame(gameLoop);
+            });
         }
 
         // 暂停游戏（冻结/恢复 CSS transition）
@@ -691,7 +1642,7 @@
                     balloon.duration = balloon.remainingTime;
                     balloon.element.style.transition = `transform ${balloon.remainingTime}s linear`;
                     balloon.element.offsetHeight; // 强制 reflow
-                    balloon.element.style.transform = 'translateY(-500px)';
+                    balloon.element.style.transform = `translateY(-${gameArea.clientHeight + 100}px)`;
                 });
                 feedbackEl.textContent = '';
                 requestAnimationFrame(gameLoop);
@@ -714,6 +1665,7 @@
             finalScoreEl.textContent = score;
             document.getElementById('final-combo').textContent = maxCombo;
             gameOverEl.classList.remove('hidden');
+            spawnConfetti();
         }
 
         // 切换难度
@@ -727,13 +1679,13 @@
 
             // 移除所有active类
             diffBtns.forEach(btn => btn.classList.remove('active'));
-            
+
             // 添加当前active类
             const btn = e.target;
             btn.classList.add('active');
-            
+
             gameMode = btn.dataset.mode;
-            
+
             // 设置难度参数
             switch (gameMode) {
                 case 'easy':
@@ -766,10 +1718,10 @@
         // 处理输入
         function handleInput(e) {
             if (!gameRunning || gamePaused) return;
-            
+
             const input = inputArea.value.trim().toLowerCase();
             if (!input) return;
-            
+
             // 查找匹配的气球
             for (let i = 0; i < balloons.length; i++) {
                 if (balloons[i].text.toLowerCase() === input && !balloons[i].popped) {
@@ -778,7 +1730,7 @@
                     return;
                 }
             }
-            
+
             // 没有匹配 - 只在有实际输入内容时才算打错
             // 部分匹配不算错，让用户继续输入
             const hasPartialMatch = balloons.some(b => !b.popped && !b.done && b.text.toLowerCase().startsWith(input));
@@ -786,7 +1738,7 @@
                 combo = 0;
                 updateStats();
                 feedbackEl.textContent = '打错啦 ❌';
-                feedbackEl.style.color = '#ef5350';
+                feedbackEl.style.color = '#f87171';
                 inputArea.value = '';
             }
         }

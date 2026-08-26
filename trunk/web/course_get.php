@@ -72,33 +72,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (empty($course)) {
             $error_message = $MSG_COURSE_NOT_AVAILABLE;
         } else {
-            $has_permission = ($license_type == 1 && $permission['has_full_preview']) ||
-                              ($license_type == 2 && $permission['has_source']);
-            if ($has_permission) {
-                set_success_and_redirect($course_id, $MSG_ALREADY_ACQUIRED_HINT);
+            // 升级价格校验：付费原文件版升级差价为 0 视为价格配置错误，禁止免费升级（与 GET 页一致，防薅羊毛）
+            if ($is_upgrade && $license_type == 2
+                && $permission['upgrade_price'] <= 0 && $permission['source_price'] > 0) {
+                $error_message = '升级失败：价格计算错误';
             } else {
-                $amount = calculate_course_price($course, $license_type, $is_upgrade);
-                $point_amount = intval(ceil(max(0.0, floatval($amount))));
-
-                if ($point_amount <= 0) {
-                    // 免费课程 / 升级差价为 0：直接授予权限
-                    $grant = grant_course_license($user_id, $course_id, $license_type, array(
-                        'pay_channel' => 'free',
-                        'amount' => 0,
-                        'is_upgrade' => $is_upgrade,
-                    ));
-                    if ($grant['success']) {
-                        set_success_and_redirect($course_id, $MSG_GET_SUCCESS);
-                    } else {
-                        $error_message = $grant['message'];
-                    }
+                $has_permission = ($license_type == 1 && $permission['has_full_preview']) ||
+                                  ($license_type == 2 && $permission['has_source']);
+                if ($has_permission) {
+                    set_success_and_redirect($course_id, $MSG_ALREADY_ACQUIRED_HINT);
                 } else {
-                    // 积分支付：服务端再次重算价格 / 校验余额 / 扣减积分 / 登记订单
-                    $pay = point_pay_for_course($user_id, $course_id, $license_type, $is_upgrade ? true : false);
-                    if ($pay['success']) {
-                        set_success_and_redirect($course_id, '积分支付成功，已为您开通权限');
+                    $amount = calculate_course_price($course, $license_type, $is_upgrade);
+                    $point_amount = intval(ceil(max(0.0, floatval($amount))));
+
+                    if ($point_amount <= 0) {
+                        // 免费课程 / 升级差价为 0：直接授予权限
+                        $grant = grant_course_license($user_id, $course_id, $license_type, array(
+                            'pay_channel' => 'free',
+                            'amount' => 0,
+                            'is_upgrade' => $is_upgrade,
+                        ));
+                        if ($grant['success']) {
+                            set_success_and_redirect($course_id, $MSG_GET_SUCCESS);
+                        } else {
+                            $error_message = $grant['message'];
+                        }
                     } else {
-                        $error_message = $pay['message'];
+                        // 积分支付：服务端再次重算价格 / 校验余额 / 扣减积分 / 登记订单
+                        $pay = point_pay_for_course($user_id, $course_id, $license_type, $is_upgrade ? true : false);
+                        if ($pay['success']) {
+                            set_success_and_redirect($course_id, '积分支付成功，已为您开通权限');
+                        } else {
+                            $error_message = $pay['message'];
+                        }
                     }
                 }
             }

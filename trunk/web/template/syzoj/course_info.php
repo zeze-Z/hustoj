@@ -79,22 +79,23 @@
           <?php elseif ($view_has_preview_license): ?>
             <!-- 仅拥有完整预览版：显示升级或已拥有提示 -->
             <?php if ($view_has_source_resource): ?>
-              <?php if ($view_source_price > 0): ?>
-                <!-- 原文件版付费：显示升级按钮 -->
-                <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1"
-                   class="ui large orange button">
-                  <i class="arrow up icon"></i> 升级到原文件版 <?php echo intval($view_upgrade_price); ?> 积分
-                </a>
-              <?php elseif ($view_source_price == 0): ?>
+              <?php if ($view_is_source_free): ?>
                 <!-- 原文件版免费：显示限时免费获取按钮 -->
                 <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1"
                    class="ui large green button">
                   <i class="gift icon"></i> 限时免费获取原文件版
                 </a>
+              <?php elseif ($view_upgrade_price > 0): ?>
+                <!-- 原文件版付费且可正常升级：显示升级按钮 -->
+                <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1"
+                   class="ui large orange button">
+                  <i class="arrow up icon"></i> 升级到原文件版 <?php echo intval($view_upgrade_price); ?> 积分
+                </a>
               <?php else: ?>
-                <div class="ui positive message" style="padding: 15px 20px;">
-                  <i class="checkmark icon"></i>
-                  已拥有完整预览权限
+                <!-- 原文件版付费但升级差价为 0（价格配置异常）：不提供升级入口 -->
+                <div class="ui orange message" style="padding: 15px 20px;">
+                  <i class="warning sign icon"></i>
+                  价格配置异常，请联系管理员
                 </div>
               <?php endif; ?>
             <?php else: ?>
@@ -236,13 +237,15 @@
             <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
               <div style="font-size: 1.3em; font-weight: 700; color: #52c41a;">
                 <?php if ($view_has_only_preview): ?>
-                  <?php if ($view_upgrade_price == 0): ?>
+                  <?php if ($view_is_source_free): ?>
                     <span style="color: #21ba45;">限时免费升级</span>
-                  <?php else: ?>
+                  <?php elseif ($view_upgrade_price > 0): ?>
                     <span><?php echo intval($view_upgrade_price); ?> 积分</span>
                     <span style="font-size: 0.7em; color: #999; font-weight: 400; margin-left: 6px;">
                       原价 <span style="text-decoration: line-through;"><?php echo intval($view_source_price); ?> 积分</span>
                     </span>
+                  <?php else: ?>
+                    <span style="color: #d9534f;">价格配置异常，请联系管理员</span>
                   <?php endif; ?>
                 <?php else: ?>
                   <?php if ($view_is_source_free): ?>
@@ -265,14 +268,16 @@
                 <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
                   <a class="ui small positive button" href="javascript:void(0)" onclick="showLoginPrompt()">登录后升级</a>
                 <?php else: ?>
-                  <?php if ($view_upgrade_price == 0): ?>
+                  <?php if ($view_is_source_free): ?>
                     <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1" class="ui small positive button">
                       <i class="gift icon"></i> 限时免费升级
                     </a>
-                  <?php else: ?>
+                  <?php elseif ($view_upgrade_price > 0): ?>
                     <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=2&upgrade=1" class="ui small positive button">
                       <i class="arrow up icon"></i> 抵扣后升级 <?php echo intval($view_upgrade_price); ?> 积分
                     </a>
+                  <?php else: ?>
+                    <span style="color: #d9534f;">价格配置异常，请联系管理员</span>
                   <?php endif; ?>
                 <?php endif; ?>
               </div>

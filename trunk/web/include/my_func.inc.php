@@ -939,12 +939,10 @@ function get_user_course_permission($user_id, $course_id) {
         $permission['has_full_preview'] = true;
     }
 
-    // 计算是否可以升级
-    if ($permission['has_full_preview'] && !$permission['has_source'] && $permission['source_price'] > 0) {
+    // 计算是否可以升级（仅当原文件版价格高于预览版价格时允许，避免误配价格导致 0 差价免费升级）
+    if ($permission['has_full_preview'] && !$permission['has_source']
+        && $permission['source_price'] > $permission['full_preview_price']) {
         $permission['upgrade_price'] = $permission['source_price'] - $permission['full_preview_price'];
-        if ($permission['upgrade_price'] < 0) {
-            $permission['upgrade_price'] = 0;
-        }
         $permission['can_upgrade'] = true;
     }
 

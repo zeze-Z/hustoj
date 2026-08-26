@@ -2,10 +2,10 @@
 /**
  * 新客连续登录分批奖励（V2.4）
  *
- * 业务规则见 docs/需求_20积分分批发放活动.md (v1.1) 第四节：
+ * 业务规则见 docs/需求_20积分分批发放活动.md (v1.2) 第四节：
  *   - 注册/激活发 6 分，并播种签到基线（last_login_reward_date=当天, login_streak=0, status=0）
  *   - 其后连续登录 7 天，每天 2 分（共 14），第 7 天标记完成
- *   - 断签即结束（status=2），不再发放
+ *   - 断签即结束（status=2），不再发放；严格起始：播种次日未登录即断签（v1.2）
  *
  * 并发安全：grant_login_streak_reward() 用条件 UPDATE 抢"今日名额"，天然防双发。
  * 健壮性：任何异常只记日志、不抛出，确保不影响正常登录（验收7）。
@@ -59,7 +59,7 @@ function seed_login_reward($user_id) {
 
 /**
  * 发放每日连续登录奖励（登录成功后调用）。
- * 详见需求文档第四节 step1~8；step8 为条件 UPDATE。
+ * 详见需求文档第四节 step1~7；step7 为条件 UPDATE。
  *
  * @param string $user_id
  * @return array {granted,points,streak,status,reason}
@@ -107,11 +107,10 @@ function grant_login_streak_reward($user_id) {
             return $result;
         }
 
-        // step3~5: 计算新 streak / 是否断签
-        if ($streak === 0) {
-            // 首次签到：领6后任意一天均可开始（宽松起始）
-            $new_streak = 1;
-        } elseif ($last === $yesterday) {
+        // step3~4: 计算新 streak / 是否断签（严格连续，v1.2）
+        // 统一规则：last=昨天才连续（含首次签到：播种次日登录，streak 0 -> 1）；
+        // 播种后隔天/多天首次登录同样视为断签，直接结束不发。
+        if ($last === $yesterday) {
             // 连续
             $new_streak = $streak + 1;
         } else {
@@ -127,13 +126,13 @@ function grant_login_streak_reward($user_id) {
             return $result;
         }
 
-        // step6~7: 发2积分；满7天标记完成
+        // step5~6: 发2积分；满7天标记完成
         $new_status = ($new_streak >= LOGIN_STREAK_TARGET)
             ? LOGIN_REWARD_COMPLETED
             : LOGIN_REWARD_IN_PROGRESS;
         $points = LOGIN_STREAK_DAILY_POINT;
 
-        // step8: 条件 UPDATE 抢今日名额（防并发双发）；成功后再发积分，整段事务保证原子
+        // step7: 条件 UPDATE 抢今日名额（防并发双发）；成功后再发积分，整段事务保证原子
         point_tx_begin();
         $affected = pdo_query(
             "UPDATE `users`
