@@ -319,6 +319,14 @@
                 <div class="card-title">气球打字</div>
                 <div class="card-desc">打字击破上升的气球，练习键盘输入（适合3-6年级）</div>
             </a>
+
+            <a href="frog_typing.php" class="card">
+                <div class="card-icon">
+                    <i class="keyboard icon"></i>
+                </div>
+                <div class="card-title">青蛙过河</div>
+                <div class="card-desc">打对石头上的词让青蛙过河，闯关收集星星解锁关卡（适合3-6年级）</div>
+            </a>
         </div>
     </div>
 

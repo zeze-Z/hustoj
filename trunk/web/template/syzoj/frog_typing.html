@@ -1,0 +1,2150 @@
+<?php $show_title="青蛙过河闯关 - $OJ_NAME"; ?>
+<?php include("template/$OJ_TEMPLATE/header.php");?>
+
+<div class="padding">
+<style>
+        /* ===== 青蛙过河闯关 · 清新河湖风 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 覆盖 syzoj 模板 .padding 的白玻璃效果（white.css 会给内容区垫 rgba(255,255,255,0.55) 半透明白底），
+           否则暗色霓虹主题的文字会落在白底上看不见 */
+        .padding {
+            background: transparent !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            overflow: visible !important;
+            padding: 0 !important;
+            color: inherit !important;
+            transition: none !important;
+        }
+        .padding::before,
+        .padding::after {
+            display: none !important;
+        }
+
+        :root {
+            --font-cute: "Comic Sans MS", "Chalkboard SE", "PingFang SC", "Microsoft YaHei", sans-serif;
+            --lake: #0ea5e9;        /* 湖水蓝 */
+            --lake-soft: #38bdf8;
+            --leaf: #22c55e;        /* 青蛙绿 */
+            --leaf-deep: #16a34a;   /* 荷叶深绿 */
+            --stone: #7c9aa8;       /* 石头灰蓝 */
+            --gold: #fbbf24;        /* 星星 */
+            --danger: #f87171;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background: linear-gradient(180deg, #d6f3f5 0%, #b8e6ea 40%, #a5dce3 100%);
+            background-size: 400% 400%;
+            animation: bgShift 20s ease infinite;
+        }
+
+        @keyframes bgShift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 背景漂浮光斑 */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(1px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .particle-1 {
+            width: 320px;
+            height: 320px;
+            left: -120px;
+            top: 12%;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.22), transparent 70%);
+            animation: drift 12s ease-in-out infinite;
+        }
+        .particle-2 {
+            width: 380px;
+            height: 380px;
+            right: -140px;
+            bottom: 8%;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.18), transparent 70%);
+            animation: drift 16s ease-in-out infinite reverse;
+        }
+        @keyframes drift {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50%      { transform: translateY(-34px) scale(1.12); }
+        }
+
+        .game-container {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            width: 100%;
+            min-height: calc(100vh - 60px - 2rem);
+            margin: 1rem auto;
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(2, 132, 199, 0.16);
+            padding: 1.6rem 1.6rem 2rem;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+        }
+
+        .hidden { display: none !important; }
+
+        .game-title {
+            font-family: var(--font-cute);
+            font-size: clamp(1.7rem, 4vw, 2.6rem);
+            font-weight: 800;
+            text-align: center;
+            background: linear-gradient(90deg, #0284c7, #16a34a, #0ea5e9);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            margin-bottom: 0.35rem;
+        }
+        /* 标题渐变只作用于文字，青蛙 emoji 保持原生配色（否则会被渐变填充成绿色） */
+        .title-emoji {
+            background: none;
+            -webkit-background-clip: initial;
+            background-clip: initial;
+            -webkit-text-fill-color: initial;
+            color: initial;
+        }
+        .game-subtitle {
+            text-align: center;
+            color: #64748b;
+            font-size: 1.05rem;
+            margin-bottom: 1.2rem;
+        }
+
+        /* ============ 关卡地图 ============ */
+        .map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 0.8rem;
+        }
+        .map-user {
+            color: #334155;
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+        .map-stars {
+            color: #b45309;
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+        .map-stars strong { color: #f59e0b; font-size: 1.3rem; }
+        .map-progress {
+            height: 14px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-bottom: 1.4rem;
+        }
+        .map-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #4ade80, #fbbf24);
+            border-radius: 999px;
+            transition: width 0.6s ease;
+        }
+
+        .zone {
+            position: relative;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            border-radius: 18px;
+            padding: 1rem 1.1rem 1.2rem;
+            margin-bottom: 1.1rem;
+        }
+        .zone-title {
+            font-family: var(--font-cute);
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #0c4a6e;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .zone-title .zone-done {
+            margin-left: auto;
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .zone-sub {
+            font-size: 0.82rem;
+            color: #0e7490;
+            font-weight: 600;
+            margin: -0.45rem 0 0.8rem;
+        }
+        .zone-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.8rem;
+        }
+
+        /* 地图屏第一区（荷花池）角落的手绘荷花水印 */
+        .map-lotus {
+            position: absolute;
+            right: 12px;
+            bottom: 8px;
+            width: 38px;
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 0;
+            animation: decorBob 4.4s ease-in-out infinite;
+        }
+        .map-lotus svg {
+            width: 100%;
+            height: auto;
+            display: block;
+            filter: drop-shadow(0 2px 3px rgba(2, 80, 110, 0.2));
+        }
+
+        .level-card {
+            position: relative;
+            border-radius: 16px;
+            padding: 0.9rem 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            background: linear-gradient(145deg, #eff8ff, #e0f2fe);
+            border: 2px solid #bae6fd;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            user-select: none;
+        }
+        .level-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(14, 165, 233, 0.25); }
+        .level-num {
+            font-family: var(--font-cute);
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #0369a1;
+            line-height: 1;
+        }
+        .level-bank-icon { font-size: 2.2rem; line-height: 1; margin: 0.2rem 0; }
+        .level-stars { font-size: 1rem; letter-spacing: 2px; color: #fbbf24; }
+        .level-stars .dim { color: #cbd5e1; }
+        .level-card.locked {
+            background: linear-gradient(145deg, #f1f5f9, #e2e8f0);
+            border-color: #cbd5e1;
+            cursor: not-allowed;
+            color: #94a3b8;
+        }
+        .level-card.locked:hover { transform: none; box-shadow: none; }
+        .level-card.locked .level-num { color: #94a3b8; }
+        .level-card.locked .level-lock {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            font-size: 1.05rem;
+        }
+        .level-card.current {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35), 0 8px 20px rgba(14, 165, 233, 0.2);
+            animation: cardBreath 1.6s ease-in-out infinite;
+        }
+        @keyframes cardBreath {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35), 0 8px 20px rgba(14, 165, 233, 0.2); }
+            50%      { box-shadow: 0 0 0 5px rgba(56, 189, 248, 0.55), 0 8px 24px rgba(14, 165, 233, 0.3); }
+        }
+
+        /* ============ 游戏屏 ============ */
+        .game-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .topbar-title {
+            font-family: var(--font-cute);
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #0c4a6e;
+        }
+        .topbar-stars {
+            font-size: 1.2rem;
+            color: #fbbf24;
+            letter-spacing: 2px;
+        }
+        .topbar-stars .dim { color: #cbd5e1; }
+        .topbar-left { display: flex; align-items: center; gap: 0.4rem; }
+        .topbar-center { margin: 0 auto; text-align: center; }
+        /* 喇叭图标按钮：手绘SVG更清晰、更像图标按钮 */
+        #sound-btn { padding: 6px 9px; }
+        #sound-btn svg { width: 22px; height: 22px; display: block; }
+
+        .control-btn {
+            background: linear-gradient(145deg, #ffffff, #e0f2fe);
+            border: 1px solid #bae6fd;
+            border-radius: 999px;
+            padding: 8px 18px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0369a1;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 3px 10px rgba(14, 165, 233, 0.15);
+        }
+        .control-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(14, 165, 233, 0.25); }
+        .control-btn.small { padding: 6px 14px; font-size: 0.9rem; }
+        .control-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .control-btn.start { background: linear-gradient(145deg, #4ade80, #22c55e); color: #052e16; border-color: #86efac; }
+
+        .main-row {
+            display: flex;
+            gap: 1.2rem;
+            align-items: stretch;
+        }
+        .panel-left {
+            flex: 0 0 330px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+        }
+        .panel-right {
+            flex: 1 1 auto;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+        .stat-item {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 12px;
+            padding: 0.55rem 0.4rem;
+            text-align: center;
+        }
+        .stat-label { display: block; font-size: 0.78rem; color: #64748b; font-weight: 600; margin-bottom: 0.2rem; }
+        .stat-value { display: block; font-size: 1.15rem; font-weight: 800; color: #0c4a6e; }
+        .stat-value.hearts { color: #ef4444; letter-spacing: 1px; }
+
+        .progress-col .col-progress {
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .col-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #22c55e);
+            border-radius: 999px;
+            transition: width 0.45s ease;
+        }
+
+        #input-area {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-align: center;
+            color: #0c4a6e;
+            background: #ffffff;
+            border: 2px solid #7dd3fc;
+            border-radius: 14px;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: inset 0 2px 6px rgba(2, 132, 199, 0.08);
+        }
+        #input-area:focus {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.25), inset 0 2px 6px rgba(2, 132, 199, 0.1);
+        }
+        #input-area:disabled { background: #f1f5f9; color: #94a3b8; }
+
+        .feedback {
+            min-height: 1.6rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-align: center;
+            color: #64748b;
+        }
+        .feedback.ok { color: #16a34a; }
+        .feedback.err { color: #dc2626; }
+        .feedback.info { color: #0369a1; }
+
+        .controls {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+        .controls .control-btn { flex: 1 1 auto; }
+
+        /* ============ 河面 ============ */
+        .river {
+            position: relative;
+            flex: 1 1 auto;
+            min-height: 400px;
+            border-radius: 18px;
+            overflow: hidden;
+            background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 45%, #0ea5e9 100%);
+            border: 2px solid #7dd3fc;
+            box-shadow: inset 0 0 40px rgba(2, 132, 199, 0.25);
+        }
+        .river::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(0deg,
+                transparent 0 10px,
+                rgba(255, 255, 255, 0.22) 10px 14px,
+                transparent 14px 26px);
+            opacity: 0.55;
+            animation: waterFlow 7s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        @keyframes waterFlow {
+            from { background-position: 0 0; }
+            to   { background-position: 0 28px; }
+        }
+        /* 水面色块（给石头/青蛙垫底的可视水位线） */
+        .river::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 18%;
+            height: 38%;
+            background: linear-gradient(180deg, rgba(2, 132, 199, 0.25), rgba(2, 132, 199, 0.5));
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== 四区主题背景：荷花池 / 小溪 / 大河 / 大海 ===== */
+        .river-zone-1 { background: linear-gradient(180deg, #bdeeda 0%, #6fd8ae 45%, #2fae7f 100%); }  /* 荷花池·春水青绿 */
+        .river-zone-2 { background: linear-gradient(180deg, #c3ecff 0%, #8ac9fb 45%, #4aa0e8 100%); }  /* 小溪·明亮浅蓝 */
+        .river-zone-3 { background: linear-gradient(180deg, #8fc7fa 0%, #3f8fe0 45%, #1a5cb0 100%); }  /* 大河·深湛蓝 */
+        .river-zone-4 { background: linear-gradient(180deg, #5fc8d8 0%, #248db0 40%, #0b5f8a 100%); }  /* 大海·深海蓝绿 */
+
+        /* ===== 四区手绘装饰层（轻点缀，SVG绘制） ===== */
+        #river-decor {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .decor {
+            position: absolute;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            opacity: 0.88;
+        }
+        .decor svg {
+            width: 100%;
+            height: auto;
+            display: block;
+            filter: drop-shadow(0 3px 4px rgba(2, 80, 110, 0.22));
+        }
+        .decor.flip svg { transform: scaleX(-1); }
+        .decor.bob { animation: decorBob 3.8s ease-in-out infinite; }
+        .decor.bob-2 { animation: decorBob 5.4s ease-in-out infinite reverse; }
+        /* 荷花独立层：z-index 4 高于石头(z3)，在河面装饰层(z1)之上，
+           避免被 .decor 容器的层叠上下文压住 */
+        #lotus-layer {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 4;
+        }
+        @keyframes decorBob {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-5px); }
+        }
+
+        .bank {
+            position: absolute;
+            bottom: 24%;
+            z-index: 2;
+            filter: drop-shadow(0 4px 8px rgba(0, 60, 100, 0.35));
+            pointer-events: none;
+        }
+        .bank svg { display: block; width: 100%; height: auto; }
+        .bank-left { left: 2px; width: 54px; }
+        .bank-right { right: 2px; width: 116px; }
+
+        /* 石头/荷叶（手绘SVG荷叶） */
+        .stone {
+            position: absolute;
+            bottom: 24%;
+            transform: translateX(-50%);
+            width: 86px;
+            height: 62px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
+            transition: filter 0.2s ease;
+            cursor: default;
+        }
+        .stone-pad {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 5px 8px rgba(2, 100, 60, 0.35));
+        }
+        .stone-chars {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1px;
+            padding-top: 3px;
+        }
+        .stone .char {
+            display: inline-block;
+            color: #ffffff;
+            font-weight: 800;
+            text-shadow: 0 1px 3px rgba(0, 60, 30, 0.7);
+            transition: all 0.15s ease;
+        }
+        .stone .char.pending { color: rgba(255, 255, 255, 0.55); }
+        .stone .char.current {
+            color: #0ea5e9;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 4px;
+            transform: scale(1.18);
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+        }
+        .stone .char.correct {
+            color: #052e16;
+            background: #bbf7d0;
+            border-radius: 4px;
+            text-shadow: none;
+        }
+        .stone .char.wrong { color: #dc2626; animation: charWrongShake 0.3s ease; }
+        @keyframes charWrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+
+        .stone.damaged {
+            filter: brightness(0.82) saturate(0.85);
+            border-color: rgba(220, 38, 38, 0.6);
+        }
+        .stone.damaged::before {
+            content: "";
+            position: absolute;
+            top: 12%;
+            left: 50%;
+            width: 3px;
+            height: 42%;
+            background: rgba(220, 38, 38, 0.8);
+            transform: rotate(28deg);
+            border-radius: 2px;
+            z-index: 2;
+        }
+        .stone.sinking {
+            animation: stoneSink 0.55s ease-in forwards;
+            pointer-events: none;
+        }
+        @keyframes stoneSink {
+            0%   { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateX(-50%) translateY(40px) scale(0.8); opacity: 0.25; }
+        }
+        .stone.sunk { opacity: 0.18; pointer-events: none; filter: blur(1px) brightness(0.7); }
+        .stone.shake { animation: stoneShake 0.35s ease; }
+        @keyframes stoneShake {
+            0%, 100% { transform: translateX(-50%) translateX(0); }
+            25% { transform: translateX(calc(-50% - 4px)); }
+            75% { transform: translateX(calc(-50% + 4px)); }
+        }
+
+        /* 青蛙 */
+        .frog {
+            position: absolute;
+            bottom: 26%;
+            left: 0;
+            transform: translateX(-50%);
+            font-size: 2.2rem;
+            z-index: 6;
+            transition: left 0.5s cubic-bezier(0.3, 1.4, 0.4, 1);
+            filter: drop-shadow(0 6px 10px rgba(0, 60, 100, 0.4));
+            pointer-events: none;
+        }
+        .frog-bounce { animation: frogArc 0.5s ease-in-out; }
+        @keyframes frogArc {
+            0%   { transform: translateX(-50%) translateY(0) rotate(0deg); }
+            40%  { transform: translateX(-50%) translateY(-72px) rotate(-10deg); }
+            70%  { transform: translateX(-50%) translateY(4px) rotate(4deg); }
+            100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
+        }
+        .frog.splash { animation: frogSplash 0.9s ease-in forwards; }
+        @keyframes frogSplash {
+            0%   { transform: translateX(-50%) translateY(0) scale(1) rotate(0deg); opacity: 1; }
+            55%  { transform: translateX(-50%) translateY(24px) scale(0.8) rotate(18deg); opacity: 0.8; }
+            100% { transform: translateX(-50%) translateY(52px) scale(0.15) rotate(40deg); opacity: 0; }
+        }
+
+        /* 手绘青蛙SVG：呼吸 + 眨眼待机动画（跳起/落水动画作用于 .frog 外层，互不冲突） */
+        .frog svg {
+            width: 64px;
+            height: 64px;
+            display: block;
+            animation: frogBreath 3.2s ease-in-out infinite;
+            transform-origin: 50% 88%;
+        }
+        @keyframes frogBreath {
+            0%, 100% { transform: scaleY(1); }
+            50%      { transform: scaleY(1.045); }
+        }
+        .frog-eyelid {
+            transform-box: fill-box;
+            transform-origin: center top;
+            animation: frogBlink 4.2s ease-in-out infinite;
+        }
+        @keyframes frogBlink {
+            0%, 92%  { transform: scaleY(0); }
+            94%, 96% { transform: scaleY(1); }
+            98%, 100% { transform: scaleY(0); }
+        }
+
+        /* 鳄鱼（第四区追赶，位于荷叶上方的空旷水面，头朝右游向青蛙） */
+        .crocodile {
+            position: absolute;
+            bottom: 52%;
+            left: -18%;
+            transform: translateX(-50%);
+            z-index: 5;
+            filter: drop-shadow(0 4px 8px rgba(0, 60, 100, 0.4));
+            pointer-events: none;
+        }
+        .crocodile svg {
+            width: 88px;
+            height: auto;
+            display: block;
+        }
+        .crocodile.bob { animation: crocBob 0.9s ease-in-out infinite; }
+        @keyframes crocBob {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50%      { transform: translateX(-50%) translateY(-6px); }
+        }
+
+        /* 波纹 */
+        #ripple-layer {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 4;
+        }
+        .ripple {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            border: 3px solid rgba(255, 255, 255, 0.85);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: rippleExpand 0.65s ease-out forwards;
+        }
+        @keyframes rippleExpand {
+            0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(3.2); opacity: 0; }
+        }
+
+        /* 3-2-1-GO 倒计时 */
+        .countdown-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at center, rgba(56, 189, 248, 0.25) 0%, rgba(2, 132, 199, 0.45) 100%);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            z-index: 900;
+            animation: overlayFadeIn 0.3s ease-out;
+        }
+        @keyframes overlayFadeIn {
+            0%   { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        .countdown-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: clamp(150px, 32%, 220px);
+            aspect-ratio: 1 / 1;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f0fdff, #e0f2fe 50%, #dcfce7 100%);
+            border: 4px solid #fff;
+            box-shadow:
+                0 0 0 10px rgba(14, 165, 233, 0.25),
+                0 0 40px rgba(34, 197, 94, 0.4),
+                0 20px 60px rgba(2, 132, 199, 0.35);
+        }
+        .countdown-num {
+            font-family: var(--font-cute);
+            font-size: clamp(5rem, 13vw, 8.5rem);
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -0.02em;
+            color: #0ea5e9;
+            -webkit-text-stroke: 3px #ffffff;
+            text-stroke: 3px #ffffff;
+            text-shadow:
+                -3px  0   0 #ffffff,
+                 3px  0   0 #ffffff,
+                 0   -3px 0 #ffffff,
+                 0    3px 0 #ffffff,
+                -2px -2px 0 #ffffff,
+                 2px -2px 0 #ffffff,
+                -2px  2px 0 #ffffff,
+                 2px  2px 0 #ffffff,
+                0 6px 16px rgba(14, 165, 233, 0.5);
+        }
+        .countdown-num_play { animation: countdownPop 0.9s cubic-bezier(0.22, 1.3, 0.36, 1) forwards; }
+        @keyframes countdownPop {
+            0%   { transform: scale(0.25); opacity: 0; }
+            30%  { transform: scale(1.25); opacity: 1; }
+            55%  { transform: scale(1.0);  opacity: 1; }
+            100% { transform: scale(0.55); opacity: 0; }
+        }
+
+        /* 结算弹窗 */
+        .game-over {
+            background: rgba(2, 132, 199, 0.35);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .game-over-card {
+            background: #ffffff;
+            border: 1px solid #bae6fd;
+            border-radius: 24px;
+            padding: 2.4rem 2rem;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(2, 132, 199, 0.2);
+            max-width: 430px;
+            width: 92%;
+            animation: cardIn 0.4s ease-out;
+        }
+        @keyframes cardIn {
+            0%   { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .game-over-card h2 {
+            font-family: var(--font-cute);
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            line-height: 1.2;
+            color: #0369a1;
+        }
+        .game-over-card .result-stars {
+            font-size: 2.2rem;
+            letter-spacing: 6px;
+            margin-bottom: 0.8rem;
+        }
+        .game-over-card .result-stars .dim { color: #cbd5e1; }
+        .game-over-card p { font-size: 1.05rem; color: #475569; margin-bottom: 0.4rem; }
+        .game-over-card strong { color: #0284c7; font-size: 1.2rem; }
+        .game-over-card .unlock-tip {
+            margin-top: 0.4rem;
+            color: #16a34a;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .game-over-card .all-clear {
+            color: #b45309;
+            font-weight: 800;
+            font-size: 1.05rem;
+            margin: 0.6rem 0;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            border: none;
+            border-radius: 999px;
+            padding: 12px 34px;
+            color: #052e16;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 24px rgba(34, 197, 94, 0.4);
+            margin-top: 1rem;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 32px rgba(34, 197, 94, 0.55);
+        }
+        .game-over-card .control-btn { margin-top: 0.8rem; width: 100%; }
+
+        /* 全局轻提示 Toast */
+        .toast {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(2, 40, 60, 0.88);
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 999px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            z-index: 2000;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            animation: toastIn 0.3s ease-out;
+            pointer-events: none;
+            max-width: 92vw;
+            text-align: center;
+        }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* ============ 响应式 ============ */
+        @media (max-width: 768px) {
+            .main-row { flex-direction: column; }
+            .panel-right { order: -1; }
+            .panel-left { flex: 1 1 auto; width: 100%; }
+            .river { min-height: 300px; }
+            .zone-grid { grid-template-columns: repeat(2, 1fr); }
+            .frog svg { width: 50px; height: 50px; }
+            .game-container { padding: 1rem 0.8rem 1.4rem; }
+        }
+        @media (max-width: 420px) {
+            .stats { grid-template-columns: repeat(3, 1fr); gap: 0.3rem; }
+        }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/game_confetti.js"></script>
+
+<div class="particle particle-1"></div>
+<div class="particle particle-2"></div>
+
+<!-- ===== 屏 1：关卡地图 ===== -->
+<div class="game-container" id="screen-map">
+    <h1 class="game-title"><span class="title-emoji">🐸</span> 青蛙过河闯关 <span class="title-emoji">🐸</span></h1>
+    <p class="game-subtitle">打对荷叶上的内容，青蛙就向前跳！收集星星解锁下一关 ✨</p>
+    <div class="map-header">
+        <div class="map-user">你好，<span id="map-user-name">同学</span>！</div>
+        <div class="map-stars">⭐ 总星数：<strong id="map-total-stars">0</strong><span id="map-total-max">/48</span></div>
+    </div>
+    <div class="map-progress"><div class="map-progress-bar" id="map-progress-bar"></div></div>
+    <div class="zone" id="zone-1">
+        <div class="zone-title">🪷 第一区 · 荷花池<span class="zone-done" id="zone-done-1"></span></div>
+        <div class="zone-sub">打出荷叶上的内容…</div>
+        <div class="zone-grid" id="zone-grid-1"></div>
+    </div>
+    <div class="zone" id="zone-2">
+        <div class="zone-title">🏞️ 第二区 · 小溪<span class="zone-done" id="zone-done-2"></span></div>
+        <div class="zone-sub">打出荷叶上的内容…</div>
+        <div class="zone-grid" id="zone-grid-2"></div>
+    </div>
+    <div class="zone" id="zone-3">
+        <div class="zone-title">🌊 第三区 · 大河<span class="zone-done" id="zone-done-3"></span></div>
+        <div class="zone-sub">打出荷叶上的内容…</div>
+        <div class="zone-grid" id="zone-grid-3"></div>
+    </div>
+    <div class="zone" id="zone-4">
+        <div class="zone-title">🐬 第四区 · 大海<span class="zone-done" id="zone-done-4"></span></div>
+        <div class="zone-sub">打出荷叶上的内容，小心鳄鱼！</div>
+        <div class="zone-grid" id="zone-grid-4"></div>
+    </div>
+</div>
+
+<!-- ===== 屏 2：游戏 ===== -->
+<div class="game-container hidden" id="screen-game">
+    <div class="game-topbar">
+        <div class="topbar-left">
+            <button class="control-btn small" id="back-btn">← 返回</button>
+            <button class="control-btn small" id="sound-btn" title="声音开关"></button>
+        </div>
+        <div class="topbar-center">
+            <span class="topbar-title" id="topbar-level-name">第 1 关</span>
+            <span class="topbar-stars" id="topbar-stars">☆☆☆</span>
+        </div>
+    </div>
+    <div class="main-row">
+        <div class="panel-left">
+            <div class="stats">
+                <div class="stat-item"><span class="stat-label">❤️ 生命</span><span class="stat-value hearts" id="lives">❤️❤️❤️</span></div>
+                <div class="stat-item"><span class="stat-label">❌ 失误</span><span class="stat-value" id="mistakes">0</span></div>
+                <div class="stat-item"><span class="stat-label">⏱ 用时</span><span class="stat-value" id="timer">0.0s</span></div>
+            </div>
+            <div class="progress-col">
+                <span class="stat-label">过河进度</span>
+                <div class="col-progress"><div class="col-progress-bar" id="col-progress-bar"></div></div>
+            </div>
+            <input type="text" id="input-area" placeholder="打出荷叶上的内容…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="text">
+            <div class="feedback" id="feedback"></div>
+            <div class="controls">
+                <button class="control-btn" id="pause-btn">▶ 开始</button>
+                <button class="control-btn" id="restart-btn">🔄 重开</button>
+            </div>
+        </div>
+        <div class="panel-right">
+            <div class="river" id="river">
+                <div class="bank bank-left" id="bank-left" aria-hidden="true">
+                    <svg viewBox="0 0 60 44" xmlns="http://www.w3.org/2000/svg">
+                        <g stroke="#22c55e" stroke-width="4" stroke-linecap="round" fill="none">
+                            <path d="M10 40 C 8 28 6 20 2 10"/>
+                            <path d="M18 40 C 18 26 20 18 24 8"/>
+                            <path d="M28 40 C 30 28 28 20 34 12"/>
+                            <path d="M40 40 C 44 30 50 24 58 18"/>
+                        </g>
+                        <g stroke="#16a34a" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8">
+                            <path d="M14 40 C 12 30 8 24 6 16"/>
+                            <path d="M34 40 C 36 30 40 22 46 16"/>
+                        </g>
+                    </svg>
+                </div>
+                <div id="stones-container"></div>
+                <div id="river-decor"></div>
+                <div id="lotus-layer"></div>
+                <div class="bank bank-right" id="bank-right" aria-hidden="true">
+                    <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 沙岛 -->
+                        <ellipse cx="60" cy="66" rx="54" ry="14" fill="#fde68a"/>
+                        <ellipse cx="60" cy="68" rx="46" ry="11" fill="#fcd34d"/>
+                        <path d="M22 66 Q 40 70 60 66 Q 80 62 98 66" stroke="#f59e0b" stroke-width="2" fill="none" opacity="0.5"/>
+                        <!-- 棕榈树干 -->
+                        <path d="M60 64 C 56 48 62 40 64 26" stroke="#92400e" stroke-width="6" fill="none" stroke-linecap="round"/>
+                        <!-- 棕榈叶 -->
+                        <g fill="#22c55e">
+                            <path d="M64 26 C 84 22 96 30 100 40 C 90 38 78 36 64 32 Z"/>
+                            <path d="M64 26 C 66 8 76 0 88 4 C 80 10 74 18 68 26 Z"/>
+                            <path d="M64 26 C 44 22 32 30 28 40 C 38 38 50 36 64 32 Z"/>
+                            <path d="M64 26 C 62 8 52 0 40 4 C 48 10 54 18 60 26 Z"/>
+                        </g>
+                        <!-- 椰子 -->
+                        <circle cx="61" cy="40" r="3" fill="#78350f"/>
+                        <circle cx="67" cy="39" r="3" fill="#78350f"/>
+                        <!-- 岸边小石 -->
+                        <ellipse cx="20" cy="66" rx="8" ry="4" fill="#cbd5e1"/>
+                    </svg>
+                </div>
+                <div id="frog" class="frog" aria-hidden="true">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="frog-body-grad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0" stop-color="#86efac"/>
+                                <stop offset="0.45" stop-color="#4ade80"/>
+                                <stop offset="1" stop-color="#16a34a"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- 后腿 -->
+                        <ellipse cx="21" cy="77" rx="12" ry="9" fill="#22c55e"/>
+                        <ellipse cx="79" cy="77" rx="12" ry="9" fill="#22c55e"/>
+                        <!-- 脚趾 -->
+                        <circle cx="13" cy="84" r="2.6" fill="#16a34a"/>
+                        <circle cx="21" cy="86" r="2.6" fill="#16a34a"/>
+                        <circle cx="29" cy="84" r="2.6" fill="#16a34a"/>
+                        <circle cx="71" cy="84" r="2.6" fill="#16a34a"/>
+                        <circle cx="79" cy="86" r="2.6" fill="#16a34a"/>
+                        <circle cx="87" cy="84" r="2.6" fill="#16a34a"/>
+                        <!-- 身体 -->
+                        <ellipse cx="50" cy="60" rx="31" ry="25" fill="url(#frog-body-grad)"/>
+                        <!-- 肚子 -->
+                        <ellipse cx="50" cy="69" rx="21" ry="15" fill="#d1fae5" opacity="0.95"/>
+                        <!-- 眼睛底座 -->
+                        <circle cx="34" cy="36" r="15" fill="#22c55e"/>
+                        <circle cx="66" cy="36" r="15" fill="#22c55e"/>
+                        <!-- 眼白 -->
+                        <circle cx="34" cy="35" r="11.5" fill="#ffffff"/>
+                        <circle cx="66" cy="35" r="11.5" fill="#ffffff"/>
+                        <!-- 瞳孔 + 高光 -->
+                        <circle cx="35" cy="36" r="5" fill="#0f172a"/>
+                        <circle cx="36.5" cy="34" r="1.7" fill="#ffffff"/>
+                        <circle cx="67" cy="36" r="5" fill="#0f172a"/>
+                        <circle cx="68.5" cy="34" r="1.7" fill="#ffffff"/>
+                        <!-- 眼皮（眨眼动画） -->
+                        <rect class="frog-eyelid" x="22.5" y="23" width="23" height="17" rx="8.5" fill="#4ade80"/>
+                        <rect class="frog-eyelid" x="54.5" y="23" width="23" height="17" rx="8.5" fill="#4ade80"/>
+                        <!-- 腮红 -->
+                        <circle cx="24" cy="68" r="4.2" fill="#fda4af" opacity="0.85"/>
+                        <circle cx="76" cy="68" r="4.2" fill="#fda4af" opacity="0.85"/>
+                        <!-- 嘴巴（微笑 + 舌头） -->
+                        <path d="M40 72 Q 50 80 60 72" stroke="#14532d" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+                        <path d="M46 76 Q 50 81 54 76 Z" fill="#f87171"/>
+                        <!-- 背斑 -->
+                        <circle cx="50" cy="47" r="2.8" fill="#15803d" opacity="0.6"/>
+                        <circle cx="41" cy="52" r="2" fill="#15803d" opacity="0.6"/>
+                        <circle cx="59" cy="52" r="2.2" fill="#15803d" opacity="0.6"/>
+                    </svg>
+                </div>
+                <div id="crocodile" class="crocodile hidden" aria-hidden="true">
+                    <svg viewBox="0 0 160 64" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 尾巴（左端上卷） -->
+                        <path d="M20 30 C 8 27 3 20 4 12 C 7 21 12 28 24 32 Z" fill="#15803d"/>
+                        <!-- 身体 -->
+                        <path d="M30 13 C 62 3 98 5 124 15 C 129 24 122 33 104 37 C 74 43 40 41 20 32 C 12 28 14 17 30 13 Z" fill="#22c55e"/>
+                        <!-- 腹部 -->
+                        <path d="M24 30 C 48 41 88 43 112 36 C 118 40 106 45 90 45 C 66 49 32 45 16 35 Z" fill="#d9f99d"/>
+                        <!-- 上颚长嘴（头朝右） -->
+                        <path d="M110 15 C 128 11 146 12 156 17 L152 25 L110 24 Z" fill="#22c55e"/>
+                        <!-- 下颚（张开，凶相） -->
+                        <path d="M112 25 L146 30 L138 36 L110 31 Z" fill="#166534"/>
+                        <!-- 上排牙 -->
+                        <path d="M120 20 L122 29 L126 20 Z" fill="#ffffff"/>
+                        <path d="M130 21 L132 30 L136 21 Z" fill="#ffffff"/>
+                        <path d="M140 22 L142 30 L146 22 Z" fill="#ffffff"/>
+                        <!-- 下排牙 -->
+                        <path d="M122 31 L124 23 L127 31 Z" fill="#ffffff"/>
+                        <path d="M132 32 L134 24 L137 32 Z" fill="#ffffff"/>
+                        <!-- 鼻孔 -->
+                        <path d="M149 18 L154 19" stroke="#14532d" stroke-width="2.4" stroke-linecap="round"/>
+                        <!-- 凶猛的眼睛：竖瞳 + 怒眉 -->
+                        <circle cx="103" cy="13" r="7" fill="#fefce8"/>
+                        <ellipse cx="105" cy="13" rx="2.4" ry="5.4" fill="#7f1d1d"/>
+                        <path d="M96 6 L110 9" stroke="#14532d" stroke-width="3.6" stroke-linecap="round"/>
+                        <!-- 背部突刺 -->
+                        <path d="M42 9 L44 1 L49 10 Z" fill="#15803d"/>
+                        <path d="M58 6 L61 0 L66 9 Z" fill="#15803d"/>
+                        <path d="M74 6 L78 0 L83 9 Z" fill="#15803d"/>
+                        <path d="M90 7 L94 2 L98 11 Z" fill="#15803d"/>
+                        <!-- 前腿 + 爪 -->
+                        <path d="M68 40 C 66 47 63 51 59 53" stroke="#15803d" stroke-width="5" fill="none" stroke-linecap="round"/>
+                        <path d="M57 53 L54 57 M60 54 L60 58 M63 53 L66 57" stroke="#14532d" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+                        <!-- 后腿 + 爪 -->
+                        <path d="M36 36 C 34 43 32 49 28 52" stroke="#15803d" stroke-width="5" fill="none" stroke-linecap="round"/>
+                        <path d="M26 52 L23 56 M29 53 L29 57 M32 52 L35 56" stroke="#14532d" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div id="ripple-layer"></div>
+                <div class="countdown-overlay hidden" id="countdown-overlay">
+                    <div class="countdown-card"><span class="countdown-num" id="countdown-num">3</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 全局轻提示 ===== -->
+<div class="toast hidden" id="toast"></div>
+
+<!-- ===== 结算弹窗 ===== -->
+<div class="game-over hidden" id="result-screen">
+    <div class="game-over-card">
+        <h2><span class="emoji-keep">🏆</span><span id="result-title">过关！</span></h2>
+        <div class="result-stars" id="result-stars">☆☆☆</div>
+        <p>失误：<strong id="result-mistakes">0</strong>　用时：<strong id="result-time">0s</strong></p>
+        <p class="unlock-tip hidden" id="result-new-unlock">🔓 已解锁下一关！</p>
+        <p class="all-clear hidden" id="result-all-clear">🎉 太棒了！全部 16 关通关！</p>
+        <button class="btn-primary" id="next-btn">下一关 ➡</button>
+        <button class="control-btn" id="retry-btn">🔄 再来一次</button>
+        <button class="control-btn" id="map-btn">🗺️ 回地图</button>
+    </div>
+</div>
+
+<script>
+(function () {
+    "use strict";
+
+    // ================= 全局工具 =================
+    function $(id) { return document.getElementById(id); }
+    function shuffle(arr) {
+        for (var i = arr.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+        }
+        return arr;
+    }
+
+    // ================= 用户标识（PHP 注入，按用户隔离进度） =================
+    var USER_ID = "<?php echo isset($_SESSION[$OJ_NAME.'_'.'user_id']) ? $_SESSION[$OJ_NAME.'_'.'user_id'] : 'guest'; ?>";
+
+    // ================= 关卡配置 =================
+    var LEVELS = [
+        { id: 1,  zone: 1, zoneName: '荷花池', cols: 5, bank: 'letters_home',      timeLimit: 0,  star3Time: 20000, croc: 0 },
+        { id: 2,  zone: 1, zoneName: '荷花池', cols: 6, bank: 'letters_home',      timeLimit: 0,  star3Time: 18000, croc: 0 },
+        { id: 3,  zone: 1, zoneName: '荷花池', cols: 7, bank: 'letters_home_ext',  timeLimit: 0,  star3Time: 22000, croc: 0 },
+        { id: 4,  zone: 1, zoneName: '荷花池', cols: 8, bank: 'letters_full',      timeLimit: 0,  star3Time: 30000, croc: 0 },
+        { id: 5,  zone: 2, zoneName: '小溪',   cols: 4, bank: 'words23',           timeLimit: 0,  star3Time: 25000, croc: 0 },
+        { id: 6,  zone: 2, zoneName: '小溪',   cols: 5, bank: 'words23',           timeLimit: 0,  star3Time: 28000, croc: 0 },
+        { id: 7,  zone: 2, zoneName: '小溪',   cols: 6, bank: 'words23',           timeLimit: 0,  star3Time: 32000, croc: 0 },
+        { id: 8,  zone: 2, zoneName: '小溪',   cols: 7, bank: 'words23_mix',       timeLimit: 0,  star3Time: 38000, croc: 0 },
+        { id: 9,  zone: 3, zoneName: '大河',   cols: 4, bank: 'words46',           timeLimit: 0,  star3Time: 35000, croc: 0 },
+        { id: 10, zone: 3, zoneName: '大河',   cols: 5, bank: 'words46',           timeLimit: 0,  star3Time: 40000, croc: 0 },
+        { id: 11, zone: 3, zoneName: '大河',   cols: 6, bank: 'words46_digits',    timeLimit: 0,  star3Time: 45000, croc: 0 },
+        { id: 12, zone: 3, zoneName: '大河',   cols: 7, bank: 'words46_digits',    timeLimit: 0,  star3Time: 50000, croc: 0 },
+        { id: 13, zone: 4, zoneName: '大海',   cols: 5, bank: 'long_words',        timeLimit: 90, star3Time: 55000, croc: 12 },
+        { id: 14, zone: 4, zoneName: '大海',   cols: 6, bank: 'long_symbols',      timeLimit: 80, star3Time: 60000, croc: 11 },
+        { id: 15, zone: 4, zoneName: '大海',   cols: 6, bank: 'long_symbols_digits', timeLimit: 70, star3Time: 58000, croc: 10 },
+        { id: 16, zone: 4, zoneName: '大海',   cols: 8, bank: 'master',            timeLimit: 60, star3Time: 65000, croc: 9 }
+    ];
+    var ZONES = {
+        1: { name: '荷花池', emoji: '🪷' },
+        2: { name: '小溪',   emoji: '🏞️' },
+        3: { name: '大河',   emoji: '🌊' },
+        4: { name: '大海',   emoji: '🐬' }
+    };
+    function getLevel(n) { return LEVELS[n - 1]; }
+
+    // ================= 四区手绘装饰（内联SVG，轻点缀） =================
+    var LOTUS_SVG = '<svg viewBox="0 0 64 44" xmlns="http://www.w3.org/2000/svg">' +
+        '<ellipse cx="14" cy="26" rx="12" ry="16" fill="#f9a8d4" transform="rotate(-24 14 26)"/>' +
+        '<ellipse cx="50" cy="26" rx="12" ry="16" fill="#f9a8d4" transform="rotate(24 50 26)"/>' +
+        '<ellipse cx="32" cy="20" rx="9" ry="13" fill="#f472b6"/>' +
+        '<path d="M32 6 C 42 12 44 26 32 40 C 20 26 22 12 32 6 Z" fill="#f472b6"/>' +
+        '<ellipse cx="32" cy="24" rx="6" ry="4.2" fill="#fde68a"/>' +
+        '</svg>';
+    var PAD_SVG = '<svg viewBox="0 0 60 26" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M30 4 C 52 4 58 13 30 22 C 2 13 8 4 30 4 Z" fill="#4ade80" opacity="0.9"/>' +
+        '<path d="M30 4 L 39 13 L 21 13 Z" fill="#1f9d7e"/>' +
+        '</svg>';
+    var REED_SVG = '<svg viewBox="0 0 12 40" xmlns="http://www.w3.org/2000/svg">' +
+        '<line x1="6" y1="40" x2="6" y2="9" stroke="#16a34a" stroke-width="2.6" stroke-linecap="round"/>' +
+        '<ellipse cx="6" cy="6" rx="3.6" ry="5.2" fill="#a3e635"/>' +
+        '</svg>';
+    var WAVE_SVG = '<svg viewBox="0 0 80 16" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M0 8 Q 10 0 20 8 T 40 8 T 60 8 T 80 8" stroke="rgba(255,255,255,0.55)" stroke-width="3.5" fill="none" stroke-linecap="round"/>' +
+        '</svg>';
+    var PEBBLE_SVG = '<svg viewBox="0 0 24 16" xmlns="http://www.w3.org/2000/svg">' +
+        '<ellipse cx="8" cy="9" rx="7" ry="5" fill="#94a3b8" opacity="0.75"/>' +
+        '<ellipse cx="17" cy="11" rx="5" ry="3.5" fill="#cbd5e1" opacity="0.85"/>' +
+        '</svg>';
+    var BOAT_SVG = '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M7 29 L 33 29 L 27 37 L 13 37 Z" fill="#92400e"/>' +
+        '<path d="M19 5 L 19 29 L 35 29 Z" fill="#ffffff" opacity="0.92"/>' +
+        '<path d="M17 29 L 17 9 L 5 29 Z" fill="#fde68a"/>' +
+        '</svg>';
+    var FISH_SVG = '<svg viewBox="0 0 32 20" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M4 10 Q 12 2 24 10 Q 12 18 4 10 Z" fill="#fbbf24"/>' +
+        '<path d="M24 10 L 32 4 L 32 16 Z" fill="#f59e0b"/>' +
+        '<circle cx="10" cy="9" r="1.5" fill="#0f172a"/>' +
+        '</svg>';
+    var DRAGONFLY_SVG = '<svg viewBox="0 0 48 30" xmlns="http://www.w3.org/2000/svg">' +
+        '<ellipse cx="14" cy="13" rx="10" ry="4" fill="#a5f3fc" opacity="0.85" transform="rotate(-18 14 13)"/>' +
+        '<ellipse cx="14" cy="17" rx="10" ry="4" fill="#cffafe" opacity="0.85" transform="rotate(18 14 17)"/>' +
+        '<ellipse cx="32" cy="12" rx="8" ry="3.5" fill="#a5f3fc" opacity="0.85" transform="rotate(-14 32 12)"/>' +
+        '<ellipse cx="32" cy="18" rx="8" ry="3.5" fill="#cffafe" opacity="0.85" transform="rotate(14 32 18)"/>' +
+        '<path d="M6 15 L 42 15" stroke="#0ea5e9" stroke-width="3" stroke-linecap="round"/>' +
+        '<circle cx="6" cy="15" r="3.5" fill="#0369a1"/>' +
+        '</svg>';
+    var GULL_SVG = '<svg viewBox="0 0 48 28" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M4 18 Q 12 4 22 16 Q 30 2 44 16" stroke="#ffffff" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.9"/>' +
+        '</svg>';
+    var SOUND_ON_SVG = '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M4 11 L 11 11 L 18 5 L 18 27 L 11 21 L 4 21 Z" fill="#0369a1"/>' +
+        '<path d="M22 11 Q 26 16 22 21" stroke="#0369a1" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
+        '<path d="M25 7 Q 31 16 25 25" stroke="#0369a1" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
+        '</svg>';
+    var SOUND_OFF_SVG = '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M4 11 L 11 11 L 18 5 L 18 27 L 11 21 L 4 21 Z" fill="#94a3b8"/>' +
+        '<path d="M22 9 L 29 16 M29 9 L 22 16" stroke="#94a3b8" stroke-width="2.6" stroke-linecap="round"/>' +
+        '</svg>';
+
+    // 每个区：位置以 % 定位（left/right + bottom），size 为宽度px；bob 轻浮动，flip 水平翻转
+    // 荷叶（石头）集中在底部约 24%-44% 一带，装饰元素全部放在其上方的空旷水面（bottom ≥ 46%）
+    var ZONE_DECOR = {
+        1: [ // 荷花池 · 荷花 + 蜻蜓 + 岸边芦苇
+            { svg: LOTUS_SVG,     left: 14,  bottom: 62, size: 52, bob: true, lotus: true },
+            { svg: LOTUS_SVG,     right: 16, bottom: 66, size: 44, bob: true, cls: 'bob-2', lotus: true },
+            { svg: LOTUS_SVG,     left: 46,  bottom: 78, size: 40, bob: true, lotus: true },
+            { svg: PAD_SVG,       left: 8,   bottom: 52, size: 40 },
+            { svg: PAD_SVG,       right: 10, bottom: 48, size: 34 },
+            { svg: DRAGONFLY_SVG, left: 72,  bottom: 72, size: 40, bob: true, cls: 'bob-2' },
+            { svg: REED_SVG,      left: 2,   bottom: 24, size: 44, flip: true },
+            { svg: REED_SVG,      right: 2,  bottom: 27, size: 50, flip: true }
+        ],
+        2: [ // 小溪 · 波浪 + 小鱼 + 溪底鹅卵石
+            { svg: WAVE_SVG,      left: 20,  bottom: 72, size: 64, bob: true },
+            { svg: WAVE_SVG,      right: 18, bottom: 58, size: 52, bob: true, cls: 'bob-2' },
+            { svg: FISH_SVG,      left: 48,  bottom: 76, size: 36, bob: true, cls: 'bob-2' },
+            { svg: FISH_SVG,      right: 32, bottom: 62, size: 30, bob: true, flip: true },
+            { svg: PEBBLE_SVG,    left: 14,  bottom: 26, size: 34 },
+            { svg: PEBBLE_SVG,    right: 14, bottom: 27, size: 38 },
+            { svg: PEBBLE_SVG,    left: 44,  bottom: 24, size: 30 }
+        ],
+        3: [ // 大河 · 小船 + 波浪
+            { svg: BOAT_SVG,      left: 24,  bottom: 62, size: 56, bob: true },
+            { svg: WAVE_SVG,      left: 8,   bottom: 78, size: 72, bob: true },
+            { svg: WAVE_SVG,      right: 12, bottom: 68, size: 60, bob: true, cls: 'bob-2' },
+            { svg: WAVE_SVG,      left: 46,  bottom: 50, size: 52, bob: true },
+            { svg: WAVE_SVG,      right: 42, bottom: 48, size: 44, bob: true, cls: 'bob-2' }
+        ],
+        4: [ // 大海 · 帆船 + 大波浪 + 鱼 + 海鸥
+            { svg: BOAT_SVG,      right: 20, bottom: 58, size: 60, bob: true },
+            { svg: WAVE_SVG,      left: 8,   bottom: 82, size: 80, bob: true },
+            { svg: WAVE_SVG,      right: 8,  bottom: 72, size: 68, bob: true, cls: 'bob-2' },
+            { svg: WAVE_SVG,      left: 34,  bottom: 60, size: 56, bob: true },
+            { svg: FISH_SVG,      left: 18,  bottom: 48, size: 38, bob: true, cls: 'bob-2' },
+            { svg: FISH_SVG,      right: 46, bottom: 46, size: 30, bob: true, flip: true },
+            { svg: GULL_SVG,      left: 62,  bottom: 88, size: 40, bob: true, cls: 'bob-2' },
+            { svg: GULL_SVG,      left: 26,  bottom: 92, size: 32, bob: true, flip: true }
+        ]
+    };
+
+    // ================= 词库 =================
+    var WORD_BANKS = {
+        letters_home: ['a', 's', 'd', 'f', 'j', 'k', 'l', ';'],
+        letters_home_ext: ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', 'e', 'i', 'r', 'u'],
+        letters_full: 'abcdefghijklmnopqrstuvwxyz'.split(''),
+        words23: [
+            'am', 'an', 'at', 'be', 'by', 'do', 'go', 'he', 'hi', 'if', 'in', 'is', 'it', 'me', 'my',
+            'no', 'of', 'oh', 'on', 'or', 'so', 'to', 'up', 'us', 'we',
+            'cat', 'dog', 'sun', 'red', 'run', 'hot', 'big', 'fun', 'top', 'cup', 'hat', 'pen', 'box',
+            'sit', 'win', 'fly', 'sky', 'map', 'car', 'bus', 'key', 'ice', 'egg', 'fan', 'bed', 'day',
+            'old', 'new', 'boy', 'cow'
+        ],
+        words23_mix: [
+            'am', 'at', 'be', 'do', 'go', 'he', 'hi', 'in', 'it', 'me', 'my', 'no', 'of', 'on', 'or',
+            'so', 'to', 'up', 'we',
+            'cat', 'dog', 'sun', 'red', 'run', 'hot', 'big', 'fun', 'top', 'cup', 'hat', 'pen', 'box',
+            'sit', 'win', 'fly', 'sky', 'map', 'car', 'bus', 'key', 'ice', 'egg', 'fan', 'bed', 'day',
+            'old', 'new', 'boy', 'cow',
+            'fish', 'book', 'star', 'hand', 'tree', 'bird'
+        ],
+        words46: [
+            'fish', 'book', 'play', 'star', 'hand', 'tree', 'bird', 'cake', 'ball', 'rain', 'home',
+            'snow', 'milk', 'door', 'gift',
+            'green', 'happy', 'water', 'light', 'music', 'dance', 'smile', 'color', 'plant', 'panda',
+            'tiger', 'lemon',
+            'school', 'flower', 'friend', 'orange', 'yellow', 'purple', 'rocket', 'bridge', 'forest', 'island'
+        ],
+        words46_digits: [
+            'fish', 'book', 'play', 'star', 'hand', 'tree', 'bird', 'cake', 'rain', 'home',
+            'green', 'happy', 'water', 'light', 'music', 'dance', 'smile', 'color',
+            'school', 'flower', 'friend', 'orange', 'yellow', 'purple', 'rocket',
+            '12', '34', '56', '78', '90', '101', '23', '45', '67', '89',
+            'red2', 'sun3', 'cat5', 'dog4', 'car7', 'box8', 'fish9', 'star1'
+        ],
+        long_words: [
+            'rainbow', 'airplane', 'elephant', 'butterfly', 'umbrella', 'computer', 'keyboard',
+            'chocolate', 'strawberry', 'pineapple', 'watermelon', 'beautiful', 'wonderful',
+            'mountain', 'dinosaur', 'octopus'
+        ],
+        long_symbols: [
+            'hello!', 'world@', 'cat#', 'sun_rise', 'red-blue', 'dog?', 'duck!', 'a_b_c',
+            '123@4', 'star*', 'hi-there', 'okay-ok'
+        ],
+        long_symbols_digits: [
+            'hello!', 'world@', 'cat#', 'dog?', 'duck!', 'a_b_c', 'star*', 'hi-there',
+            'cat@7', 'dog#5', 'red-2', 'sun_9', 'fish!8', 'box@3', 'home-4', 'star#1'
+        ],
+        master: [
+            'rainbow', 'airplane', 'elephant', 'butterfly', 'umbrella', 'computer', 'keyboard',
+            'chocolate', 'pineapple', 'watermelon', 'beautiful', 'mountain', 'dinosaur',
+            'hello!', 'world@', 'cat#', 'sun_rise', 'dog?', 'a_b_c', '123@4', 'star*',
+            'cat@7', 'dog#5', 'red-2', 'sun_9', 'fish!8', 'box@3', 'home-4', 'star#1'
+        ]
+    };
+    function pickWord(bank, last) {
+        if (!bank.length) return 'a';
+        if (bank.length === 1) return bank[0];
+        var w = bank[Math.floor(Math.random() * bank.length)];
+        var guard = 0;
+        while (w === last && guard < 20) {
+            w = bank[Math.floor(Math.random() * bank.length)];
+            guard++;
+        }
+        return w;
+    }
+
+    // ================= 进度与解锁（localStorage 按用户隔离） =================
+    var ProgressStore = {
+        KEY: 'frog_typing_progress_' + USER_ID,
+        enabled: true,
+        data: {},
+        load: function () {
+            try {
+                var raw = localStorage.getItem(this.KEY);
+                this.data = raw ? JSON.parse(raw) : {};
+            } catch (e) {
+                this.enabled = false;
+                this.data = {};
+            }
+        },
+        save: function () {
+            if (!this.enabled) return;
+            try { localStorage.setItem(this.KEY, JSON.stringify(this.data)); }
+            catch (e) { this.enabled = false; }
+        },
+        getStars: function (level) { return this.data[level] || 0; },
+        setStars: function (level, stars) {
+            if (stars > (this.data[level] || 0)) {
+                this.data[level] = stars;
+                this.save();
+            }
+        },
+        isUnlocked: function (level) {
+            if (level <= 1) return true;
+            return (this.data[level - 1] || 0) >= 1;
+        },
+        totalStars: function () {
+            var t = 0;
+            for (var i = 1; i <= LEVELS.length; i++) t += this.getStars(i);
+            return t;
+        }
+    };
+    ProgressStore.load();
+    if (!ProgressStore.enabled) {
+        // localStorage 不可用时降级为内存进度（刷新即丢），页面停留期间仍可玩
+        // 提示信息放地图区
+    }
+
+    // ================= 音效（WebAudio，零文件依赖） =================
+    var AudioSfx = {
+        ctx: null,
+        enabled: true,
+        loadPref: function () {
+            try { this.enabled = localStorage.getItem('frog_typing_mute') !== '1'; }
+            catch (e) { this.enabled = true; }
+        },
+        init: function () {
+            var AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) { this.ctx = null; return; }
+            if (!this.ctx) {
+                try { this.ctx = new AC(); } catch (e) { this.ctx = null; }
+            }
+            this.resume();
+        },
+        resume: function () {
+            if (!this.ctx || this.ctx.state !== 'suspended' || !this.ctx.resume) return;
+            try {
+                var p = this.ctx.resume();
+                if (p && p.catch) p.catch(function () {});
+            } catch (e) {}
+        },
+        unlock: function () {
+            // 在首次用户手势中创建/恢复 AudioContext，绕过浏览器自动播放限制
+            this.init();
+        },
+        beep: function (freq, dur, type, gain, delay) {
+            if (!this.ctx) return;
+            var t0 = this.ctx.currentTime + (delay || 0);
+            var osc = this.ctx.createOscillator();
+            var g = this.ctx.createGain();
+            osc.type = type || 'sine';
+            osc.frequency.value = freq;
+            g.gain.setValueAtTime(gain || 0.1, t0);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+            osc.connect(g);
+            g.connect(this.ctx.destination);
+            osc.start(t0);
+            osc.stop(t0 + dur + 0.02);
+        },
+        slide: function (f1, f2, dur, type, gain) {
+            if (!this.ctx) return;
+            var t0 = this.ctx.currentTime;
+            var osc = this.ctx.createOscillator();
+            var g = this.ctx.createGain();
+            osc.type = type || 'sine';
+            osc.frequency.setValueAtTime(f1, t0);
+            osc.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+            g.gain.setValueAtTime(gain || 0.1, t0);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+            osc.connect(g);
+            g.connect(this.ctx.destination);
+            osc.start(t0);
+            osc.stop(t0 + dur + 0.02);
+        },
+        play: function (name) {
+            if (!this.enabled) return;
+            this.init();
+            if (!this.ctx) return;
+            switch (name) {
+                case 'jump':    this.slide(520, 880, 0.18, 'triangle', 0.15); break;
+                case 'correct': this.beep(660, 0.08, 'sine', 0.14); this.beep(880, 0.1, 'sine', 0.14, 0.09); break;
+                case 'wrong':   this.beep(180, 0.15, 'square', 0.1); break;
+                case 'sink':    this.slide(300, 110, 0.45, 'sine', 0.14); break;
+                case 'splash':  this.slide(520, 180, 0.4, 'triangle', 0.12); break;
+                case 'win':     [523, 659, 784, 1047].forEach(function (f, i) { this.beep(f, 0.14, 'triangle', 0.14, i * 0.12); }, this); break;
+                case 'lose':    [392, 330, 262].forEach(function (f, i) { this.beep(f, 0.18, 'triangle', 0.12, i * 0.15); }, this); break;
+                case 'unlock':  this.beep(880, 0.09, 'sine', 0.12); this.beep(1175, 0.12, 'sine', 0.12, 0.1); break;
+                case 'click':   this.beep(320, 0.05, 'square', 0.12); break;
+            }
+        },
+        toggle: function () {
+            this.enabled = !this.enabled;
+            try { localStorage.setItem('frog_typing_mute', this.enabled ? '0' : '1'); } catch (e) {}
+            return this.enabled;
+        }
+    };
+    AudioSfx.loadPref();
+
+    // ================= DOM 引用 =================
+    var screenMap = $('screen-map');
+    var screenGame = $('screen-game');
+    var resultScreen = $('result-screen');
+    var mapUserName = $('map-user-name');
+    var mapTotalStars = $('map-total-stars');
+    var mapProgressBar = $('map-progress-bar');
+    var topbarLevelName = $('topbar-level-name');
+    var topbarStars = $('topbar-stars');
+    var livesEl = $('lives');
+    var mistakesEl = $('mistakes');
+    var timerEl = $('timer');
+    var colProgressBar = $('col-progress-bar');
+    var inputArea = $('input-area');
+    var feedbackEl = $('feedback');
+    var restartBtn = $('restart-btn');
+    var backBtn = $('back-btn');
+    var pauseBtn = $('pause-btn');
+    var soundBtn = $('sound-btn');
+    var riverEl = $('river');
+    var stonesContainer = $('stones-container');
+    var riverDecorEl = $('river-decor');
+    var frogEl = $('frog');
+    var crocEl = $('crocodile');
+    var rippleLayer = $('ripple-layer');
+    var countdownOverlay = $('countdown-overlay');
+    var countdownNum = $('countdown-num');
+    var resultTitle = $('result-title');
+    var resultStars = $('result-stars');
+    var resultMistakes = $('result-mistakes');
+    var resultTime = $('result-time');
+    var resultNewUnlock = $('result-new-unlock');
+    var resultAllClear = $('result-all-clear');
+    var nextBtn = $('next-btn');
+    var retryBtn = $('retry-btn');
+    var mapBtn = $('map-btn');
+    var toastEl = $('toast');
+
+    // ================= 游戏状态 =================
+    var DURABILITY = 3;   // 每块石头能承受的打错次数，达上限即沉没
+    var Game = {
+        phase: 'idle',    // idle | countdown | running | paused | over
+        level: 1,
+        lives: 3,
+        mistakes: 0,
+        colIndex: 0,      // 当前正在打的石头下标（青蛙在 colIndex-1 上）
+        falling: false,
+        startTime: 0,
+        elapsed: 0,
+        timerRaf: null,
+        crocVisible: false,
+        isComposing: false,
+        lockUntil: 0,
+        stones: []
+    };
+    var countdownTimer = null;
+
+    // ================= 进度/地图 =================
+    function starText(stars) {
+        var s = '';
+        for (var i = 1; i <= 3; i++) s += (i <= stars) ? '★' : '<span class="dim">☆</span>';
+        return s;
+    }
+
+    function buildLevelCards() {
+        for (var z = 1; z <= 4; z++) {
+            var grid = $('zone-grid-' + z);
+            grid.innerHTML = '';
+            for (var i = 0; i < LEVELS.length; i++) {
+                var cfg = LEVELS[i];
+                if (cfg.zone !== z) continue;
+                var card = document.createElement('div');
+                card.className = 'level-card';
+                card.setAttribute('data-level', cfg.id);
+                card.innerHTML =
+                    '<div class="level-num">' + cfg.id + '</div>' +
+                    '<div class="level-bank-icon">' + ZONES[z].emoji + '</div>' +
+                    '<div class="level-stars">' + starText(0).replace(/★/g, '<span class="dim">★</span>') + '</div>';
+                card.addEventListener('click', function () {
+                    var lvl = parseInt(this.getAttribute('data-level'), 10);
+                    AudioSfx.init();
+                    AudioSfx.play('click');
+                    if (!ProgressStore.isUnlocked(lvl)) {
+                        showToast('🔒 先通关上一关才能玩这一关哦！');
+                        return;
+                    }
+                    enterLevel(lvl);
+                });
+                grid.appendChild(card);
+            }
+        }
+    }
+
+    function updateMap() {
+        var total = ProgressStore.totalStars();
+        mapTotalStars.textContent = total;
+        mapProgressBar.style.width = (total / (LEVELS.length * 3) * 100) + '%';
+        for (var z = 1; z <= 4; z++) {
+            var grid = $('zone-grid-' + z);
+            var done = 0;
+            var cards = grid.children;
+            for (var i = 0; i < cards.length; i++) {
+                var lvl = parseInt(cards[i].getAttribute('data-level'), 10);
+                var stars = ProgressStore.getStars(lvl);
+                var unlocked = ProgressStore.isUnlocked(lvl);
+                cards[i].className = 'level-card' + (unlocked ? '' : ' locked') +
+                    (unlocked && stars > 0 ? ' cleared' : '') +
+                    (unlocked && stars === 0 ? ' current' : '');
+                cards[i].querySelector('.level-stars').innerHTML = starText(stars);
+                var lock = cards[i].querySelector('.level-lock');
+                if (!unlocked) {
+                    if (!lock) {
+                        lock = document.createElement('div');
+                        lock.className = 'level-lock';
+                        cards[i].appendChild(lock);
+                    }
+                    lock.textContent = '🔒';
+                } else if (lock) {
+                    lock.remove();
+                }
+                if (stars > 0) done++;
+            }
+            $('zone-done-' + z).textContent = done + '/4 已通关';
+        }
+    }
+
+    // ================= 全局轻提示 =================
+    var toastTimer = null;
+    function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.remove('hidden');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toastEl.classList.add('hidden'); }, 2200);
+    }
+
+    // ================= 反馈 =================
+    var feedbackTimer = null;
+    function setFeedback(text, type) {
+        feedbackEl.textContent = text;
+        feedbackEl.className = 'feedback' + (type ? ' ' + type : '');
+        if (feedbackTimer) clearTimeout(feedbackTimer);
+        feedbackTimer = setTimeout(function () {
+            if (feedbackEl.className.indexOf('keep') === -1) {
+                feedbackEl.textContent = '';
+                feedbackEl.className = 'feedback';
+            }
+        }, 1800);
+    }
+
+    // ================= 河面渲染 =================
+    function applyZoneTheme(zone) {
+        riverDecorEl.innerHTML = '';
+        var lotusLayer = $('lotus-layer');
+        lotusLayer.innerHTML = '';
+        var items = ZONE_DECOR[zone] || [];
+        for (var i = 0; i < items.length; i++) {
+            var it = items[i];
+            var d = document.createElement('div');
+            d.className = 'decor' +
+                (it.bob ? ' bob' : '') +
+                (it.cls ? ' ' + it.cls : '');
+            d.style.width = it.size + 'px';
+            if (it.left != null) d.style.left = it.left + '%';
+            if (it.right != null) d.style.right = it.right + '%';
+            d.style.bottom = it.bottom + '%';
+            d.innerHTML = it.svg;
+            // 荷花放入独立荷花层（z4，高于荷叶），其余装饰留在底层
+            (it.lotus ? lotusLayer : riverDecorEl).appendChild(d);
+        }
+    }
+
+    function addMapLotus() {
+        var z1 = $('zone-1');
+        if (!z1 || z1.querySelector('.map-lotus')) return;
+        var lotus = document.createElement('span');
+        lotus.className = 'map-lotus';
+        lotus.innerHTML = LOTUS_SVG;
+        z1.appendChild(lotus);
+    }
+
+    function placeStones() {
+        var cfg = getLevel(Game.level);
+        stonesContainer.innerHTML = '';
+        Game.stones = [];
+        var last = null;
+        for (var i = 0; i < cfg.cols; i++) {
+            var bank = WORD_BANKS[cfg.bank];
+            var word = pickWord(bank, last);
+            last = word;
+            var stone = document.createElement('div');
+            stone.className = 'stone';
+            stone.style.left = (((i + 1) / (cfg.cols + 1)) * 100) + '%';
+            // 荷叶大小随河宽与列数自适应：列少更大、列多不重叠
+            var avail = (riverEl.clientWidth || 700) / (cfg.cols + 1);
+            var sw = Math.max(58, Math.min(112, avail * 0.94));
+            stone.style.width = Math.round(sw) + 'px';
+            stone.style.height = Math.round(sw * 0.72) + 'px';
+            // 按词长自适应字号
+            var fs = '1.4rem';
+            if (word.length <= 1) fs = '2rem';
+            else if (word.length <= 3) fs = '1.4rem';
+            else if (word.length <= 6) fs = '1.15rem';
+            else fs = '0.95rem';
+            var chars = '';
+            for (var c = 0; c < word.length; c++) {
+                chars += '<span class="char pending" style="font-size:' + fs + '">' +
+                    escapeHtml(word[c]) + '</span>';
+            }
+            // 手绘荷叶：带V型缺口的叶片 + 放射叶脉 + 高光
+            stone.innerHTML =
+                '<svg class="stone-pad" viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg">' +
+                '<path fill="#4ade80" fill-rule="evenodd" d="M50 5 C 78 5 93 24 87 43 C 81 61 66 69 50 69 C 34 69 19 61 13 43 C 7 24 22 5 50 5 Z M41 12 L 59 12 L 50 30 Z"/>' +
+                '<ellipse cx="50" cy="58" rx="34" ry="10" fill="#159a4e" opacity="0.35"/>' +
+                '<ellipse cx="40" cy="26" rx="16" ry="9" fill="#ffffff" opacity="0.22"/>' +
+                '<g stroke="#2fae68" stroke-width="2.2" stroke-linecap="round" fill="none" opacity="0.75">' +
+                '<path d="M50 34 L 20 26"/><path d="M50 34 L 26 44"/><path d="M50 34 L 42 58"/>' +
+                '<path d="M50 34 L 58 58"/><path d="M50 34 L 74 44"/><path d="M50 34 L 80 26"/><path d="M50 34 L 50 12"/>' +
+                '</g>' +
+                '</svg>' +
+                '<div class="stone-chars">' + chars + '</div>';
+            stonesContainer.appendChild(stone);
+            Game.stones.push({ word: word, el: stone, damaged: 0, chars: stone.querySelectorAll('.char') });
+        }
+    }
+
+    function escapeHtml(s) {
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function slotLeft(slot, cfg) {
+        return ((slot + 1) / (cfg.cols + 1)) * 100;
+    }
+
+    // 青蛙中心不超出河面左右边界（避免半身出画布）
+    function frogLeft(slot, cfg) {
+        var pct = slotLeft(slot, cfg);
+        var w = riverEl.clientWidth || 700;
+        var half = (frogEl.offsetWidth || 64) / 2;
+        var minPct = Math.min(50, (half / w) * 100);
+        return Math.min(100 - minPct, Math.max(minPct, pct));
+    }
+
+    function moveFrogTo(slot) {
+        var cfg = getLevel(Game.level);
+        var left = frogLeft(slot, cfg);
+        frogEl.style.left = left + '%';
+        if (slot >= 0) {
+            frogEl.classList.remove('frog-bounce');
+            void frogEl.offsetWidth;
+            frogEl.classList.add('frog-bounce');
+        }
+        spawnRipple(left, null);
+    }
+
+    function spawnRipple(leftPct, bottomPct) {
+        var r = document.createElement('div');
+        r.className = 'ripple';
+        var bottom = bottomPct != null ? bottomPct : 26;
+        r.style.left = leftPct + '%';
+        r.style.bottom = bottom + '%';
+        rippleLayer.appendChild(r);
+        setTimeout(function () { if (r.parentNode) r.parentNode.removeChild(r); }, 700);
+    }
+
+    function updateStoneCharStatus(typed) {
+        var st = Game.stones[Game.colIndex];
+        if (!st) return;
+        for (var i = 0; i < st.chars.length; i++) {
+            var cls = 'char ';
+            if (i < typed.length) cls += 'correct';
+            else if (i === typed.length) cls += 'current';
+            else cls += 'pending';
+            st.chars[i].className = cls;
+        }
+    }
+
+    function renderLives() {
+        var hearts = '';
+        for (var i = 0; i < Game.lives; i++) hearts += '❤️';
+        for (var j = Game.lives; j < 3; j++) hearts += '🖤';
+        livesEl.textContent = hearts;
+    }
+
+    function updateColProgress() {
+        var cfg = getLevel(Game.level);
+        colProgressBar.style.width = (Game.colIndex / cfg.cols * 100) + '%';
+    }
+
+    // ================= 倒计时 =================
+    function triggerCountdownAnim(el) {
+        el.classList.remove('countdown-num_play');
+        void el.offsetWidth;
+        el.classList.add('countdown-num_play');
+    }
+    function startCountdownThen(onDone) {
+        var sequence = ['3', '2', '1', 'GO!'];
+        var idx = 0;
+        countdownOverlay.classList.remove('hidden');
+        countdownNum.textContent = sequence[0];
+        triggerCountdownAnim(countdownNum);
+        countdownTimer = setInterval(function () {
+            idx += 1;
+            if (idx >= sequence.length) {
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+                countdownOverlay.classList.add('hidden');
+                onDone && onDone();
+                return;
+            }
+            countdownNum.textContent = sequence[idx];
+            triggerCountdownAnim(countdownNum);
+        }, 900);
+    }
+    function clearCountdown() {
+        if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+        countdownOverlay.classList.add('hidden');
+    }
+
+    // ================= 计时器 =================
+    function startTimer() {
+        Game.startTime = performance.now() - Game.elapsed;
+        tickTimer();
+    }
+    function tickTimer() {
+        Game.elapsed = performance.now() - Game.startTime;
+        renderTimer(Game.elapsed);
+        var cfg = getLevel(Game.level);
+        // 最后一词已打完、正跳向右岸的收尾窗口不判负
+        if (Game.colIndex < cfg.cols) {
+            // 限时判定
+            if (cfg.timeLimit > 0 && Game.elapsed >= cfg.timeLimit * 1000) {
+                setFeedback('⏰ 时间到！', 'err');
+                endLevel(false);
+                return;
+            }
+            // 鳄鱼追赶判定
+            if (cfg.croc > 0) {
+                var crocSlot = -3 + (Game.elapsed / 1000) / cfg.croc;
+                updateCroc(crocSlot);
+                if (crocSlot >= Game.colIndex - 1) {
+                    setFeedback('🐊 被鳄鱼追上啦！', 'err');
+                    endLevel(false);
+                    return;
+                }
+            }
+        }
+        Game.timerRaf = requestAnimationFrame(tickTimer);
+    }
+    function stopTimer() {
+        if (Game.timerRaf) { cancelAnimationFrame(Game.timerRaf); Game.timerRaf = null; }
+    }
+    function renderTimer(ms) {
+        var sec = ms / 1000;
+        var text;
+        if (sec < 100) text = sec.toFixed(1) + 's';
+        else {
+            var m = Math.floor(sec / 60);
+            var s = Math.floor(sec % 60);
+            text = m + ':' + (s < 10 ? '0' : '') + s;
+        }
+        timerEl.textContent = text;
+    }
+
+    // ================= 鳄鱼 =================
+    function updateCroc(slot) {
+        var cfg = getLevel(Game.level);
+        var left = slotLeft(slot, cfg);
+        crocEl.style.left = left + '%';
+        if (slot < -2.4) {
+            crocEl.classList.add('hidden');
+        } else {
+            crocEl.classList.remove('hidden');
+            if (!crocEl.classList.contains('bob')) {
+                crocEl.classList.add('bob');
+            }
+        }
+    }
+    function hideCroc() {
+        crocEl.classList.add('hidden');
+        crocEl.classList.remove('bob');
+    }
+
+    // ================= 游戏主流程 =================
+    function enterLevel(n) {
+        clearTimers();
+        Game.level = n;
+        Game.lives = 3;
+        Game.mistakes = 0;
+        Game.colIndex = 0;
+        Game.falling = false;
+        Game.elapsed = 0;
+        Game.phase = 'idle';
+
+        screenMap.classList.add('hidden');
+        screenGame.classList.remove('hidden');
+        resultScreen.classList.add('hidden');
+
+        var cfg = getLevel(n);
+        riverEl.className = 'river river-zone-' + cfg.zone;
+        applyZoneTheme(cfg.zone);
+        topbarLevelName.textContent = '第 ' + n + ' 关 · ' + cfg.zoneName;
+        topbarStars.innerHTML = starText(ProgressStore.getStars(n));
+
+        placeStones();
+        frogEl.classList.remove('splash', 'frog-bounce');
+        frogEl.style.left = frogLeft(-1, cfg) + '%';
+        renderLives();
+        mistakesEl.textContent = '0';
+        timerEl.textContent = '0.0s';
+        colProgressBar.style.width = '0%';
+        updateColProgress();
+
+        if (cfg.croc > 0) {
+            crocEl.classList.add('hidden');
+            crocEl.classList.remove('bob');
+        } else {
+            hideCroc();
+        }
+
+        inputArea.value = '';
+        inputArea.disabled = true;
+        inputArea.placeholder = cfg.croc > 0 ? '打出荷叶上的内容，小心鳄鱼！' : '打出荷叶上的内容…';
+        setFeedback('点击 ▶ 开始 出发！', 'info');
+        setMainBtn('▶ 开始', true, false);
+    }
+
+    function startGame() {
+        if (Game.phase !== 'idle' && Game.phase !== 'paused') return;
+        Game.phase = 'countdown';
+        inputArea.disabled = true;
+        setMainBtn('… 准备中', false, true);
+        startCountdownThen(function () {
+            Game.phase = 'running';
+            inputArea.disabled = false;
+            setMainBtn('⏸ 暂停', false, false);
+            focusInput();
+            startTimer();
+            setFeedback('出发！', 'ok');
+        });
+    }
+
+    function focusInput() {
+        try { inputArea.focus({ preventScroll: true }); } catch (e) { inputArea.focus(); }
+    }
+
+    // 合并后的"开始/暂停/继续"主按钮：切换文案、绿色开始态与禁用态
+    function setMainBtn(text, cls, disabled) {
+        pauseBtn.textContent = text;
+        pauseBtn.classList.toggle('start', !!cls);
+        pauseBtn.disabled = !!disabled;
+    }
+
+    function goPause(auto) {
+        if (Game.phase !== 'running') return;
+        Game.phase = 'paused';
+        stopTimer();
+        inputArea.disabled = true;
+        setMainBtn('▶ 继续', true, false);
+        setFeedback(auto ? '⏸ 离开页面已暂停，点继续出发' : '⏸ 已暂停', 'info');
+    }
+    function goResume() {
+        if (Game.phase !== 'paused') return;
+        Game.phase = 'running';
+        inputArea.disabled = false;
+        setMainBtn('⏸ 暂停', false, false);
+        focusInput();
+        startTimer();
+        setFeedback('继续！', 'ok');
+    }
+    function pauseToggle() {
+        AudioSfx.init();
+        AudioSfx.play('click');
+        if (Game.phase === 'idle') startGame();
+        else if (Game.phase === 'running') goPause(false);
+        else if (Game.phase === 'paused') goResume();
+    }
+
+    function restartLevel() {
+        AudioSfx.play('click');
+        clearTimers();
+        enterLevel(Game.level);
+        startGame();
+    }
+
+    function clearTimers() {
+        stopTimer();
+        clearCountdown();
+        Game.timerRaf = null;
+        Game.elapsed = 0;
+        Game.startTime = 0;
+    }
+
+    function exitToMap() {
+        clearTimers();
+        resultScreen.classList.add('hidden');
+        screenGame.classList.add('hidden');
+        screenMap.classList.remove('hidden');
+        updateMap();
+    }
+
+    function calcStars(win, mistakes, timeMs, cfg) {
+        if (!win) return 0;
+        if (mistakes <= 1 && timeMs <= cfg.star3Time) return 3;
+        if (mistakes <= 2) return 2;
+        return 1;
+    }
+
+    function endLevel(win) {
+        if (Game.phase === 'over') return;
+        Game.phase = 'over';
+        stopTimer();
+        clearCountdown();
+        inputArea.disabled = true;
+        setMainBtn('⏸ 暂停', false, true);
+
+        var cfg = getLevel(Game.level);
+        var elapsed = Game.elapsed;
+        var stars = win ? calcStars(win, Game.mistakes, elapsed, cfg) : 0;
+        var prevStars = ProgressStore.getStars(Game.level);
+        var newUnlock = win && stars >= 1 && Game.level < LEVELS.length && prevStars < 1;
+        ProgressStore.setStars(Game.level, stars);
+
+        resultTitle.textContent = win ? (stars === 3 ? '完美通关！' : '过关！') : '失败了…';
+        resultStars.innerHTML = starText(stars);
+        resultMistakes.textContent = Game.mistakes;
+        resultTime.textContent = formatTime(elapsed);
+
+        resultNewUnlock.classList.add('hidden');
+        if (newUnlock) {
+            resultNewUnlock.classList.remove('hidden');
+            AudioSfx.play('unlock');
+        }
+        resultAllClear.classList.add('hidden');
+        if (win && Game.level === LEVELS.length) resultAllClear.classList.remove('hidden');
+
+        if (win && Game.level < LEVELS.length) {
+            nextBtn.classList.remove('hidden');
+            nextBtn.textContent = '下一关 ➡';
+        } else {
+            nextBtn.classList.add('hidden');
+        }
+
+        resultScreen.classList.remove('hidden');
+
+        if (win) {
+            AudioSfx.play('win');
+            launchConfetti();
+        } else {
+            AudioSfx.play('lose');
+        }
+    }
+
+    function formatTime(ms) {
+        var sec = ms / 1000;
+        if (sec < 100) return sec.toFixed(1) + 's';
+        var m = Math.floor(sec / 60);
+        var s = Math.floor(sec % 60);
+        return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    // ================= 输入处理 =================
+    function onInput() {
+        if (Game.phase !== 'running') return;
+        if (Game.isComposing) return;
+        if (performance.now() < Game.lockUntil) {
+            inputArea.value = '';
+            return;
+        }
+        var st = Game.stones[Game.colIndex];
+        if (!st) return;
+        var val = inputArea.value.toLowerCase();
+        if (val.length === 0) {
+            updateStoneCharStatus('');
+            return;
+        }
+        var word = st.word;
+        // 逐字符校验：任何一个字符对不上即判失误
+        for (var i = 0; i < val.length; i++) {
+            if (val[i] !== word[i]) {
+                onWrongKey();
+                return;
+            }
+        }
+        updateStoneCharStatus(val);
+        if (val.length >= word.length) {
+            onWordComplete();
+        }
+    }
+
+    function onWordComplete() {
+        var cfg = getLevel(Game.level);
+        AudioSfx.play('correct');
+        var slot = Game.colIndex;      // 跳到当前这块石头上
+        moveFrogTo(slot);
+        Game.colIndex++;
+        updateColProgress();
+        inputArea.value = '';
+        Game.lockUntil = performance.now() + 250;
+        updateStoneCharStatus('');
+        if (Game.colIndex >= cfg.cols) {
+            // 最后再跳一步到右岸
+            setTimeout(function () {
+                if (Game.phase !== 'running') return;
+                AudioSfx.play('jump');
+                moveFrogTo(cfg.cols);
+                endLevel(true);
+            }, 480);
+        } else {
+            setTimeout(function () {
+                if (Game.phase === 'running') focusInput();
+            }, 260);
+        }
+    }
+
+    function onWrongKey() {
+        var st = Game.stones[Game.colIndex];
+        Game.mistakes++;
+        mistakesEl.textContent = Game.mistakes;
+        AudioSfx.play('wrong');
+        inputArea.value = '';
+        updateStoneCharStatus('');
+        if (!st) return;
+        st.damaged++;
+        if (st.damaged >= DURABILITY) {
+            // 石头沉没 → 青蛙落水
+            st.el.classList.add('sinking');
+            setTimeout(function () { st.el.classList.add('sunk'); }, 550);
+            frogFall();
+            return;
+        }
+        st.el.classList.add('damaged');
+        st.el.classList.remove('shake');
+        void st.el.offsetWidth;
+        st.el.classList.add('shake');
+        setFeedback('打错啦！荷叶在往下沉…（还能错 ' + (DURABILITY - st.damaged) + ' 次）', 'err');
+    }
+
+    function frogFall() {
+        if (Game.falling) return;
+        Game.falling = true;
+        Game.lives--;
+        AudioSfx.play('splash');
+        spawnRipple(parseFloat(frogEl.style.left), 26);
+        frogEl.classList.remove('frog-bounce');
+        frogEl.classList.add('splash');
+        setFeedback('💦 青蛙掉水里了！', 'err');
+        setTimeout(function () {
+            frogEl.classList.remove('splash');
+            if (Game.lives <= 0) {
+                endLevel(false);
+            } else {
+                restartRun();
+            }
+            Game.falling = false;
+        }, 950);
+    }
+
+    function restartRun() {
+        // 石头重新生成，青蛙回到左岸，失误计数保留
+        var cfg = getLevel(Game.level);
+        Game.colIndex = 0;
+        placeStones();
+        frogEl.style.left = frogLeft(-1, cfg) + '%';
+        updateColProgress();
+        inputArea.value = '';
+        updateStoneCharStatus('');
+        renderLives();
+        if (Game.phase === 'running') {
+            inputArea.disabled = false;
+            setTimeout(focusInput, 300);
+        }
+        setFeedback('重新出发，还剩 ' + Game.lives + ' 条命！', 'info');
+    }
+
+    // ================= 事件绑定 =================
+    // 首次用户手势解锁音频（浏览器自动播放策略要求，在用户手势内创建/恢复 AudioContext）
+    function unlockAudioOnce() { AudioSfx.unlock(); }
+    document.addEventListener('pointerdown', unlockAudioOnce, { once: true });
+    document.addEventListener('keydown', unlockAudioOnce, { once: true });
+    document.addEventListener('click', unlockAudioOnce, { once: true });
+
+    restartBtn.addEventListener('click', restartLevel);
+    backBtn.addEventListener('click', function () { AudioSfx.play('click'); exitToMap(); });
+    pauseBtn.addEventListener('click', pauseToggle);
+    soundBtn.addEventListener('click', function () {
+        var on = AudioSfx.toggle();
+        soundBtn.innerHTML = on ? SOUND_ON_SVG : SOUND_OFF_SVG;
+        AudioSfx.init();
+        AudioSfx.play('click');
+    });
+    nextBtn.addEventListener('click', function () {
+        AudioSfx.play('click');
+        if (Game.level < LEVELS.length) enterLevel(Game.level + 1);
+        else exitToMap();
+    });
+    retryBtn.addEventListener('click', function () { AudioSfx.play('click'); restartLevel(); });
+    mapBtn.addEventListener('click', function () { AudioSfx.play('click'); exitToMap(); });
+
+    inputArea.addEventListener('input', onInput);
+    inputArea.addEventListener('compositionstart', function () { Game.isComposing = true; });
+    inputArea.addEventListener('compositionend', function () {
+        Game.isComposing = false;
+        onInput();
+    });
+    inputArea.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            var st = Game.stones[Game.colIndex];
+            if (st && inputArea.value.toLowerCase() === st.word) onWordComplete();
+        }
+    });
+
+    // 切标签页自动暂停，防时间偷跑
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden && Game.phase === 'running') goPause(true);
+    });
+
+    // 点击河面聚焦输入框
+    riverEl.addEventListener('click', function (e) {
+        if (Game.phase === 'running' || Game.phase === 'idle') {
+            try { inputArea.focus(); } catch (err) {}
+        }
+    });
+
+    // ================= 初始化 =================
+    function init() {
+        AudioSfx.loadPref();
+        soundBtn.innerHTML = AudioSfx.enabled ? SOUND_ON_SVG : SOUND_OFF_SVG;
+        mapUserName.textContent = USER_ID;
+        buildLevelCards();
+        addMapLotus();
+        updateMap();
+        screenGame.classList.add('hidden');
+        screenMap.classList.remove('hidden');
+        resultScreen.classList.add('hidden');
+        if (!ProgressStore.enabled) {
+            setTimeout(function () {
+                showToast('⚠️ 浏览器不允许保存进度，本次游玩记录不会被保存');
+            }, 600);
+        }
+    }
+
+    init();
+})();
+</script>
+</div>
+<?php include("template/$OJ_TEMPLATE/footer.php");?>
