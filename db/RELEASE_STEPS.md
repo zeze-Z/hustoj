@@ -24,6 +24,7 @@
 | V2.2 | 2026-07-18 | 修复存量用户被误判为新用户跳转 welcome |
 | V2.4 | 2026-07-24 | 新客连续登录分批奖励（20积分分批发放） |
 | V2.5 | 2026-08-23 | 课件学科Tab重命名（美术→新课标解读，音乐→小学电子教材） |
+| V2.6 | 2026-08-30 | 课件学科Tab新增"精选PPT模板"（位于小学电子教材之后） |
 
 ---
 
@@ -90,6 +91,10 @@ mysql -u root -p jol < db/V2.4_20260724_login_streak.sql
 # 14. 课件学科Tab重命名（V2.5）
 #     美术->新课标解读，音乐->小学电子教材
 mysql -u root -p jol < db/V2.5_20260823_rename_course_subject.sql
+
+# 15. 课件学科Tab新增"精选PPT模板"（V2.6）
+#     位于"小学电子教材"（sort_order=4）之后（sort_order=5）
+mysql -u root -p jol < db/V2.6_20260830_add_ppt_template_subject.sql
 ```
 
 **验证：**
@@ -191,6 +196,10 @@ DESCRIBE jol.users login_reward_status;      -- tinyint(1), NOT NULL, Default: 0
 -- 存量用户全部排除：迁移后 login_reward_status=0 的记录应为 0
 SELECT COUNT(*) FROM jol.users WHERE login_reward_status = 0;
 -- 预期：0（迁移后存量全部为2；功能上线后新注册用户才为0）
+
+-- 新增学科"精选PPT模板"（V2.6）
+SELECT id, name, sort_order, status FROM jol.course_subject WHERE name = '精选PPT模板';
+-- 预期：status=1，sort_order=5（位于"小学电子教材" sort_order=4 之后）
 ```
 
 ---
