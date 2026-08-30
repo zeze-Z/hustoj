@@ -7,6 +7,8 @@
 require_once('./include/db_info.inc.php');
 require_once('./include/const.inc.php');
 require_once('./include/my_func.inc.php');
+// 课件详情内容依赖用户购买状态，禁用页面缓存，避免购买后仍展示旧的未购买文案
+$OJ_SKIP_PAGE_CACHE = true;
 require_once('./include/cache_start.php');
 require_once('./include/setlang.php');
 
@@ -84,6 +86,8 @@ $view_has_only_preview = $has_only_preview;
 $view_is_purchased = $has_preview_license || $has_source_license; // 兼容旧逻辑
 $view_has_full_courseware = !empty($course['courseware_full_preview_url']);
 $view_has_full_lesson_plan = !empty($course['lesson_plan_full_preview_url']);
+// 是否有完整预览版可交付内容：无完整预览链接的课程（仅提供原文件链接）不展示完整预览版
+$view_has_full_preview = $view_has_full_courseware || $view_has_full_lesson_plan;
 $view_preview_price = $preview_price;
 $view_source_price = $source_price;
 $view_upgrade_price = $upgrade_price; // 升级补差价金额（公共函数统一计算，避免负数）

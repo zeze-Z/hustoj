@@ -1,6 +1,6 @@
 <?php
- //cache foot start      
-                if(isset($cache_file)){
+ //cache foot start
+                if(isset($cache_file) && !(isset($OJ_SKIP_PAGE_CACHE) && $OJ_SKIP_PAGE_CACHE)){
                         if(  $OJ_MEMCACHE  ||  $OJ_APCU_OK  ){
                             $page_used_time=microtime(true)-$page_start_time;
                             echo "<!-- ssr time $page_used_time  -->";

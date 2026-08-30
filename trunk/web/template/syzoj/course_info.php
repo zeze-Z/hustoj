@@ -107,18 +107,20 @@
           <?php else: ?>
             <!-- 未购买任何权限：根据价格显示对应按钮 -->
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <?php if ($view_is_full_preview_free): ?>
-                <!-- 完整预览版免费 -->
-                <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1"
-                   class="ui large green button">
-                  <i class="gift icon"></i>限时免费获取完整预览版
-                </a>
-              <?php elseif ($view_preview_price > 0): ?>
-                <!-- 完整预览版付费 -->
-                <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1"
-                   class="ui large primary button">
-                  <i class="eye icon"></i> 解锁完整预览 <?php echo intval($view_preview_price); ?> 积分
-                </a>
+              <?php if ($view_has_full_preview): ?>
+                <?php if ($view_is_full_preview_free): ?>
+                  <!-- 完整预览版免费 -->
+                  <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1"
+                     class="ui large green button">
+                    <i class="gift icon"></i>限时免费获取完整预览版
+                  </a>
+                <?php elseif ($view_preview_price > 0): ?>
+                  <!-- 完整预览版付费 -->
+                  <a href="course_get.php?id=<?php echo $view_course['id']; ?>&type=1"
+                     class="ui large primary button">
+                    <i class="eye icon"></i> 解锁完整预览 <?php echo intval($view_preview_price); ?> 积分
+                  </a>
+                <?php endif; ?>
               <?php endif; ?>
 
               <?php if ($view_has_source_resource): ?>
@@ -160,11 +162,14 @@
     <div class="ui stackable grid" style="margin: 0;">
       <!-- ===== 左列：版本与购买 ===== -->
       <div class="<?php echo $has_resource ? 'eight' : 'sixteen'; ?> wide column" style="padding: 6px;">
+        <?php if ($view_has_full_preview || $view_has_source_resource): ?>
         <div style="font-size: 0.85em; color: #999; margin-bottom: 6px; padding-left: 2px;">
           <i class="key icon"></i> 选择版本
         </div>
+        <?php endif; ?>
 
-        <!-- 完整预览版 -->
+        <!-- 完整预览版（仅存在完整预览链接的课程才展示） -->
+        <?php if ($view_has_full_preview): ?>
         <div class="ui card" style="width: 100%; margin: 0 0 8px 0; border-radius: 8px; border: 1px solid #667eea; box-shadow: none; <?php if ($view_has_preview_license): ?>opacity: 0.7;<?php endif; ?>">
           <div class="content" style="padding: 12px 14px;">
             <div class="header" style="font-size: 1em; margin-bottom: 6px; color: #667eea; display: flex; align-items: center;">
@@ -218,6 +223,7 @@
             </div>
           <?php endif; ?>
         </div>
+        <?php endif; ?>
 
         <!-- 原文件版（只有存在资源时才显示） -->
         <?php if ($view_has_source_resource): ?>

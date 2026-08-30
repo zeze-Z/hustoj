@@ -56,7 +56,11 @@
             }
         }
         
-        if($OJ_MEMCACHE||$OJ_APCU_OK ){
+        // 页面内容依赖实时用户状态（如购买后权限变化）时，设置 $OJ_SKIP_PAGE_CACHE 跳过页面缓存
+        $skip_page_cache = isset($OJ_SKIP_PAGE_CACHE) && $OJ_SKIP_PAGE_CACHE;
+        if ($skip_page_cache) {
+                $use_cache = false;
+        } elseif ($OJ_MEMCACHE || $OJ_APCU_OK) {
                     $success = false;
                     if( $OJ_APCU_OK ){
                             $content = apcu_fetch($cache_file, $success);
