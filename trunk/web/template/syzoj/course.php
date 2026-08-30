@@ -57,6 +57,8 @@
         $source_price = floatval($course['source_price']);
         $min_price = min($preview_price, $source_price);
         $is_free = $preview_price == 0 && $source_price == 0;
+        // 是否存在完整预览版（有完整预览链接才算有预览版，与详情页 view_has_full_preview 口径一致）
+        $has_preview = !empty($course['courseware_full_preview_url']) || !empty($course['lesson_plan_full_preview_url']);
       ?>
         <div class="column">
           <div class="ui card" style="height: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s; border-radius: 12px; overflow: hidden;"
@@ -112,9 +114,9 @@
                 <span style="margin: 0 8px; color: #ddd;">|</span>
                 <?php if ($is_free): ?>
                   <span style="color: #52c41a; font-weight: 600;"><?php echo $MSG_FREE; ?></span>
-                <?php elseif ($preview_price == 0 && $source_price > 0): ?>
+                <?php elseif ($has_preview && $preview_price == 0 && $source_price > 0): ?>
                   <span style="color: #52c41a; font-weight: 600;">预览免费</span>
-                <?php elseif ($preview_price > 0 && $source_price > 0): ?>
+                <?php elseif ($has_preview && $preview_price > 0 && $source_price > 0): ?>
                   <span style="color: #ff6b6b; font-weight: 600;"><?php echo intval($min_price); ?> 积分起</span>
                 <?php else: ?>
                   <span style="color: #ff6b6b; font-weight: 600;"><?php echo intval(max($preview_price, $source_price)); ?> 积分</span>
