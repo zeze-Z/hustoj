@@ -50,11 +50,9 @@ if (window.top !== window.self) {
       </form>
 
       <div class="ui message">
-        <!-- <a href="registerpage.php"><?php echo $MSG_REGISTER ?></a> -->
-        <a>忘记密码，请联系客服QQ重置：2326077585</a>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
-        <!-- <a href="lostpassword.php"><?php echo $MSG_LOST_PASSWORD ?></a> -->
+        <a>忘记密码，请联系客服QQ重置：<?php echo htmlentities($OJ_CUSTOMER_QQ, ENT_QUOTES, 'UTF-8');?></a>
+        <br><br>
+        <a href="teacher_guide.php" style="font-weight: 600;">👨‍🏫 老师：班级学生较多？可联系客服批量开通学生账号，点击查看指南 →</a>
       </div>
     </div>
   </div>

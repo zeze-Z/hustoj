@@ -41,7 +41,8 @@
                   $url!='loginpage.php'&&
                   $url!='lostpassword.php'&&
                   $url!='lostpassword2.php'&&
-                  $url!='registerpage.php'
+                  $url!='registerpage.php'&&
+                  $url!='teacher_guide.php'
                   ) && !isset($_SESSION[$OJ_NAME.'_'.'user_id'])){
            $redirect = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'index.php';
            header("location:".$path_fix."loginpage.php?redirect=".urlencode($redirect));
@@ -60,6 +61,7 @@
             'lostpassword.php',    // 找回密码
             'lostpassword2.php',  // 找回密码第二步
             'more.php',           // 更多功能页
+            'teacher_guide.php',  // 教师账号开通指南（游客可看）
             // ========== 无需登录功能 ==========
             // 低年级专区（1-3年级）
             'color_match.php',

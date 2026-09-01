@@ -23,7 +23,7 @@
     <?php include(dirname(__FILE__)."/js.php");?>
     <div class="footer">
         <div class="ui center aligned container">
-            <div>欢迎广大师生使用，问题咨询，商务合作，请联系客服QQ：2326077585</div>
+            <div>欢迎广大师生使用，问题咨询，商务合作，请联系客服QQ：<a href="https://wpa.qq.com/msgrd?v=3&uin=<?php echo htmlentities($OJ_CUSTOMER_QQ, ENT_QUOTES, 'UTF-8');?>&site=qq&menu=yes" target="_blank" style="color: inherit; text-decoration: underline;"><?php echo htmlentities($OJ_CUSTOMER_QQ, ENT_QUOTES, 'UTF-8');?></a> <a href="javascript:void(0);" onclick="copyFooterQQ(event)" style="color: inherit;">[复制]</a> ｜ <a href="<?php echo $path_fix?>teacher_guide.php" style="color: inherit;">学生账号开通指南</a></div>
             <div style="margin-top: 8px; color: #aaa;">📱 关注小红书：@子昂老师 ITlizhi888 ｜ 获取更多教学资源动态</div>
             <!-- <div><?php echo $domain==$DOMAIN?$OJ_NAME:ucwords($OJ_NAME)."'s OJ"?> is powered by <a style="color: inherit !important;" class=" " title="GitHub"
                     target="_blank" rel="noreferrer noopener" href="https://github.com/zhblue/hustoj">HUSTOJ</a>, Theme
@@ -39,6 +39,30 @@
         </div>
     </div>
     </div>
+<script>
+    // 一键复制客服QQ号
+    function copyFooterQQ(e) {
+        if (e) e.preventDefault();
+        var qq = "<?php echo htmlentities($OJ_CUSTOMER_QQ, ENT_QUOTES, 'UTF-8');?>";
+        var done = function () { alert("客服QQ已复制：" + qq); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(qq).then(done).catch(function () { fallbackCopy(qq, done); });
+        } else {
+            fallbackCopy(qq, done);
+        }
+    }
+    function fallbackCopy(text, done) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (err) {}
+        document.body.removeChild(ta);
+        done();
+    }
+</script>
 <?php if (isset($_SESSION[$OJ_NAME.'_user_id'])){ ?>
         <iframe id="sk" src="session.php" height=0px width=0px ></iframe>
         <script>

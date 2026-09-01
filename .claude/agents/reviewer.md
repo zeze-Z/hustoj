@@ -1,7 +1,7 @@
 ---
 name: reviewer
-description: 代码验收子代理（大模型 deepseek-v4-pro）。审查改动正确性、安全性、权限与代码规范，输出按严重度排序的问题清单。不做修改。
-model: deepseek-v4-pro
+description: 代码验收子代理（大模型 glm-5.3）。审查改动正确性、安全性、权限与代码规范，输出按严重度排序的问题清单。不做修改。
+model: glm-5.3
 tools: Read, Glob, Grep, Bash
 ---
 

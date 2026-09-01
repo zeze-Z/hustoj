@@ -26,6 +26,20 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
     </div>
     <?php } ?>
 
+    <!-- 教师入驻引导 -->
+    <div style="margin-bottom: 20px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 16px 20px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+            <div style="display: flex; align-items: center;">
+                <i class="graduation icon" style="color: white; font-size: 1.5em;"></i>
+                <div style="margin-left: 12px;">
+                    <strong style="color: white; font-size: 1.1em;">👨‍🏫 老师您好：想给全班学生开通账号？</strong>
+                    <p style="margin: 5px 0 0 0; color: rgba(255,255,255,0.9); font-size: 0.95em;">添加客服QQ，提供学生名单，3步完成批量开通</p>
+                </div>
+            </div>
+            <a href="teacher_guide.php" class="ui small button" style="background: white; color: #667eea; font-weight: 600;">查看开通指南</a>
+        </div>
+    </div>
+
     <!-- 功能介绍轮播图 -->
     <div style="margin-bottom: 25px;">
         <div class="carousel" id="featureCarousel" style="position: relative; width: 100%; height: 280px; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);">

@@ -407,6 +407,7 @@
 
     <!-- 底部链接 -->
     <div class="register-footer">
+      <p style="margin: 0 0 10px 0;">班级学生较多？<a href="teacher_guide.php">联系客服批量开通学生账号</a>，无需逐个注册</p>
       已有账号？<a href="loginpage.php">立即登录</a>
     </div>
   </div>
