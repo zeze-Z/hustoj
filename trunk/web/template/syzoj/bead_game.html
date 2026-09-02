@@ -1,0 +1,809 @@
+<?php $show_title="拼豆游戏 - $OJ_NAME"; ?>
+<?php include("template/$OJ_TEMPLATE/header.php");?>
+
+<style>
+/* ===== 统一游戏基础样式 ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f0f2f5;
+    min-height: 100vh;
+}
+
+.bead-container {
+    max-width: 1600px;
+    margin: 0.5rem auto;
+    background: #fff;
+    border-radius: 20px;
+    padding: 0.6rem 1rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+.bead-title {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.bead-logo {
+    width: 32px;
+    height: 32px;
+}
+
+.bead-subtitle {
+    text-align: center;
+    color: #888;
+    font-size: 0.85rem;
+    margin-bottom: 0.8rem;
+}
+
+.bead-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 1rem;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .bead-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===== 参考图区 ===== */
+.ref-panel {
+    background: #fafbfc;
+    border-radius: 14px;
+    padding: 0.6rem;
+    border: 1px solid #ececec;
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+}
+
+.ref-section-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.upload-btn-wrap {
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.upload-btn {
+    display: inline-block;
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: opacity 0.2s;
+}
+.upload-btn:hover { opacity: 0.9; }
+.upload-btn input { display: none; }
+
+.upload-hint {
+    font-size: 0.78rem;
+    color: #999;
+}
+
+.default-imgs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-bottom: 0.4rem;
+}
+
+.default-imgs img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.2s, transform 0.2s;
+}
+.default-imgs img:hover { transform: scale(1.04); }
+.default-imgs img.active { border-color: #667eea; }
+
+.ref-canvas-wrap {
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+#refCanvas {
+    max-width: 100%;
+    image-rendering: pixelated;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+}
+
+.ref-toggle {
+    margin-top: 0.6rem;
+    text-align: center;
+}
+
+.ref-toggle button {
+    padding: 6px 14px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #555;
+}
+.ref-toggle button:hover { background: #f5f5f5; }
+
+/* ===== 画板区 ===== */
+.board-panel {
+    background: #fafbfc;
+    border-radius: 14px;
+    padding: 0.5rem;
+    border: 1px solid #ececec;
+}
+
+.board-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    margin-bottom: 0.4rem;
+}
+.board-toolbar .size-selector { margin-bottom: 2px; }
+
+/* 蒙版 + 导出 同行 */
+.mask-export-row {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+}
+.mask-export-row .tool-btn { flex: 1; }
+
+/* 撤销 + 重做 + 清空 同行 */
+.undo-clear-row {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+}
+.undo-clear-row .tool-btn { flex: 1; }
+
+.size-selector {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+.size-selector span { font-size: 0.85rem; color: #666; }
+.size-selector button {
+    padding: 5px 12px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #555;
+}
+.size-selector button.active {
+    background: #667eea;
+    color: #fff;
+    border-color: #667eea;
+}
+
+.tool-btn {
+    padding: 4px 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: #555;
+    transition: background 0.2s;
+}
+.tool-btn:hover { background: #f0f0f5; }
+.tool-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.tool-btn.danger { color: #e74c3c; }
+.tool-btn.primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border-color: transparent;
+}
+
+/* 调色板 */
+.palette {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 3px;
+    margin-bottom: 0.4rem;
+    padding: 4px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #ececec;
+}
+
+.palette-color {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.1s;
+}
+.palette-color:hover { transform: scale(1.15); }
+.palette-color.active {
+    border-color: #333;
+    transform: scale(1.15);
+}
+
+/* 画布 — 按视口高度自适应，保证一屏显示 */
+.board-canvas-wrap {
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+    /* 高度受视口限制，减去 header导航(~60px) + 标题/padding/提示(~100px) */
+    height: calc(100vh - 160px);
+    max-height: 100vh;
+    /* 宽度 = 高度，保持正方形；同时不超过父容器宽度 */
+    aspect-ratio: 1 / 1;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+#beadCanvas {
+    image-rendering: pixelated;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: crosshair;
+    touch-action: none;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* 蒙版层：叠在画板上方，半透明黑白灰色块 */
+#maskCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    image-rendering: pixelated;
+    opacity: 0.55;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+#maskCanvas.show { display: block; }
+
+.board-tip {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #999;
+    margin-top: 0.5rem;
+}
+
+.toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+.toast.show { opacity: 1; }
+</style>
+
+<div class="bead-container">
+    <h1 class="bead-title"><svg class="bead-logo" viewBox="0 0 64 64" aria-hidden="true"><circle cx="16" cy="16" r="5" fill="#ef4444"/><circle cx="32" cy="16" r="5" fill="#f59e0b"/><circle cx="48" cy="16" r="5" fill="#22c55e"/><circle cx="16" cy="32" r="5" fill="#3b82f6"/><circle cx="32" cy="32" r="5" fill="#a855f7"/><circle cx="48" cy="32" r="5" fill="#ec4899"/><circle cx="16" cy="48" r="5" fill="#14b8a6"/><circle cx="32" cy="48" r="5" fill="#f97316"/><circle cx="48" cy="48" r="5" fill="#6366f1"/></svg> 拼豆游戏</h1>
+    <p class="bead-subtitle">上传图片或选默认图，照着像素图拼豆子，创作专属图案</p>
+
+    <div class="bead-layout">
+        <!-- 左栏：参考图 + 工具 + 调色板 -->
+        <div class="ref-panel">
+            <div class="ref-section-title">🖼️ 选择参考图</div>
+
+            <div class="upload-btn-wrap">
+                <label class="upload-btn">
+                    📁 上传本地图片
+                    <input type="file" id="fileInput" accept="image/*">
+                </label>
+                <span class="upload-hint">支持 jpg/png/gif/webp/bmp，≤5MB</span>
+            </div>
+
+            <div class="default-imgs" id="defaultImgs">
+                <?php foreach ([2, 4, 6] as $i): ?>
+                    <img src="image/puzzle/<?php echo sprintf('%02d', $i); ?>.jpg"
+                         data-src="image/puzzle/<?php echo sprintf('%02d', $i); ?>.jpg"
+                         alt="默认图<?php echo $i; ?>" title="默认图<?php echo $i; ?>">
+                <?php endforeach; ?>
+            </div>
+
+            <div class="ref-section-title">🛠️ 工具</div>
+            <div class="board-toolbar">
+                <div class="size-selector">
+                    <span>网格：</span>
+                    <button data-size="32">32</button>
+                    <button data-size="64">64</button>
+                    <button data-size="96">96</button>
+                </div>
+                <div class="undo-clear-row">
+                    <button class="tool-btn" id="undoBtn">↶ 撤销</button>
+                    <button class="tool-btn" id="redoBtn">↷ 重做</button>
+                    <button class="tool-btn danger" id="clearBtn">🗑 清空</button>
+                </div>
+                <div class="mask-export-row">
+                    <button class="tool-btn" id="toggleMaskBtn">🔲 显示蒙版</button>
+                    <button class="tool-btn primary" id="exportBtn">⬇ 导出作品</button>
+                </div>
+            </div>
+
+            <div class="ref-section-title">🎨 调色板</div>
+            <div class="palette" id="palette"></div>
+        </div>
+
+        <!-- 右栏：画板 -->
+        <div class="board-panel">
+            <div class="board-canvas-wrap">
+                <canvas id="beadCanvas" width="512" height="512"></canvas>
+                <canvas id="maskCanvas" width="512" height="512"></canvas>
+            </div>
+            <div class="board-tip">点击或拖拽格子填色；右键擦除</div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+    "use strict";
+
+    /* ===== 64 色调色板 ===== */
+    var PALETTE = [
+        '#000000','#1a1a1a','#333333','#4d4d4d','#666666','#808080','#999999','#b3b3b3',
+        '#cccccc','#e6e6e6','#ffffff','#fef3c7','#fde68a','#fcd34d','#fbbf24','#f59e0b',
+        '#dc2626','#ef4444','#f87171','#fca5a5','#fb923c','#f97316','#ea580c','#92400e',
+        '#b45309','#d97706','#facc15','#eab308','#84cc16','#65a30d','#4ade80','#22c55e',
+        '#16a34a','#15803d','#14532d','#10b981','#059669','#06b6d4','#0891b2','#0e7490',
+        '#0284c7','#0369a1','#3b82f6','#2563eb','#1d4ed8','#1e3a8a','#6366f1','#4f46e5',
+        '#7c3aed','#6d28d9','#5b21b6','#a855f7','#9333ea','#c026d3','#db2777','#e11d48',
+        '#be185d','#9d174d','#831843','#f43f5e','#fb7185','#fda4af','#fecdd3','#ffe4e6'
+    ];
+
+    /* ===== 状态 ===== */
+    var gridSize = 32;
+    var gridData = [];          // gridData[y][x] = color string or null
+    var undoStack = [];
+    var redoStack = [];
+    var currentColor = PALETTE[0];
+    var refData = null;         // 参考图格子数据 refData[y][x] = [r,g,b]
+    var refVisible = true;
+    var maskVisible = false;    // 蒙版是否显示
+    var isDrawing = false;
+    var isErasing = false;
+    var currentRefSrc = null;   // 当前参考图源（DataURL 或 image/puzzle 路径）
+
+    var beadCanvas = document.getElementById('beadCanvas');
+    var beadCtx = beadCanvas.getContext('2d');
+    var maskCanvas = document.getElementById('maskCanvas');
+    var maskCtx = maskCanvas.getContext('2d');
+
+    var CELL = 0;               // 每格像素大小（按画布尺寸算）
+    var CANVAS_PX = 512;
+
+    /* ===== Toast ===== */
+    var toastEl = document.getElementById('toast');
+    var toastTimer = null;
+    function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2200);
+    }
+
+    /* ===== 调色板渲染 ===== */
+    var paletteEl = document.getElementById('palette');
+    PALETTE.forEach(function (c, i) {
+        var d = document.createElement('div');
+        d.className = 'palette-color' + (i === 0 ? ' active' : '');
+        d.style.background = c;
+        d.dataset.color = c;
+        d.addEventListener('click', function () {
+            currentColor = c;
+            paletteEl.querySelectorAll('.palette-color').forEach(function (el) {
+                el.classList.remove('active');
+            });
+            d.classList.add('active');
+        });
+        paletteEl.appendChild(d);
+    });
+
+    /* ===== 网格尺寸选择 ===== */
+    document.querySelectorAll('.size-selector button').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var s = parseInt(btn.dataset.size, 10);
+            if (s !== gridSize) {
+                gridSize = s;
+                document.querySelectorAll('.size-selector button').forEach(function (b) {
+                    b.classList.toggle('active', parseInt(b.dataset.size, 10) === gridSize);
+                });
+                initGrid();
+                loadFromStorage();
+                renderBoard();
+                recomputeRef();
+                renderMask();
+            }
+        });
+    });
+    // 默认激活 32
+    document.querySelector('.size-selector button[data-size="32"]').classList.add('active');
+
+    /* ===== 网格初始化 ===== */
+    function initGrid() {
+        gridData = [];
+        for (var y = 0; y < gridSize; y++) {
+            var row = [];
+            for (var x = 0; x < gridSize; x++) row.push(null);
+            gridData.push(row);
+        }
+        undoStack = [];
+        redoStack = [];
+        CELL = Math.floor(CANVAS_PX / gridSize);
+        beadCanvas.width = CELL * gridSize;
+        beadCanvas.height = CELL * gridSize;
+        maskCanvas.width = CELL * gridSize;
+        maskCanvas.height = CELL * gridSize;
+        updateUndoRedoBtns();
+    }
+
+    /* ===== 画板渲染 ===== */
+    function renderBoard() {
+        beadCtx.clearRect(0, 0, beadCanvas.width, beadCanvas.height);
+        for (var y = 0; y < gridSize; y++) {
+            for (var x = 0; x < gridSize; x++) {
+                var col = gridData[y][x];
+                if (col) {
+                    beadCtx.fillStyle = col;
+                    beadCtx.fillRect(x * CELL, y * CELL, CELL, CELL);
+                }
+            }
+        }
+        // 网格线
+        beadCtx.strokeStyle = 'rgba(0,0,0,0.08)';
+        beadCtx.lineWidth = 1;
+        for (var i = 0; i <= gridSize; i++) {
+            beadCtx.beginPath();
+            beadCtx.moveTo(i * CELL + 0.5, 0);
+            beadCtx.lineTo(i * CELL + 0.5, beadCanvas.height);
+            beadCtx.stroke();
+            beadCtx.beginPath();
+            beadCtx.moveTo(0, i * CELL + 0.5);
+            beadCtx.lineTo(beadCanvas.width, i * CELL + 0.5);
+            beadCtx.stroke();
+        }
+    }
+
+    /* ===== 坐标转换 ===== */
+    function getCell(e) {
+        var rect = beadCanvas.getBoundingClientRect();
+        var cx, cy;
+        if (e.touches && e.touches[0]) {
+            cx = e.touches[0].clientX - rect.left;
+            cy = e.touches[0].clientY - rect.top;
+        } else {
+            cx = e.clientX - rect.left;
+            cy = e.clientY - rect.top;
+        }
+        // 缩放比例
+        var sx = beadCanvas.width / rect.width;
+        var sy = beadCanvas.height / rect.height;
+        var x = Math.floor(cx * sx / CELL);
+        var y = Math.floor(cy * sy / CELL);
+        if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) return null;
+        return { x: x, y: y };
+    }
+
+    /* ===== 填色 ===== */
+    function paintCell(x, y, color) {
+        var old = gridData[y][x];
+        if (old === color) return;
+        gridData[y][x] = color;
+        undoStack.push({ x: x, y: y, old: old, new: color });
+        redoStack = [];
+        renderBoard();
+        saveToStorage();
+        updateUndoRedoBtns();
+    }
+
+    function handlePointerDown(e) {
+        e.preventDefault();
+        var cell = getCell(e);
+        if (!cell) return;
+        isDrawing = true;
+        isErasing = (e.button === 2);
+        paintCell(cell.x, cell.y, isErasing ? null : currentColor);
+    }
+
+    function handlePointerMove(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+        var cell = getCell(e);
+        if (!cell) return;
+        paintCell(cell.x, cell.y, isErasing ? null : currentColor);
+    }
+
+    function handlePointerUp() { isDrawing = false; }
+
+    beadCanvas.addEventListener('mousedown', handlePointerDown);
+    beadCanvas.addEventListener('mousemove', handlePointerMove);
+    beadCanvas.addEventListener('mouseup', handlePointerUp);
+    beadCanvas.addEventListener('mouseleave', handlePointerUp);
+    beadCanvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    // 触摸
+    beadCanvas.addEventListener('touchstart', handlePointerDown, { passive: false });
+    beadCanvas.addEventListener('touchmove', handlePointerMove, { passive: false });
+    beadCanvas.addEventListener('touchend', handlePointerUp);
+
+    /* ===== 撤销/重做/清空 ===== */
+    function updateUndoRedoBtns() {
+        document.getElementById('undoBtn').disabled = undoStack.length === 0;
+        document.getElementById('redoBtn').disabled = redoStack.length === 0;
+    }
+
+    document.getElementById('undoBtn').addEventListener('click', function () {
+        if (undoStack.length === 0) return;
+        var op = undoStack.pop();
+        gridData[op.y][op.x] = op.old;
+        redoStack.push(op);
+        renderBoard();
+        saveToStorage();
+        updateUndoRedoBtns();
+    });
+
+    document.getElementById('redoBtn').addEventListener('click', function () {
+        if (redoStack.length === 0) return;
+        var op = redoStack.pop();
+        gridData[op.y][op.x] = op.new;
+        undoStack.push(op);
+        renderBoard();
+        saveToStorage();
+        updateUndoRedoBtns();
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', function () {
+        // 记录每格变更以便撤销
+        for (var y = 0; y < gridSize; y++) {
+            for (var x = 0; x < gridSize; x++) {
+                if (gridData[y][x] !== null) {
+                    undoStack.push({ x: x, y: y, old: gridData[y][x], new: null });
+                }
+            }
+        }
+        initGridKeepHistory();
+        renderBoard();
+        saveToStorage();
+        updateUndoRedoBtns();
+        toast('已清空画板');
+    });
+
+    // 清空但保留 undoStack（用于清空按钮）
+    function initGridKeepHistory() {
+        gridData = [];
+        for (var y = 0; y < gridSize; y++) {
+            var row = [];
+            for (var x = 0; x < gridSize; x++) row.push(null);
+            gridData.push(row);
+        }
+        redoStack = [];
+    }
+
+    /* ===== 导出 JPG ===== */
+    document.getElementById('exportBtn').addEventListener('click', function () {
+        // 离屏画布：只画豆子色块，不画网格线
+        var off = document.createElement('canvas');
+        off.width = gridSize;
+        off.height = gridSize;
+        var offCtx = off.getContext('2d');
+        for (var y = 0; y < gridSize; y++) {
+            for (var x = 0; x < gridSize; x++) {
+                if (gridData[y][x]) {
+                    offCtx.fillStyle = gridData[y][x];
+                    offCtx.fillRect(x, y, 1, 1);
+                }
+            }
+        }
+        // 放大输出，便于查看
+        var outSize = 512;
+        var out = document.createElement('canvas');
+        out.width = outSize;
+        out.height = outSize;
+        var outCtx = out.getContext('2d');
+        // JPG 不支持透明，先填白底避免空格变黑
+        outCtx.fillStyle = '#ffffff';
+        outCtx.fillRect(0, 0, outSize, outSize);
+        outCtx.imageSmoothingEnabled = false;
+        outCtx.drawImage(off, 0, 0, outSize, outSize);
+
+        var link = document.createElement('a');
+        link.download = 'bead_art_' + Date.now() + '.jpg';
+        link.href = out.toDataURL('image/jpeg', 0.92);
+        link.click();
+        toast('已导出作品');
+    });
+
+    /* ===== 参考图：降采样 ===== */
+    function loadImageToRef(src) {
+        var img = new Image();
+        img.onload = function () {
+            // 离屏缩放到 gridSize
+            var off = document.createElement('canvas');
+            off.width = gridSize;
+            off.height = gridSize;
+            var offCtx = off.getContext('2d');
+            offCtx.imageSmoothingEnabled = true;
+            offCtx.drawImage(img, 0, 0, gridSize, gridSize);
+            var data = offCtx.getImageData(0, 0, gridSize, gridSize).data;
+            refData = [];
+            for (var y = 0; y < gridSize; y++) {
+                var row = [];
+                for (var x = 0; x < gridSize; x++) {
+                    var idx = (y * gridSize + x) * 4;
+                    row.push([data[idx], data[idx + 1], data[idx + 2]]);
+                }
+                refData.push(row);
+            }
+            renderMask();
+            // 选图后自动显示蒙版
+            maskVisible = true;
+            maskCanvas.classList.add('show');
+            var btn = document.getElementById('toggleMaskBtn');
+            if (btn) btn.textContent = '🔲 隐藏蒙版';
+        };
+        img.onerror = function () { toast('图片加载失败'); };
+        img.src = src;
+    }
+
+    /* ===== 蒙版：黑白灰色块 =====
+       基于参考图每格亮度，量化到 5 级灰度（黑/深灰/中灰/浅灰/白），
+       填充整格，生成明暗分区色块蒙版，叠在画板上方供临摹。 */
+    function renderMask() {
+        maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+        if (!refData) return;
+        var GRAYS = ['#000000', '#404040', '#808080', '#c0c0c0', '#ffffff'];
+        for (var y = 0; y < gridSize; y++) {
+            for (var x = 0; x < gridSize; x++) {
+                var rgb = refData[y][x];
+                // 感知亮度（Rec. 709）
+                var lum = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+                // 量化到 0-4 五级
+                var level = Math.min(4, Math.floor(lum / 51));
+                maskCtx.fillStyle = GRAYS[level];
+                maskCtx.fillRect(x * CELL, y * CELL, CELL, CELL);
+            }
+        }
+    }
+
+    function colorDist(a, b) {
+        var dr = a[0] - b[0], dg = a[1] - b[1], db = a[2] - b[2];
+        return Math.sqrt(dr * dr + dg * dg + db * db);
+    }
+
+    function recomputeRef() {
+        // 网格尺寸变化时，若有当前参考图源，重新降采样
+        if (currentRefSrc) loadImageToRef(currentRefSrc);
+    }
+
+    /* ===== 默认图点击 ===== */
+    document.querySelectorAll('#defaultImgs img').forEach(function (im) {
+        im.addEventListener('click', function () {
+            document.querySelectorAll('#defaultImgs img').forEach(function (el) {
+                el.classList.remove('active');
+            });
+            im.classList.add('active');
+            currentRefSrc = im.dataset.src;
+            loadImageToRef(currentRefSrc);
+        });
+    });
+
+    /* ===== 上传 ===== */
+    document.getElementById('fileInput').addEventListener('change', function (e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        if (!file.type || file.type.indexOf('image/') !== 0) {
+            toast('请选择图片文件');
+            e.target.value = '';
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            toast('图片过大，请选择 5MB 以内的图片');
+            e.target.value = '';
+            return;
+        }
+        document.querySelectorAll('#defaultImgs img').forEach(function (el) {
+            el.classList.remove('active');
+        });
+        var reader = new FileReader();
+        reader.onload = function (ev) {
+            currentRefSrc = ev.target.result;
+            loadImageToRef(currentRefSrc);
+        };
+        reader.onerror = function () { toast('图片读取失败'); };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    });
+
+    /* ===== 蒙版显隐 ===== */
+    document.getElementById('toggleMaskBtn').addEventListener('click', function () {
+        maskVisible = !maskVisible;
+        maskCanvas.classList.toggle('show', maskVisible);
+        this.textContent = maskVisible ? '🔲 隐藏蒙版' : '🔲 显示蒙版';
+    });
+
+    /* ===== localStorage 持久化 ===== */
+    function storageKey() { return 'bead_game_' + gridSize; }
+
+    function saveToStorage() {
+        try {
+            localStorage.setItem(storageKey(), JSON.stringify({
+                grid: gridData,
+                undo: undoStack,
+                redo: redoStack
+            }));
+        } catch (e) { /* 容量满则忽略 */ }
+    }
+
+    function loadFromStorage() {
+        try {
+            var raw = localStorage.getItem(storageKey());
+            if (!raw) return;
+            var obj = JSON.parse(raw);
+            if (obj && obj.grid && obj.grid.length === gridSize) {
+                gridData = obj.grid;
+                undoStack = obj.undo || [];
+                redoStack = obj.redo || [];
+                updateUndoRedoBtns();
+            }
+        } catch (e) { /* 忽略损坏数据 */ }
+    }
+
+    /* ===== 初始化 ===== */
+    initGrid();
+    loadFromStorage();
+    renderBoard();
+    // 默认加载第一张默认图作为参考
+    var firstImg = document.querySelector('#defaultImgs img');
+    if (firstImg) {
+        firstImg.classList.add('active');
+        currentRefSrc = firstImg.dataset.src;
+        loadImageToRef(currentRefSrc);
+    }
+})();
+</script>
+
+<?php require("footer.php"); ?>

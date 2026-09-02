@@ -372,6 +372,24 @@
                 <div class="card-desc">控制小蛇吃食物变长，不要撞墙（适合3-6年级）</div>
             </a>
 
+            <a href="bead_game.php" class="card">
+                <div class="card-icon" style="background: #d1d5db;">
+                    <svg viewBox="0 0 64 64">
+                        <circle cx="16" cy="16" r="5" fill="#ef4444"/>
+                        <circle cx="32" cy="16" r="5" fill="#f59e0b"/>
+                        <circle cx="48" cy="16" r="5" fill="#22c55e"/>
+                        <circle cx="16" cy="32" r="5" fill="#3b82f6"/>
+                        <circle cx="32" cy="32" r="5" fill="#a855f7"/>
+                        <circle cx="48" cy="32" r="5" fill="#ec4899"/>
+                        <circle cx="16" cy="48" r="5" fill="#14b8a6"/>
+                        <circle cx="32" cy="48" r="5" fill="#f97316"/>
+                        <circle cx="48" cy="48" r="5" fill="#6366f1"/>
+                    </svg>
+                </div>
+                <div class="card-title">拼豆游戏</div>
+                <div class="card-desc">上传图片或选默认图，照着像素图拼豆子，创作专属图案（适合4-6年级）</div>
+            </a>
+
             <a href="number_puzzle.php" class="card">
                 <div class="card-icon" style="background: linear-gradient(135deg, #14b8a6, #0891b2);">
                     <svg viewBox="0 0 64 64">
