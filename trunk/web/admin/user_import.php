@@ -31,7 +31,7 @@ function user_exists($user_id) {
     return !empty(pdo_query($sql, $user_id));
 }
 
-function import_user($filename, $target_school_id, $target_school_name) {
+function import_user($filename, $target_school_id, $target_school_name, $target_teacher_id = '') {
     global $OJ_EXPIRY_DAYS, $OJ_SCHOOL_MODE;
     static $nick_altered = false;  // 确保整个请求内昵称扩列只 ALTER 一次
     static $cred_block = 0;        // 多次导入时保证账号清单 textarea id 唯一
@@ -42,6 +42,9 @@ function import_user($filename, $target_school_id, $target_school_name) {
     $skip_list = array();
     $cred_list = array();
     $max_nick_len = 20;  // users.nick 默认长度上限，超出需扩列
+    // 教师推广绑定（V2.7）：导入时把新学生绑定到所选教师
+    $bind_teacher_id = !empty($target_teacher_id) ? trim($target_teacher_id) : '';
+    $bound_user_ids = array();  // 成功导入且需绑定的学生
 
     if (($h = fopen("{$filename}", "r")) !== FALSE) {
         // 文件中的每一行数据都被转换为我们调用的单个数组$data
@@ -133,15 +136,18 @@ function import_user($filename, $target_school_id, $target_school_name) {
 
             $ip = "127.0.0.1";
             $sql = "INSERT INTO `users`("
-                    . "`user_id`,`email`,`ip`,`accesstime`,`password`,`reg_time`,`nick`,`school`,`school_id`,`role`,`group_name`,`defunct`,`expiry_date`)"
-                    . "VALUES(?,?,?,NOW(),?,NOW(),?,?,?,'student',?,'N',?)";
-            $ret = pdo_query($sql, $user_id, $email, $ip, $password, $nick, $school, $school_id, $group_name, $expiry_date);
+                    . "`user_id`,`email`,`ip`,`accesstime`,`password`,`reg_time`,`nick`,`school`,`school_id`,`role`,`group_name`,`defunct`,`expiry_date`,`bind_teacher_id`)"
+                    . "VALUES(?,?,?,NOW(),?,NOW(),?,?,?,'student',?,'N',?,?)";
+            $ret = pdo_query($sql, $user_id, $email, $ip, $password, $nick, $school, $school_id, $group_name, $expiry_date, $bind_teacher_id);
             if ($ret === -1 || $ret === false) {
                 $stats['fail']++;
                 $fail_list[] = array('user_id' => $user_id, 'reason' => '数据库写入失败');
             } else {
                 $stats['success']++;
                 $cred_list[] = array('user_id' => $user_id, 'password' => $plain_pwd);
+                if (!empty($bind_teacher_id)) {
+                    $bound_user_ids[] = $user_id;
+                }
             }
         }
         // 昵称列扩容：仅在确实超长时执行一次
@@ -157,6 +163,9 @@ function import_user($filename, $target_school_id, $target_school_name) {
     // ===== 结果汇总 =====
     echo "<div style='padding: 15px; background: #eafaf1; border: 1px solid #a9dfbf; border-radius: 6px; margin: 15px 0;'>";
     echo "<b>导入完成：</b>成功 <b>{$stats['success']}</b> 人 ｜ 跳过 <b>{$stats['skip']}</b> 人（已存在）｜ 失败 <b>{$stats['fail']}</b> 人";
+    if (!empty($bind_teacher_id) && !empty($bound_user_ids)) {
+        echo " ｜ 已绑定到教师 <b>" . htmlentities($bind_teacher_id, ENT_QUOTES, 'UTF-8') . "</b>（" . count($bound_user_ids) . " 人）";
+    }
     echo "</div>";
 
     // 已存在列表
@@ -201,6 +210,16 @@ function import_user($filename, $target_school_id, $target_school_name) {
 if (isset($_FILES["fps"])) {
     // CSRF 校验（CLAUDE.md 强制：管理后台表单必须 check_post_key）
     require_once ("../include/check_post_key.php");
+    // 服务端防御：拒绝 xlsx/xls 等非 CSV/zip 格式，避免 fgetcsv 解析乱码导致"0成功0跳过0失败"
+    $upload_ext = strtolower(get_extension($_FILES["fps"]["name"]));
+    if (!in_array($upload_ext, array('csv', 'zip'))) {
+        echo "<div style='padding: 15px; background: #fdf2e9; border: 1px solid #f5cba7; border-radius: 6px; margin: 15px 0;'>";
+        echo "<h3 style='color:#d35400;'>文件格式不支持：" . htmlentities($_FILES["fps"]["name"], ENT_QUOTES, 'UTF-8') . "</h3>";
+        echo "<p>仅支持 <b>CSV</b> 或 <b>ZIP</b> 文件。请将 Excel 文件在 Excel 中选择「文件 → 另存为」，保存类型选择 <b>CSV UTF-8 (逗号分隔)(*.csv)</b>，然后重新上传。</p>";
+        echo "<p><a href='users.csv' style='color:#d35400;'>点此下载标准模板</a>（用 Excel 打开填写后再另存为 CSV UTF-8）。</p>";
+        echo "</div>";
+        exit(1);
+    }
     if ($_FILES["fps"]["error"] > 0) {
         echo "&nbsp;&nbsp;- Error: " . $_FILES["fps"]["error"] . "File size is too big, change in PHP.ini<br />";
     } else {
@@ -220,6 +239,16 @@ if (isset($_FILES["fps"])) {
             echo "<h1>请选择有效（启用中）的目标学校后再导入。</h1>";
             exit(1);
         }
+        // 教师推广绑定（V2.7）：可选归属教师，导入后学生 bind_teacher_id 设为该教师
+        $target_teacher_id = isset($_POST['teacher_id']) ? trim($_POST['teacher_id']) : '';
+        if ($target_teacher_id !== '') {
+            // 校验所选教师确为 teacher 权限，防伪造
+            $tchk = pdo_query(
+                "SELECT 1 FROM `privilege` WHERE user_id = ? AND rightstr = 'teacher' LIMIT 1",
+                $target_teacher_id
+            );
+            if (empty($tchk)) $target_teacher_id = '';
+        }
         $tempfile = $_FILES["fps"]["tmp_name"];
         if (get_extension($_FILES["fps"]["name"]) == "zip") {
             echo "&nbsp;&nbsp;- zip file, only fps/xml files in root dir are supported";
@@ -233,7 +262,7 @@ if (isset($_FILES["fps"])) {
                         $file_size = zip_entry_filesize($dir_resource);
                         $file_content = zip_entry_read($dir_resource, $file_size);
                         file_put_contents($tempfile, $file_content);
-                        import_user($tempfile, $target_school_id, $target_school_name);
+                        import_user($tempfile, $target_school_id, $target_school_name, $target_teacher_id);
                     }
                     zip_entry_close($dir_resource);
                 }
@@ -241,7 +270,7 @@ if (isset($_FILES["fps"])) {
             zip_close($resource);
             unlink($_FILES["fps"]["tmp_name"]);
         } else {
-            import_user($tempfile, $target_school_id, $target_school_name);
+            import_user($tempfile, $target_school_id, $target_school_name, $target_teacher_id);
             unlink($_FILES["fps"]["tmp_name"]);
         }
     }
@@ -250,6 +279,8 @@ if (isset($_FILES["fps"])) {
     if (function_exists('getSchoolList')) {
         $school_list = getSchoolList(true);
     }
+    // 教师推广绑定（V2.7）：获取教师列表供"归属教师"下拉选择
+    $teacher_list = function_exists('get_teacher_list') ? get_teacher_list() : array();
 ?>
 
 <br>
@@ -258,7 +289,7 @@ if (isset($_FILES["fps"])) {
 <?php if ($OJ_SCHOOL_MODE) { ?>
 <div class="alert alert-warning">当前为<strong>学校隔离模式</strong>，批量导入的账号将统一归属到所选目标学校，角色默认为「学生」。</div>
 <?php } ?>
-    <form class='form-inline' action='user_import.php' method=post enctype="multipart/form-data">
+    <form class='form-inline' id='importForm' action='user_import.php' method=post enctype="multipart/form-data" onsubmit="return checkImportFile();">
       <?php if ($OJ_SCHOOL_MODE) { ?>
       <div class='form-group'>
         <label>目标学校：</label>
@@ -271,8 +302,19 @@ if (isset($_FILES["fps"])) {
       </div>
       <?php } ?>
       <div class='form-group'>
+        <label>归属教师：</label>
+        <select name='teacher_id' class='form-control'>
+          <option value=''>不绑定教师</option>
+          <?php foreach ($teacher_list as $t) { ?>
+          <option value='<?php echo htmlentities($t['user_id'], ENT_QUOTES, 'UTF-8'); ?>'><?php echo htmlentities($t['user_id'] . ($t['nick'] ? ' / ' . $t['nick'] : '') . ($t['school'] ? ' / ' . $t['school'] : ''), ENT_QUOTES, 'UTF-8'); ?></option>
+          <?php } ?>
+        </select>
+        <span style="color:#888;font-size:12px;margin-left:6px;">导入的学生将归属该教师，用于教师推广奖励统计</span>
+      </div>
+      <div class='form-group'>
         <label>名单文件：</label>
-        <input class='form-control' type=file name='fps' required>
+        <input class='form-control' type=file name='fps' id='importFile' accept=".csv,.zip" required>
+        <span style="color:#888;font-size:12px;margin-left:6px;">仅支持 CSV / ZIP 文件</span>
       </div>
       <br><br>
       <center>
@@ -282,7 +324,26 @@ if (isset($_FILES["fps"])) {
       </center>
       <?php require_once ("../include/set_post_key.php"); ?>
     </form>
+<script>
+// 前端拦截：禁止上传 xlsx/xls 等 Excel 格式，避免 fgetcsv 解析乱码导致"0成功0跳过0失败"
+function checkImportFile(){
+    var f = document.getElementById('importFile');
+    if (!f || !f.value) return true;  // required 属性会兜底
+    var name = f.value.toLowerCase();
+    var ext = name.substring(name.lastIndexOf('.') + 1);
+    if (ext !== 'csv' && ext !== 'zip') {
+        alert('文件格式不支持：' + f.files[0].name + '\n\n仅支持 CSV 或 ZIP 文件。\n请将 Excel 文件另存为「CSV UTF-8 (逗号分隔)」格式后重新上传。');
+        f.value = '';  // 清空，便于重新选择
+        return false;
+    }
+    return true;
+}
+// 选择文件即时提示
+document.getElementById('importFile').addEventListener('change', function(){
+    if (this.value) checkImportFile();
+});
+</script>
 <h2><a href="users.csv">下载模板</a></h2>
-<h3>请用下载的模板填写，保存为UTF-8编码。密码列可留空，默认初始密码为「学号后6位」（学号不足6位取整个学号）；重复学号不会覆盖原账号，将跳过并提示「xxx账号已存在」。</h3>
+<h3>请用下载的模板填写，保存为UTF-8编码（Excel 请选「文件 → 另存为 → CSV UTF-8」）。密码列可留空，默认初始密码为「学号后6位」（学号不足6位取整个学号）；重复学号不会覆盖原账号，将跳过并提示「xxx账号已存在」。</h3>
 <?php
 } ?>

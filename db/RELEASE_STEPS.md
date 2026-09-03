@@ -25,6 +25,7 @@
 | V2.4 | 2026-07-24 | 新客连续登录分批奖励（20积分分批发放） |
 | V2.5 | 2026-08-23 | 课件学科Tab重命名（美术→新课标解读，音乐→小学电子教材） |
 | V2.6 | 2026-08-30 | 课件学科Tab新增"精选PPT模板"（位于小学电子教材之后） |
+| V2.7 | 2026-09-02 | 教师推广积分奖励（bind_teacher_id + teacher_promo_stat 结算表） |
 
 ---
 
@@ -95,6 +96,10 @@ mysql -u root -p jol < db/V2.5_20260823_rename_course_subject.sql
 # 15. 课件学科Tab新增"精选PPT模板"（V2.6）
 #     位于"小学电子教材"（sort_order=4）之后（sort_order=5）
 mysql -u root -p jol < db/V2.6_20260830_add_ppt_template_subject.sql
+
+# 16. 教师推广积分奖励（V2.7）
+#     users 加 bind_teacher_id；新建 teacher_promo_stat 周结算表
+mysql -u root -p jol < db/V2.7_20260902_teacher_promo_reward.sql
 ```
 
 **验证：**
@@ -200,6 +205,11 @@ SELECT COUNT(*) FROM jol.users WHERE login_reward_status = 0;
 -- 新增学科"精选PPT模板"（V2.6）
 SELECT id, name, sort_order, status FROM jol.course_subject WHERE name = '精选PPT模板';
 -- 预期：status=1，sort_order=5（位于"小学电子教材" sort_order=4 之后）
+
+-- 教师推广积分奖励（V2.7）
+DESCRIBE jol.users bind_teacher_id;             -- varchar(48), NULL
+SHOW TABLES IN jol LIKE 'teacher_promo_stat';   -- 预期存在
+SHOW INDEX FROM jol.teacher_promo_stat WHERE Key_name='uk_teacher_week';  -- UNIQUE(teacher_id, week_start)
 ```
 
 ---

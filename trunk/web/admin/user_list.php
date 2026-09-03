@@ -43,14 +43,14 @@ $trash="";
 if(isset($_GET['keyword']) && $_GET['keyword']!=""){
   $gkeyword = $_GET['keyword'];
   $keyword = "%$gkeyword%";
-  $sql = "select `user_id`,`nick`,email,`accesstime`,`reg_time`,`expiry_date`,`ip`,`school`,`group_name`,`defunct` FROM `users` WHERE (user_id LIKE ?) OR (nick LIKE ?) OR (school LIKE ?)  OR (group_name LIKE ?) or (ip like ?) ORDER BY `user_id` DESC";
+  $sql = "select `user_id`,`nick`,email,`accesstime`,`reg_time`,`expiry_date`,`ip`,`school`,`group_name`,`defunct`,`role` FROM `users` WHERE (user_id LIKE ?) OR (nick LIKE ?) OR (school LIKE ?)  OR (group_name LIKE ?) or (ip like ?) ORDER BY `user_id` DESC";
   $result = pdo_query($sql,$keyword,$keyword,$keyword,$keyword,$keyword);
 }else if(isset($_GET['trash'])){
   $trash="&trash";
-  $sql = "select `user_id`,`nick`,email,`accesstime`,`reg_time`,`expiry_date`,`ip`,`school`,`group_name`,`defunct` FROM `users` where defunct='Y' ORDER BY `accesstime` DESC LIMIT $sid, $idsperpage";
+  $sql = "select `user_id`,`nick`,email,`accesstime`,`reg_time`,`expiry_date`,`ip`,`school`,`group_name`,`defunct`,`role` FROM `users` where defunct='Y' ORDER BY `accesstime` DESC LIMIT $sid, $idsperpage";
   $result = pdo_query($sql);
 }else{
-  $sql = "select `user_id`,`nick`,email,`accesstime`,`reg_time`,`expiry_date`,`ip`,`school`,`group_name`,`defunct` FROM `users` where defunct='N' ORDER BY `accesstime` DESC LIMIT $sid, $idsperpage";
+  $sql = "select `user_id`,`nick`,email,`accesstime`,`reg_time`,`expiry_date`,`ip`,`school`,`group_name`,`defunct`,`role` FROM `users` where defunct='N' ORDER BY `accesstime` DESC LIMIT $sid, $idsperpage";
   $result = pdo_query($sql);
 }
 ?>
@@ -65,11 +65,12 @@ if(isset($_GET['keyword']) && $_GET['keyword']!=""){
 
 <center>
   <div style="overflow-x:auto;">
-  <table width=100% border=1 style="text-align:center;" class="ui striped aligned table">
+  <table width=100% border=1 style="text-align:center; font-size:12px;" class="ui striped aligned table compact">
 <thead>
     <tr>
     <th><?php echo $MSG_USER_ID?></th>
       <th><?php echo $MSG_NICK?></th>
+      <th>角色</th>
       <th>IP</th>
       <th><?php echo $MSG_EMAIL?></th>
       <th><?php echo $MSG_SCHOOL?></th>
@@ -91,6 +92,7 @@ if(isset($_GET['keyword']) && $_GET['keyword']!=""){
         echo "<td><a href='../userinfo.php?user=".htmlentities(urlencode($row['user_id']))."'>".$row['user_id']."</a></td>";
         if($row['nick']=="") $row['nick']="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
         echo "<td><span fd='nick' user_id='".$row['user_id']."'>".$row['nick']."</span></td>";
+        echo "<td>".htmlentities($row['role'],ENT_QUOTES,'UTF-8')."</td>";
         echo "<td><a href='user_list.php?keyword=".htmlentities(urlencode($row['ip']))."' >".$row['ip']."</td>";
         if($row['email']=="") $row['email']="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
         echo "<td><span fd='email' user_id='".$row['user_id']."'>".$row['email']."</span></td>";

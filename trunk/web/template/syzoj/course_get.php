@@ -35,9 +35,14 @@
         <i class="spinner loading icon"></i>
         <span id="countdown">3</span> 秒后自动跳转...
       </p>
-      <a href="<?php echo htmlentities($view_redirect_url, ENT_QUOTES, 'UTF-8'); ?>" class="ui large blue button" style="width: 100%; margin-top: 15px;">
-        <i class="arrow right icon"></i> 立即查看课程
-      </a>
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <a href="<?php echo htmlentities($view_redirect_url, ENT_QUOTES, 'UTF-8'); ?>" class="ui large blue button" style="flex: 1;">
+          <i class="arrow right icon"></i> 立即查看课程
+        </a>
+        <a href="course_my.php" class="ui large positive button" style="flex: 1;">
+          <i class="shopping bag icon"></i> 查看我的课件
+        </a>
+      </div>
     </div>
 
     <script>

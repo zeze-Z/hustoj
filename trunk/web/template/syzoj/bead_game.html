@@ -57,7 +57,79 @@ body {
 
 @media (max-width: 900px) {
     .bead-layout {
+        grid-template-columns: 140px 1fr;
+        gap: 0.5rem;
+    }
+    /* 移动端左栏极紧凑 */
+    .ref-panel {
+        max-height: none;
+        overflow-y: visible;
+        padding: 0.4rem;
+        font-size: 0.75rem;
+    }
+    .ref-section-title {
+        font-size: 0.75rem;
+        margin-bottom: 0.2rem;
+    }
+    .upload-btn {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
+    .upload-hint {
+        display: none;
+    }
+    .default-imgs {
         grid-template-columns: 1fr;
+        gap: 3px;
+        margin-bottom: 0.3rem;
+    }
+    .default-imgs img {
+        max-width: 100%;
+        border-radius: 4px;
+    }
+    .board-toolbar {
+        flex-direction: column;
+        gap: 3px;
+        margin-bottom: 0.3rem;
+    }
+    .size-selector {
+        flex-wrap: wrap;
+    }
+    .size-selector span { font-size: 0.75rem; }
+    .size-selector button { padding: 3px 8px; font-size: 0.75rem; }
+    .tool-btn {
+        padding: 3px 6px;
+        font-size: 0.72rem;
+    }
+    .palette {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2px;
+        padding: 2px;
+        margin-bottom: 0.3rem;
+    }
+    .board-canvas-wrap {
+        /* 移动端由JS动态计算 */
+    }
+    .bead-title {
+        font-size: 1.2rem;
+    }
+    .bead-logo {
+        width: 24px;
+        height: 24px;
+    }
+    .bead-subtitle {
+        font-size: 0.75rem;
+        margin-bottom: 0.4rem;
+    }
+    .bead-container {
+        padding: 0.4rem;
+        margin: 0.2rem auto;
+    }
+    .board-panel {
+        padding: 0.3rem;
+    }
+    .board-tip {
+        font-size: 0.7rem;
     }
 }
 
@@ -254,17 +326,11 @@ body {
     transform: scale(1.15);
 }
 
-/* 画布 — 按视口高度自适应，保证一屏显示 */
+/* 画布 — JS 动态设置尺寸，保证正方形且不超屏 */
 .board-canvas-wrap {
     text-align: center;
     overflow: hidden;
     position: relative;
-    /* 高度受视口限制，减去 header导航(~60px) + 标题/padding/提示(~100px) */
-    height: calc(100vh - 160px);
-    max-height: 100vh;
-    /* 宽度 = 高度，保持正方形；同时不超过父容器宽度 */
-    aspect-ratio: 1 / 1;
-    max-width: 100%;
     margin: 0 auto;
 }
 
@@ -791,6 +857,21 @@ body {
             }
         } catch (e) { /* 忽略损坏数据 */ }
     }
+
+    /* ===== 画板尺寸自适应 ===== */
+    var canvasWrap = document.querySelector('.board-canvas-wrap');
+    function resizeBoard() {
+        // 取右栏可用宽度和视口可用高度的较小值，保证正方形不超屏
+        var parent = beadCanvas.parentElement.parentElement; // board-panel
+        var availW = parent.clientWidth - 4; // 减去 board-panel padding
+        var availH = window.innerHeight - 160; // 减去 header + 标题 + 间距
+        var size = Math.min(availW, availH);
+        if (size < 100) size = 100; // 最小 100px
+        canvasWrap.style.width = size + 'px';
+        canvasWrap.style.height = size + 'px';
+    }
+    window.addEventListener('resize', resizeBoard);
+    resizeBoard();
 
     /* ===== 初始化 ===== */
     initGrid();

@@ -268,6 +268,7 @@
                         <a class="dropdown-item btn-sm" href="point_card_list.php?status=1" target="main" title="兑换记录"><i class="glyphicon glyphicon-ok"></i> 兑换记录</a>
                         <a class="dropdown-item btn-sm" href="point_log_list.php" target="main" title="积分流水"><i class="glyphicon glyphicon-list"></i> 积分流水</a>
                         <a class="dropdown-item btn-sm" href="point_adjust.php" target="main" title="手动调整积分"><i class="glyphicon glyphicon-edit"></i> 手动调整</a>
+                        <a class="dropdown-item btn-sm" href="teacher_promo_list.php" target="main" title="教师推广统计"><i class="glyphicon glyphicon-bullhorn"></i> 教师推广统计</a>
                     </div>
                 </div>
     <?php }?>

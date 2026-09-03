@@ -5,8 +5,8 @@
   <!-- 搜索框和学科 Tab -->
   <div style="margin-bottom: 20px;">
     <!-- 搜索框 -->
-    <div style="margin-bottom: 15px;">
-      <form action="course.php" method="get" class="ui form" style="max-width: 400px;">
+    <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+      <form action="course.php" method="get" class="ui form" style="margin: 0; width: 400px; max-width: 100%; flex-shrink: 0;">
         <?php if ($view_current_subject > 0): ?>
         <input type="hidden" name="subject" value="<?php echo $view_current_subject; ?>">
         <?php endif; ?>
@@ -15,6 +15,11 @@
           <button class="ui button" type="submit"><i class="search icon"></i>搜索</button>
         </div>
       </form>
+      <?php if (isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
+      <a href="course_my.php" class="ui positive button" style="white-space: nowrap;">
+        <i class="shopping bag icon"></i>我的课件
+      </a>
+      <?php endif; ?>
     </div>
 
     <div class="ui top attached tabular menu" style="border-radius: 12px 12px 0 0;">

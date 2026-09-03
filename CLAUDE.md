@@ -75,7 +75,7 @@
 
 - 测试虚机：web-2204，部署路径：/home/judge/src/web/，sudo密码：judge
 - 虚机执行命令格式：`multipass exec web-2204 -- sudo -S [shell命令] <<< "judge"`
-- 测试账号：普通用户zezhang/zezhang123，管理员admin/admin123
+- 测试账号：教师用户zezhang/zezhang123，学生用户test/test123，管理员admin/admin123
 - 文件同步：先传文件到虚机/tmp目录`multipass transfer [本地文件路径] web-2204:/tmp/[文件名]`，再mv到部署路径
 - 代码更新生效：执行`php -r 'opcache_reset();'`即可，无需重启php-fpm服务（避免服务名找不到的坑）
 

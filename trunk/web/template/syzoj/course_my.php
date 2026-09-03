@@ -13,6 +13,19 @@
     </div>
   </h2>
 
+  <!-- 教师推广奖励说明（V2.7，仅教师身份显示） -->
+  <?php if (!empty($view_is_teacher)): ?>
+  <div style="max-width:700px;margin:0 auto 24px;background:#fff;border-radius:16px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border:1px solid #f0f0f0;">
+    <div style="font-size:17px;font-weight:600;color:#667eea;margin-bottom:12px;">📢 教师推广奖励说明</div>
+    <div style="font-size:14px;color:#555;line-height:1.8;">
+      <p><strong>奖励规则：</strong>联系客服导入班级学生后，每周若有 <strong>60%</strong> 关联学生登录平台，您即可获得 <strong>5 积分</strong> 奖励。</p>
+      <p><strong>奖励周期：</strong>连续 <strong>4 周</strong>，每周达标每周发放。若某周未达标则奖励终止，已发放积分不回收。最多可获 <strong>20 积分</strong>。</p>
+      <p><strong>参与方式：</strong>联系客服批量开通学生账号，学生将自动关联到您的教师账号。</p>
+      <p><strong>积分用途：</strong>购买课件等平台服务。</p>
+    </div>
+  </div>
+  <?php endif; ?>
+
   <!-- 错误消息 -->
   <?php if (!empty($view_error)): ?>
     <div class="ui error message" style="border-radius: 12px;">

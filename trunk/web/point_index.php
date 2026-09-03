@@ -42,6 +42,7 @@ $valid_types = [
     POINT_LOG_TYPE_COURSE,
     POINT_LOG_TYPE_ADMIN,
     POINT_LOG_TYPE_SYSTEM,
+    POINT_LOG_TYPE_PROMO,
 ];
 if (!in_array($type_filter, $valid_types, true)) {
     $type_filter = 0;
@@ -93,6 +94,11 @@ $view_card_value      = POINT_CARD_VALUE;
 $view_faka_url        = 'https://www.qianxun1688.com/details/8E870BDF';
 $view_postkey         = isset($_SESSION[$OJ_NAME.'_'.'postkey']) ? $_SESSION[$OJ_NAME.'_'.'postkey'] : '';
 $page_title           = '我的积分 - ' . $OJ_NAME;
+
+// 教师推广奖励说明卡片显示判定：系统教师身份用 users.role='teacher'（privilege 表不一定有 rightstr='teacher' 记录）
+$_role_rows = pdo_query("SELECT `role` FROM `users` WHERE `user_id` = ? AND `defunct` = 'N' LIMIT 1", $user_id);
+$view_is_teacher = (!empty($_role_rows) && isset($_role_rows[0]['role']) && $_role_rows[0]['role'] === 'teacher')
+    || isset($_SESSION[$OJ_NAME.'_'.'administrator']);
 
 require('template/' . $OJ_TEMPLATE . '/point_index.php');
 

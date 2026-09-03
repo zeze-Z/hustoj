@@ -1107,6 +1107,7 @@ if (!defined('POINT_LOG_TYPE_CARD'))   define('POINT_LOG_TYPE_CARD',   1); // �
 if (!defined('POINT_LOG_TYPE_COURSE')) define('POINT_LOG_TYPE_COURSE', 2); // 课件购买
 if (!defined('POINT_LOG_TYPE_ADMIN'))  define('POINT_LOG_TYPE_ADMIN',  3); // 管理员调整
 if (!defined('POINT_LOG_TYPE_SYSTEM')) define('POINT_LOG_TYPE_SYSTEM', 4); // 系统操作
+if (!defined('POINT_LOG_TYPE_PROMO'))  define('POINT_LOG_TYPE_PROMO',  5); // 教师推广奖励
 
 /** 充值卡状态常量 */
 if (!defined('POINT_CARD_STATUS_UNUSED'))   define('POINT_CARD_STATUS_UNUSED',   0);
@@ -1592,5 +1593,60 @@ function point_admin_adjust($admin_id, $target_user_id, $delta, $reason) {
 }
 
 
+/**
+ * ===== 教师推广积分奖励（V2.7）基础函数 =====
+ * 详见 .claude/plans/教师推广积分奖励_需求.md
+ * 核心结算逻辑在 include/teacher_promo.php
+ */
 
+/**
+ * 获取拥有 teacher 权限的用户列表（供导入页下拉、统计页使用）。
+ * @param int $school_id 可选学校筛选（0=不限学校）
+ * @return array [{user_id, nick, school}, ...]
+ */
+function get_teacher_list($school_id = 0) {
+    // 系统教师身份用 users.role 字段判定，privilege 表不一定有 rightstr='teacher' 记录
+    if ($school_id > 0) {
+        $sql = "SELECT user_id, nick, school
+                  FROM `users`
+                 WHERE role = 'teacher' AND defunct = 'N' AND school_id = ?
+                 ORDER BY user_id";
+        return pdo_query($sql, $school_id);
+    }
+    $sql = "SELECT user_id, nick, school
+              FROM `users`
+             WHERE role = 'teacher' AND defunct = 'N'
+             ORDER BY user_id";
+    return pdo_query($sql);
+}
+
+/**
+ * 批量把学生绑定到教师（导入时调用）。
+ * 一个学生只归属一个教师，重复绑定以最新为准（UPDATE）。
+ * @param string $teacher_id 教师user_id
+ * @param array  $user_ids   学生user_id数组
+ * @return int 受影响行数
+ */
+function bind_students_to_teacher($teacher_id, $user_ids) {
+    if (empty($teacher_id) || empty($user_ids) || !is_array($user_ids)) {
+        return 0;
+    }
+    // 校验 teacher_id 确为教师权限，防止任意绑定
+    $chk = pdo_query(
+        "SELECT 1 FROM `privilege` WHERE user_id = ? AND rightstr = 'teacher' LIMIT 1",
+        $teacher_id
+    );
+    if (empty($chk)) return 0;
+
+    $affected = 0;
+    foreach ($user_ids as $uid) {
+        if (empty($uid)) continue;
+        $r = pdo_query(
+            "UPDATE `users` SET `bind_teacher_id` = ? WHERE `user_id` = ?",
+            $teacher_id, $uid
+        );
+        if ($r > 0) $affected += $r;
+    }
+    return $affected;
+}
 

@@ -45,6 +45,11 @@ $view_error = isset($error_message) ? $error_message : '';
 $view_success = isset($success_message) ? $success_message : '';
 $page_title = "$MSG_MY_COURSE - $OJ_NAME";
 
+// 教师推广奖励说明卡片显示判定：系统教师身份用 users.role='teacher'（privilege 表不一定有 rightstr='teacher' 记录）
+$_role_rows = pdo_query("SELECT `role` FROM `users` WHERE `user_id` = ? AND `defunct` = 'N' LIMIT 1", $user_id);
+$view_is_teacher = (!empty($_role_rows) && isset($_role_rows[0]['role']) && $_role_rows[0]['role'] === 'teacher')
+    || isset($_SESSION[$OJ_NAME.'_'.'administrator']);
+
 require("template/" . $OJ_TEMPLATE . "/course_my.php");
 
 if (file_exists('./include/cache_end.php'))

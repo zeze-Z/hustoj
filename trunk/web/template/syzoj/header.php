@@ -653,6 +653,7 @@
                         ?>
                         <i class="dropdown icon"></i>
                         <div class="menu">
+                                <a class="item" href="course_my.php"><i class="shopping bag icon"></i>我的课件</a>
                                 <a class="item" href="point_index.php"><i class="dollar sign icon"></i>我的积分</a>
                                 <a class="item" href="<?php echo $path_fix?>/userinfo.php?user=<?php echo $_SESSION[$OJ_NAME.'_'.'user_id']?>"><i class="user icon"></i>个人资料</a>
                                 <a class="item" href="modifypage.php"><i class="edit icon"></i><?php echo $MSG_REG_INFO;?></a>
