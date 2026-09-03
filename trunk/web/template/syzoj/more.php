@@ -3,7 +3,7 @@
 <style>
 /* 更多功能页面样式 */
 .more-page {
-    padding: 40px 0;
+    padding: 20px 0 40px;
     max-width: 1200px;
     margin: 0 auto;
 }
@@ -20,7 +20,92 @@
     font-size: 1.1rem;
     color: #666;
     text-align: center;
-    margin-bottom: 50px;
+    margin-bottom: 25px;
+}
+
+/* 一级 Tab 导航 */
+.tabs {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    border-bottom: 2px solid #e8e8e8;
+    margin-bottom: 30px;
+    padding: 0 10px;
+}
+
+.tab-item {
+    padding: 12px 24px;
+    cursor: pointer;
+    color: #666;
+    font-size: 1.05rem;
+    font-weight: 500;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    user-select: none;
+    margin-bottom: -2px;
+}
+
+.tab-item:hover {
+    color: #667eea;
+}
+
+.tab-item.active {
+    color: #667eea;
+    font-weight: 600;
+    border-bottom-color: #667eea;
+}
+
+/* Tab 面板 */
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+/* 二级 Tab（小游戏内部分类） */
+.sub-tabs {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 30px;
+    padding: 0 10px;
+}
+
+.sub-tab-item {
+    padding: 8px 20px;
+    cursor: pointer;
+    color: #666;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-radius: 20px;
+    background: #f3f4f6;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.sub-tab-item:hover {
+    color: #667eea;
+    background: #ede9fe;
+}
+
+.sub-tab-item.active {
+    color: #fff;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    font-weight: 600;
+}
+
+.sub-panel {
+    display: none;
+}
+
+.sub-panel.active {
+    display: block;
 }
 
 .section {
@@ -126,129 +211,61 @@
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 20px;
     }
+
+    .tabs {
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 4px;
+        padding-bottom: 2px;
+    }
+
+    .tab-item {
+        padding: 10px 16px;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+    }
+
+    .sub-tabs {
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 4px;
+    }
+
+    .sub-tab-item {
+        padding: 7px 16px;
+        font-size: 0.88rem;
+        flex-shrink: 0;
+    }
 }
 </style>
 
 <div class="more-page">
-    <h1 class="page-title">更多功能</h1>
-    <p class="page-subtitle">探索平台提供的丰富功能与工具</p>
-
-    <!-- 教师服务 -->
-    <div class="section">
-        <h2 class="section-title">👨‍🏫 教师服务 <span class="auth-tag tag-public">无需登录</span></h2>
-        <div class="cards-grid">
-            <a href="teacher_guide.php" class="card">
-                <div class="card-icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
-                    <svg viewBox="0 0 64 64">
-                        <path d="M32 10 L8 22 L32 34 L56 22 Z" fill="#fff"/>
-                        <rect x="12" y="33" width="40" height="5" rx="2.5" fill="#fff"/>
-                        <circle cx="32" cy="40" r="6" fill="#fff"/>
-                        <path d="M50 22 v10 a5 5 0 0 1 -5 5" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>
-                        <circle cx="43" cy="39" r="2.5" fill="#fff"/>
-                    </svg>
-                </div>
-                <div class="card-title">学生账号批量开通</div>
-                <div class="card-desc">教师专属通道：联系客服QQ，一次开通全班学生账号（适合班级/年级统一使用）</div>
-            </a>
-        </div>
+    <!-- 一级 Tab 导航 -->
+    <div class="tabs">
+        <div class="tab-item active" data-tab="games" onclick="switchTab('games')">🎮 小游戏</div>
+        <div class="tab-item" data-tab="ai" onclick="switchTab('ai')">🤖 AI</div>
+        <div class="tab-item" data-tab="coding" onclick="switchTab('coding')">💻 编程</div>
+        <div class="tab-item" data-tab="teacher" onclick="switchTab('teacher')">👨‍🏫 教师服务</div>
     </div>
 
-    <!-- AI训练 -->
-    <div class="section">
-        <h2 class="section-title">🤖 AI训练 <span class="auth-tag tag-private">需要登录</span></h2>
-        <div class="cards-grid">
-            <a href="AI_training.php?type=image" class="card">
-                <div class="card-icon" style="background: linear-gradient(135deg, #06b6d4, #3b82f6);">
-                    <svg viewBox="0 0 64 64">
-                        <rect x="12" y="12" width="40" height="40" rx="7" fill="#fff"/>
-                        <circle cx="22" cy="24" r="4" fill="rgba(0,0,0,0.28)"/>
-                        <path d="M16 44 l12 -12 7 7 6 -6 9 11 z" fill="rgba(0,0,0,0.28)"/>
-                    </svg>
-                </div>
-                <div class="card-title">图像分类</div>
-                <div class="card-desc">训练AI模型识别不同类别的图像内容</div>
-            </a>
-
-            <a href="AI_training.php?type=handpose" class="card">
-                <div class="card-icon" style="background: linear-gradient(135deg, #f97316, #f43f5e);">
-                    <svg viewBox="0 0 64 64">
-                        <rect x="14" y="20" width="8" height="24" rx="4" fill="#fff"/>
-                        <rect x="24" y="14" width="8" height="30" rx="4" fill="#fff"/>
-                        <rect x="34" y="12" width="8" height="32" rx="4" fill="#fff"/>
-                        <rect x="44" y="20" width="8" height="24" rx="4" fill="#fff"/>
-                        <path d="M14 44 h38 v2 a9 9 0 0 1 -9 9 h-20 a9 9 0 0 1 -9 -9 z" fill="#fff"/>
-                        <ellipse cx="10" cy="38" rx="4" ry="9" fill="#fff" transform="rotate(-25 10 38)"/>
-                    </svg>
-                </div>
-                <div class="card-title">手势分类</div>
-                <div class="card-desc">训练AI模型识别各种手势动作</div>
-            </a>
-
-            <!-- 三方API已下线，暂时隐藏：语音分类、图像识别、手势识别 -->
-            <!--
-            <a href="AI_training.php?type=audio" class="card">
-                <div class="card-icon">
-                    <i class="microphone icon"></i>
-                </div>
-                <div class="card-title">语音分类</div>
-                <div class="card-desc">训练AI模型识别不同的语音特征</div>
-            </a>
-
-            <a href="AI_training.php?type=recognition" class="card">
-                <div class="card-icon">
-                    <i class="eye icon"></i>
-                </div>
-                <div class="card-title">图像识别</div>
-                <div class="card-desc">体验先进的图像识别与分析技术</div>
-            </a>
-
-            <a href="AI_training.php?type=gesture" class="card">
-                <div class="card-icon">
-                    <i class="hand rock icon"></i>
-                </div>
-                <div class="card-title">手势识别</div>
-                <div class="card-desc">实时识别手势动作，体验交互乐趣</div>
-            </a>
-            -->
+    <!-- ============ 小游戏 Tab ============ -->
+    <div class="tab-panel active" id="panel-games">
+        <!-- 二级 Tab -->
+        <div class="sub-tabs">
+            <div class="sub-tab-item active" data-subtab="lower" onclick="switchSubTab('lower')">🎒 低年级专区（1-3年级）</div>
+            <div class="sub-tab-item" data-subtab="upper" onclick="switchSubTab('upper')">📚 高年级专区（4-6年级）</div>
+            <div class="sub-tab-item" data-subtab="typing" onclick="switchSubTab('typing')">⌨️ 打字练习</div>
         </div>
-    </div>
 
-    <!-- AI体验 -->
-    <div class="section">
-        <h2 class="section-title">✨ AI体验 <span class="auth-tag tag-public">无需登录</span></h2>
-        <div class="cards-grid">
-            <a href="javascript:openAIExperience()" class="card">
-                <div class="card-icon" style="background: linear-gradient(135deg, #8b5cf6, #d946ef);">
-                    <svg viewBox="0 0 64 64">
-                        <rect x="30" y="6" width="4" height="12" fill="#fff"/>
-                        <circle cx="32" cy="4" r="3" fill="#fff"/>
-                        <rect x="13" y="18" width="38" height="32" rx="10" fill="#fff"/>
-                        <circle cx="25" cy="32" r="4.5" fill="rgba(0,0,0,0.35)"/>
-                        <circle cx="39" cy="32" r="4.5" fill="rgba(0,0,0,0.35)"/>
-                        <rect x="25" y="43" width="14" height="3.5" rx="1.75" fill="rgba(0,0,0,0.35)"/>
-                    </svg>
-                </div>
-                <div class="card-title">AI进阶</div>
-                <div class="card-desc">体验前沿大语言模型的强大能力</div>
-            </a>
-
-            <a href="ai_drawing_game.php" class="card">
-                <div class="card-icon" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">
-                    <svg viewBox="0 0 64 64">
-                        <rect x="26" y="14" width="12" height="30" rx="5" fill="#fff"/>
-                        <path d="M26 16 l-4 -4 a10 10 0 0 1 12 -12 l4 4 a8 8 0 0 1 -4 8 q-4 4 -8 4 z" fill="#fff"/>
-                        <path d="M50 8 l2.5 5 5 2.5 -5 2.5 -2.5 5 -2.5 -5 -5 -2.5 5 -2.5 z" fill="#fff"/>
-                    </svg>
-                </div>
-                <div class="card-title">AI猜猜画</div>
-                <div class="card-desc">画图让AI识别，认识人工智能（适合1-6年级）</div>
-            </a>
-        </div>
-    </div>
-
-    <!-- 低年级专区（1-3年级） -->
-    <div class="section">
-        <h2 class="section-title">🎒 低年级专区（1-3年级） <span class="auth-tag tag-public">无需登录</span></h2>
+        <!-- 二级面板：低年级专区 -->
+        <div class="sub-panel active" id="subpanel-lower">
+        <!-- 低年级专区（1-3年级） -->
+        <div class="section">
+            <h2 class="section-title">🎒 低年级专区（1-3年级） <span class="auth-tag tag-public">无需登录</span></h2>
         <div class="cards-grid">
             <a href="color_match.php" class="card">
                 <div class="card-icon" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">
@@ -352,7 +369,10 @@
 
         </div>
     </div>
+        </div><!-- /subpanel-lower -->
 
+        <!-- 二级面板：高年级专区 -->
+        <div class="sub-panel" id="subpanel-upper">
     <!-- 高年级专区（4-6年级） -->
     <div class="section">
         <h2 class="section-title">📚 高年级专区（4-6年级） <span class="auth-tag tag-private">需要登录</span></h2>
@@ -445,7 +465,10 @@
             </a>
         </div>
     </div>
+        </div><!-- /subpanel-upper -->
 
+        <!-- 二级面板：打字练习 -->
+        <div class="sub-panel" id="subpanel-typing">
     <!-- 打字练习 -->
     <div class="section">
         <h2 class="section-title">⌨️ 打字练习 <span class="auth-tag tag-private">需要登录</span></h2>
@@ -507,7 +530,107 @@
             </a>
         </div>
     </div>
+        </div><!-- /subpanel-typing -->
+    </div><!-- /panel-games -->
 
+    <!-- ============ AI Tab ============ -->
+    <div class="tab-panel" id="panel-ai">
+    <!-- AI训练 -->
+    <div class="section">
+        <h2 class="section-title">🤖 AI训练 <span class="auth-tag tag-private">需要登录</span></h2>
+        <div class="cards-grid">
+            <a href="AI_training.php?type=image" class="card">
+                <div class="card-icon" style="background: linear-gradient(135deg, #06b6d4, #3b82f6);">
+                    <svg viewBox="0 0 64 64">
+                        <rect x="12" y="12" width="40" height="40" rx="7" fill="#fff"/>
+                        <circle cx="22" cy="24" r="4" fill="rgba(0,0,0,0.28)"/>
+                        <path d="M16 44 l12 -12 7 7 6 -6 9 11 z" fill="rgba(0,0,0,0.28)"/>
+                    </svg>
+                </div>
+                <div class="card-title">图像分类</div>
+                <div class="card-desc">训练AI模型识别不同类别的图像内容</div>
+            </a>
+
+            <a href="AI_training.php?type=handpose" class="card">
+                <div class="card-icon" style="background: linear-gradient(135deg, #f97316, #f43f5e);">
+                    <svg viewBox="0 0 64 64">
+                        <rect x="14" y="20" width="8" height="24" rx="4" fill="#fff"/>
+                        <rect x="24" y="14" width="8" height="30" rx="4" fill="#fff"/>
+                        <rect x="34" y="12" width="8" height="32" rx="4" fill="#fff"/>
+                        <rect x="44" y="20" width="8" height="24" rx="4" fill="#fff"/>
+                        <path d="M14 44 h38 v2 a9 9 0 0 1 -9 9 h-20 a9 9 0 0 1 -9 -9 z" fill="#fff"/>
+                        <ellipse cx="10" cy="38" rx="4" ry="9" fill="#fff" transform="rotate(-25 10 38)"/>
+                    </svg>
+                </div>
+                <div class="card-title">手势分类</div>
+                <div class="card-desc">训练AI模型识别各种手势动作</div>
+            </a>
+
+            <!-- 三方API已下线，暂时隐藏：语音分类、图像识别、手势识别 -->
+            <!--
+            <a href="AI_training.php?type=audio" class="card">
+                <div class="card-icon">
+                    <i class="microphone icon"></i>
+                </div>
+                <div class="card-title">语音分类</div>
+                <div class="card-desc">训练AI模型识别不同的语音特征</div>
+            </a>
+
+            <a href="AI_training.php?type=recognition" class="card">
+                <div class="card-icon">
+                    <i class="eye icon"></i>
+                </div>
+                <div class="card-title">图像识别</div>
+                <div class="card-desc">体验先进的图像识别与分析技术</div>
+            </a>
+
+            <a href="AI_training.php?type=gesture" class="card">
+                <div class="card-icon">
+                    <i class="hand rock icon"></i>
+                </div>
+                <div class="card-title">手势识别</div>
+                <div class="card-desc">实时识别手势动作，体验交互乐趣</div>
+            </a>
+            -->
+        </div>
+    </div>
+
+    <!-- AI体验 -->
+    <div class="section">
+        <h2 class="section-title">✨ AI体验 <span class="auth-tag tag-public">无需登录</span></h2>
+        <div class="cards-grid">
+            <a href="javascript:openAIExperience()" class="card">
+                <div class="card-icon" style="background: linear-gradient(135deg, #8b5cf6, #d946ef);">
+                    <svg viewBox="0 0 64 64">
+                        <rect x="30" y="6" width="4" height="12" fill="#fff"/>
+                        <circle cx="32" cy="4" r="3" fill="#fff"/>
+                        <rect x="13" y="18" width="38" height="32" rx="10" fill="#fff"/>
+                        <circle cx="25" cy="32" r="4.5" fill="rgba(0,0,0,0.35)"/>
+                        <circle cx="39" cy="32" r="4.5" fill="rgba(0,0,0,0.35)"/>
+                        <rect x="25" y="43" width="14" height="3.5" rx="1.75" fill="rgba(0,0,0,0.35)"/>
+                    </svg>
+                </div>
+                <div class="card-title">AI进阶</div>
+                <div class="card-desc">体验前沿大语言模型的强大能力</div>
+            </a>
+
+            <a href="ai_drawing_game.php" class="card">
+                <div class="card-icon" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">
+                    <svg viewBox="0 0 64 64">
+                        <rect x="26" y="14" width="12" height="30" rx="5" fill="#fff"/>
+                        <path d="M26 16 l-4 -4 a10 10 0 0 1 12 -12 l4 4 a8 8 0 0 1 -4 8 q-4 4 -8 4 z" fill="#fff"/>
+                        <path d="M50 8 l2.5 5 5 2.5 -5 2.5 -2.5 5 -2.5 -5 -5 -2.5 5 -2.5 z" fill="#fff"/>
+                    </svg>
+                </div>
+                <div class="card-title">AI猜猜画</div>
+                <div class="card-desc">画图让AI识别，认识人工智能（适合1-6年级）</div>
+            </a>
+        </div>
+    </div>
+    </div><!-- /panel-ai -->
+
+    <!-- ============ 编程 Tab ============ -->
+    <div class="tab-panel" id="panel-coding">
     <!-- 编程学习 -->
     <div class="section">
         <h2 class="section-title">💻 编程学习 <span class="auth-tag tag-private">需要登录</span></h2>
@@ -554,6 +677,30 @@
             -->
         </div>
     </div>
+    </div><!-- /panel-coding -->
+
+    <!-- ============ 教师服务 Tab ============ -->
+    <div class="tab-panel" id="panel-teacher">
+    <!-- 教师服务 -->
+    <div class="section">
+        <h2 class="section-title">👨‍🏫 教师服务 <span class="auth-tag tag-public">无需登录</span></h2>
+        <div class="cards-grid">
+            <a href="teacher_guide.php" class="card">
+                <div class="card-icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                    <svg viewBox="0 0 64 64">
+                        <path d="M32 10 L8 22 L32 34 L56 22 Z" fill="#fff"/>
+                        <rect x="12" y="33" width="40" height="5" rx="2.5" fill="#fff"/>
+                        <circle cx="32" cy="40" r="6" fill="#fff"/>
+                        <path d="M50 22 v10 a5 5 0 0 1 -5 5" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>
+                        <circle cx="43" cy="39" r="2.5" fill="#fff"/>
+                    </svg>
+                </div>
+                <div class="card-title">学生账号批量开通</div>
+                <div class="card-desc">教师专属通道：联系客服QQ，一次开通全班学生账号（适合班级/年级统一使用）</div>
+            </a>
+        </div>
+    </div>
+    </div><!-- /panel-teacher -->
 </div>
 
 <script>
@@ -561,6 +708,47 @@
 function openAIExperience() {
     window.open('https://yiyan.baidu.com/', '_blank');
 }
+
+// ===== Tab 切换逻辑 =====
+// 一级 Tab 切换
+function switchTab(tabName) {
+    // 切换一级 Tab 高亮
+    document.querySelectorAll('.tabs .tab-item').forEach(function(el) {
+        el.classList.toggle('active', el.getAttribute('data-tab') === tabName);
+    });
+    // 切换一级面板显示
+    document.querySelectorAll('.tab-panel').forEach(function(el) {
+        el.classList.toggle('active', el.id === 'panel-' + tabName);
+    });
+    // 切换到小游戏时，默认显示低年级子 Tab
+    if (tabName === 'games') {
+        switchSubTab('lower');
+    }
+    // 更新 URL hash，便于直链与刷新保持
+    if (history.replaceState) {
+        history.replaceState(null, '', '#' + tabName);
+    }
+}
+
+// 二级 Tab 切换（仅小游戏面板内）
+function switchSubTab(subName) {
+    var gamesPanel = document.getElementById('panel-games');
+    if (!gamesPanel) return;
+    gamesPanel.querySelectorAll('.sub-tabs .sub-tab-item').forEach(function(el) {
+        el.classList.toggle('active', el.getAttribute('data-subtab') === subName);
+    });
+    gamesPanel.querySelectorAll('.sub-panel').forEach(function(el) {
+        el.classList.toggle('active', el.id === 'subpanel-' + subName);
+    });
+}
+
+// 页面加载时根据 URL hash 定位 Tab，默认小游戏
+(function() {
+    var validTabs = ['games', 'ai', 'coding', 'teacher'];
+    var hash = (window.location.hash || '').replace('#', '');
+    var initTab = validTabs.indexOf(hash) >= 0 ? hash : 'games';
+    switchTab(initTab);
+})();
 </script>
 
 <?php require("footer.php"); ?>

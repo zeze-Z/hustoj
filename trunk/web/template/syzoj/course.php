@@ -158,13 +158,9 @@
                   <a href="course_info.php?id=<?php echo $course['id']; ?>" class="ui small positive button">
                     <i class="check icon"></i>已拥有
                   </a>
-                <?php elseif ($is_free): ?>
-                  <a href="course_info.php?id=<?php echo $course['id']; ?>" class="ui small green button">
-                    <i class="gift icon"></i>限时免费获取
-                  </a>
                 <?php else: ?>
                   <a href="course_info.php?id=<?php echo $course['id']; ?>" class="ui small primary button">
-                    <i class="shopping cart icon"></i>购买
+                    去查看
                   </a>
                 <?php endif; ?>
               </div>
