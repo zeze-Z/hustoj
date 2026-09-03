@@ -2,7 +2,7 @@
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 
 <style>
-/* ===== 统一游戏基础样式 ===== */
+/* ===== 序列记忆 sm- ===== */
 * {
     margin: 0;
     padding: 0;
@@ -11,231 +11,376 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: #f0f2f5;
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
+/* 背景装饰层 */
+.sm-bg-decor {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+        radial-gradient(circle at 1px 1px, rgba(139, 92, 246, 0.08) 1px, transparent 0) 0 0/22px 22px,
+        linear-gradient(135deg, #f5f0ff 0%, #fdf2ff 50%, #fff5f0 100%);
+    overflow: hidden;
+}
+.sm-bg-decor::before,
+.sm-bg-decor::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.5;
+    animation: sm-float-blob 8s ease-in-out infinite;
+}
+.sm-bg-decor::before {
+    width: 320px;
+    height: 320px;
+    background: radial-gradient(circle, #8b5cf6, transparent 70%);
+    top: -80px;
+    left: -60px;
+}
+.sm-bg-decor::after {
+    width: 360px;
+    height: 360px;
+    background: radial-gradient(circle, #ec4899, transparent 70%);
+    bottom: -100px;
+    right: -80px;
+    animation-delay: -4s;
+}
+@keyframes sm-float-blob {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, 20px) scale(1.1); }
+}
+
+/* 外层 wrapper：靠上居中（不占满 100vh，避免与 header 叠加把内容推出视口） */
+.sm-wrap {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* 主容器：玻璃拟态 */
 .game-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    background: #fff;
-    border-radius: 20px;
-    padding: 2rem;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    width: 100%;
+    max-width: 560px;
+    margin: clamp(0.6rem, 2vh, 1.2rem) auto;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: clamp(18px, 3vw, 30px);
+    padding: clamp(1.2rem, 3vh, 2.2rem) clamp(1.2rem, 3vw, 2rem);
+    box-shadow: 0 20px 60px rgba(139, 92, 246, 0.12), 0 4px 20px rgba(236, 72, 153, 0.08);
     text-align: center;
     position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.5rem, 1.5vh, 1rem);
+    max-height: calc(100dvh - 70px);   /* 扣掉 header 高度，避免内容被推出视口 */
+    overflow-y: auto;
 }
 
+/* 容器顶部彩虹条 */
+.game-container::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #8b5cf6, #ec4899, #f59e0b, #8b5cf6);
+    background-size: 300% 100%;
+    animation: sm-gradient-shift 6s linear infinite;
+}
+@keyframes sm-gradient-shift {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+}
+
+/* 标题 */
 .game-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #9B59B6;
-    margin-bottom: 0.5rem;
+    font-size: clamp(1.5rem, 4.5vw, 2.3rem);
+    font-weight: 800;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 50%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    filter: drop-shadow(0 2px 8px rgba(139, 92, 246, 0.25));
+}
+.game-title::after {
+    content: "";
+    display: block;
+    width: 56px;
+    height: 4px;
+    margin: 6px auto 0;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #8b5cf6, #ec4899);
 }
 
 .game-subtitle {
-    font-size: 1rem;
-    color: #666;
-    margin-bottom: 1.5rem;
-}
-
-.stats-bar {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-}
-
-.stat-item {
-    background: #F3E8FF;
-    border-radius: 12px;
-    padding: 12px 24px;
-    min-width: 100px;
-}
-
-.stat-label {
-    font-size: 0.8rem;
-    color: #888;
-    display: block;
-    margin-bottom: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.stat-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #9B59B6;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #9B59B6, #8A45A5);
-    border: none;
-    border-radius: 12px;
-    padding: 12px 32px;
-    color: #fff;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px #9B59B633;
-    margin: 0.5rem;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px #9B59B644;
-}
-
-.btn-primary:active {
-    transform: translateY(0);
-}
-
-.btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* 序列记忆特有样式 */
-.instruction {
-    color: #666;
-    margin-bottom: 1.5rem;
-    font-size: 1rem;
+    font-size: clamp(0.75rem, 2vw, 0.95rem);
+    color: #6b7280;
     line-height: 1.6;
 }
 
+/* 统计栏 */
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(6px, 1.5vw, 10px);
+    width: 100%;
+    flex-shrink: 0;
+}
+.stat-item {
+    background: linear-gradient(135deg, #ffffff, #faf5ff);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    border-radius: clamp(12px, 2vw, 16px);
+    padding: clamp(6px, 1.4vh, 12px) clamp(6px, 1.5vw, 12px);
+    box-shadow: 0 2px 10px rgba(139, 92, 246, 0.06);
+}
+.stat-item:nth-child(1) { border-top: 3px solid #8b5cf6; }
+.stat-item:nth-child(2) { border-top: 3px solid #ec4899; }
+.stat-item:nth-child(3) { border-top: 3px solid #f59e0b; }
+
+.stat-icon { font-size: 1rem; display: block; }
+.stat-label {
+    font-size: clamp(0.55rem, 1.6vw, 0.7rem);
+    color: #9ca3af;
+    display: block;
+    margin: 2px 0 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.stat-value {
+    font-size: clamp(1rem, 3vw, 1.4rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+}
+.stat-value.stat-bounce { animation: sm-stat-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes sm-stat-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+}
+
+/* 状态提示 */
+.instruction {
+    color: #6b7280;
+    font-size: clamp(0.8rem, 2.2vw, 1rem);
+    font-weight: 600;
+    min-height: 1.4em;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+.instruction.show-feedback {
+    transform: scale(1);
+    animation: sm-feedback-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.instruction.sm-success { color: #16a34a; }
+.instruction.sm-error { color: #ef4444; }
+.instruction.sm-watch { color: #8b5cf6; }
+@keyframes sm-feedback-in {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* 游戏板 2x2 网格 */
 .game-board {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 30px;
-    aspect-ratio: 1/1;
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
+    grid-template-rows: 1fr 1fr;
+    gap: clamp(12px, 2.5vw, 20px);
+    width: 100%;
+    max-width: min(300px, 38dvh);   /* 按视口高度限制，避免矮屏挤掉按钮 */
+    aspect-ratio: 1 / 1;
+    flex-shrink: 0;
 }
 
 .color-button {
     border: none;
-    border-radius: 30px;
+    border-radius: clamp(18px, 3vw, 30px);
     cursor: pointer;
     transition: all 0.2s ease;
-    opacity: 0.6;
+    opacity: 0.55;
     position: relative;
     overflow: hidden;
+    box-shadow: inset 0 -4px 12px rgba(0, 0, 0, 0.15);
 }
-
 .color-button::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 30px;
+    inset: 0;
+    border-radius: inherit;
     box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
     opacity: 0;
     transition: opacity 0.2s ease;
 }
-
 .color-button.active {
     opacity: 1;
-    transform: scale(0.95);
+    transform: scale(0.94);
+    box-shadow: 0 0 30px currentColor, inset 0 -4px 12px rgba(0, 0, 0, 0.15);
 }
+.color-button.active::before { opacity: 1; }
+.color-button:active { transform: scale(0.94); }
+.color-button:disabled { cursor: not-allowed; }
+.color-button:not(:disabled):hover { opacity: 0.85; }
 
-.color-button.active::before {
-    opacity: 1;
+.red    { background-color: #ef4444; color: #ef4444; }
+.yellow { background-color: #f59e0b; color: #f59e0b; }
+.blue   { background-color: #3b82f6; color: #3b82f6; }
+.green  { background-color: #22c55e; color: #22c55e; }
+
+/* 主按钮 */
+.btn-primary {
+    border: none;
+    border-radius: 999px;
+    padding: clamp(10px, 2vh, 14px) clamp(24px, 5vw, 36px);
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    color: #fff;
+    font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 22px rgba(139, 92, 246, 0.4);
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
 }
-
-.color-button:active {
-    transform: scale(0.95);
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(139, 92, 246, 0.5);
 }
-
-.color-button:disabled {
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled {
+    opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
+}
+.btn-primary .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: scale(0);
+    animation: sm-ripple-anim 0.6s linear;
+    pointer-events: none;
+}
+@keyframes sm-ripple-anim {
+    to { transform: scale(4); opacity: 0; }
 }
 
-.red { background-color: #e74c3c; }
-.yellow { background-color: #f1c40f; }
-.blue { background-color: #3498db; }
-.green { background-color: #2ecc71; }
+/* 次级按钮 */
+.btn-secondary {
+    border-radius: 999px;
+    padding: clamp(10px, 2vh, 14px) clamp(24px, 5vw, 36px);
+    background: #fff;
+    color: #7c3aed;
+    border: 2px solid rgba(139, 92, 246, 0.35);
+    font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.1);
+}
+.btn-secondary:hover {
+    background: #faf5ff;
+    transform: translateY(-2px);
+}
+
+.hidden { display: none !important; }
 
 /* 游戏结束 overlay */
 .game-over {
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
+    width: 100%;
+    height: 100%;
     display: none;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 100000;
 }
+.game-over.show { display: flex; }
 
 .game-over-content {
-    background: #fff;
-    border-radius: 20px;
-    padding: 2.5rem;
+    background: linear-gradient(160deg, #ffffff, #faf5ff);
+    border-radius: 30px;
+    padding: clamp(1.8rem, 4vh, 2.5rem);
     text-align: center;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-    max-width: 400px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(139, 92, 246, 0.1);
+    max-width: 380px;
     width: 90%;
+    margin: auto;
+    position: relative;
+    overflow: hidden;
+    animation: sm-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
+.game-over-content::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #8b5cf6, #ec4899, #f59e0b);
+}
+@keyframes sm-pop-in {
+    0% { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
 .game-over-content h2 {
-    font-size: 1.8rem;
-    color: #9B59B6;
-    margin-bottom: 1rem;
+    font-size: clamp(1.4rem, 4vw, 1.8rem);
+    font-weight: 800;
+    margin-bottom: 0.8rem;
+    background: linear-gradient(135deg, #8b5cf6, #ec4899, #f59e0b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
 }
-
 .game-over-content p {
-    font-size: 1.1rem;
-    color: #555;
-    margin-bottom: 0.5rem;
+    font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+    color: #6b7280;
+    margin-bottom: 0.4rem;
 }
-
 .game-over-content .final-score {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin: 20px 0;
-    color: #9B59B6;
+    font-size: clamp(1.1rem, 3vw, 1.4rem);
+    font-weight: 800;
+    margin: 16px 0 20px;
+    line-height: 1.6;
+}
+.game-over-content .final-score span {
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
 }
 
-@media (max-width: 768px) {
-    .game-container {
-        margin: 1rem;
-        padding: 1.5rem;
-        border-radius: 16px;
-    }
-    .game-title {
-        font-size: 1.6rem;
-    }
-    .stats-bar {
-        gap: 8px;
-    }
-    .stat-item {
-        padding: 10px 16px;
-        min-width: 80px;
-    }
-    .stat-value {
-        font-size: 1.2rem;
-    }
-    .game-board {
-        gap: 15px;
-        max-width: 350px;
-    }
+@media (max-width: 480px), (max-height: 700px) {
+    .game-subtitle { display: none; }
+    .stat-icon { font-size: 0.8rem; }
+    .stat-label { font-size: 0.55rem; }
+    .stat-value { font-size: 1rem; }
+    .game-board { max-width: min(240px, 38dvh); }
+    .game-container { padding: clamp(0.8rem, 2vh, 1.2rem) clamp(0.8rem, 3vw, 1rem); gap: clamp(0.4rem, 1vh, 0.7rem); }
 }
 </style>
 
+<div class="sm-bg-decor"></div>
+<div class="sm-wrap">
 <div class="game-container">
     <h1 class="game-title">🧠 序列记忆</h1>
     <p class="game-subtitle">
@@ -244,18 +389,23 @@ body {
     </p>
     <div class="stats-bar">
         <div class="stat-item">
+            <span class="stat-icon">🏆</span>
             <span class="stat-label">关卡</span>
             <span class="stat-value" id="level">1</span>
         </div>
         <div class="stat-item">
+            <span class="stat-icon">⭐</span>
             <span class="stat-label">得分</span>
             <span class="stat-value" id="score">0</span>
         </div>
         <div class="stat-item">
+            <span class="stat-icon">👑</span>
             <span class="stat-label">最高记录</span>
             <span class="stat-value" id="high-score">0</span>
         </div>
     </div>
+
+    <div class="instruction" id="instruction">点击「开始游戏」开始挑战</div>
 
     <div class="game-board">
         <button class="color-button red" data-color="red" disabled></button>
@@ -266,6 +416,7 @@ body {
 
     <button id="start-button" class="btn-primary">开始游戏</button>
 </div>
+</div>
 
 <div class="game-over" id="game-over-modal">
     <div class="game-over-content">
@@ -275,9 +426,12 @@ body {
             最终得分: <span id="final-score">0</span><br>
             达到关卡: <span id="final-level">1</span>
         </div>
-        <button class="btn-primary" id="play-again-button">再来一局</button>
+        <button class="btn-secondary" id="play-again-button">再来一局</button>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/game_confetti.js"></script>
 
 <script>
 const colors = ['red', 'yellow', 'blue', 'green'];
@@ -291,6 +445,7 @@ let isPlayingSequence = false;
 const levelEl = document.getElementById('level');
 const scoreEl = document.getElementById('score');
 const highScoreEl = document.getElementById('high-score');
+const instructionEl = document.getElementById('instruction');
 const startButton = document.getElementById('start-button');
 const colorButtons = document.querySelectorAll('.color-button');
 const gameOverModal = document.getElementById('game-over-modal');
@@ -304,23 +459,57 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/* 统计数字 bounce 动效 */
+function bounceStat(el) {
+    el.classList.remove('stat-bounce');
+    void el.offsetWidth;
+    el.classList.add('stat-bounce');
+    el.addEventListener('animationend', () => el.classList.remove('stat-bounce'), { once: true });
+}
+
+/* 反馈提示弹入 */
+function showInstruction(text, type) {
+    instructionEl.textContent = text;
+    instructionEl.classList.remove('show-feedback', 'sm-success', 'sm-error', 'sm-watch');
+    void instructionEl.offsetWidth;
+    instructionEl.classList.add('show-feedback');
+    if (type) instructionEl.classList.add('sm-' + type);
+}
+
+/* 按钮波纹 */
+function addRipple(button, e) {
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    const rect = button.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+    button.appendChild(ripple);
+    ripple.addEventListener('animationend', () => ripple.remove());
+}
+
 async function playSequence() {
     isPlayingSequence = true;
     disableButtons();
-    
+    showInstruction('仔细看灯亮顺序 👀', 'watch');
+
+    await sleep(700);
+
     for (let i = 0; i < sequence.length; i++) {
         const color = sequence[i];
         const button = document.querySelector(`[data-color="${color}"]`);
-        
+
         button.classList.add('active');
         await sleep(600);
         button.classList.remove('active');
         await sleep(400);
     }
-    
+
     isPlayingSequence = false;
     enableButtons();
     playerSequence = [];
+    showInstruction('轮到你了！按顺序点击 👇', 'success');
 }
 
 function addToSequence() {
@@ -334,11 +523,10 @@ function startGame() {
     level = 1;
     score = 0;
     updateStats();
-    
+
     startButton.disabled = true;
     startButton.textContent = '游戏进行中...';
-    
-    // Start with 2 colors on level 1 for more challenge
+
     for (let i = 0; i < 2; i++) {
         addToSequence();
     }
@@ -346,11 +534,16 @@ function startGame() {
 }
 
 function updateStats() {
+    const oldLevel = parseInt(levelEl.textContent);
+    const oldScore = parseInt(scoreEl.textContent);
     levelEl.textContent = level;
     scoreEl.textContent = score;
+    if (level !== oldLevel) bounceStat(levelEl);
+    if (score !== oldScore) bounceStat(scoreEl);
     if (score > highScore) {
         highScore = score;
         highScoreEl.textContent = highScore;
+        bounceStat(highScoreEl);
         localStorage.setItem('sequenceMemoryHighScore', highScore);
     }
 }
@@ -369,36 +562,37 @@ function enableButtons() {
 
 async function handleButtonClick(e) {
     if (isPlayingSequence) return;
-    
-    const color = e.target.dataset.color;
-    const button = e.target;
-    
+
+    const color = e.currentTarget.dataset.color;
+    const button = e.currentTarget;
+
     button.classList.add('active');
     await sleep(200);
     button.classList.remove('active');
-    
+
     playerSequence.push(color);
     checkAnswer();
 }
 
 function checkAnswer() {
     const currentIndex = playerSequence.length - 1;
-    
+
     if (playerSequence[currentIndex] !== sequence[currentIndex]) {
+        showInstruction('错了！游戏结束 ❌', 'error');
         gameOver();
         return;
     }
-    
+
     score += 10;
     updateStats();
-    
+
     if (playerSequence.length === sequence.length) {
         disableButtons();
+        showInstruction('正确！进入下一关 🎉', 'success');
         setTimeout(() => {
             level++;
             score += level * 5;
             updateStats();
-            // Add 1-2 new colors per level for more variety
             const newColors = Math.random() > 0.7 ? 2 : 1;
             for (let i = 0; i < newColors; i++) {
                 addToSequence();
@@ -408,17 +602,28 @@ function checkAnswer() {
     }
 }
 
+/* 通关礼花：从屏幕中心绽开（弹窗居中，中心即屏幕中心，不依赖弹窗元素位置避免布局时序问题） */
+function launchConfettiFromCard() {
+    if (typeof confetti !== 'function') return;
+    const center = { x: 0.5, y: 0.5 };
+    confetti({ particleCount: 100, spread: 80, startVelocity: 45, origin: center, colors: ['#8b5cf6', '#ec4899', '#f59e0b', '#22c55e', '#3b82f6'] });
+    setTimeout(() => confetti({ particleCount: 70, angle: 60, spread: 60, origin: { x: 0.2, y: 0.6 } }), 150);
+    setTimeout(() => confetti({ particleCount: 70, angle: 120, spread: 60, origin: { x: 0.8, y: 0.6 } }), 300);
+}
+
 function gameOver() {
     disableButtons();
     finalScoreEl.textContent = score;
     finalLevelEl.textContent = level;
-    gameOverModal.style.display = 'flex';
+    /* 弹窗和礼花在同一帧出现 */
+    gameOverModal.classList.add('show');
+    requestAnimationFrame(() => launchConfettiFromCard());
     startButton.disabled = false;
     startButton.textContent = '开始游戏';
 }
 
 function resetGame() {
-    gameOverModal.style.display = 'none';
+    gameOverModal.classList.remove('show');
     startGame();
 }
 
@@ -426,7 +631,7 @@ colorButtons.forEach(button => {
     button.addEventListener('click', handleButtonClick);
 });
 
-startButton.addEventListener('click', startGame);
+startButton.addEventListener('click', (e) => { addRipple(startButton, e); startGame(); });
 playAgainButton.addEventListener('click', resetGame);
 </script>
 

@@ -6,7 +6,7 @@
 
 <div class="padding">
 <style>
-/* ===== 统一游戏基础样式 ===== */
+/* ===== 统一游戏基础样式（mtg- = math_game）===== */
 * {
     margin: 0;
     padding: 0;
@@ -15,236 +15,460 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: #f0f2f5;
     min-height: 100vh;
+    min-height: 100dvh;
+}
+
+/* 游戏外层 wrapper：占满视口高度，内部 flex 靠上 */
+.mtg-wrap {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* 活泼的渐变背景 + 浮动装饰 + 点纹 */
+.mtg-bg-decor {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+        radial-gradient(circle at 1px 1px, rgba(139,92,246,0.10) 1px, transparent 0) 0 0/22px 22px,
+        linear-gradient(135deg, #f5f3ff 0%, #eef2ff 50%, #f5f3ff 100%);
+    overflow: hidden;
+}
+.mtg-bg-decor::before,
+.mtg-bg-decor::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.5;
+}
+.mtg-bg-decor::before {
+    width: 360px; height: 360px;
+    background: radial-gradient(circle, #c4b5fd, transparent 70%);
+    top: -90px; left: -70px;
+    animation: mtg-float-blob 8s ease-in-out infinite;
+}
+.mtg-bg-decor::after {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, #fcd34d, transparent 70%);
+    bottom: -110px; right: -90px;
+    animation: mtg-float-blob 10s ease-in-out infinite reverse;
+}
+@keyframes mtg-float-blob {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(20px, 30px) scale(1.1); }
 }
 
 .game-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    background: #fff;
-    border-radius: 20px;
-    padding: 2rem;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: clamp(18px, 3vw, 30px);
+    padding: clamp(1.2rem, 3vh, 2.2rem) clamp(1.2rem, 3vw, 2rem);
+    box-shadow:
+        0 24px 70px rgba(139, 92, 246, 0.15),
+        0 8px 24px rgba(245, 158, 11, 0.08),
+        0 2px 8px rgba(0,0,0,0.04),
+        inset 0 1px 0 rgba(255,255,255,0.9);
     text-align: center;
     position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.6rem, 1.6vh, 1.1rem);
+    max-height: 100dvh;
+    overflow-y: auto;
+}
+.game-container::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #8b5cf6, #6366f1, #f59e0b, #8b5cf6);
+    background-size: 300% 100%;
+    animation: mtg-gradient-shift 6s linear infinite;
+}
+@keyframes mtg-gradient-shift {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+}
+
+.game-header {
+    flex-shrink: 0;
 }
 
 .game-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #27AE60;
-    margin-bottom: 0.5rem;
+    font-size: clamp(1.6rem, 4.5vw, 2.3rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.5px;
+    line-height: 1.1;
+    filter: drop-shadow(0 2px 8px rgba(139,92,246,0.25));
+}
+/* 标题里的 SVG 图标：行内对齐、跟随标题渐变、统一渲染（替代平台差异大的 🧮 emoji） */
+.game-title .title-icon {
+    display: inline-block;
+    width: 1.05em;
+    height: 1.05em;
+    vertical-align: -0.12em;
+    margin-right: 0.1em;
+    filter: drop-shadow(0 2px 6px rgba(139,92,246,0.4));
+    animation: mtg-icon-float 3s ease-in-out infinite;
+}
+@keyframes mtg-icon-float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-3px) rotate(-4deg); }
+}
+/* 标题下装饰线 */
+.game-title::after {
+    content: "";
+    display: block;
+    width: 60px;
+    height: 4px;
+    margin: 8px auto 0;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #8b5cf6, #f59e0b);
 }
 
 .game-subtitle {
-    font-size: 1rem;
-    color: #666;
-    margin-bottom: 1.5rem;
+    font-size: clamp(0.85rem, 2vw, 1.05rem);
+    color: #64748b;
 }
 
+/* 难度徽章（按关卡自动切换，非按钮） */
+.difficulty-badge {
+    display: inline-block;
+    padding: clamp(7px, 1.8vh, 10px) clamp(18px, 3.5vw, 26px);
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: clamp(0.85rem, 2.2vw, 1rem);
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 14px rgba(139,92,246,0.18);
+}
+.difficulty-easy {
+    background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+    color: #6d28d9;
+    border: 2px solid #c4b5fd;
+}
+.difficulty-normal {
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    color: #fff;
+    border: 2px solid transparent;
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+}
+/* 困难档用暖色对比（红/橙）区分 */
+.difficulty-hard {
+    background: linear-gradient(135deg, #ef4444, #f59e0b);
+    color: #fff;
+    border: 2px solid transparent;
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35);
+}
+
+/* 统计栏 */
 .stats-bar {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(6px, 1.5vw, 10px);
+    width: 100%;
+    flex-shrink: 0;
 }
 
 .stat-item {
-    background: #E8F8F0;
-    border-radius: 12px;
-    padding: 12px 24px;
-    min-width: 100px;
+    background: linear-gradient(135deg, #ffffff, #f5f3ff);
+    border: 1px solid #ede9fe;
+    border-radius: clamp(12px, 2vw, 16px);
+    padding: clamp(8px, 1.8vh, 12px) clamp(4px, 1vw, 8px);
+    min-width: 0;
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 10px rgba(139,92,246,0.06);
+}
+.stat-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(139, 92, 246, 0.16);
+}
+.stat-item:nth-child(1) { border-top: 3px solid #8b5cf6; }
+.stat-item:nth-child(2) { border-top: 3px solid #6366f1; }
+.stat-item:nth-child(3) { border-top: 3px solid #f59e0b; }
+.stat-item:nth-child(4) { border-top: 3px solid #ef4444; }
+
+.stat-icon {
+    font-size: clamp(1rem, 2.6vh, 1.3rem);
+    display: block;
+    margin-bottom: 2px;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.08));
 }
 
 .stat-label {
-    font-size: 0.8rem;
-    color: #888;
+    font-size: clamp(0.6rem, 1.6vw, 0.74rem);
+    color: #94a3b8;
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    font-weight: 600;
 }
 
 .stat-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #27AE60;
+    font-size: clamp(1.2rem, 3.6vh, 1.6rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    line-height: 1;
+}
+.stat-item:nth-child(3) .stat-value {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent !important; color: transparent !important;
+}
+.stat-item:nth-child(4) .stat-value {
+    background: linear-gradient(135deg, #ef4444, #f59e0b);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent !important; color: transparent !important;
 }
 
-.btn-primary {
-    background: linear-gradient(135deg, #27AE60, #219A52);
-    border: none;
-    border-radius: 12px;
-    padding: 12px 32px;
-    color: #fff;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px #27AE6033;
-    margin: 0.5rem;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px #27AE6044;
-}
-
-.btn-primary:active {
-    transform: translateY(0);
-}
-
-.btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* 数学闯关特有样式 */
-.difficulty-badge {
-    display: inline-block;
-    padding: 8px 20px;
-    border-radius: 20px;
-    font-weight: bold;
-    margin-bottom: 1.5rem;
-    font-size: 1rem;
-}
-
-.difficulty-easy {
-    background-color: #E8F8F0;
-    color: #27AE60;
-}
-
-.difficulty-normal {
-    background-color: #27AE60;
-    color: white;
-}
-
-.difficulty-hard {
-    background-color: #219A52;
-    color: white;
-}
-
+/* 题目展示 */
 .question-display {
-    font-size: 3rem;
-    margin: 30px 0;
-    padding: 25px;
-    background-color: #E8F8F0;
-    border-radius: 20px;
-    border: 2px solid #27AE6033;
-    color: #219A52;
-    font-weight: bold;
+    font-size: clamp(2rem, 7vw, 3rem);
+    margin: 0;
+    padding: clamp(18px, 4vh, 25px) clamp(14px, 3vw, 25px);
+    background: linear-gradient(135deg, #f5f3ff, #eef2ff);
+    border-radius: clamp(16px, 2.5vw, 22px);
+    border: 2px solid #ddd6fe;
+    color: #5b21b6;
+    font-weight: 800;
     letter-spacing: 2px;
+    flex-shrink: 0;
+    width: 100%;
+    box-shadow: 0 6px 20px rgba(139,92,246,0.10), inset 0 1px 0 rgba(255,255,255,0.8);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.question-display.flash-correct {
+    background: linear-gradient(135deg, #d1fae5, #ecfccb);
+    border-color: #6ee7b7;
+    color: #065f46;
+    transform: scale(1.03);
+}
+.question-display.flash-wrong {
+    background: linear-gradient(135deg, #fee2e2, #fde68a);
+    border-color: #fca5a5;
+    color: #991b1b;
+    animation: mtg-shake 0.4s ease;
 }
 
+/* 输入框 - 视觉焦点 */
 #input-area {
     width: 100%;
-    padding: 18px;
-    font-size: 2rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    margin-bottom: 20px;
+    padding: clamp(13px, 2.8vh, 18px);
+    font-size: clamp(1.3rem, 4vw, 1.6rem);
+    border: 2px solid #ddd6fe;
+    border-radius: clamp(14px, 2vw, 18px);
+    margin-bottom: 0;
     text-align: center;
-    background-color: #fff;
-    transition: all 0.3s;
-}
-
-#input-area:focus {
+    background: linear-gradient(135deg, #ffffff, #f5f3ff);
+    transition: all 0.3s ease;
     outline: none;
-    border-color: #27AE60;
-    box-shadow: 0 0 0 4px #27AE6022;
-    transform: translateY(-2px);
+    font-weight: 800;
+    color: #5b21b6;
+    flex-shrink: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    box-shadow: inset 0 2px 6px rgba(139,92,246,0.06);
+}
+#input-area::placeholder {
+    color: #94a3b8;
+    font-weight: 500;
+}
+#input-area:focus {
+    border-color: #8b5cf6;
+    background: #fff;
+    box-shadow: 0 0 0 5px rgba(139, 92, 246, 0.18), 0 8px 24px rgba(139,92,246,0.15);
+    transform: translateY(-1px);
 }
 
-.control-btn {
-    padding: 12px 35px;
-    font-size: 1.2rem;
+/* 输入框状态闪烁 */
+#input-area.flash-correct {
+    border-color: #10b981;
+    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.2), 0 0 20px rgba(16, 185, 129, 0.15);
+}
+#input-area.flash-wrong {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.2), 0 0 20px rgba(239, 68, 68, 0.15);
+}
+#input-area.flash-hint {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.2), 0 0 20px rgba(245, 158, 11, 0.15);
+}
+
+/* 控制区 + 主次按钮 */
+.game-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.btn-primary, .control-btn {
+    background: linear-gradient(135deg, #8b5cf6, #6366f1);
     border: none;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #27AE60, #219A52);
-    color: white;
+    border-radius: 999px;
+    padding: clamp(11px, 2.2vh, 14px) clamp(26px, 4.5vw, 38px);
+    color: #fff;
+    font-size: clamp(0.92rem, 2.3vw, 1.05rem);
+    font-weight: 700;
     cursor: pointer;
-    margin: 0 10px;
-    transition: all 0.3s;
-    font-weight: 600;
-    box-shadow: 0 4px 12px #27AE6033;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 8px 22px rgba(139, 92, 246, 0.4);
+    margin: 0;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
 }
-
-.control-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px #27AE6044;
+.btn-primary:hover, .control-btn:hover:not(:disabled) {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 12px 30px rgba(139, 92, 246, 0.5);
 }
-
-.control-btn:disabled {
+.btn-primary:active, .control-btn:active:not(:disabled) {
+    transform: translateY(-1px) scale(1.01);
+}
+.btn-primary:disabled, .control-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none;
-    box-shadow: none;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
 }
 
+/* 重新开始 = 次级按钮（描边样式）*/
+#reset-btn, #overlay-restart-btn {
+    background: #fff;
+    color: #6d28d9;
+    border: 2px solid #c4b5fd;
+    box-shadow: 0 4px 14px rgba(139,92,246,0.1);
+}
+#reset-btn:hover, #overlay-restart-btn:hover {
+    background: #f5f3ff;
+    box-shadow: 0 8px 22px rgba(139,92,246,0.2);
+    transform: translateY(-3px) scale(1.04);
+}
+
+/* 按钮波纹 */
+.btn-primary .ripple, .control-btn .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.45);
+    transform: scale(0);
+    animation: ripple-anim 0.6s ease-out forwards;
+    pointer-events: none;
+}
+@keyframes ripple-anim {
+    to { transform: scale(4); opacity: 0; }
+}
+
+/* 反馈区 - 增强动效 */
 .feedback {
-    height: 35px;
-    font-size: 1.5rem;
-    margin: 15px 0;
-    font-weight: bold;
+    height: clamp(36px, 6vh, 48px);
+    font-size: clamp(1rem, 3vw, 1.35rem);
+    margin: 0;
+    font-weight: 700;
+    flex-shrink: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    padding: 0 12px;
+    transform: scale(0.8);
+    opacity: 0;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+}
+.feedback.show-feedback {
+    transform: scale(1);
+    opacity: 1;
 }
 
 .correct {
-    color: #27AE60;
-    animation: bounce 0.5s ease;
+    color: #fff;
+    background: linear-gradient(135deg, #10b981, #059669);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
 }
 
 .wrong {
-    color: #e74c3c;
-    animation: shake 0.5s ease;
+    color: #fff;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35);
 }
 
+/* 通关/失败提示横幅 */
 .game-result {
-    font-size: 1.5rem;
-    margin: 20px 0;
-    font-weight: bold;
-    padding: 20px;
-    border-radius: 12px;
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
+    margin: 0;
+    font-weight: 800;
+    padding: clamp(10px, 2vh, 16px);
+    border-radius: 14px;
+    width: 100%;
+    flex-shrink: 0;
+    transform: scale(0.8);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+}
+.game-result.show-result {
+    transform: scale(1);
+    opacity: 1;
 }
 
 .game-win {
-    background-color: #E8F8F0;
-    color: #219A52;
-    animation: celebration 1s ease infinite;
+    background: linear-gradient(135deg, #d1fae5, #ecfccb);
+    color: #065f46;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
 }
 
 .game-lose {
-    background-color: #FDE8E8;
-    color: #c62828;
+    background: linear-gradient(135deg, #fee2e2, #fde68a);
+    color: #991b1b;
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.25);
 }
 
-@keyframes shake {
+/* 统计数字跳动 */
+.stat-bounce {
+    animation: stat-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes stat-pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+
+@keyframes mtg-shake {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-5px); }
     75% { transform: translateX(5px); }
 }
 
-@keyframes bounce {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-}
-
-@keyframes celebration {
-    0%, 100% { transform: rotate(0deg) scale(1); }
-    25% { transform: rotate(-5deg) scale(1.05); }
-    75% { transform: rotate(5deg) scale(1.05); }
-}
-
 /* 游戏结束弹窗 */
 .game-over {
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(8px);
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     position: fixed;
     top: 0;
     left: 0;
@@ -254,88 +478,142 @@ body {
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    animation: mtg-fade-in 0.3s ease;
+}
+@keyframes mtg-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .game-over-card {
-    background: #fff;
-    border-radius: 20px;
-    padding: 2.5rem;
+    background: linear-gradient(160deg, #ffffff, #f5f3ff);
+    border-radius: 30px;
+    padding: 2.5rem 2rem;
     text-align: center;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-    max-width: 400px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(139,92,246,0.1);
+    max-width: 420px;
     width: 90%;
+    position: relative;
+    animation: mtg-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+}
+.game-over-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #8b5cf6, #6366f1, #f59e0b);
+}
+@keyframes mtg-pop-in {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
 }
 
 .game-over-card h2 {
-    font-size: 1.8rem;
-    color: #27AE60;
-    margin-bottom: 1rem;
+    font-size: clamp(1.4rem, 4vw, 1.9rem);
+    background: linear-gradient(135deg, #8b5cf6, #6366f1, #f59e0b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    margin-bottom: 1.25rem;
+    font-weight: 800;
 }
 
 .game-over-card p {
     font-size: 1.1rem;
-    color: #555;
-    margin-bottom: 0.5rem;
+    color: #475569;
+    margin-bottom: 0.6rem;
 }
 
 .game-over-card strong {
-    color: #27AE60;
+    color: #6d28d9;
+    font-size: 1.2rem;
+    font-weight: 800;
 }
 
+/* 隐藏类 */
+.hidden {
+    display: none !important;
+}
+
+/* 响应式 - 移动端 */
 @media (max-width: 768px) {
     .game-container {
-        margin: 1rem;
-        padding: 1.5rem;
-        border-radius: 16px;
-    }
-    .game-title {
-        font-size: 1.6rem;
-    }
-    .stats-bar {
-        gap: 8px;
+        margin: 0;
+        padding: clamp(0.8rem, 2vh, 1.2rem) clamp(0.8rem, 3vw, 1rem);
+        border-radius: 18px;
+        gap: clamp(0.5rem, 1.5vh, 0.85rem);
     }
     .stat-item {
-        padding: 10px 16px;
-        min-width: 80px;
+        padding: 8px 6px;
+    }
+    .btn-primary, .control-btn {
+        padding: 10px 22px;
+        font-size: 0.9rem;
+    }
+}
+
+/* 超小屏 / 矮屏 */
+@media (max-width: 480px), (max-height: 560px) {
+    .mtg-wrap {
+        align-items: flex-start;
+    }
+    .game-container {
+        max-height: none;
+        justify-content: flex-start;
+    }
+    .stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
+    .stat-icon {
+        font-size: 0.9rem;
+    }
+    .stat-label {
+        font-size: 0.6rem;
     }
     .stat-value {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
     .question-display {
-        font-size: 2rem;
-        padding: 20px;
+        font-size: 1.8rem;
+        padding: 14px;
+        letter-spacing: 1px;
     }
     #input-area {
-        font-size: 1.5rem;
-    }
-    .control-btn {
-        padding: 10px 25px;
-        font-size: 1rem;
-    }
-    .game-result {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
+        padding: 12px;
     }
 }
 </style>
+    <div class="mtg-bg-decor"></div>
+    <div class="mtg-wrap">
     <div class="game-container">
-        <h1 class="game-title">🧮 数学闯关 🏆</h1>
+        <div class="game-header">
+            <h1 class="game-title"><svg class="title-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="mtg-calc-grad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#8b5cf6"/><stop offset="0.5" stop-color="#6366f1"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs><rect x="5" y="1.5" width="14" height="21" rx="3" fill="url(#mtg-calc-grad)"/><rect x="7" y="3.8" width="10" height="4.2" rx="1" fill="#fff" opacity="0.92"/><rect x="8" y="5" width="8" height="2" rx="0.5" fill="#6366f1" opacity="0.55"/><circle cx="8.6" cy="11.5" r="1.1" fill="#fff"/><circle cx="12" cy="11.5" r="1.1" fill="#fff"/><circle cx="15.4" cy="11.5" r="1.1" fill="#fff"/><circle cx="8.6" cy="15" r="1.1" fill="#fff"/><circle cx="12" cy="15" r="1.1" fill="#fff"/><circle cx="15.4" cy="15" r="1.1" fill="#fff"/><circle cx="8.6" cy="18.5" r="1.1" fill="#fff"/><circle cx="12" cy="18.5" r="1.1" fill="#fff"/><circle cx="15.4" cy="18.5" r="1.1" fill="#fff"/></svg> 数学闯关 🏆</h1>
+        </div>
 
-        <div class="difficulty-badge" id="difficulty-badge">简单难度</div>
+        <div class="difficulty-badge difficulty-easy" id="difficulty-badge">简单难度</div>
 
         <div class="stats-bar">
             <div class="stat-item">
+                <span class="stat-icon">🪜</span>
                 <span class="stat-label">关卡</span>
                 <span class="stat-value" id="level">1</span>
             </div>
             <div class="stat-item">
+                <span class="stat-icon">⭐</span>
                 <span class="stat-label">得分</span>
                 <span class="stat-value" id="score">0</span>
             </div>
             <div class="stat-item">
+                <span class="stat-icon">⏳</span>
                 <span class="stat-label">剩余</span>
                 <span class="stat-value" id="remaining">5</span>
             </div>
             <div class="stat-item">
+                <span class="stat-icon">🔥</span>
                 <span class="stat-label">连击</span>
                 <span class="stat-value" id="combo">0</span>
             </div>
@@ -349,12 +627,12 @@ body {
 
         <div class="feedback" id="feedback"></div>
 
-        <div>
+        <div id="game-result" class="game-result"></div>
+
+        <div class="game-controls">
             <button class="control-btn" id="submit-btn">提交答案</button>
             <button class="control-btn" id="reset-btn">重新开始</button>
         </div>
-
-        <div id="game-result" class="game-result"></div>
 
         <div class="game-over hidden" id="game-over-screen">
             <div class="game-over-card">
@@ -365,6 +643,7 @@ body {
                 <button class="btn-primary" id="overlay-restart-btn" style="margin-top:1rem;">再来一局</button>
             </div>
         </div>
+    </div>
     </div>
 
     <script>
@@ -380,6 +659,7 @@ body {
         const resetBtn = document.getElementById('reset-btn');
         const feedbackEl = document.getElementById('feedback');
         const gameResultEl = document.getElementById('game-result');
+        const gameOverScreen = document.getElementById('game-over-screen');
 
         // 游戏状态变量
         let level = 1;
@@ -442,7 +722,9 @@ body {
             }
 
             currentAnswer = answer;
-            questionEl.textContent = `${a} ${op} ${b} = ?`;
+            // 把 * / 换成更友好的显示符号
+            const displayOp = op === '*' ? '×' : (op === '/' ? '÷' : op);
+            questionEl.textContent = `${a} ${displayOp} ${b} = ?`;
         }
 
         // 更新UI显示
@@ -450,7 +732,7 @@ body {
             const difficulty = getCurrentDifficulty();
             difficultyBadgeEl.textContent = difficulty.name;
             difficultyBadgeEl.className = 'difficulty-badge ' + difficulty.className;
-            
+
             levelEl.textContent = level;
             scoreEl.textContent = score;
             remainingEl.textContent = remaining;
@@ -465,16 +747,16 @@ body {
             combo = 0;
             correctCount = 0;
             gameOver = false;
-            
+
             generateQuestion();
             updateUI();
-            
+
             inputArea.value = '';
             feedbackEl.textContent = '';
             feedbackEl.className = 'feedback';
             gameResultEl.textContent = '';
             gameResultEl.className = 'game-result';
-            document.getElementById('game-over-screen').classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
             inputArea.disabled = false;
             submitBtn.disabled = false;
             inputArea.focus();
@@ -486,10 +768,11 @@ body {
             remaining = 5;
             correctCount = 0;
             gameResultEl.textContent = `🎉 恭喜通过第${level-1}关！进入第${level}关，难度提升！`;
-            gameResultEl.className = 'game-result game-win';
+            gameResultEl.className = 'game-result game-win show-result';
             generateQuestion();
             updateUI();
-            
+            bounceStat(levelEl);
+
             // 3秒后清除提示
             setTimeout(() => {
                 gameResultEl.textContent = '';
@@ -500,37 +783,54 @@ body {
         // 处理答题
         function handleSubmit() {
             if (gameOver) return;
-            
+
             const userAnswer = parseInt(inputArea.value.trim());
-            
+
             // 验证输入
             if (isNaN(userAnswer)) {
-                feedbackEl.textContent = '请输入有效的数字！';
+                feedbackEl.textContent = '⚠️ 请输入有效的数字！';
                 feedbackEl.className = 'feedback wrong';
+                requestAnimationFrame(() => feedbackEl.classList.add('show-feedback'));
+                flashInput('hint');
                 inputArea.value = '';
                 inputArea.focus();
                 return;
             }
 
+            // 按钮波纹
+            createRipple(submitBtn);
+
             if (userAnswer === currentAnswer) {
                 // 答对了
                 feedbackEl.textContent = '✅ 回答正确！';
                 feedbackEl.className = 'feedback correct';
+                requestAnimationFrame(() => feedbackEl.classList.add('show-feedback'));
+                flashInput('correct');
+                questionEl.classList.add('flash-correct');
+                setTimeout(() => questionEl.classList.remove('flash-correct'), 800);
                 correctCount++;
                 combo++;
-                
+
                 // 计算得分：基础10分 + 连击加分
                 let addScore = 10 + Math.floor(combo / 3) * 5;
                 score += addScore;
+                bounceStat(scoreEl);
+                if (combo > 0) bounceStat(comboEl);
             } else {
                 // 答错了
                 feedbackEl.textContent = `❌ 回答错误，正确答案是 ${currentAnswer}`;
                 feedbackEl.className = 'feedback wrong';
+                requestAnimationFrame(() => feedbackEl.classList.add('show-feedback'));
+                flashInput('wrong');
+                questionEl.classList.add('flash-wrong');
+                setTimeout(() => questionEl.classList.remove('flash-wrong'), 800);
                 combo = 0;
                 score = Math.max(0, score - 5); // 得分不低于0
+                bounceStat(comboEl);
             }
 
             remaining--;
+            bounceStat(remainingEl);
             updateUI();
 
             // 检查本关是否结束
@@ -548,13 +848,13 @@ body {
                     inputArea.disabled = true;
                     submitBtn.disabled = true;
                     gameResultEl.textContent = `😔 闯关失败！本关答对${correctCount}题，总得分${score}，继续加油哦！`;
-                    gameResultEl.className = 'game-result game-lose';
+                    gameResultEl.className = 'game-result game-lose show-result';
 
                     // 显示游戏结束弹窗
                     document.getElementById('final-score').textContent = score;
                     document.getElementById('final-levels').textContent = level - 1;
                     document.getElementById('final-accuracy').textContent = Math.round(correctCount / 5 * 100) + '%';
-                    document.getElementById('game-over-screen').classList.remove('hidden');
+                    gameOverScreen.classList.remove('hidden');
                 }
             } else {
                 // 继续下一题
@@ -571,7 +871,7 @@ body {
         // 事件监听
         submitBtn.addEventListener('click', handleSubmit);
         resetBtn.addEventListener('click', initGame);
-        
+
         // 回车键提交
         inputArea.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -581,9 +881,45 @@ body {
 
         // 弹窗重新开始按钮
         document.getElementById('overlay-restart-btn').addEventListener('click', function() {
-            document.getElementById('game-over-screen').classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
             initGame();
         });
+
+        // ===== �效辅助函数 =====
+
+        // 输入框状态闪烁
+        function flashInput(type) {
+            inputArea.classList.remove('flash-correct','flash-wrong','flash-hint');
+            void inputArea.offsetWidth; // 强制 reflow
+            inputArea.classList.add('flash-' + type);
+            setTimeout(() => inputArea.classList.remove('flash-correct','flash-wrong','flash-hint'), 1200);
+        }
+
+        // 统计数字跳动
+        function bounceStat(el) {
+            el.classList.remove('stat-bounce');
+            void el.offsetWidth;
+            el.classList.add('stat-bounce');
+            el.addEventListener('animationend', () => el.classList.remove('stat-bounce'), { once: true });
+        }
+
+        // 按钮波纹
+        function createRipple(btn) {
+            const existing = btn.querySelector('.ripple');
+            if (existing) existing.remove();
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            const rect = btn.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = (rect.width / 2 - size / 2) + 'px';
+            ripple.style.top = (rect.height / 2 - size / 2) + 'px';
+            btn.appendChild(ripple);
+            ripple.addEventListener('animationend', () => ripple.remove());
+        }
+
+        // 通关撒花 - 复用项目公共 game_confetti.js
+        // launchConfetti() 由 game_confetti.js 提供
 
         // 初始化游戏
         initGame();
