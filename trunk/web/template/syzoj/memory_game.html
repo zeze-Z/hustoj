@@ -73,7 +73,7 @@
             -webkit-backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.7);
             border-radius: clamp(18px, 3vw, 30px);
-            padding: clamp(1rem, 2.5vh, 1.8rem) clamp(1rem, 3vw, 2rem);
+            padding: clamp(1.2rem, 3vh, 2.2rem) clamp(1rem, 3vw, 2rem);
             box-shadow:
                 0 24px 70px rgba(255, 152, 0, 0.12),
                 0 8px 24px rgba(251, 191, 36, 0.08),
@@ -81,13 +81,10 @@
                 inset 0 1px 0 rgba(255,255,255,0.9);
             text-align: center;
             position: relative;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: clamp(0.5rem, 1.5vh, 1rem);
-            max-height: 100dvh;
-            overflow-y: auto;
         }
         .game-container::before {
             content: "";
@@ -97,6 +94,7 @@
             background: linear-gradient(90deg, #FF9800, #f59e0b, #ef4444, #FF9800);
             background-size: 300% 100%;
             animation: mg-gradient-shift 6s linear infinite;
+            border-radius: clamp(18px, 3vw, 30px) clamp(18px, 3vw, 30px) 0 0;
         }
         @keyframes mg-gradient-shift {
             0% { background-position: 0% 50%; }
@@ -124,6 +122,25 @@
             margin: 6px auto 0;
             border-radius: 2px;
             background: linear-gradient(90deg, #FF9800, #ef4444);
+        }
+        .game-title-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: clamp(28px, 5vw, 36px);
+            height: clamp(28px, 5vw, 36px);
+            border-radius: 50%;
+            vertical-align: middle;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #6366f1, #06b6d4) !important;
+            -webkit-background-clip: unset !important;
+            background-clip: unset !important;
+            -webkit-text-fill-color: initial !important;
+        }
+        .game-title-icon svg {
+            width: 60%;
+            height: 60%;
+            display: block;
         }
 
         /* 难度选择器 */
@@ -247,21 +264,6 @@
             justify-content: center;
             perspective: 1000px;
             flex-shrink: 0;
-        }
-
-        .grid-easy {
-            grid-template-columns: repeat(3, 1fr);
-            max-width: min(100%, 340px);
-        }
-
-        .grid-normal {
-            grid-template-columns: repeat(4, 1fr);
-            max-width: min(100%, 440px);
-        }
-
-        .grid-hard {
-            grid-template-columns: repeat(5, 1fr);
-            max-width: min(100%, 520px);
         }
 
         .grid-auto {
@@ -524,9 +526,13 @@
         /* 响应式 - 移动端 */
         @media (max-width: 768px) {
             .game-container {
+                margin: 0;
                 padding: clamp(0.8rem, 2vh, 1.2rem) clamp(0.8rem, 3vw, 1rem);
                 border-radius: 18px;
                 gap: clamp(0.4rem, 1.2vh, 0.8rem);
+            }
+            .game-container::before {
+                border-radius: 18px 18px 0 0;
             }
             .stats-bar {
                 gap: 6px;
@@ -570,7 +576,7 @@
     <div class="mg-bg-decor"></div>
     <div class="mg-wrap">
     <div class="game-container">
-        <h1 class="game-title">🃏 卡片配对游戏</h1>
+        <h1 class="game-title"><span class="game-title-icon" style="background: linear-gradient(135deg, #6366f1, #06b6d4);"><svg viewBox="0 0 64 64"><rect x="10" y="16" width="24" height="32" rx="5" fill="#fff" transform="rotate(-8 22 32)"/><rect x="32" y="20" width="24" height="32" rx="5" fill="#fff" transform="rotate(7 44 36)"/><path d="M39 34 l3 4 5 1 -4 4 1 5 -5 -3 -5 3 1 -5 -4 -4 5 -1 z" fill="rgba(0,0,0,0.3)"/></svg></span> 卡片配对游戏</h1>
 
         <div class="difficulty-selector">
             <button class="diff-btn" data-rows="2" data-cols="3">简单 (2×3)</button>
@@ -744,7 +750,7 @@
             if (isProcessing || card.classList.contains('flipped') || card.classList.contains('matched')) {
                 return;
             }
-            
+
             // 游戏开始时启动计时器
             if (!gameStarted) {
                 gameStarted = true;
@@ -852,15 +858,31 @@
 
         // 事件监听
         diffBtns.forEach(btn => btn.addEventListener('click', changeDifficulty));
-        resetBtn.addEventListener('click', initGame);
+        resetBtn.addEventListener('click', function() { createRipple(this); initGame(); });
 
         // 弹窗重新开始按钮
         document.getElementById('overlay-restart-btn').addEventListener('click', function() {
+            createRipple(this);
             document.getElementById('game-over-screen').classList.add('hidden');
             initGame();
         });
 
         // ===== 动效辅助函数 =====
+
+        // 按钮波纹
+        function createRipple(btn) {
+            const existing = btn.querySelector('.ripple');
+            if (existing) existing.remove();
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            const rect = btn.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = (rect.width / 2 - size / 2) + 'px';
+            ripple.style.top = (rect.height / 2 - size / 2) + 'px';
+            btn.appendChild(ripple);
+            ripple.addEventListener('animationend', () => ripple.remove());
+        }
 
         // 统计数字跳动
         function bounceStat(el) {

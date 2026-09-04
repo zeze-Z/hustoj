@@ -267,19 +267,17 @@
         <div class="section">
             <h2 class="section-title">🎒 低年级专区（1-3年级） <span class="auth-tag tag-public">无需登录</span></h2>
         <div class="cards-grid">
-            <a href="color_match.php" class="card">
-                <div class="card-icon" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">
+            <a href="puzzle_game.php" class="card">
+                <div class="card-icon" style="background: linear-gradient(135deg, #eab308, #f97316);">
                     <svg viewBox="0 0 64 64">
-                        <path d="M32 8 a24 24 0 1 0 24 24 l-8 0 a8 8 0 0 1 -8 -8 a8 8 0 0 0 -8 -8 h-2 a10 10 0 0 0 2 -8 z" fill="#fff"/>
-                        <circle cx="20" cy="20" r="3" fill="rgba(0,0,0,0.3)"/>
-                        <circle cx="34" cy="14" r="3" fill="rgba(0,0,0,0.3)"/>
-                        <circle cx="44" cy="26" r="3" fill="rgba(0,0,0,0.3)"/>
-                        <circle cx="18" cy="36" r="3" fill="rgba(0,0,0,0.3)"/>
-                        <circle cx="40" cy="44" r="4" fill="rgba(255,255,255,0.5)"/>
+                        <rect x="10" y="10" width="26" height="26" rx="6" fill="#fff"/>
+                        <circle cx="36" cy="23" r="6.5" fill="#fff"/>
+                        <rect x="28" y="28" width="26" height="26" rx="6" fill="#fff"/>
+                        <circle cx="36" cy="41" r="5.5" fill="rgba(0,0,0,0.3)"/>
                     </svg>
                 </div>
-                <div class="card-title">颜色匹配</div>
-                <div class="card-desc">认识颜色，点击正确的颜色名称（适合1-2年级）</div>
+                <div class="card-title">拼图游戏</div>
+                <div class="card-desc">拖动拼图碎片还原图片，训练观察力与空间思维（适合1-3年级）</div>
             </a>
 
             <a href="clock_reading.php" class="card">
@@ -293,6 +291,38 @@
                 </div>
                 <div class="card-title">时钟认读</div>
                 <div class="card-desc">学习看时钟，认识整点和半点（适合1-2年级）</div>
+            </a>
+
+            <a href="math_game.php" class="card">
+                <div class="card-icon" style="background: linear-gradient(135deg, #f97316, #dc2626);">
+                    <svg viewBox="0 0 64 64">
+                        <rect x="15" y="8" width="34" height="48" rx="7" fill="#fff"/>
+                        <rect x="19" y="13" width="26" height="11" rx="2.5" fill="rgba(0,0,0,0.3)"/>
+                        <circle cx="23" cy="34" r="3" fill="rgba(0,0,0,0.35)"/>
+                        <circle cx="32" cy="34" r="3" fill="rgba(0,0,0,0.35)"/>
+                        <circle cx="41" cy="34" r="3" fill="rgba(0,0,0,0.35)"/>
+                        <circle cx="23" cy="45" r="3" fill="rgba(0,0,0,0.35)"/>
+                        <circle cx="32" cy="45" r="3" fill="rgba(0,0,0,0.35)"/>
+                        <circle cx="41" cy="45" r="3" fill="rgba(0,0,0,0.35)"/>
+                    </svg>
+                </div>
+                <div class="card-title">数学闯关</div>
+                <div class="card-desc">挑战数学题，闯过一关又一关（适合2-4年级）</div>
+            </a>
+
+            <a href="color_match.php" class="card">
+                <div class="card-icon" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">
+                    <svg viewBox="0 0 64 64">
+                        <path d="M32 8 a24 24 0 1 0 24 24 l-8 0 a8 8 0 0 1 -8 -8 a8 8 0 0 0 -8 -8 h-2 a10 10 0 0 0 2 -8 z" fill="#fff"/>
+                        <circle cx="20" cy="20" r="3" fill="rgba(0,0,0,0.3)"/>
+                        <circle cx="34" cy="14" r="3" fill="rgba(0,0,0,0.3)"/>
+                        <circle cx="44" cy="26" r="3" fill="rgba(0,0,0,0.3)"/>
+                        <circle cx="18" cy="36" r="3" fill="rgba(0,0,0,0.3)"/>
+                        <circle cx="40" cy="44" r="4" fill="rgba(255,255,255,0.5)"/>
+                    </svg>
+                </div>
+                <div class="card-title">颜色匹配</div>
+                <div class="card-desc">认识颜色，点击正确的颜色名称（适合1-2年级）</div>
             </a>
 
             <a href="guess_number.php" class="card">
@@ -335,36 +365,6 @@
                 </div>
                 <div class="card-title">序列记忆</div>
                 <div class="card-desc">记住颜色顺序并重复，挑战你的记忆力（适合1-4年级）</div>
-            </a>
-
-            <a href="math_game.php" class="card">
-                <div class="card-icon" style="background: linear-gradient(135deg, #f97316, #dc2626);">
-                    <svg viewBox="0 0 64 64">
-                        <rect x="15" y="8" width="34" height="48" rx="7" fill="#fff"/>
-                        <rect x="19" y="13" width="26" height="11" rx="2.5" fill="rgba(0,0,0,0.3)"/>
-                        <circle cx="23" cy="34" r="3" fill="rgba(0,0,0,0.35)"/>
-                        <circle cx="32" cy="34" r="3" fill="rgba(0,0,0,0.35)"/>
-                        <circle cx="41" cy="34" r="3" fill="rgba(0,0,0,0.35)"/>
-                        <circle cx="23" cy="45" r="3" fill="rgba(0,0,0,0.35)"/>
-                        <circle cx="32" cy="45" r="3" fill="rgba(0,0,0,0.35)"/>
-                        <circle cx="41" cy="45" r="3" fill="rgba(0,0,0,0.35)"/>
-                    </svg>
-                </div>
-                <div class="card-title">数学闯关</div>
-                <div class="card-desc">挑战数学题，闯过一关又一关（适合2-4年级）</div>
-            </a>
-
-            <a href="puzzle_game.php" class="card">
-                <div class="card-icon" style="background: linear-gradient(135deg, #eab308, #f97316);">
-                    <svg viewBox="0 0 64 64">
-                        <rect x="10" y="10" width="26" height="26" rx="6" fill="#fff"/>
-                        <circle cx="36" cy="23" r="6.5" fill="#fff"/>
-                        <rect x="28" y="28" width="26" height="26" rx="6" fill="#fff"/>
-                        <circle cx="36" cy="41" r="5.5" fill="rgba(0,0,0,0.3)"/>
-                    </svg>
-                </div>
-                <div class="card-title">拼图游戏</div>
-                <div class="card-desc">拖动拼图碎片还原图片，训练观察力与空间思维（适合1-3年级）</div>
             </a>
 
         </div>

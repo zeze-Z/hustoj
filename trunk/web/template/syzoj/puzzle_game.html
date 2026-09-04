@@ -5,184 +5,307 @@
 <script src="template/<?php echo $OJ_TEMPLATE?>/game_confetti.js"></script>
 
 <style>
-/* ===== 统一游戏基础样式 ===== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* ===== 拼图游戏 pz- 前缀，统一规范 ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: #f0f2f5;
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
+/* 背景装饰层：紫粉暖底 + 点纹 + 浮动光斑 */
+.pz-bg-decor {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+        radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.08) 1px, transparent 0) 0 0/22px 22px,
+        linear-gradient(135deg, #ede9fe 0%, #fce7f3 50%, #ede9fe 100%);
+    overflow: hidden;
+}
+.pz-bg-decor::before,
+.pz-bg-decor::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.5;
+    animation: pz-float-blob 8s ease-in-out infinite;
+}
+.pz-bg-decor::before {
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, #a78bfa, transparent 70%);
+    top: -60px; left: -60px;
+}
+.pz-bg-decor::after {
+    width: 360px; height: 360px;
+    background: radial-gradient(circle, #f9a8d4, transparent 70%);
+    bottom: -80px; right: -80px;
+    animation-delay: 4s;
+}
+@keyframes pz-float-blob {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, 20px) scale(1.1); }
+}
+
+/* 外层 wrapper：靠上居中 */
+.pz-wrap {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* 玻璃拟态主容器 */
 .game-container {
+    width: 100%;
     max-width: 1120px;
-    margin: 1rem auto;
-    background: #fff;
-    border-radius: 20px;
-    padding: 1.5rem 2rem;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    margin: clamp(0.5rem, 1.5vh, 1rem) auto;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: clamp(18px, 3vw, 30px);
+    padding: clamp(1.2rem, 3vh, 2.2rem) clamp(1.2rem, 3vw, 2rem);
+    box-shadow: 0 20px 60px rgba(99, 102, 241, 0.15), 0 4px 20px rgba(236, 72, 153, 0.08);
     text-align: center;
     position: relative;
-}
-
-.game-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #6366F1;
-    margin-bottom: 0.5rem;
-}
-
-.game-subtitle {
-    font-size: 1rem;
-    color: #666;
-    margin-bottom: 1.5rem;
-}
-
-.stats-bar {
+    overflow: hidden;
     display: flex;
-    justify-content: flex-start;
-    gap: 10px;
-    margin-bottom: 1.25rem;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.5rem, 1.5vh, 1rem);
+    max-height: 100dvh;
+    overflow-y: auto;
 }
 
-.stat-item {
-    background: #EEF2FF;
-    border-radius: 12px;
-    padding: 10px 8px;
-    flex: 1 1 0;
-    min-width: 0;
-    text-align: center;
+/* 容器顶部彩虹条 */
+.game-container::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #6366f1, #ec4899, #f59e0b, #6366f1);
+    background-size: 300% 100%;
+    animation: pz-gradient-shift 6s linear infinite;
+}
+@keyframes pz-gradient-shift {
+    0% { background-position: 0% 0; }
+    100% { background-position: 300% 0; }
 }
 
-.stat-label {
-    font-size: 0.8rem;
-    color: #888;
+/* 标题：渐变文字 */
+.game-title {
+    font-size: clamp(1.5rem, 4.5vw, 2.3rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #6366f1 0%, #ec4899 50%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.25));
+    margin: 0;
+}
+.game-title::after {
+    content: "";
     display: block;
-    margin-bottom: 4px;
+    width: 60px;
+    height: 4px;
+    margin: 6px auto 0;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #6366f1, #ec4899);
+}
+
+/* 统计栏 */
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(6px, 1.5vw, 10px);
+    width: 100%;
+    flex-shrink: 0;
+    margin: 0;
+}
+.stat-item {
+    background: linear-gradient(135deg, #ffffff, #f5f3ff);
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    border-radius: clamp(12px, 2vw, 16px);
+    padding: clamp(8px, 1.8vh, 12px) clamp(6px, 1.5vw, 12px);
+    box-shadow: 0 2px 10px rgba(99, 102, 241, 0.06);
+    text-align: center;
+    min-width: 0;
+}
+.stat-item:nth-child(1) { border-top: 3px solid #6366f1; }
+.stat-item:nth-child(2) { border-top: 3px solid #ec4899; }
+.stat-item:nth-child(3) { border-top: 3px solid #f59e0b; }
+.stat-icon { font-size: 1.1rem; display: block; line-height: 1.2; }
+.stat-label {
+    font-size: clamp(0.55rem, 1.5vw, 0.8rem);
+    color: #6b7280;
+    display: block;
+    margin: 2px 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-
 .stat-value {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #6366F1;
+    font-size: clamp(1rem, 3vw, 1.3rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
     word-break: break-word;
+    display: inline-block;
+}
+.stat-value.stat-bounce { animation: pz-stat-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes pz-stat-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.35); }
+    100% { transform: scale(1); }
 }
 
-.btn {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #6366F1, #5558E0);
-    color: #fff;
-    box-shadow: 0 4px 12px #6366F133;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px #6366F144;
-}
-
-.btn-primary:active {
-    transform: translateY(0);
-}
-
-.btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.btn-secondary {
-    background: white;
-    color: #6366F1;
-    border: 2px solid #6366F1;
-}
-
-.btn-secondary:hover {
-    background: #6366F1;
-    color: white;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* 拼图游戏特有样式 */
+/* 介绍卡 */
 .puzzle-intro {
-    background: #EEF2FF;
-    border-left: 4px solid #6366F1;
-    padding: 1rem;
-    border-radius: 8px;
-    margin: 0 0 1.25rem;
+    background: linear-gradient(135deg, #f5f3ff, #fce7f3);
+    border: 1px solid rgba(167, 139, 250, 0.25);
+    border-left: 4px solid #6366f1;
+    padding: clamp(0.7rem, 2vh, 1rem);
+    border-radius: 12px;
+    margin: 0;
     text-align: left;
 }
-
 .puzzle-intro p {
-    margin: 0;
     color: #374151;
-    font-size: 0.95rem;
+    font-size: clamp(0.8rem, 2vw, 0.95rem);
     line-height: 1.6;
 }
 
+/* 难度药丸按钮组 */
+.difficulty-pills {
+    display: flex;
+    gap: clamp(4px, 1vw, 8px);
+    width: 100%;
+    flex-wrap: wrap;
+}
+.diff-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: clamp(0.5rem, 1.5vh, 0.7rem) clamp(4px, 1vw, 8px);
+    border-radius: 999px;
+    border: 2px solid #a78bfa;
+    background: #fff;
+    color: #6366f1;
+    font-size: clamp(0.72rem, 1.8vw, 0.9rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+.diff-btn:hover { background: #f5f3ff; transform: translateY(-1px); }
+.diff-btn.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border-color: #6366f1;
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+}
+/* 困难档（7、9）用红/橙对比色 */
+.diff-btn[data-size="7"] { border-color: #fb923c; color: #ea580c; }
+.diff-btn[data-size="7"].active {
+    background: linear-gradient(135deg, #fb923c, #f59e0b);
+    color: #fff; border-color: #fb923c;
+    box-shadow: 0 6px 18px rgba(251, 146, 60, 0.4);
+}
+.diff-btn[data-size="9"] { border-color: #ef4444; color: #dc2626; }
+.diff-btn[data-size="9"].active {
+    background: linear-gradient(135deg, #ef4444, #ec4899);
+    color: #fff; border-color: #ef4444;
+    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.4);
+}
+
+/* 主按钮 + 次级按钮 */
+.btn {
+    padding: clamp(0.6rem, 1.8vh, 0.75rem) clamp(1rem, 3vw, 1.5rem);
+    border: none;
+    border-radius: 999px;
+    font-size: clamp(0.85rem, 2vw, 1rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(99, 102, 241, 0.4);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(99, 102, 241, 0.5); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+#restart, #playAgain {
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(99, 102, 241, 0.4);
+}
+.btn-secondary, #changeImg, #challengeHarder {
+    background: #fff;
+    color: #6366f1;
+    border: 2px solid rgba(99, 102, 241, 0.4);
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.1);
+}
+.btn-secondary:hover, #changeImg:hover, #challengeHarder:hover {
+    background: #f5f3ff;
+    transform: translateY(-1px);
+}
+
+/* 按钮波纹 */
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(0);
+    animation: pz-ripple-anim 0.6s ease-out;
+    pointer-events: none;
+}
+@keyframes pz-ripple-anim {
+    to { transform: scale(4); opacity: 0; }
+}
+
+.hidden { display: none !important; }
+
+/* 控制区 */
 .puzzle-controls {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    margin-bottom: 1.25rem;
     align-items: stretch;
 }
-
 .controls-row {
     display: flex;
     gap: 0.75rem;
 }
+.controls-row .btn { flex: 1; }
 
-.controls-row .btn {
-    flex: 1;
-}
-
-.difficulty-select {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
-    font-size: 1rem;
-    background: white;
-    cursor: pointer;
-    transition: border-color 0.2s;
-}
-
-.difficulty-select:focus {
-    outline: none;
-    border-color: #6366F1;
-}
-
+/* 主布局：sidebar + 拼图区 */
 .game-layout {
     display: flex;
-    gap: 1.5rem;
+    gap: clamp(1rem, 2vw, 1.5rem);
     align-items: flex-start;
     text-align: left;
+    width: 100%;
+    justify-content: center;
 }
-
 .game-sidebar {
-    width: 320px;
+    width: clamp(260px, 30vw, 320px);
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.6rem, 1.8vh, 1rem);
 }
-
 .puzzle-main {
     flex: 1;
     display: flex;
@@ -192,19 +315,20 @@ body {
     min-width: 0;
 }
 
+/* 拼图网格：保留原有定位逻辑，仅外观升级 */
 .puzzle-grid {
     flex: none;
-    width: min(560px, calc(100% - 136px), calc(100vh - 200px));
+    width: min(560px, calc(100% - 136px), calc(100dvh - 220px));
     aspect-ratio: 1 / 1;
-    background: #f1f5f9;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    background: linear-gradient(135deg, #f1f5f9, #ede9fe);
+    border: 1px solid rgba(167, 139, 250, 0.25);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
     position: relative;
     overflow: hidden;
     user-select: none;
     -webkit-user-select: none;
 }
-
 .target-highlight {
     position: absolute;
     pointer-events: none;
@@ -213,14 +337,13 @@ body {
     opacity: 0;
     z-index: 5;
     display: none;
+    background: rgba(34, 197, 94, 0.08);
 }
-
 .target-highlight.active {
     display: block;
-    animation: breathe 1s ease-in-out infinite;
+    animation: pz-breathe 1s ease-in-out infinite;
 }
-
-@keyframes breathe {
+@keyframes pz-breathe {
     0%, 100% { opacity: 0.5; }
     50% { opacity: 1; }
 }
@@ -230,185 +353,169 @@ body {
     background-size: cover;
     background-repeat: no-repeat;
     border-radius: 4px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(226, 232, 240, 0.6);
     background-color: #f1f5f9;
     cursor: grab;
     z-index: 1;
     will-change: transform;
     box-sizing: border-box;
+    transition: box-shadow 0.2s ease;
 }
-
 .piece:active { cursor: grabbing; }
-
 .piece.dragging {
     cursor: grabbing;
     z-index: 10;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
 }
-
 .piece.correct {
     border-color: #22c55e;
     border-width: 2px;
+    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3);
 }
-
+.piece.correct.flash-correct { animation: pz-flash-correct 0.6s ease; }
+@keyframes pz-flash-correct {
+    0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    40% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.5); }
+    100% { box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3); }
+}
 .piece.selected {
-    border: 2px solid #6366F1;
-    box-shadow: 0 0 8px #6366F166;
+    border: 2px solid #6366f1;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
 }
+.piece.transitioning { transition: transform 0.2s ease; }
 
-.piece.transitioning {
-    transition: transform 0.2s ease;
-}
-
+/* 预览面板 */
 .preview-panel {
-    width: 120px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    width: clamp(96px, 12vw, 120px);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(167, 139, 250, 0.25);
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.1);
     padding: 0.5rem;
     text-align: center;
     position: relative;
     flex-shrink: 0;
 }
-
 .preview-panel img {
     width: 100%;
     height: auto;
-    border-radius: 8px;
+    border-radius: 10px;
     display: block;
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(226, 232, 240, 0.8);
 }
-
 .preview-toggle {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 28px;
-    height: 28px;
+    top: 8px; right: 8px;
+    width: 28px; height: 28px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.95);
     border: 1px solid #e2e8f0;
     cursor: pointer;
     font-size: 14px;
     color: #64748b;
-    padding: 0;
-    line-height: 26px;
-    text-align: center;
+    padding: 0; line-height: 26px; text-align: center;
 }
-
-.preview-toggle:hover {
-    background: #f1f5f9;
-}
+.preview-toggle:hover { background: #f5f3ff; }
 
 .puzzle-footer {
-    margin-top: 1.25rem;
     text-align: left;
-    color: #64748b;
-    font-size: 0.875rem;
+    color: #6b7280;
+    font-size: clamp(0.72rem, 1.8vw, 0.875rem);
 }
 
-/* Victory Modal */
+/* 胜利弹窗 */
 .victory-modal {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    inset: 0;
+    background: rgba(30, 27, 75, 0.5);
     backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
 }
-
-.victory-modal.show {
-    opacity: 1;
-    visibility: visible;
-}
-
+.victory-modal.hidden { display: none !important; }
 .victory-content {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) scale(0.9);
-    background: white;
-    padding: 2.5rem;
-    border-radius: 20px;
+    background: linear-gradient(160deg, #ffffff, #fce7f3);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 30px;
+    padding: clamp(1.5rem, 4vh, 2.5rem);
     text-align: center;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-    transition: transform 0.3s ease;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(99, 102, 241, 0.1);
     max-width: 400px;
-    width: 90%;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    animation: pz-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
-.victory-modal.show .victory-content {
-    transform: translate(-50%, -50%) scale(1);
+@keyframes pz-pop-in {
+    0% { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
 }
-
+.victory-content::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #6366f1, #ec4899, #f59e0b, #6366f1);
+    background-size: 300% 100%;
+    animation: pz-gradient-shift 6s linear infinite;
+}
 .victory-content h2 {
-    color: #6366F1;
-    font-size: 1.8rem;
+    font-size: clamp(1.4rem, 4vw, 1.8rem);
+    font-weight: 800;
     margin-bottom: 1rem;
+    background: linear-gradient(135deg, #6366f1, #ec4899, #f59e0b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
 }
-
 .victory-stats {
     margin: 1.5rem 0;
-    display: flex;
-    gap: 2rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(8px, 2vw, 1.5rem);
     justify-content: center;
-    flex-wrap: wrap;
+}
+.victory-stats .stat-item { min-width: 0; }
+.victory-btns {
+    display: flex;
+    gap: 0.75rem;
+    flex-direction: column;
 }
 
-.victory-stats .stat-item {
-    min-width: 80px;
-}
-
+/* 移动端 */
 @media (max-width: 768px) {
     .game-container {
-        margin: 1rem;
-        padding: 1.5rem;
-        border-radius: 16px;
-    }
-    .game-title {
-        font-size: 1.6rem;
+        padding: clamp(0.8rem, 2vh, 1.2rem) clamp(0.8rem, 3vw, 1rem);
     }
     .game-layout {
         flex-direction: column;
+        align-items: stretch;
     }
-    .game-sidebar {
-        width: 100%;
-    }
-    .stats-bar {
-        gap: 8px;
-        justify-content: center;
-    }
-    .stat-item {
-        padding: 10px 8px;
-    }
-    .stat-value {
-        font-size: 1.2rem;
-    }
-    .puzzle-main {
-        flex-direction: column;
-        align-items: center;
-    }
+    .game-sidebar { width: 100%; }
+    .puzzle-main { flex-direction: row; align-items: center; }
     .puzzle-grid {
-        width: min(420px, 100%, calc(100vh - 280px));
+        width: min(420px, 100%, calc(100dvh - 320px));
     }
-    .preview-panel {
-        width: 100px;
-    }
-    .victory-content {
-        padding: 1.5rem 2rem;
+}
+@media (max-width: 480px), (max-height: 560px) {
+    .stat-icon { font-size: 0.8rem; }
+    .stat-label { font-size: 0.55rem; }
+    .stat-value { font-size: 1rem; }
+    .puzzle-grid {
+        width: min(360px, 100%, calc(100dvh - 340px));
     }
 }
 </style>
 
+<div class="pz-bg-decor"></div>
+<div class="pz-wrap">
 <div class="game-container">
-    <div class="puzzle-header">
-        <h1 class="game-title">🧩 拼图游戏</h1>
-    </div>
+    <h1 class="game-title">🧩 拼图游戏</h1>
 
     <div class="game-layout">
         <div class="game-sidebar">
@@ -418,25 +525,34 @@ body {
 
             <div class="stats-bar">
                 <div class="stat-item">
+                    <span class="stat-icon">👣</span>
                     <span class="stat-label">步数</span>
                     <span class="stat-value" id="moves">0</span>
                 </div>
                 <div class="stat-item">
+                    <span class="stat-icon">⏱️</span>
                     <span class="stat-label">用时</span>
                     <span class="stat-value" id="time">00:00</span>
                 </div>
                 <div class="stat-item">
+                    <span class="stat-icon">🏆</span>
                     <span class="stat-label">最佳记录</span>
                     <span class="stat-value" id="best">--:--</span>
                 </div>
             </div>
 
             <div class="puzzle-controls">
-                <select id="difficulty" class="difficulty-select">
-                    <option value="3">3×3（适合1-2年级）</option>
-                    <option value="5" selected>5×5（适合2-4年级）</option>
-                    <option value="7">7×7（适合4-5年级）</option>
-                    <option value="9">9×9（适合5-6年级）</option>
+                <div class="difficulty-pills" id="difficultyPills">
+                    <button type="button" class="diff-btn" data-size="3">3×3</button>
+                    <button type="button" class="diff-btn active" data-size="5">5×5</button>
+                    <button type="button" class="diff-btn" data-size="7">7×7</button>
+                    <button type="button" class="diff-btn" data-size="9">9×9</button>
+                </div>
+                <select id="difficulty" class="difficulty-select hidden" aria-hidden="true">
+                    <option value="3">3×3</option>
+                    <option value="5" selected>5×5</option>
+                    <option value="7">7×7</option>
+                    <option value="9">9×9</option>
                 </select>
                 <div class="controls-row">
                     <button id="restart" class="btn btn-primary">🔄 重新开始</button>
@@ -455,31 +571,37 @@ body {
             </div>
             <div class="preview-panel" id="previewPanel">
                 <img id="previewImg" src="" alt="预览原图" />
-                <button class="preview-toggle" id="previewToggle" title="切换预览显示">👁️</button>
+                <button type="button" class="preview-toggle" id="previewToggle" title="切换预览显示">👁️</button>
             </div>
         </div>
     </div>
 </div>
+</div>
 
-<div class="victory-modal" id="victoryModal">
+<div class="victory-modal hidden" id="victoryModal">
     <div class="victory-content">
         <h2>🎉 恭喜完成！</h2>
         <div class="victory-stats">
             <div class="stat-item">
+                <span class="stat-icon">👣</span>
                 <span class="stat-label">总步数</span>
                 <span class="stat-value" id="victoryMoves">0</span>
             </div>
             <div class="stat-item">
+                <span class="stat-icon">⏱️</span>
                 <span class="stat-label">用时</span>
                 <span class="stat-value" id="victoryTime">00:00</span>
             </div>
             <div class="stat-item">
+                <span class="stat-icon">🧩</span>
                 <span class="stat-label">难度</span>
                 <span class="stat-value" id="victoryDifficulty">5×5</span>
             </div>
         </div>
-        <button id="playAgain" class="btn btn-primary">🔄 再玩一次</button>
-        <button id="challengeHarder" class="btn btn-secondary" style="margin-top:0.75rem;">🚀 挑战更难</button>
+        <div class="victory-btns">
+            <button id="playAgain" class="btn btn-primary">🔄 再玩一次</button>
+            <button id="challengeHarder" class="btn btn-secondary">🚀 挑战更难</button>
+        </div>
     </div>
 </div>
 
@@ -495,6 +617,7 @@ var movesEl = document.getElementById('moves');
 var timeEl = document.getElementById('time');
 var bestEl = document.getElementById('best');
 var difficultySelect = document.getElementById('difficulty');
+var difficultyPills = document.getElementById('difficultyPills');
 var restartBtn = document.getElementById('restart');
 var changeImgBtn = document.getElementById('changeImg');
 var targetHighlight = document.getElementById('targetHighlight');
@@ -518,6 +641,30 @@ var rafId = null;
 // Click swap state
 var selectedPiece = null;
 
+/* ===== 通用动效辅助 ===== */
+function bounceStat(el) {
+    el.classList.remove('stat-bounce');
+    void el.offsetWidth;
+    el.classList.add('stat-bounce');
+    el.addEventListener('animationend', function(){ el.classList.remove('stat-bounce'); }, { once: true });
+}
+function addRipple(btn, e) {
+    var rect = btn.getBoundingClientRect();
+    var size = Math.max(rect.width, rect.height);
+    var x = (e.clientX || rect.left + rect.width/2) - rect.left - size/2;
+    var y = (e.clientY || rect.top + rect.height/2) - rect.top - size/2;
+    var span = document.createElement('span');
+    span.className = 'ripple';
+    span.style.width = span.style.height = size + 'px';
+    span.style.left = x + 'px';
+    span.style.top = y + 'px';
+    btn.appendChild(span);
+    span.addEventListener('animationend', function(){ span.remove(); }, { once: true });
+}
+document.querySelectorAll('.btn, .diff-btn').forEach(function(btn){
+    btn.addEventListener('click', function(e){ addRipple(btn, e); });
+});
+
 function fmtTime(s) {
     var m = Math.floor(s / 60);
     var sec = s % 60;
@@ -533,6 +680,7 @@ function loadBest() {
         try { var d = JSON.parse(raw); bestEl.textContent = d.steps + '步/' + fmtTime(d.time); }
         catch(e) { bestEl.textContent = '--:--'; }
     } else { bestEl.textContent = '--:--'; }
+    bounceStat(bestEl);
 }
 
 function saveBest() {
@@ -550,7 +698,10 @@ function saveBest() {
     bestEl.textContent = steps + '步/' + fmtTime(time);
 }
 
-function updateMoves() { movesEl.textContent = steps; }
+function updateMoves() {
+    movesEl.textContent = steps;
+    bounceStat(movesEl);
+}
 function updateTime() { timeEl.textContent = fmtTime(time); }
 
 function startTimer() {
@@ -606,6 +757,19 @@ function checkWin() {
     return true;
 }
 
+/* 移动端礼花从弹窗中心绽开（不改共享 game_confetti.js） */
+function launchConfettiFromCard() {
+    if (typeof confetti !== 'function') return;
+    var card = document.querySelector('.victory-content');
+    var rect = card ? card.getBoundingClientRect() : { left: window.innerWidth/2, top: window.innerHeight/2, width: 0, height: 0 };
+    var ox = (rect.left + rect.width / 2) / window.innerWidth;
+    var oy = (rect.top + rect.height / 2) / window.innerHeight;
+    var colors = ['#6366f1', '#ec4899', '#f59e0b', '#a78bfa', '#22c55e'];
+    confetti({ particleCount: 80, spread: 70, origin: { x: ox, y: oy }, colors: colors });
+    setTimeout(function(){ confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: ox, y: oy }, colors: colors }); }, 150);
+    setTimeout(function(){ confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: ox, y: oy }, colors: colors }); }, 300);
+}
+
 function onVictory() {
     won = true;
     stopTimer();
@@ -613,15 +777,21 @@ function onVictory() {
     hideHighlight();
     clearSelection();
 
-    // 礼花效果
-    launchConfetti();
+    // 弹窗数据先填好
+    victoryMovesEl.textContent = steps;
+    victoryTimeEl.textContent = fmtTime(time);
+    victoryDifficultyEl.textContent = gridSize + '×' + gridSize;
 
-    setTimeout(function(){
-        victoryMovesEl.textContent = steps;
-        victoryTimeEl.textContent = fmtTime(time);
-        victoryDifficultyEl.textContent = gridSize + '×' + gridSize;
-        victoryModal.classList.add('show');
-    }, 300);
+    // 弹窗和礼花同时出现
+    victoryModal.classList.remove('hidden');
+    // 移动端窄视口用弹窗中心绽开，桌面端用默认 launchConfetti
+    if (window.innerWidth <= 768) {
+        launchConfettiFromCard();
+    } else if (typeof launchConfetti === 'function') {
+        launchConfetti();
+    } else {
+        launchConfettiFromCard();
+    }
 }
 
 function clearSelection() {
@@ -635,11 +805,25 @@ function updateCorrect(p) {
     p.correct = (p.currentRow === p.targetRow && p.currentCol === p.targetCol);
 }
 
+function flashCorrect(idx) {
+    var el = pieceEls[idx];
+    el.classList.remove('flash-correct');
+    void el.offsetWidth;
+    el.classList.add('flash-correct');
+    el.addEventListener('animationend', function(){ el.classList.remove('flash-correct'); }, { once: true });
+}
+
 function updateCorrectClasses() {
     for (var i = 0; i < pieces.length; i++) {
+        var wasCorrect = pieces[i].correct;
         updateCorrect(pieces[i]);
-        if (pieces[i].correct) { pieceEls[i].classList.add('correct'); pieceEls[i].classList.remove('selected'); }
-        else { pieceEls[i].classList.remove('correct'); }
+        if (pieces[i].correct) {
+            pieceEls[i].classList.add('correct');
+            pieceEls[i].classList.remove('selected');
+            if (!wasCorrect) flashCorrect(i);
+        } else {
+            pieceEls[i].classList.remove('correct');
+        }
     }
 }
 
@@ -882,8 +1066,27 @@ previewToggle.addEventListener('click', function() {
     previewToggle.textContent = previewVisible ? '👁️' : '👁️‍🗨️';
 });
 
+// 难度药丸按钮 ↔ 隐藏 select 双向同步
+difficultyPills.addEventListener('click', function(e) {
+    var btn = e.target.closest('.diff-btn');
+    if (!btn) return;
+    var size = btn.dataset.size;
+    difficultyPills.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    difficultySelect.value = size;
+    startGame();
+});
+
+function syncPillsFromSelect() {
+    var cur = String(difficultySelect.value);
+    difficultyPills.querySelectorAll('.diff-btn').forEach(function(b){
+        b.classList.toggle('active', b.dataset.size === cur);
+    });
+}
+
 function startGame() {
     gridSize = parseInt(difficultySelect.value);
+    syncPillsFromSelect();
     // Reset state
     won = false;
     steps = 0;
@@ -898,7 +1101,6 @@ function startGame() {
     updateTime();
     hideHighlight();
     if (!imgSrc) randomImage();
-    // Build pieces after image status confirmed
     loadBest();
     initPieces();
     shuffle();
@@ -923,7 +1125,6 @@ function startGame() {
         }
         imgSrc = c.toDataURL();
         previewImg.src = imgSrc;
-        // Update all piece backgrounds to fallback image
         Array.prototype.forEach.call(pieceEls, function(el) {
             el.style.backgroundImage = 'url(' + imgSrc + ')';
         });
@@ -933,7 +1134,6 @@ function startGame() {
 
 function initPieces() {
     pieces = [];
-    // Remove old pieces
     grid.querySelectorAll('.piece').forEach(function(el) { el.remove(); });
     var sz = gridSize;
     var frag = document.createDocumentFragment();
@@ -970,7 +1170,6 @@ function shuffle() {
         pieces[b].currentRow = tmpR;
         pieces[b].currentCol = tmpC;
     }
-    // Double-check not accidentally solved
     var allCorrect = true;
     for (var j = 0; j < total; j++) {
         if (pieces[j].currentRow !== pieces[j].targetRow || pieces[j].currentCol !== pieces[j].targetCol) {
@@ -998,15 +1197,14 @@ changeImgBtn.addEventListener('click', function() {
     previewImg.src = imgSrc;
     startGame();
 });
-difficultySelect.addEventListener('change', startGame);
 
 playAgainBtn.addEventListener('click', function() {
-    victoryModal.classList.remove('show');
+    victoryModal.classList.add('hidden');
     startGame();
 });
 
 challengeHarderBtn.addEventListener('click', function() {
-    victoryModal.classList.remove('show');
+    victoryModal.classList.add('hidden');
     var sizes = [3, 5, 7, 9];
     var cur = sizes.indexOf(gridSize);
     if (cur < sizes.length - 1) difficultySelect.value = sizes[cur + 1];
