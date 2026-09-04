@@ -320,7 +320,8 @@
                         <a class="dropdown-item btn-sm" href="update_db.php" target="main" title="<?php echo $MSG_HELP_UPDATE_DATABASE?>"><i class="glyphicon glyphicon-hdd"></i> <?php echo $MSG_SYSTEM."-".$MSG_UPDATE_DATABASE?></a>
                         <a class="dropdown-item btn-sm" href="backup.php" target="main" title="<?php echo $MSG_HELP_BACKUP_DATABASE?>"><i class="glyphicon glyphicon-folder-close"></i> <?php echo $MSG_SYSTEM."-".$MSG_BACKUP_DATABASE?></a>
                         <a class="dropdown-item btn-sm" href="ranklist_export.php" target="main" title="<?php echo $MSG_EXPORT.$MSG_RANKLIST ?>"><i class="glyphicon glyphicon-export"></i> <?php echo  $MSG_EXPORT.$MSG_RANKLIST ?></a>
-                    
+                        <a class="dropdown-item btn-sm" href="teacher_ip_stats.php" target="main" title="老师登录IP统计"><i class="glyphicon glyphicon-map-marker"></i> 老师登录IP统计</a>
+
                     </div>
                 </div>
     <?php }?>

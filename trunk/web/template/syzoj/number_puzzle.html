@@ -5,265 +5,515 @@
 <script src="template/<?php echo $OJ_TEMPLATE?>/game_confetti.js"></script>
 
 <style>
-.puzzle-container {
-    max-width: 480px;
-    margin: 2rem auto;
-    background: #fff;
-    border-radius: 20px;
-    padding: 2rem;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+/* ===== 数字华容道 np- 前缀，统一规范 ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+/* 背景装饰层：蓝青暖底 + 点纹 + 浮动光斑 */
+.np-bg-decor {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+        radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.08) 1px, transparent 0) 0 0/22px 22px,
+        linear-gradient(135deg, #eff6ff 0%, #ecfeff 50%, #fffbeb 100%);
+    overflow: hidden;
+}
+.np-bg-decor::before,
+.np-bg-decor::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.5;
+    animation: np-float-blob 8s ease-in-out infinite;
+}
+.np-bg-decor::before {
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, #93c5fd, transparent 70%);
+    top: -60px; left: -60px;
+}
+.np-bg-decor::after {
+    width: 360px; height: 360px;
+    background: radial-gradient(circle, #fcd34d, transparent 70%);
+    bottom: -80px; right: -80px;
+    animation-delay: 4s;
+}
+@keyframes np-float-blob {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, 20px) scale(1.1); }
+}
+
+/* 外层 wrapper：靠上居中 */
+.np-wrap {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* 玻璃拟态主容器 */
+.game-container {
+    width: 100%;
+    max-width: 900px;
+    margin: clamp(0.5rem, 1.5vh, 1rem) auto;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: clamp(18px, 3vw, 30px);
+    padding: clamp(1.2rem, 3vh, 2.2rem) clamp(1.2rem, 3vw, 2rem);
+    box-shadow: 0 20px 60px rgba(59, 130, 246, 0.15), 0 4px 20px rgba(6, 182, 212, 0.08);
     text-align: center;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.5rem, 1.5vh, 1rem);
+    max-height: 100dvh;
+    overflow-y: auto;
 }
 
-.puzzle-header h1 {
-    color: #3498DB;
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
+/* 容器顶部彩虹条 */
+.game-container::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #3b82f6, #06b6d4, #f59e0b, #3b82f6);
+    background-size: 300% 100%;
+    animation: np-gradient-shift 6s linear infinite;
+}
+@keyframes np-gradient-shift {
+    0% { background-position: 0% 0; }
+    100% { background-position: 300% 0; }
 }
 
+/* 标题：渐变文字 */
+.game-title {
+    font-size: clamp(1.5rem, 4.5vw, 2.3rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 50%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    filter: drop-shadow(0 2px 8px rgba(59, 130, 246, 0.25));
+    margin: 0;
+}
+.game-title::after {
+    content: "";
+    display: block;
+    width: 60px;
+    height: 4px;
+    margin: 6px auto 0;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #3b82f6, #06b6d4);
+}
+
+/* 统计栏 */
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(6px, 1.5vw, 10px);
+    width: 100%;
+    flex-shrink: 0;
+    margin: 0;
+}
+.stat-item {
+    background: linear-gradient(135deg, #ffffff, #eff6ff);
+    border: 1px solid rgba(147, 197, 253, 0.25);
+    border-radius: clamp(12px, 2vw, 16px);
+    padding: clamp(8px, 1.8vh, 12px) clamp(6px, 1.5vw, 12px);
+    box-shadow: 0 2px 10px rgba(59, 130, 246, 0.06);
+    text-align: center;
+    min-width: 0;
+}
+.stat-item:nth-child(1) { border-top: 3px solid #3b82f6; }
+.stat-item:nth-child(2) { border-top: 3px solid #06b6d4; }
+.stat-item:nth-child(3) { border-top: 3px solid #f59e0b; }
+.stat-icon { font-size: 1.1rem; display: block; line-height: 1.2; }
+.stat-label {
+    font-size: clamp(0.55rem, 1.5vw, 0.8rem);
+    color: #6b7280;
+    display: block;
+    margin: 2px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.stat-value {
+    font-size: clamp(1rem, 3vw, 1.3rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    word-break: break-word;
+    display: inline-block;
+}
+.stat-value.stat-bounce { animation: np-stat-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes np-stat-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.35); }
+    100% { transform: scale(1); }
+}
+
+/* 介绍卡 */
 .puzzle-intro {
-    background: #EBF5FB;
-    border-left: 4px solid #3498DB;
-    padding: 1rem;
+    background: linear-gradient(135deg, #eff6ff, #ecfeff);
+    border: 1px solid rgba(147, 197, 253, 0.25);
+    border-left: 4px solid #3b82f6;
+    padding: clamp(0.7rem, 2vh, 1rem);
     border-radius: 12px;
-    margin: 1rem 0;
+    margin: 0;
     text-align: left;
+    width: 100%;
+}
+.puzzle-intro p {
     color: #374151;
-    font-size: 0.95rem;
+    font-size: clamp(0.8rem, 2vw, 0.95rem);
     line-height: 1.6;
 }
 
-.puzzle-stats {
+/* 难度药丸按钮组 */
+.difficulty-pills {
     display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 1.5rem;
+    gap: clamp(4px, 1vw, 8px);
+    width: 100%;
     flex-wrap: wrap;
 }
-
-.stat-item {
-    background: #EBF5FB;
-    border-radius: 12px;
-    padding: 12px 24px;
-    min-width: 90px;
-    text-align: center;
-}
-
-.stat-label {
-    font-size: 0.8rem;
-    color: #888;
-    display: block;
-    margin-bottom: 4px;
-}
-
-.stat-value {
-    font-size: 1.5rem;
+.diff-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: clamp(0.5rem, 1.5vh, 0.7rem) clamp(4px, 1vw, 8px);
+    border-radius: 999px;
+    border: 2px solid #93c5fd;
+    background: #fff;
+    color: #3b82f6;
+    font-size: clamp(0.72rem, 1.8vw, 0.9rem);
     font-weight: 700;
-    color: #3498DB;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+.diff-btn:hover { background: #eff6ff; transform: translateY(-1px); }
+.diff-btn.active {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    border-color: #3b82f6;
+    box-shadow: 0 6px 18px rgba(59, 130, 246, 0.35);
+}
+/* 困难档用橙色对比色区分 */
+.diff-btn[data-diff="hard"] { border-color: #fbbf24; color: #d97706; }
+.diff-btn[data-diff="hard"].active {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff; border-color: #f59e0b;
+    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.4);
 }
 
+/* 主按钮 + 次级按钮 */
+.btn {
+    padding: clamp(0.6rem, 1.8vh, 0.75rem) clamp(1rem, 3vw, 1.5rem);
+    border: none;
+    border-radius: 999px;
+    font-size: clamp(0.85rem, 2vw, 1rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(59, 130, 246, 0.4);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(59, 130, 246, 0.5); }
+.btn-primary:active { transform: translateY(0); }
+.btn-secondary {
+    background: #fff;
+    color: #3b82f6;
+    border: 2px solid rgba(59, 130, 246, 0.4);
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.1);
+}
+.btn-secondary:hover { background: #eff6ff; transform: translateY(-1px); }
+
+/* 按钮波纹 */
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(0);
+    animation: np-ripple-anim 0.6s ease-out;
+    pointer-events: none;
+}
+@keyframes np-ripple-anim {
+    to { transform: scale(4); opacity: 0; }
+}
+
+.hidden { display: none !important; }
+
+/* 主布局：sidebar + 游戏区 */
+.game-layout {
+    display: flex;
+    gap: clamp(1rem, 2vw, 1.5rem);
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+    justify-content: center;
+}
+.game-sidebar {
+    width: clamp(240px, 28vw, 300px);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.6rem, 1.8vh, 1rem);
+}
+.puzzle-main {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    min-width: 0;
+}
+
+/* 控制区 */
 .puzzle-controls {
     display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
 }
-
-.diff-btns {
+.controls-row {
     display: flex;
-    background: #f0f2f5;
-    border-radius: 12px;
-    padding: 4px;
-    gap: 4px;
+    gap: 0.75rem;
+}
+.controls-row .btn { flex: 1; }
+
+.puzzle-footer {
+    text-align: left;
+    color: #6b7280;
+    font-size: clamp(0.72rem, 1.8vw, 0.875rem);
 }
 
-.diff-btn {
-    padding: 8px 20px;
-    border: none;
-    border-radius: 10px;
-    font-size: 0.9rem;
-    background: transparent;
-    cursor: pointer;
-    font-weight: 600;
-    color: #888;
-    transition: all 0.2s;
-}
-
-.diff-btn:hover { color: #555; }
-
-.diff-btn.active {
-    background: #fff;
-    color: #3498DB;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.btn {
-    border: none;
-    border-radius: 12px;
-    padding: 12px 32px;
-    color: #fff;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #3498DB, #2980B9);
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
-}
-
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52,152,219,0.27); }
-.btn-primary:active { transform: translateY(0); }
-
-/* 核心：CSS Grid 自然布局 */
+/* 核心：CSS Grid 棋盘 */
 .puzzle-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    background: #f0f2f5;
-    border-radius: 12px;
-    padding: 8px;
+    grid-template-columns: repeat(var(--grid-size, 4), 1fr);
+    gap: clamp(4px, 1vw, 8px);
+    background: linear-gradient(135deg, #f1f5f9, #eff6ff);
+    border: 1px solid rgba(147, 197, 253, 0.25);
+    border-radius: 16px;
+    padding: clamp(4px, 1vw, 8px);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
     touch-action: manipulation;
     user-select: none;
+    width: min(420px, 100%);
+    aspect-ratio: 1;
 }
 
 .tile {
     aspect-ratio: 1;
     background: linear-gradient(135deg, #fff, #f1f5f9);
-    border-radius: 10px;
+    border-radius: clamp(6px, 1.5vw, 10px);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(1.4rem, 5vw, 2.2rem);
+    font-size: clamp(1.2rem, 4vw, 2rem);
     font-weight: 700;
     color: #1e293b;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.1);
     cursor: pointer;
-    transition: transform 0.15s ease, opacity 0.15s ease;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-
-.tile:hover { transform: scale(1.05); }
+.tile:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2); }
 
 .tile.empty {
-    background: #e2e8f0;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
+    background: linear-gradient(135deg, #e2e8f0, #dbeafe);
+    box-shadow: inset 0 2px 4px rgba(59, 130, 246, 0.08);
     cursor: default;
 }
-
 .tile.empty:hover { transform: none; }
 
-.puzzle-footer {
-    margin-top: 2rem;
-    color: #999;
-    font-size: 0.875rem;
-}
+/* 移动端礼花从弹窗中心绽开 */
+/* 不改共享的 game_confetti.js，页面内覆盖 */
 
-.victory-modal {
-    background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(8px);
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 100000;
-}
-
-.victory-modal.hidden {
-    display: none !important;
-}
-
-.victory-content {
-    background: white;
-    padding: 2.5rem 3rem;
-    border-radius: 20px;
-    text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    max-width: 400px;
-    width: 90%;
-}
-.victory-content h2 { color: #3498DB; font-size: 1.8rem; margin-bottom: 1rem; }
-
-.victory-stats {
-    margin: 1.5rem 0;
-    display: flex;
-    gap: 2rem;
-    justify-content: center;
-}
-
+/* ===== 移动端适配 ===== */
 @media (max-width: 768px) {
-    .puzzle-container { margin: 1rem; padding: 1.5rem; }
-    .puzzle-header h1 { font-size: 1.6rem; }
-    .stat-item { padding: 10px 16px; min-width: 70px; }
-    .stat-value { font-size: 1.2rem; }
-    .puzzle-grid { gap: 6px; padding: 6px; }
+    .game-container {
+        padding: clamp(0.8rem, 2vh, 1.2rem) clamp(0.8rem, 3vw, 1rem);
+        margin: clamp(0.3rem, 1vh, 0.6rem) auto;
+    }
+    .game-layout {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .game-sidebar { width: 100%; }
+    .puzzle-main { justify-content: center; }
+    .puzzle-grid {
+        width: min(380px, 100%);
+        max-width: 100%;
+    }
+}
+@media (max-width: 480px), (max-height: 560px) {
+    .stat-icon { font-size: 0.8rem; }
+    .stat-label { font-size: 0.55rem; }
+    .stat-value { font-size: 1rem; }
+    .puzzle-grid {
+        width: min(320px, 100%);
+    }
+    .tile { font-size: clamp(1rem, 3.5vw, 1.6rem); }
 }
 </style>
 
-<div class="puzzle-container">
-    <div class="puzzle-header">
-        <h1>数字华容道</h1>
-        <p style="color:#666;margin-bottom:0.5rem;">将数字按1-15顺序排列，锻炼逻辑思维能力</p>
-        <div class="puzzle-intro">
-            <p>🎮 <strong>玩法说明：</strong>滑动方块，将数字按1-15的顺序排列，空格在右下角即为胜利。支持鼠标点击、触屏滑动和键盘方向键操作。</p>
+<div class="np-bg-decor"></div>
+<div class="np-wrap">
+<div class="game-container">
+    <h1 class="game-title">🔢 数字华容道</h1>
+
+    <div class="game-layout">
+        <div class="game-sidebar">
+            <div class="puzzle-intro">
+                <p>🎮 <strong>玩法说明：</strong>滑动方块，将数字按1-15的顺序排列，空格在右下角即为胜利。支持鼠标点击、触屏滑动和键盘方向键操作。</p>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-icon">👣</span>
+                    <span class="stat-label">步数</span>
+                    <span class="stat-value" id="moves">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">⏱️</span>
+                    <span class="stat-label">用时</span>
+                    <span class="stat-value" id="time">00:00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">🏆</span>
+                    <span class="stat-label">最佳记录</span>
+                    <span class="stat-value" id="best">--:--</span>
+                </div>
+            </div>
+
+            <div class="puzzle-controls">
+                <div class="difficulty-pills" id="diffBtns">
+                    <button type="button" class="diff-btn" data-diff="easy">简单</button>
+                    <button type="button" class="diff-btn active" data-diff="medium">中等</button>
+                    <button type="button" class="diff-btn" data-diff="hard">困难</button>
+                </div>
+                <div class="controls-row">
+                    <button id="restart" class="btn btn-primary">🔄 重新开始</button>
+                </div>
+            </div>
+
+            <div class="puzzle-footer">
+                <p id="diffHint">💡 简单模式：1-8已排好，只需完成最后两行（至少3步）</p>
+                <p>适合小学3-6年级学生，点击与空格相邻的数字块进行滑动</p>
+            </div>
+        </div>
+
+        <div class="puzzle-main">
+            <div class="puzzle-grid" id="grid"></div>
         </div>
     </div>
-
-    <div class="puzzle-stats">
-        <div class="stat-item">
-            <span class="stat-label">步数</span>
-            <span class="stat-value" id="moves">0</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">用时</span>
-            <span class="stat-value" id="time">00:00</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">最佳记录</span>
-            <span class="stat-value" id="best">--:--</span>
-        </div>
-    </div>
-
-    <div class="puzzle-controls">
-        <div class="diff-btns" id="diffBtns">
-            <button class="diff-btn" data-diff="easy">简单</button>
-            <button class="diff-btn active" data-diff="medium">中等</button>
-            <button class="diff-btn" data-diff="hard">困难</button>
-        </div>
-        <button id="restart" class="btn btn-primary">重新开始</button>
-    </div>
-
-    <div class="puzzle-grid" id="grid"></div>
-
-    <div class="puzzle-footer">
-        <p id="diffHint" style="margin-bottom:0.5rem;color:#666;">💡 简单模式：1-8已排好，只需完成最后两行（至少3步）</p>
-        <p>适合小学3-6年级学生，点击与空格相邻的数字块进行滑动</p>
-    </div>
+</div>
 </div>
 
 <div class="victory-modal hidden" id="victoryModal">
     <div class="victory-content">
         <h2>🎉 恭喜你赢了！</h2>
         <div class="victory-stats">
-            <div>
-                <p class="stat-label">总步数</p>
-                <p class="stat-value" id="victoryMoves">0</p>
+            <div class="stat-item">
+                <span class="stat-icon">👣</span>
+                <span class="stat-label">总步数</span>
+                <span class="stat-value" id="victoryMoves">0</span>
             </div>
-            <div>
-                <p class="stat-label">用时</p>
-                <p class="stat-value" id="victoryTime">00:00</p>
+            <div class="stat-item">
+                <span class="stat-icon">⏱️</span>
+                <span class="stat-label">用时</span>
+                <span class="stat-value" id="victoryTime">00:00</span>
             </div>
         </div>
-        <button id="playAgain" class="btn btn-primary">再玩一次</button>
+        <div class="victory-btns">
+            <button id="playAgain" class="btn btn-primary">🔄 再玩一次</button>
+        </div>
     </div>
 </div>
+
+<style>
+/* 胜利弹窗 */
+.victory-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 27, 75, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.victory-content {
+    background: linear-gradient(160deg, #ffffff, #eff6ff);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 30px;
+    padding: clamp(1.5rem, 4vh, 2.5rem);
+    text-align: center;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(59, 130, 246, 0.1);
+    max-width: 400px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    animation: np-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes np-pop-in {
+    0% { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.victory-content::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #3b82f6, #06b6d4, #f59e0b, #3b82f6);
+    background-size: 300% 100%;
+    animation: np-gradient-shift 6s linear infinite;
+}
+.victory-content h2 {
+    font-size: clamp(1.4rem, 4vw, 1.8rem);
+    font-weight: 800;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4, #f59e0b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+}
+.victory-stats {
+    margin: 1.5rem 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(8px, 2vw, 1.5rem);
+    justify-content: center;
+}
+.victory-stats .stat-item { min-width: 0; }
+.victory-btns {
+    display: flex;
+    gap: 0.75rem;
+    flex-direction: column;
+}
+</style>
 
 <script>
 class NumberPuzzle {
@@ -323,36 +573,29 @@ class NumberPuzzle {
         const diff = this.getDifficulty();
 
         if (diff === 'easy') {
-            // 简单：1-8已排好，只打乱最后两行（位置8-15），BFS保证最优解>=3步
-            // 注：4格最后一行最多只有3步且3步题唯一，故扩大到最后两行以获得多样且>=3步的题目
             const MIN_STEPS = 3;
             let attempts = 0;
             let ok = false;
             do {
-                // 重置最后两行为完成态 [9..15, 0]
                 for (let i = 8; i < this.total - 1; i++) this.board[i] = i + 1;
                 this.board[15] = 0;
                 this.emptyIdx = 15;
-                // 空格限制在最后两行内随机移动，保证1-8不动
                 let last = -1;
                 for (let i = 0; i < 60; i++) {
                     let neighbors = this.getNeighbors(this.emptyIdx).filter(n => n >= 8);
                     let choices = neighbors.filter(n => n !== last);
                     if (choices.length === 0) choices = neighbors;
-                    if (choices.length === 0) break; // 安全兜底
+                    if (choices.length === 0) break;
                     const pick = choices[Math.floor(Math.random() * choices.length)];
                     last = this.emptyIdx;
                     this.swap(this.emptyIdx, pick);
                     this.emptyIdx = pick;
                 }
-                // BFS 求当前状态到完成态的最短步数，不达标则重洗
                 if (this.easyMinSteps() >= MIN_STEPS) { ok = true; break; }
                 attempts++;
             } while (attempts < 100);
-            // 兜底：若100次仍不达标（极小概率），强制扰动确保非平凡
             if (!ok) { this.swap(8, 12); this.swap(9, 13); }
         } else {
-            // 中等/困难：全面打乱（从完成状态随机移动，保证可解）
             const steps = diff === 'medium' ? 150 : 400;
             for (let i = 0; i < steps; i++) {
                 const neighbors = this.getNeighbors(this.emptyIdx);
@@ -362,14 +605,9 @@ class NumberPuzzle {
             }
         }
 
-        // 统一校正：emptyIdx 必须指向 board 中 0 的真实位置
         this.emptyIdx = this.board.indexOf(0);
     }
 
-    /* ---------- 简单模式难度评估（2x4 子棋盘 BFS） ---------- */
-
-    // 将最后两行 board[8..15] 视为 2行4列子棋盘，求当前状态到完成态的最短步数。
-    // 滑块每步可逆，故从完成态 BFS 一次即可得到所有可达状态的最短距离（懒加载缓存）。
     easyMinSteps() {
         const W = 4, H = 2;
         const TARGET = [9, 10, 11, 12, 13, 14, 15, 0];
@@ -407,94 +645,43 @@ class NumberPuzzle {
 
     /* ---------- 核心逻辑 ---------- */
 
-    // 获取某索引的相邻索引（上下左右）
     getNeighbors(idx) {
         const r = Math.floor(idx / this.size);
         const c = idx % this.size;
         const result = [];
-        if (r > 0) result.push(idx - this.size); // 上
-        if (r < this.size - 1) result.push(idx + this.size); // 下
-        if (c > 0) result.push(idx - 1); // 左
-        if (c < this.size - 1) result.push(idx + 1); // 右
+        if (r > 0) result.push(idx - this.size);
+        if (r < this.size - 1) result.push(idx + this.size);
+        if (c > 0) result.push(idx - 1);
+        if (c < this.size - 1) result.push(idx + 1);
         return result;
     }
 
-    // 判断两个索引是否相邻
     isAdjacent(a, b) {
         const ar = Math.floor(a / this.size), ac = a % this.size;
         const br = Math.floor(b / this.size), bc = b % this.size;
         return (Math.abs(ar - br) + Math.abs(ac - bc)) === 1;
     }
 
-    // 交换数组中两个位置的值
     swap(i, j) {
         [this.board[i], this.board[j]] = [this.board[j], this.board[i]];
     }
 
-    // 尝试移动指定索引处的瓷砖
     tryMove(idx) {
         if (this.isWon || this.isAnimating) return;
-        if (this.board[idx] === 0) return; // 点的是空格
-        if (!this.isAdjacent(idx, this.emptyIdx)) return; // 不相邻
+        if (this.board[idx] === 0) return;
+        if (!this.isAdjacent(idx, this.emptyIdx)) return;
 
         this.isAnimating = true;
 
-        // 交换数组
         this.swap(idx, this.emptyIdx);
         this.emptyIdx = idx;
 
-        // 重绘整个棋盘（最可靠，无不同步问题）
         this.render();
 
-        // 更新步数
         this.moves++;
         this.updateMoves();
         this.checkWin();
         this.isAnimating = false;
-    }
-
-    // 交换两个 DOM 元素的位置（在父容器中）
-    swapDOM(a, b) {
-        const parent = a.parentNode;
-        const aNext = a.nextSibling;
-        const bNext = b.nextSibling;
-        if (aNext === b) {
-            parent.insertBefore(b, a);
-        } else if (bNext === a) {
-            parent.insertBefore(a, b);
-        } else {
-            parent.insertBefore(a, bNext);
-            parent.insertBefore(b, aNext);
-        }
-        // 同步更新 dataset.idx，保持与网格位置一致
-        const tmpIdx = a.dataset.idx;
-        a.dataset.idx = b.dataset.idx;
-        b.dataset.idx = tmpIdx;
-    }
-
-    // 简单的交换动画
-    animateSwap(tileA, tileB, callback) {
-        const rectA = tileA.getBoundingClientRect();
-        const rectB = tileB.getBoundingClientRect();
-        const dx = rectB.left - rectA.left;
-        const dy = rectB.top - rectA.top;
-
-        tileA.style.transition = 'transform 0.15s ease';
-        tileB.style.transition = 'transform 0.15s ease';
-        tileA.style.transform = `translate(${dx}px, ${dy}px)`;
-        tileB.style.transform = `translate(${-dx}px, ${-dy}px)`;
-        tileA.style.zIndex = '10';
-        tileB.style.zIndex = '10';
-
-        setTimeout(() => {
-            tileA.style.transition = '';
-            tileB.style.transition = '';
-            tileA.style.transform = '';
-            tileB.style.transform = '';
-            tileA.style.zIndex = '';
-            tileB.style.zIndex = '';
-            callback();
-        }, 155);
     }
 
     /* ---------- 渲染 ---------- */
@@ -526,12 +713,24 @@ class NumberPuzzle {
             this.bestEl.textContent = this.fmtTime(this.time);
         }
 
-        setTimeout(() => {
-            this.victoryMovesEl.textContent = this.moves;
-            this.victoryTimeEl.textContent = this.fmtTime(this.time);
-            this.victoryModal.classList.remove('hidden');
-            launchConfetti();
-        }, 300);
+        // 弹窗和礼花同时出现
+        this.victoryMovesEl.textContent = this.moves;
+        this.victoryTimeEl.textContent = this.fmtTime(this.time);
+        this.victoryModal.classList.remove('hidden');
+        this.launchConfettiFromCard();
+    }
+
+    /* 移动端礼花从弹窗中心绽开（不改共享 game_confetti.js） */
+    launchConfettiFromCard() {
+        if (typeof confetti !== 'function') return;
+        var card = document.querySelector('.victory-content');
+        var rect = card ? card.getBoundingClientRect() : { left: window.innerWidth/2, top: window.innerHeight/2, width: 0, height: 0 };
+        var ox = (rect.left + rect.width / 2) / window.innerWidth;
+        var oy = (rect.top + rect.height / 2) / window.innerHeight;
+        var colors = ['#3b82f6', '#06b6d4', '#f59e0b', '#93c5fd', '#22d3ee'];
+        confetti({ particleCount: 80, spread: 70, origin: { x: ox, y: oy }, colors: colors });
+        setTimeout(function(){ confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: ox, y: oy }, colors: colors }); }, 150);
+        setTimeout(function(){ confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: ox, y: oy }, colors: colors }); }, 300);
     }
 
     /* ---------- 计时 ---------- */
@@ -543,8 +742,18 @@ class NumberPuzzle {
         }, 1000);
     }
 
-    updateMoves() { this.movesEl.textContent = this.moves; }
+    updateMoves() {
+        this.movesEl.textContent = this.moves;
+        this.bounceStat(this.movesEl);
+    }
     updateTime() { this.timeEl.textContent = this.fmtTime(this.time); }
+
+    bounceStat(el) {
+        el.classList.remove('stat-bounce');
+        void el.offsetWidth;
+        el.classList.add('stat-bounce');
+        el.addEventListener('animationend', () => el.classList.remove('stat-bounce'), { once: true });
+    }
 
     getDifficulty() {
         const active = this.diffBtns.querySelector('.diff-btn.active');
@@ -606,25 +815,16 @@ class NumberPuzzle {
             const threshold = 30;
             if (Math.abs(dx) < threshold && Math.abs(dy) < threshold) { touchIdx = -1; return; }
 
-            // 判断滑动方向，找到该方向上离空格最近的同行/列瓷砖
             let target = -1;
             const tr = Math.floor(touchIdx / this.size), tc = touchIdx % this.size;
             const er = Math.floor(this.emptyIdx / this.size), ec = this.emptyIdx % this.size;
 
             if (Math.abs(dx) > Math.abs(dy)) {
-                // 水平滑动
-                if (dx > 0 && tr === er && tc < ec) { // 向右滑，空格在右边
-                    target = this.emptyIdx - 1;
-                } else if (dx < 0 && tr === er && tc > ec) { // 向左滑，空格在左边
-                    target = this.emptyIdx + 1;
-                }
+                if (dx > 0 && tr === er && tc < ec) target = this.emptyIdx - 1;
+                else if (dx < 0 && tr === er && tc > ec) target = this.emptyIdx + 1;
             } else {
-                // 垂直滑动
-                if (dy > 0 && tc === ec && tr < er) { // 向下滑，空格在下边
-                    target = this.emptyIdx - this.size;
-                } else if (dy < 0 && tc === ec && tr > er) { // 向上滑，空格在上边
-                    target = this.emptyIdx + this.size;
-                }
+                if (dy > 0 && tc === ec && tr < er) target = this.emptyIdx - this.size;
+                else if (dy < 0 && tc === ec && tr > er) target = this.emptyIdx + this.size;
             }
             if (target >= 0) this.tryMove(target);
             touchIdx = -1;
@@ -681,6 +881,25 @@ class NumberPuzzle {
 
         // 防止文字选中
         this.grid.addEventListener('selectstart', (e) => e.preventDefault());
+
+        // 按钮波纹
+        document.querySelectorAll('.btn, .diff-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.addRipple(btn, e));
+        });
+    }
+
+    addRipple(btn, e) {
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = (e.clientX || rect.left + rect.width/2) - rect.left - size/2;
+        const y = (e.clientY || rect.top + rect.height/2) - rect.top - size/2;
+        const span = document.createElement('span');
+        span.className = 'ripple';
+        span.style.width = span.style.height = size + 'px';
+        span.style.left = x + 'px';
+        span.style.top = y + 'px';
+        btn.appendChild(span);
+        span.addEventListener('animationend', () => span.remove(), { once: true });
     }
 }
 

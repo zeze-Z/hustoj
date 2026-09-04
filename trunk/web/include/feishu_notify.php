@@ -21,16 +21,10 @@ function feishu_notify($title, $content, $level = 'info') {
         return false;
     }
 
-    // 测试环境IP检测：过滤 192.168.x.x 网段
-    $isTestEnv = false;
-    // 检测访问者IP
+    // 测试环境IP检测：客户端IP在私有网段则不发送
     $client_ip = $_SERVER['REMOTE_ADDR'] ?? 'CLI';
-    if (strpos($client_ip, '192.168.') === 0 || strpos($client_ip, '127.0.') === 0) {
-        $isTestEnv = true;
-    }
-    
-    // 如果是测试环境，直接不发送告警
-    if ($isTestEnv) {
+    if (strpos($client_ip, '192.168.') === 0 || strpos($client_ip, '127.0.') === 0
+        || strpos($client_ip, '10.') === 0 || strpos($client_ip, '172.') === 0) {
         return false;
     }
 

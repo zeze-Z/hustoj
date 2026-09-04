@@ -1,320 +1,588 @@
 <?php $show_title="贪吃蛇 - $OJ_NAME"; ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/game_confetti.js"></script>
 
+<div class="padding">
 <style>
-/* ===== 统一游戏基础样式 ===== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* ===== 贪吃蛇 sk- 前缀，统一规范 ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
-    background: #f0f2f5;
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
+/* 背景装饰层：绿橙暖底 + 点纹 + 浮动光斑 */
+.sk-bg-decor {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+        radial-gradient(circle at 1px 1px, rgba(74,222,128,0.10) 1px, transparent 0) 0 0/22px 22px,
+        linear-gradient(135deg, #f0fdf4 0%, #fff7ed 50%, #f0fdf4 100%);
+    overflow: hidden;
+}
+.sk-bg-decor::before,
+.sk-bg-decor::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.5;
+    animation: sk-float-blob 8s ease-in-out infinite;
+}
+.sk-bg-decor::before {
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, #bbf7d0, transparent 70%);
+    top: -60px; left: -60px;
+}
+.sk-bg-decor::after {
+    width: 360px; height: 360px;
+    background: radial-gradient(circle, #fde68a, transparent 70%);
+    bottom: -80px; right: -80px;
+    animation-delay: 4s;
+}
+@keyframes sk-float-blob {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, 20px) scale(1.1); }
+}
+
+/* 外层 wrapper */
+.sk-wrap {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* 玻璃拟态主容器 */
 .game-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    background: #fff;
-    border-radius: 20px;
-    padding: 2rem;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    width: 100%;
+    max-width: 1120px;
+    margin: clamp(0.5rem, 1.5vh, 1rem) auto;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: clamp(18px, 3vw, 30px);
+    padding: clamp(1rem, 2.5vh, 1.8rem) clamp(1rem, 2.5vw, 1.5rem);
+    box-shadow: 0 20px 60px rgba(74, 222, 128, 0.15), 0 4px 20px rgba(245, 158, 11, 0.08);
     text-align: center;
     position: relative;
-}
-
-.game-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #4ADE80;
-    margin-bottom: 0.5rem;
-}
-
-.game-subtitle {
-    font-size: 1rem;
-    color: #666;
-    margin-bottom: 1.5rem;
-}
-
-.stats-bar {
+    overflow: hidden;
     display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.4rem, 1.2vh, 0.8rem);
+    max-height: 100dvh;
+    overflow-y: auto;
+}
+.game-container::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #4ADE80, #14b8a6, #f59e0b, #4ADE80);
+    background-size: 300% 100%;
+    animation: sk-gradient-shift 6s linear infinite;
+}
+@keyframes sk-gradient-shift {
+    0% { background-position: 0% 0; }
+    100% { background-position: 300% 0; }
 }
 
-.stat-item {
-    background: #ECFDF5;
-    border-radius: 12px;
-    padding: 12px 24px;
-    min-width: 100px;
+/* 标题 */
+.game-title {
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #4ADE80 0%, #14b8a6 50%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    filter: drop-shadow(0 2px 8px rgba(74,222,128,0.25));
+    margin: 0;
+    line-height: 1.2;
 }
-
-.stat-label {
-    font-size: 0.8rem;
-    color: #888;
+.game-title::after {
+    content: "";
     display: block;
-    margin-bottom: 4px;
+    width: 50px;
+    height: 4px;
+    margin: 6px auto 0;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #4ADE80, #f59e0b);
+}
+
+/* 主布局：sidebar + 画布区 */
+.game-layout {
+    display: flex;
+    gap: clamp(1rem, 2vw, 1.5rem);
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+    justify-content: center;
+}
+.game-sidebar {
+    width: clamp(240px, 28vw, 300px);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.5rem, 1.5vh, 0.8rem);
+}
+.snake-main {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    min-width: 0;
+}
+
+/* 统计栏 */
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(4px, 1vw, 8px);
+    width: 100%;
+    flex-shrink: 0;
+}
+.stat-item {
+    background: linear-gradient(135deg, #ffffff, #f0fdf4);
+    border: 1px solid rgba(74, 222, 128, 0.2);
+    border-radius: clamp(10px, 2vw, 14px);
+    padding: clamp(6px, 1.4vh, 10px) clamp(4px, 1.2vw, 10px);
+    box-shadow: 0 2px 10px rgba(74, 222, 128, 0.06);
+    text-align: center;
+    min-width: 0;
+}
+.stat-item:nth-child(1) { border-top: 3px solid #4ADE80; }
+.stat-item:nth-child(2) { border-top: 3px solid #f59e0b; }
+.stat-icon { font-size: 1rem; display: block; line-height: 1.2; }
+.stat-label {
+    font-size: clamp(0.55rem, 1.4vw, 0.75rem);
+    color: #6b7280;
+    display: block;
+    margin: 2px 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-
 .stat-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #4ADE80;
+    font-size: clamp(1rem, 2.8vw, 1.3rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #4ADE80, #14b8a6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    word-break: break-word;
+    display: inline-block;
+}
+.stat-item:nth-child(2) .stat-value {
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+}
+.stat-value.stat-bounce { animation: sk-stat-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes sk-stat-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.35); }
+    100% { transform: scale(1); }
 }
 
-.btn-primary {
-    background: linear-gradient(135deg, #4ADE80, #22C55E);
-    border: none;
-    border-radius: 12px;
-    padding: 12px 32px;
+/* 难度药丸按钮组 */
+.difficulty-pills {
+    display: flex;
+    gap: clamp(4px, 1vw, 8px);
+    width: 100%;
+}
+.diff-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: clamp(0.4rem, 1.2vh, 0.6rem) clamp(4px, 1vw, 8px);
+    border-radius: 999px;
+    border: 2px solid #4ADE80;
+    background: #fff;
+    color: #4ADE80;
+    font-size: clamp(0.72rem, 1.8vw, 0.88rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+.diff-btn:hover { background: #f0fdf4; transform: translateY(-1px); }
+.diff-btn.active {
+    background: linear-gradient(135deg, #4ADE80, #22c55e);
     color: #fff;
-    font-size: 1rem;
-    font-weight: 600;
+    border-color: #4ADE80;
+    box-shadow: 0 6px 18px rgba(74, 222, 128, 0.35);
+}
+/* 快速档用暖色对比色 */
+.diff-btn[data-speed="100"] { border-color: #f59e0b; color: #f59e0b; }
+.diff-btn[data-speed="100"]:hover { background: #fffbeb; }
+.diff-btn[data-speed="100"].active {
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    color: #fff; border-color: #f59e0b;
+    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.4);
+}
+
+/* 主按钮 + 次级按钮 */
+.btn {
+    padding: clamp(0.5rem, 1.5vh, 0.65rem) clamp(0.8rem, 2.5vw, 1.2rem);
+    border: none;
+    border-radius: 999px;
+    font-size: clamp(0.82rem, 2vw, 0.95rem);
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px #4ADE8033;
-    margin: 0.5rem;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
 }
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px #4ADE8044;
+.btn-primary {
+    background: linear-gradient(135deg, #4ADE80, #22C55E);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(74, 222, 128, 0.4);
 }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(74, 222, 128, 0.5); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-.btn-primary:active {
-    transform: translateY(0);
-}
-
-.btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* 贪吃蛇特有样式 */
-.difficulty-selector {
+.controls-row {
     display: flex;
-    gap: 10px;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
+    gap: 0.5rem;
 }
-
-.difficulty-btn {
-    padding: 8px 16px;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    background: white;
-    color: #666;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.difficulty-btn.active {
-    background: #4ADE80;
-    border-color: #4ADE80;
-    color: #fff;
-}
-
-.difficulty-btn:hover {
-    border-color: #4ADE80;
+.controls-row .btn { flex: 1; }
+.btn-secondary {
+    background: #fff;
     color: #4ADE80;
+    border: 2px solid rgba(74, 222, 128, 0.4);
+    box-shadow: 0 4px 14px rgba(74, 222, 128, 0.1);
+}
+.btn-secondary:hover { background: #f0fdf4; transform: translateY(-1px); }
+
+/* 按钮波纹 */
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(0);
+    animation: sk-ripple-anim 0.6s ease-out;
+    pointer-events: none;
+}
+@keyframes sk-ripple-anim {
+    to { transform: scale(4); opacity: 0; }
 }
 
-.difficulty-btn.active:hover {
-    color: #fff;
-}
+.hidden { display: none !important; }
 
+/* 画布容器 */
 .game-canvas-container {
     position: relative;
-    display: inline-block;
-    background-color: #1e293b;
-    border-radius: 12px;
-    padding: 10px;
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    align-items: flex-start;
+    justify-content: center;
+    background: linear-gradient(135deg, #f1f5f9, #f0fdf4);
+    border: 1px solid rgba(74, 222, 128, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(74, 222, 128, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    overflow: hidden;
 }
-
 #gameCanvas {
     display: block;
     background-color: #1e293b;
-    border: 2px solid #334155;
-    border-radius: 8px;
+    border-radius: 14px;
     max-width: 100%;
+    max-height: calc(100dvh - 220px);
+    width: auto;
     height: auto;
+    aspect-ratio: 1;
 }
 
+/* 游戏结束弹窗 */
 .game-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    border-radius: 12px;
+    border-radius: 14px;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.35s ease;
+    z-index: 10;
 }
-
 .game-overlay.show {
     opacity: 1;
     pointer-events: all;
 }
-
+.game-over-card {
+    background: linear-gradient(160deg, #ffffff, #f0fdf4);
+    border-radius: 24px;
+    padding: clamp(1.2rem, 3vh, 2rem) clamp(1.2rem, 3vw, 2rem);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.25), 0 0 0 1px rgba(74,222,128,0.1);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    max-width: 320px;
+    width: 88%;
+}
+.game-over-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #4ADE80, #14b8a6, #f59e0b);
+}
+@keyframes sk-pop-in {
+    0% { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.game-overlay.show .game-over-card {
+    animation: sk-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 .overlay-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 20px;
-    color: #4ADE80;
+    font-size: clamp(1.3rem, 4vw, 1.8rem);
+    font-weight: 800;
+    margin-bottom: 0.8rem;
+    background: linear-gradient(135deg, #4ADE80, #14b8a6, #f59e0b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
 }
-
 .overlay-score {
-    font-size: 1.25rem;
-    margin-bottom: 10px;
-    color: #fff;
+    font-size: clamp(0.9rem, 2.2vw, 1.1rem);
+    margin-bottom: 6px;
+    color: #444;
 }
-
 .overlay-highscore {
-    font-size: 1.1rem;
-    margin-bottom: 30px;
-    color: #4ADE80;
+    font-size: clamp(0.8rem, 2vw, 1rem);
+    margin-bottom: 16px;
+    color: #f59e0b;
+    font-weight: 600;
 }
-
+.overlay-btns {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
 .restart-btn {
-    padding: 12px 32px;
+    padding: clamp(8px, 1.8vh, 12px) clamp(20px, 4vw, 30px);
     border: none;
-    border-radius: 12px;
+    border-radius: 999px;
     background: linear-gradient(135deg, #4ADE80, #22C55E);
     color: #fff;
-    font-size: 1.25rem;
+    font-size: clamp(0.85rem, 2.2vw, 1rem);
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 4px 12px #4ADE8033;
+    box-shadow: 0 8px 22px rgba(74, 222, 128, 0.4);
     transition: all 0.3s ease;
 }
+.restart-btn:hover { transform: translateY(-2px); }
+.overlay-close-btn {
+    padding: clamp(8px, 1.8vh, 12px) clamp(20px, 4vw, 30px);
+    border: 2px solid rgba(74, 222, 128, 0.4);
+    border-radius: 999px;
+    background: #fff;
+    color: #4ADE80;
+    font-size: clamp(0.85rem, 2.2vw, 1rem);
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(74, 222, 128, 0.1);
+    transition: all 0.3s ease;
+}
+.overlay-close-btn:hover { transform: translateY(-1px); border-color: #4ADE80; }
 
-.restart-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px #4ADE8044;
+/* 底部提示 */
+.snake-footer {
+    text-align: left;
+    color: #6b7280;
+    font-size: clamp(0.7rem, 1.6vw, 0.82rem);
 }
 
-.control-hint {
-    margin-top: 1.5rem;
-    color: #888;
-    font-size: 0.875rem;
-}
-
+/* 移动端 */
 @media (max-width: 768px) {
     .game-container {
-        margin: 1rem;
-        padding: 1.5rem;
-        border-radius: 16px;
+        padding: clamp(0.6rem, 1.5vh, 1rem) clamp(0.6rem, 2vw, 0.8rem);
     }
-    .game-title {
-        font-size: 1.6rem;
+    .game-layout {
+        flex-direction: column;
+        align-items: stretch;
     }
-    .stats-bar {
-        gap: 8px;
+    .game-sidebar { width: 100%; }
+    .snake-main { width: 100%; }
+    #gameCanvas {
+        max-height: calc(100dvh - 340px);
     }
-    .stat-item {
-        padding: 10px 16px;
-        min-width: 80px;
-    }
-    .stat-value {
-        font-size: 1.2rem;
-    }
-    .difficulty-selector {
-        flex-wrap: wrap;
-    }
-    .overlay-title {
-        font-size: 2rem;
+}
+@media (max-width: 480px), (max-height: 560px) {
+    .stat-icon { font-size: 0.8rem; }
+    .stat-label { font-size: 0.5rem; }
+    .stat-value { font-size: 0.9rem; }
+    .diff-btn { font-size: 0.65rem; padding: 3px 6px; }
+    .btn { font-size: 0.78rem; padding: 5px 10px; }
+    #gameCanvas {
+        max-height: calc(100dvh - 320px);
     }
 }
 </style>
 
+<div class="sk-bg-decor"></div>
+<div class="sk-wrap">
 <div class="game-container">
     <h1 class="game-title">🐍 贪吃蛇大冒险</h1>
-    
-    <div class="stats-bar">
-        <div class="stat-item">
-            <span class="stat-label">得分</span>
-            <span class="stat-value" id="score">0</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">最高分</span>
-            <span class="stat-value" id="highscore">0</span>
-        </div>
-    </div>
 
-    <div class="difficulty-selector">
-        <button class="difficulty-btn active" data-speed="200">慢速</button>
-        <button class="difficulty-btn" data-speed="150">中速</button>
-        <button class="difficulty-btn" data-speed="100">快速</button>
-    </div>
+    <div class="game-layout">
+        <div class="game-sidebar">
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-icon">🎯</span>
+                    <span class="stat-label">得分</span>
+                    <span class="stat-value" id="score">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">🏆</span>
+                    <span class="stat-label">最高分</span>
+                    <span class="stat-value" id="highscore">0</span>
+                </div>
+            </div>
 
-    <button class="btn-primary" id="startBtn">开始游戏</button>
-    
-    <div class="game-canvas-container">
-        <canvas id="gameCanvas" width="600" height="600"></canvas>
-        
-        <div class="game-overlay" id="gameOverOverlay">
-            <h2 class="overlay-title">游戏结束</h2>
-            <p class="overlay-score">本次得分: <span id="finalScore">0</span></p>
-            <p class="overlay-highscore">最高记录: <span id="finalHighscore">0</span></p>
-            <button class="restart-btn" id="restartBtn">再来一局</button>
+            <div class="difficulty-pills">
+                <button type="button" class="diff-btn active" data-speed="200">🌿 慢速</button>
+                <button type="button" class="diff-btn" data-speed="150">⚡ 中速</button>
+                <button type="button" class="diff-btn" data-speed="100">🔥 快速</button>
+            </div>
+
+            <button class="btn btn-primary" id="startBtn">🎮 开始游戏</button>
+
+            <div class="controls-row">
+                <button class="btn btn-secondary" id="restartBtn">🔄 重新开始</button>
+            </div>
+
+            <div class="snake-footer">
+                <p>🎮 方向键 ↑↓←→ 或 WASD 控制移动</p>
+            </div>
+        </div>
+
+        <div class="snake-main">
+            <div class="game-canvas-container">
+                <canvas id="gameCanvas" width="600" height="600"></canvas>
+
+                <div class="game-overlay" id="gameOverOverlay">
+                    <div class="game-over-card">
+                        <h2 class="overlay-title">游戏结束</h2>
+                        <p class="overlay-score">本次得分: <span id="finalScore">0</span></p>
+                        <p class="overlay-highscore">🏆 最高记录: <span id="finalHighscore">0</span></p>
+                        <div class="overlay-btns">
+                            <button class="restart-btn" id="overlayRestartBtn">🔄 再来一局</button>
+                            <button class="overlay-close-btn" id="closeOverlayBtn">✕ 关闭</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    
-    <div class="control-hint">
-        🎮 操作说明: 方向键 ↑ ↓ ← → 或 WASD 控制蛇的移动方向
-    </div>
+</div>
 </div>
 
 <script>
 (() => {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    
+
     const scoreEl = document.getElementById('score');
     const highscoreEl = document.getElementById('highscore');
     const gameOverOverlay = document.getElementById('gameOverOverlay');
     const finalScoreEl = document.getElementById('finalScore');
     const finalHighscoreEl = document.getElementById('finalHighscore');
-    const restartBtn = document.getElementById('restartBtn');
+    const overlayRestartBtn = document.getElementById('overlayRestartBtn');
+    const closeOverlayBtn = document.getElementById('closeOverlayBtn');
     const startBtn = document.getElementById('startBtn');
-    const difficultyBtns = document.querySelectorAll('.difficulty-btn');
-    
+    const restartBtn = document.getElementById('restartBtn');
+    const difficultyBtns = document.querySelectorAll('.diff-btn');
+
     const GRID_SIZE = 20;
     const TILE_SIZE = canvas.width / GRID_SIZE;
-    
+
     let snake = [];
     let direction = { x: 1, y: 0 };
     let nextDirection = { x: 1, y: 0 };
     let food = { x: 0, y: 0 };
     let score = 0;
     let highscore = localStorage.getItem('snake_highscore') || 0;
-    let gameSpeed = 200; // 默认慢速
+    let gameSpeed = 200;
     let gameRunning = false;
     let gameInterval = null;
-    
+
     highscoreEl.textContent = highscore;
-    
+
+    /* 通用动效辅助 */
+    function bounceStat(el) {
+        el.classList.remove('stat-bounce');
+        void el.offsetWidth;
+        el.classList.add('stat-bounce');
+        el.addEventListener('animationend', () => el.classList.remove('stat-bounce'), { once: true });
+    }
+    function addRipple(btn, e) {
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = (e.clientX || rect.left + rect.width/2) - rect.left - size/2;
+        const y = (e.clientY || rect.top + rect.height/2) - rect.top - size/2;
+        const span = document.createElement('span');
+        span.className = 'ripple';
+        span.style.width = span.style.height = size + 'px';
+        span.style.left = x + 'px';
+        span.style.top = y + 'px';
+        btn.appendChild(span);
+        span.addEventListener('animationend', () => span.remove(), { once: true });
+    }
+    document.querySelectorAll('.btn, .diff-btn').forEach(btn => {
+        btn.addEventListener('click', e => addRipple(btn, e));
+    });
+
+    /* 从弹窗中心放礼花 */
+    function launchConfettiFromCard() {
+        if (typeof confetti !== 'function' || typeof confetti.create !== 'function') return;
+        var cvs = document.createElement('canvas');
+        cvs.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483647;';
+        document.body.appendChild(cvs);
+        var fire = confetti.create(cvs, { resize: true, useWorker: false });
+        var card = document.querySelector('.game-over-card');
+        var rect = card ? card.getBoundingClientRect() : { left: window.innerWidth/2, top: window.innerHeight/2, width: 0, height: 0 };
+        var ox = (rect.left + rect.width / 2) / window.innerWidth;
+        var oy = (rect.top + rect.height / 2) / window.innerHeight;
+        var duration = 1800;
+        var end = Date.now() + duration;
+        (function frame() {
+            fire({
+                particleCount: 5, spread: 60,
+                origin: { x: ox, y: oy },
+                colors: ['#4ADE80','#22c55e','#14b8a6','#f59e0b','#ef4444','#ec4899'],
+                disableForReducedMotion: true
+            });
+            if (Date.now() < end) requestAnimationFrame(frame);
+        })();
+        setTimeout(function () {
+            try { fire.reset(); } catch (e) {}
+            if (cvs.parentNode) cvs.parentNode.removeChild(cvs);
+        }, duration + 2000);
+    }
+
     function init() {
         snake = [];
         const startX = Math.floor(GRID_SIZE / 2);
@@ -322,180 +590,110 @@ body {
         snake.push({ x: startX, y: startY });
         snake.push({ x: startX - 1, y: startY });
         snake.push({ x: startX - 2, y: startY });
-        
+
         direction = { x: 1, y: 0 };
         nextDirection = { x: 1, y: 0 };
         score = 0;
         scoreEl.textContent = score;
         gameRunning = false;
         gameOverOverlay.classList.remove('show');
-        startBtn.style.display = 'inline-block';
-        
-        if (gameInterval) {
-            clearInterval(gameInterval);
-            gameInterval = null;
-        }
-        
+        startBtn.style.display = '';
+
+        if (gameInterval) { clearInterval(gameInterval); gameInterval = null; }
+
         spawnFood();
-        draw(); // 初始绘制静态画面
+        draw();
     }
-    
+
     function spawnFood() {
-        let validPosition = false;
-        while (!validPosition) {
+        let ok = false;
+        while (!ok) {
             food.x = Math.floor(Math.random() * GRID_SIZE);
             food.y = Math.floor(Math.random() * GRID_SIZE);
-            
-            validPosition = !snake.some(segment => segment.x === food.x && segment.y === food.y);
+            ok = !snake.some(s => s.x === food.x && s.y === food.y);
         }
     }
-    
+
     function drawGrid() {
         ctx.strokeStyle = '#334155';
         ctx.lineWidth = 0.5;
         for (let i = 0; i <= GRID_SIZE; i++) {
-            ctx.beginPath();
-            ctx.moveTo(i * TILE_SIZE, 0);
-            ctx.lineTo(i * TILE_SIZE, canvas.height);
-            ctx.stroke();
-            
-            ctx.beginPath();
-            ctx.moveTo(0, i * TILE_SIZE);
-            ctx.lineTo(canvas.width, i * TILE_SIZE);
-            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(i * TILE_SIZE, 0); ctx.lineTo(i * TILE_SIZE, canvas.height); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, i * TILE_SIZE); ctx.lineTo(canvas.width, i * TILE_SIZE); ctx.stroke();
         }
     }
-    
+
     function drawSnake() {
-        snake.forEach((segment, index) => {
-            const x = segment.x * TILE_SIZE;
-            const y = segment.y * TILE_SIZE;
-            
-            if (index === 0) {
-                ctx.fillStyle = '#22c55e';
-            } else {
-                ctx.fillStyle = '#4ade80';
-            }
-            
-            ctx.fillRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+        snake.forEach((s, i) => {
+            ctx.fillStyle = i === 0 ? '#22c55e' : '#4ade80';
+            ctx.fillRect(s.x * TILE_SIZE + 2, s.y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
         });
     }
-    
+
     function drawFood() {
-        const x = food.x * TILE_SIZE;
-        const y = food.y * TILE_SIZE;
-        
         ctx.fillStyle = '#ef4444';
-        ctx.fillRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+        ctx.fillRect(food.x * TILE_SIZE + 2, food.y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
     }
-    
+
     function update() {
         if (!gameRunning) return;
-        
         direction = nextDirection;
-        
         const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
-        
-        // 撞墙检测
-        if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) {
-            gameOver();
-            return;
-        }
-        
-        // 撞自己检测
-        if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
-            gameOver();
-            return;
-        }
-        
+
+        if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) { gameOver(); return; }
+        if (snake.some(s => s.x === head.x && s.y === head.y)) { gameOver(); return; }
+
         snake.unshift(head);
-        
-        // 吃食物
         if (head.x === food.x && head.y === food.y) {
             score += 10;
             scoreEl.textContent = score;
-            
+            bounceStat(scoreEl);
             if (score > highscore) {
                 highscore = score;
                 highscoreEl.textContent = highscore;
+                bounceStat(highscoreEl);
                 localStorage.setItem('snake_highscore', highscore);
             }
-            
             spawnFood();
         } else {
             snake.pop();
         }
-        
         draw();
     }
-    
+
     function draw() {
-        // 清除画布
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        drawGrid();
-        drawFood();
-        drawSnake();
+        drawGrid(); drawFood(); drawSnake();
     }
-    
+
     function gameOver() {
         gameRunning = false;
-        if (gameInterval) {
-            clearInterval(gameInterval);
-            gameInterval = null;
-        }
-        
+        if (gameInterval) { clearInterval(gameInterval); gameInterval = null; }
         finalScoreEl.textContent = score;
         finalHighscoreEl.textContent = highscore;
         gameOverOverlay.classList.add('show');
+        launchConfettiFromCard();
     }
-    
+
     function changeDirection(newDir) {
-        // 防止反向移动
-        if (newDir.x === -direction.x && newDir.y === -direction.y) {
-            return;
-        }
+        if (newDir.x === -direction.x && newDir.y === -direction.y) return;
         nextDirection = newDir;
     }
-    
-    // 键盘控制
-    document.addEventListener('keydown', (e) => {
+
+    document.addEventListener('keydown', e => {
         switch (e.key) {
-            case 'ArrowUp':
-            case 'w':
-            case 'W':
-                e.preventDefault();
-                changeDirection({ x: 0, y: -1 });
-                break;
-            case 'ArrowDown':
-            case 's':
-            case 'S':
-                e.preventDefault();
-                changeDirection({ x: 0, y: 1 });
-                break;
-            case 'ArrowLeft':
-            case 'a':
-            case 'A':
-                e.preventDefault();
-                changeDirection({ x: -1, y: 0 });
-                break;
-            case 'ArrowRight':
-            case 'd':
-            case 'D':
-                e.preventDefault();
-                changeDirection({ x: 1, y: 0 });
-                break;
+            case 'ArrowUp': case 'w': case 'W': e.preventDefault(); changeDirection({x:0,y:-1}); break;
+            case 'ArrowDown': case 's': case 'S': e.preventDefault(); changeDirection({x:0,y:1}); break;
+            case 'ArrowLeft': case 'a': case 'A': e.preventDefault(); changeDirection({x:-1,y:0}); break;
+            case 'ArrowRight': case 'd': case 'D': e.preventDefault(); changeDirection({x:1,y:0}); break;
             case ' ':
                 e.preventDefault();
-                if (!gameRunning && !gameOverOverlay.classList.contains('show')) {
-                    startGame();
-                }
+                if (!gameRunning && !gameOverOverlay.classList.contains('show')) startGame();
                 break;
         }
     });
-    
-    // 开始游戏
+
     function startGame() {
         if (!gameRunning) {
             gameRunning = true;
@@ -503,26 +701,24 @@ body {
             gameInterval = setInterval(update, gameSpeed);
         }
     }
-    
+
     startBtn.addEventListener('click', startGame);
     restartBtn.addEventListener('click', init);
-    
-    // 难度选择
+    overlayRestartBtn.addEventListener('click', init);
+    closeOverlayBtn.addEventListener('click', () => gameOverOverlay.classList.remove('show'));
+
     difficultyBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             difficultyBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             gameSpeed = parseInt(btn.dataset.speed);
-            
-            // 如果游戏正在运行，更新间隔
             if (gameRunning && gameInterval) {
                 clearInterval(gameInterval);
                 gameInterval = setInterval(update, gameSpeed);
             }
         });
     });
-    
-    // 初始化游戏
+
     init();
 })();
 </script>

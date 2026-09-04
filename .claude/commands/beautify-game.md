@@ -27,9 +27,28 @@ argument-hint: 游戏页面文件名，如 memory_game.php
 7. **自测**：`php -l`（若有 PHP）+ 浏览器开 `?v=N` 防缓存查看效果；移动端用 browser-use 的窄视口截图核对一屏显示。
 8. **同步测试环境**：改完按 CLAUDE.md 流程同步到 web-2204 虚机，让用户验证。
 
+## 布局参考：拼豆游戏（puzzle_game.html）
+
+所有游戏页面统一采用**左右分栏布局**，参考 `puzzle_game.html` 的 `.game-layout` 结构：
+
+```
+.game-layout          ← flex 容器，横向排列
+├── .game-sidebar     ← 左侧工具栏（固定宽度 clamp(240px, 28vw, 300px)）
+│   ├── 统计栏（.stats-bar，grid 双列）
+│   ├── 难度选择（.difficulty-pills，药丸按钮组）
+│   ├── 主按钮（开始/重新开始）
+│   └── 底部提示文字
+└── .xx-main          ← 右侧游戏区域（flex: 1，自适应填满）
+    └── 游戏主内容（画布/网格/卡片等）
+```
+
+- **左侧 sidebar**：放所有控制元素（统计、难度、按钮、提示），宽度固定不参与弹性
+- **右侧 main**：放游戏核心内容（canvas / 拼图网格 / 卡片区域），用 `flex: 1` + `min-width: 0` 自适应填满剩余空间
+- **移动端**（≤768px）：`.game-layout` 切换为 `flex-direction: column`，sidebar 在上、游戏区在下
+
 ## 约束
 
 - 只改 `template/syzoj/` 下对应文件，**不碰其他模板**
 - **不改共享的 `game_confetti.js`**，per-game 覆盖写在本页 JS 里
-- CSS 类名用游戏缩写前缀（如 `gn-`/`mg-`），避免跨游戏冲突
+- CSS 类名用游戏缩写前缀（如 `gn-`/`mg-`/`sk-`），避免跨游戏冲突
 - 不要引入新框架，纯 CSS + 原生 JS

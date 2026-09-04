@@ -15,7 +15,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                 <i class="gift icon" style="color: white; font-size: 1.5em;"></i>
                 <div style="margin-left: 12px;">
                     <strong style="color: white; font-size: 1.1em;">🎉 新用户注册送 6 积分，连登 7 天再得 14 积分！</strong>
-                    <p style="margin: 5px 0 0 0; color: rgba(255,255,255,0.9); font-size: 0.95em;">海量免费课件、体验编程游戏，开启教学新体验</p>
+                    <p style="margin: 5px 0 0 0; color: rgba(255,255,255,0.9); font-size: 0.95em;">精选课件、课前游戏，开启教学新体验</p>
                 </div>
             </div>
             <div style="display: flex; gap: 10px;">
@@ -48,7 +48,7 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
                 <div style="text-align: center; color: white; padding: 40px;">
                     <i class="gift icon" style="font-size: 5em; margin-bottom: 20px;"></i>
                     <h2 style="font-size: 2em; margin: 0 0 15px 0; font-weight: 600;">新用户福利</h2>
-                    <p style="font-size: 1.1em; opacity: 0.95; margin: 0 0 20px 0;">注册且连续登录送 20 积分，免费课件、编程游戏等你来体验</p>
+                    <p style="font-size: 1.1em; opacity: 0.95; margin: 0 0 20px 0;">注册且连续登录送 20 积分，海量课件、课前游戏等你来体验</p>
                     <a href="registerpage.php" class="ui button inverted">立即注册</a>
                 </div>
             </div>
