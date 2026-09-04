@@ -129,18 +129,55 @@ if ($action === 'activity') {
     $ip_locations = IpLocation::batchGetLocation($ips);
 
     // 按城市或省份统计
+    // batchGetLocation 返回格式: [ip => "国家省市区"] 的扁平字符串
+    // 示例: "中国北京", "中国广东广州", "中国湖北Shizishan", "中国河南省郑州市"
     $stats = [];
     foreach ($result as $row) {
         $ip = $row['ip'];
         $count = intval($row['user_count']);
-        $location = $ip_locations[$ip] ?? ['regionName' => '未知', 'city' => '未知'];
+        $location = isset($ip_locations[$ip]) ? $ip_locations[$ip] : '未知';
 
-        if ($stat_type === 'province') {
-            $key = $location['regionName'];
-        } else {
-            $key = $location['city'];
-            if ($key === '未知') {
-                $key = $location['regionName'];
+        $key = $location;
+        if ($location !== '未知' && $location !== '内网') {
+            // 去掉国家前缀（"中国"2个汉字，"美利坚"3个汉字等）
+            // 使用固定的常见国家名匹配，避免贪心匹配到省名
+            $region = preg_replace('/^(中国|美国|日本|韩国|英国|法国|德国|俄罗斯|加拿大|澳大利亚|巴西|印度)/u', '', $location);
+            // fallback: 如果没匹配到已知国家名，取前2个汉字作为国家名
+            if ($region === $location) {
+                $region = preg_replace('/^[\x{4e00}-\x{9fff}]{2}/u', '', $location);
+            }
+
+            if ($stat_type === 'province') {
+                // 省份：取第一个行政单位（通常是前2个汉字）
+                // "广东广州市" → "广东", "北京市" → "北京", "四川成都" → "四川"
+                // 先尝试匹配"省"、"自治区"等明确后缀
+                if (preg_match('/^(.{2,3}?)(?:省|自治区|特别行政区)/u', $region, $m)) {
+                    $key = $m[1];
+                } else {
+                    // 没有明确省后缀，取前2个汉字
+                    // "广东广州市" → "广东", "北京市" → "北京", "四川成都" → "四川"
+                    $key = mb_substr($region, 0, 2);
+                }
+            } else {
+                // 城市：取最后一个"市"前的最后部分，或去掉省份前缀
+                // "广东广州市" → "广州", "北京市" → "北京", "四川成都" → "成都"
+                // "湖北Shizishan" → "Shizishan"
+                $pos = mb_strrpos($region, '市');
+                if ($pos !== false) {
+                    // "广东广州市" → "广东广州" → 取最后2字 → "广州"
+                    // "北京市" → "北京" → 取最后2字 → "北京"
+                    $clean = mb_substr($region, 0, $pos);
+                    if (mb_strlen($clean) >= 2) {
+                        $key = mb_substr($clean, -2);
+                    } else {
+                        $key = $clean;
+                    }
+                } else {
+                    // 没有"市"，如"四川成都"、"湖北Shizishan"
+                    // 去掉前2个汉字的省份前缀
+                    $key = mb_substr($region, 2);
+                    if (!$key) $key = $region;
+                }
             }
         }
 
