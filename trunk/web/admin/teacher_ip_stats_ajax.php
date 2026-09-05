@@ -101,25 +101,48 @@ if ($action === 'activity') {
         exit;
     }
 
-    $sql = "SELECT l.ip, COUNT(DISTINCT l.user_id) as user_count
-            FROM loginlog l
-            JOIN users u ON l.user_id = u.user_id
-            WHERE u.role = 'teacher'
-              AND l.password = 'login ok'
-              AND l.ip IS NOT NULL
-              AND l.ip != ''";
-
-    $params = [];
+    // 每个教师只统计最近一次登录的IP（避免同一教师多IP重复统计）
+    // 子查询：先找出每个教师最近一次登录的时间
+    $time_condition_inner = "";
+    $time_condition_outer = "";
+    $params_inner = [];
+    $params_outer = [];
     if (preg_match('/^\d{4}-\d{2}-\d{2}/', $from)) {
-        $sql .= " AND l.time >= ?";
-        $params[] = $from . ' 00:00:00';
+        $time_condition_inner .= " AND time >= ?";
+        $time_condition_outer .= " AND l.time >= ?";
+        $params_inner[] = $from . ' 00:00:00';
+        $params_outer[] = $from . ' 00:00:00';
     }
     if (preg_match('/^\d{4}-\d{2}-\d{2}/', $to)) {
-        $sql .= " AND l.time <= ?";
-        $params[] = $to . ' 23:59:59';
+        $time_condition_inner .= " AND time <= ?";
+        $time_condition_outer .= " AND l.time <= ?";
+        $params_inner[] = $to . ' 23:59:59';
+        $params_outer[] = $to . ' 23:59:59';
     }
+    $params = array_merge($params_inner, $params_outer);
 
-    $sql .= " GROUP BY l.ip ORDER BY user_count DESC LIMIT 50";
+    $sql = "SELECT ip, COUNT(*) as user_count
+            FROM (
+                SELECT l.user_id, l.ip
+                FROM loginlog l
+                JOIN (
+                    SELECT user_id, MAX(time) as max_time
+                    FROM loginlog
+                    WHERE password = 'login ok'
+                      AND ip IS NOT NULL AND ip != ''
+                      $time_condition_inner
+                    GROUP BY user_id
+                ) latest ON l.user_id = latest.user_id AND l.time = latest.max_time
+                JOIN users u ON l.user_id = u.user_id
+                WHERE u.role = 'teacher'
+                  AND l.password = 'login ok'
+                  AND l.ip IS NOT NULL
+                  AND l.ip != ''
+                  $time_condition_outer
+            ) t
+            GROUP BY ip
+            ORDER BY user_count DESC
+            LIMIT 50";
 
     $result = pdo_query($sql, $params);
     if (!is_array($result)) $result = [];

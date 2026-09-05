@@ -63,6 +63,10 @@ $tab = isset($_GET['tab']) ? trim($_GET['tab']) : 'ip';
                 </thead>
                 <tbody id="tableBody"></tbody>
             </table>
+            <div style="margin-top:10px;padding:8px 12px;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;color:#856404;font-size:12px;">
+                <i class="glyphicon glyphicon-info-sign"></i>
+                <b>说明：</b>同一教师在不同地点（不同IP）登录会被分别统计。例如：某教师在北京登录3次、上海登录2次，则北京IP和上海IP各计1人，但该教师实际只有1人。
+            </div>
         </div>
         <div id="emptyArea" style="text-align:center;color:#999;margin:20px;">
             点击"刷新统计"按钮查询老师登录IP归属地分布
