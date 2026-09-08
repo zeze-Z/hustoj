@@ -1688,11 +1688,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                         </div>
                         <div class="og-step">
                             <span class="og-step-num">3</span>
-                            <span class="og-step-text">在 games/activate.html 验证授权码，下载 license.js 放入 js 目录</span>
-                        </div>
-                        <div class="og-step">
-                            <span class="og-step-num">4</span>
-                            <span class="og-step-text">整包拷贝到学生机，双击 index.html 直接使用（无需再激活）</span>
+                            <span class="og-step-text">打开解压文件中的 index.html 文件，按照提示，激活后使用</span>
                         </div>
                     </div>
                 </div>
