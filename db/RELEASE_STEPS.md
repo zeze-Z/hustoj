@@ -1,6 +1,6 @@
 # OJ 功能发布步骤
 
-## 当前版本：V1.9（2026-06-07）
+## 当前版本：V2.8（2026-09-05）
 
 ---
 
@@ -26,6 +26,7 @@
 | V2.5 | 2026-08-23 | 课件学科Tab重命名（美术→新课标解读，音乐→小学电子教材） |
 | V2.6 | 2026-08-30 | 课件学科Tab新增"精选PPT模板"（位于小学电子教材之后） |
 | V2.7 | 2026-09-02 | 教师推广积分奖励（bind_teacher_id + teacher_promo_stat 结算表） |
+| V2.8 | 2026-09-05 | 离线游戏积分兑换订单表 offline_game_order |
 
 ---
 
@@ -100,6 +101,10 @@ mysql -u root -p jol < db/V2.6_20260830_add_ppt_template_subject.sql
 # 16. 教师推广积分奖励（V2.7）
 #     users 加 bind_teacher_id；新建 teacher_promo_stat 周结算表
 mysql -u root -p jol < db/V2.7_20260902_teacher_promo_reward.sql
+
+# 17. 离线游戏积分兑换订单表（V2.8）
+#     新建 offline_game_order：记录积分兑换离线游戏的订单与授权信息
+mysql -u root -p jol < db/V2.8_20260905_offline_game_order.sql
 ```
 
 **验证：**
@@ -210,6 +215,11 @@ SELECT id, name, sort_order, status FROM jol.course_subject WHERE name = '精选
 DESCRIBE jol.users bind_teacher_id;             -- varchar(48), NULL
 SHOW TABLES IN jol LIKE 'teacher_promo_stat';   -- 预期存在
 SHOW INDEX FROM jol.teacher_promo_stat WHERE Key_name='uk_teacher_week';  -- UNIQUE(teacher_id, week_start)
+
+-- 离线游戏积分兑换订单表（V2.8）
+SHOW TABLES IN jol LIKE 'offline_game_order';   -- 预期存在
+DESCRIBE jol.offline_game_order;                -- user_id/school_name/room_name/license_code/expire_date/order_no/point_amount(默认50)/create_time
+SHOW INDEX FROM jol.offline_game_order WHERE Key_name='uk_user_order';  -- UNIQUE(user_id, order_no)
 ```
 
 ---
@@ -351,3 +361,28 @@ db/V1.9_20260607_point_payment.sql   # users 转 InnoDB + point 字段；新建 
 
 ### 修改文件（随后续任务补充）
 > 同上，待应用层任务完成后补全（如：用户菜单/我的积分页/课件支付改造/后台积分管理等）。
+
+---
+
+## V2.8 发布文件清单（离线游戏积分兑换订单表）
+
+### 变更内容
+
+- 新建表 `offline_game_order`：记录用户积分兑换离线游戏安装包的订单与授权信息（订单号、学校/机房、JSON授权码、授权有效期、消耗积分）
+- 应用层兑换入口：`trunk/web/offline_game_redeem.php`（50 积分兑换，调用签名脚本生成 JSON 授权码）
+
+### 数据库
+```
+db/V2.8_20260905_offline_game_order.sql   # 新建 offline_game_order 表（CREATE TABLE IF NOT EXISTS）
+```
+
+### 执行方式
+```bash
+mysql -u root -p jol < db/V2.8_20260905_offline_game_order.sql
+```
+
+### 回滚
+```sql
+DROP TABLE IF EXISTS `offline_game_order`;
+```
+> 完整回滚 SQL 见 `db/V2.8_20260905_offline_game_order.sql` 文件尾部。

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aioj.top离线游戏中心</title>
+    <script src="js/jquery.min.js"></script>
+    <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .header {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 20px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header h1 {
+        color: white;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .auth-info {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+        display: none;
+    }
+
+    .auth-info span {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 12px;
+        border-radius: 20px;
+        margin-left: 10px;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
+
+    .tabs {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+
+    .tab {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 25px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .tab:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .tab.active {
+        background: white;
+        color: #667eea;
+        font-weight: 600;
+    }
+
+    .section {
+        display: none;
+    }
+
+    .section.active {
+        display: block;
+    }
+
+    .section-title {
+        color: white;
+        font-size: 1.3rem;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .games-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 25px;
+    }
+
+    .game-card {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        text-decoration: none;
+        color: inherit;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s;
+        text-align: center;
+    }
+
+    .game-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .game-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 35px;
+    }
+
+    .game-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .game-desc {
+        font-size: 0.9rem;
+        color: #666;
+        line-height: 1.5;
+    }
+
+    .footer {
+        text-align: center;
+        padding: 30px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+        .header {
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .games-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .game-card {
+            padding: 20px;
+        }
+    }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎮 aioj.top离线游戏中心</h1>
+        <div class="auth-info" id="auth-status">
+            <span id="auth-school"></span>
+            <span id="auth-room"></span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" data-section="lower">🎒 低年级专区</button>
+            <button class="tab" data-section="upper">📚 高年级专区</button>
+            <button class="tab" data-section="typing">⌨️ 打字练习</button>
+            <button class="tab" data-section="other">🎯 其他</button>
+        </div>
+
+        <!-- 低年级专区 -->
+        <div class="section active" id="section-lower">
+            <h2 class="section-title">🎒 低年级专区（1-3年级）</h2>
+            <div class="games-grid">
+                <a href="games/puzzle_game.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #eab308, #f97316);">🧩</div>
+                    <div class="game-title">拼图游戏</div>
+                    <div class="game-desc">拖动拼图碎片还原图片，训练观察力与空间思维</div>
+                </a>
+
+                <a href="games/clock_reading.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #3b82f6, #6366f1);">🕐</div>
+                    <div class="game-title">时钟认读</div>
+                    <div class="game-desc">学习看时钟，认识整点和半点</div>
+                </a>
+
+                <a href="games/math_game.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #f97316, #dc2626);">🔢</div>
+                    <div class="game-title">数学闯关</div>
+                    <div class="game-desc">挑战数学题，闯过一关又一关</div>
+                </a>
+
+                <a href="games/color_match.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #f59e0b, #ef4444);">🎨</div>
+                    <div class="game-title">颜色匹配</div>
+                    <div class="game-desc">认识颜色，点击正确的颜色名称</div>
+                </a>
+
+                <a href="games/guess_number.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #10b981, #059669);">❓</div>
+                    <div class="game-title">猜数字</div>
+                    <div class="game-desc">动动脑筋，猜出隐藏的神秘数字</div>
+                </a>
+
+                <a href="games/memory_game.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #6366f1, #06b6d4);">🃏</div>
+                    <div class="game-title">卡片配对</div>
+                    <div class="game-desc">翻开卡片，找出相同的图案配对</div>
+                </a>
+
+                <a href="games/sequence_memory.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #a855f7, #ec4899);">🧠</div>
+                    <div class="game-title">序列记忆</div>
+                    <div class="game-desc">记住颜色顺序并重复，挑战你的记忆力</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 高年级专区 -->
+        <div class="section" id="section-upper">
+            <h2 class="section-title">📚 高年级专区（4-6年级）</h2>
+            <div class="games-grid">
+                <a href="games/snake.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #22c55e, #16a34a);">🐍</div>
+                    <div class="game-title">贪吃蛇</div>
+                    <div class="game-desc">控制小蛇吃食物变长，不要撞墙</div>
+                </a>
+
+                <a href="games/bead_game.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #fce7f3, #ede9fe); display: flex; align-items: center; justify-content: center;"><svg viewBox="0 0 64 64" width="40" height="40"><circle cx="16" cy="16" r="5" fill="#ef4444"/><circle cx="32" cy="16" r="5" fill="#f59e0b"/><circle cx="48" cy="16" r="5" fill="#22c55e"/><circle cx="16" cy="32" r="5" fill="#3b82f6"/><circle cx="32" cy="32" r="5" fill="#a855f7"/><circle cx="48" cy="32" r="5" fill="#ec4899"/><circle cx="16" cy="48" r="5" fill="#14b8a6"/><circle cx="32" cy="48" r="5" fill="#f97316"/><circle cx="48" cy="48" r="5" fill="#6366f1"/></svg></div>
+                    <div class="game-title">拼豆游戏</div>
+                    <div class="game-desc">上传图片或选默认图，照着像素图拼豆子</div>
+                </a>
+
+                <a href="games/number_puzzle.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #14b8a6, #0891b2);">🔢</div>
+                    <div class="game-title">数字华容道</div>
+                    <div class="game-desc">滑动数字块，按1-15顺序排列</div>
+                </a>
+
+                <a href="games/idiom_chain.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #d97706, #b45309);">📖</div>
+                    <div class="game-title">成语接龙</div>
+                    <div class="game-desc">60秒限时挑战，成语知识大比拼</div>
+                </a>
+
+                <a href="games/minesweeper.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #6b7280, #374151);">💣</div>
+                    <div class="game-title">扫雷</div>
+                    <div class="game-desc">经典扫雷，找出所有隐藏的地雷</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 打字练习 -->
+        <div class="section" id="section-typing">
+            <h2 class="section-title">⌨️ 打字练习</h2>
+            <div class="games-grid">
+                <a href="games/keyboard_game.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">⌨️</div>
+                    <div class="game-title">打字游戏</div>
+                    <div class="game-desc">在游戏中提升打字速度与准确率</div>
+                </a>
+
+                <a href="games/balloon_typing.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #f43f5e, #db2777);">🎈</div>
+                    <div class="game-title">气球打字</div>
+                    <div class="game-desc">打字击破上升的气球，练习键盘输入</div>
+                </a>
+
+                <a href="games/frog_typing.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #22c55e, #15803d);">🐸</div>
+                    <div class="game-title">青蛙过河</div>
+                    <div class="game-desc">打对石头上的词让青蛙过河</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 其他 -->
+        <div class="section" id="section-other">
+            <h2 class="section-title">🎯 其他游戏</h2>
+            <div class="games-grid">
+                <a href="games/coding_game.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #4f46e5, #7c3aed);">💻</div>
+                    <div class="game-title">编程启蒙</div>
+                    <div class="game-desc">拖拽积木学习编程，控制小猫走迷宫</div>
+                </a>
+
+                <a href="games/ai_drawing_game.html" class="game-card">
+                    <div class="game-icon" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">🎨</div>
+                    <div class="game-title">AI猜猜画</div>
+                    <div class="game-desc">画图让AI识别，认识人工智能</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>aioj.top离线游戏中心 | 仅授权使用，盗版必究</p>
+    </div>
+
+    <!-- 未授权提示遮罩 -->
+    <div id="no-auth-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:white; border-radius:20px; padding:40px; max-width:500px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="font-size:60px; margin-bottom:20px;">🔐</div>
+            <h2 style="color:#333; margin-bottom:15px;">需要激活授权</h2>
+            <p style="color:#666; margin-bottom:25px; line-height:1.6;">检测到未授权或授权无效。<br>请打开本包 games/activate.html 完成激活；授权码请在网站「更多」页面用积分兑换。</p>
+            <a href="games/activate.html" style="display:inline-block; background:linear-gradient(135deg, #667eea, #764ba2); color:white; text-decoration:none; padding:14px 30px; border-radius:10px; font-weight:600; font-size:1rem;">前往激活页面</a>
+            <p style="margin-top:20px; font-size:0.85rem; color:#888;">推荐：在教师机 games/activate.html 验证授权码后下载 license.js，放入本包 js 文件夹（与 auth.js 同级）再打开本页，即可直接使用</p>
+        </div>
+    </div>
+
+    <div id="auth-footer" style="display:none; position:fixed; bottom:0; left:0; right:0; background:rgba(0,0,0,0.8); color:white; text-align:center; padding:8px; font-size:12px; z-index:9999;"></div>
+
+    <script src="js/license.js"></script>
+    <script src="js/rsa_verify.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+    // Tab切换
+    $(document).ready(function() {
+        // 检查授权
+        Auth.checkAuth().then(function(result) {
+            if (!result.valid) {
+                // 显示未授权提示遮罩
+                $('#no-auth-overlay').css('display', 'flex');
+                // 隐藏游戏内容
+                $('.container').hide();
+                $('.tabs').hide();
+                return;
+            }
+
+            // 显示授权信息（学校、教室）
+            if (result.license) {
+                $('#auth-school').text(result.license.school);
+                $('#auth-room').text(result.license.room);
+                $('#auth-status').show();
+            }
+        });
+
+        // Tab点击事件
+        $('.tab').click(function() {
+            var section = $(this).data('section');
+
+            // 更新tab状态
+            $('.tab').removeClass('active');
+            $(this).addClass('active');
+
+            // 更新section显示
+            $('.section').removeClass('active');
+            $('#section-' + section).addClass('active');
+        });
+    });
+    </script>
+</body>
+</html>

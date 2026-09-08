@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>激活帮助 - AI-OJ离线游戏</title>
+    <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 40px 20px;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 40px;
+    }
+
+    h1 {
+        color: #333;
+        margin-bottom: 30px;
+        text-align: center;
+        font-size: 2rem;
+    }
+
+    .section {
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 12px;
+    }
+
+    .section h2 {
+        color: #667eea;
+        margin-bottom: 15px;
+        font-size: 1.3rem;
+    }
+
+    .section h3 {
+        color: #555;
+        margin: 15px 0 10px 0;
+        font-size: 1.1rem;
+    }
+
+    .section p, .section li {
+        color: #555;
+        line-height: 1.8;
+    }
+
+    .section ul, .section ol {
+        padding-left: 25px;
+        margin: 10px 0;
+    }
+
+    .section li {
+        margin-bottom: 8px;
+    }
+
+    .code-block {
+        background: #2d3748;
+        color: #e2e8f0;
+        padding: 15px;
+        border-radius: 8px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 0.9rem;
+        overflow-x: auto;
+        margin: 10px 0;
+    }
+
+    .highlight {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+    }
+
+    .highlight strong {
+        color: #856404;
+    }
+
+    .success {
+        background: #d4edda;
+        border-left: 4px solid #28a745;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+    }
+
+    .success strong {
+        color: #155724;
+    }
+
+    .error {
+        background: #f8d7da;
+        border-left: 4px solid #dc3545;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+    }
+
+    .error strong {
+        color: #721c24;
+    }
+
+    .step {
+        display: flex;
+        align-items: flex-start;
+        margin: 15px 0;
+    }
+
+    .step-number {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+
+    .step-content {
+        flex: 1;
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-top: 20px;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .back-link:hover {
+        text-decoration: underline;
+    }
+
+    .footer {
+        text-align: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+        color: #888;
+        font-size: 0.9rem;
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📖 激活帮助</h1>
+
+        <div class="section">
+            <h2>一、什么是授权码？</h2>
+            <p>授权码是用于激活离线游戏的凭证，由您在 OJ 网站积分兑换时按填写的学校名称和机房名称生成。</p>
+
+            <div class="highlight">
+                <strong>💡 特点：</strong>
+                <ul>
+                    <li>每个授权码绑定特定的<strong>学校</strong>和<strong>机房</strong></li>
+                    <li>有效期为<strong>1年</strong></li>
+                    <li>激活后<strong>无需联网</strong>即可使用</li>
+                    <li>采用<strong>RSA数字签名</strong>保护，防篡改</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>二、如何获取授权码？</h2>
+
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>登录 OJ 网站</h3>
+                    <p>登录 OJ 网站（aioj.top），进入「更多」页面</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>积分兑换</h3>
+                    <p>找到「离线游戏」，点击积分兑换（消耗50积分），填写您的学校名称和机房名称</p>
+                    <div class="code-block">
+示例：
+学校名称：XX市第一中学
+机房名称：计算机教室3楼
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>获取授权码</h3>
+                    <p>兑换成功后页面显示JSON格式授权码，点击复制；同时通过网盘链接下载离线游戏包</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>三、授权码格式说明</h2>
+            <p>授权码是一个JSON格式的文本，包含以下字段：</p>
+
+            <div class="code-block">
+{
+  "school": "学校名称",
+  "room": "机房名称",
+  "expire": "2027-09-07",
+  "created": "2026-09-07 10:50:00",
+  "version": "1.0",
+  "signature": "xxxxxxxxxxxxxxxxxxxxxx..."
+}
+            </div>
+
+            <ul>
+                <li><strong>school</strong>：学校名称</li>
+                <li><strong>room</strong>：机房名称</li>
+                <li><strong>expire</strong>：有效期（YYYY-MM-DD格式）</li>
+                <li><strong>created</strong>：创建时间</li>
+                <li><strong>version</strong>：版本号</li>
+                <li><strong>signature</strong>：RSA数字签名（用于验证授权真实性）</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>四、激活步骤详解</h2>
+
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>打开激活页面</h3>
+                    <p>双击打开 <code>games/activate.html</code> 文件</p>
+                    <p>或在浏览器地址栏输入：</p>
+                    <div class="code-block">
+file:///C:/Users/您的用户名/Desktop/hustoj-games/games/activate.html
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>粘贴授权码</h3>
+                    <p>将网站兑换获得的授权码<strong>完整复制</strong>，粘贴到文本框中</p>
+
+                    <div class="highlight">
+                        <strong>⚠️ 注意：</strong>
+                        <ul>
+                            <li>确保复制完整，不要遗漏任何字符</li>
+                            <li>不要包含多余的空格或换行</li>
+                            <li>检查是否包含所有必要字段</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>确认授权信息</h3>
+                    <p>输入授权码后，系统会自动显示：</p>
+                    <ul>
+                        <li>✅ 学校名称</li>
+                        <li>✅ 机房名称</li>
+                    </ul>
+                    <p>请确认信息无误后再进行激活。</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>点击激活按钮</h3>
+                    <p>点击「验证授权码」按钮</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h3>下载授权文件</h3>
+                    <p>验证通过后，页面出现「⬇️ 下载 license.js」按钮，点击下载授权文件</p>
+                    <p>将下载的 <code>license.js</code> 放入离线包 <code>js</code> 目录（与 auth.js 同级）；教师机本机已同步激活，可直接打开 index.html 使用</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <h3>完成激活</h3>
+                    <p>激活成功后：</p>
+                    <ul>
+                        <li>激活页显示「✅ 授权验证通过」及操作指引</li>
+                        <li>打开 index.html 进入游戏主页</li>
+                        <li>游戏主页底部显示授权信息</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>五、常见错误及解决方法</h2>
+
+            <div class="error">
+                <strong>❌ 错误：授权码格式错误</strong>
+                <p>原因：授权码不完整或格式不正确</p>
+                <p>解决：重新复制完整的授权码，确保无多余空格</p>
+            </div>
+
+            <div class="error">
+                <strong>❌ 错误：授权文件签名无效，授权码可能被篡改</strong>
+                <p>原因：授权内容被修改或损坏</p>
+                <p>解决：不要修改授权内容，重新在激活页粘贴验证</p>
+            </div>
+
+            <div class="error">
+                <strong>❌ 错误：授权已过期，请联系管理员续费</strong>
+                <p>原因：授权码有效期已过（1年）</p>
+                <p>解决：登录 OJ 网站重新积分兑换</p>
+            </div>
+
+            <div class="error">
+                <strong>❌ 错误：未找到授权文件，请先激活</strong>
+                <p>原因：离线包 js 目录缺少授权文件 license.js，或浏览器中无有效授权</p>
+                <p>解决：分发学生机请在教师机 games/activate.html 验证授权码后下载 license.js 放入离线包 js 目录（与 auth.js 同级）；单机使用可直接打开 games/activate.html 重新粘贴授权码验证</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>六、离线使用说明</h2>
+
+            <div class="success">
+                <strong>✅ 支持完全离线使用</strong>
+                <p>激活后，游戏可以完全离线运行，无需连接互联网。</p>
+                <p>适合网络受限的机房环境。</p>
+            </div>
+
+            <p><strong>离线使用步骤：</strong></p>
+            <ol>
+                <li>在任意有网络的电脑上登录 OJ 网站，完成积分兑换并获取授权码</li>
+                <li>在教师机打开 games/activate.html，粘贴授权码完成验证（验证过程离线即可完成）</li>
+                <li>点击「下载 license.js」，将文件放入离线包 js 目录（与 auth.js 同级）</li>
+                <li>将整个离线包拷贝到学生机，双击 index.html 直接使用（无需再操作）</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>七、多机房管理</h2>
+
+            <p><strong>不同机房需要不同的授权码</strong></p>
+
+            <div class="code-block">
+机房1：计算机教室1楼 → 授权码1
+机房2：计算机教室2楼 → 授权码2
+机房3：计算机教室3楼 → 授权码3
+            </div>
+
+            <p><strong>建议：</strong></p>
+            <ul>
+                <li>建立机房授权码清单</li>
+                <li>记录每个机房的授权信息</li>
+                <li>定期检查授权有效期</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>八、技术支持</h2>
+            <p>如遇到无法解决的问题，请联系技术支持：</p>
+            <ul>
+                <li><strong>QQ</strong>：2326077585</li>
+                <li><strong>邮箱</strong>：[填写客服邮箱]</li>
+                <li><strong>工作时间</strong>：周一至周五 9:00-18:00</li>
+            </ul>
+
+            <p><strong>反馈问题时请提供：</strong></p>
+            <ul>
+                <li>学校名称和机房名称</li>
+                <li>操作系统版本</li>
+                <li>浏览器版本</li>
+                <li>错误截图或错误信息</li>
+                <li>问题发生的具体步骤</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>HUSTOJ 离线游戏 - 激活帮助文档</p>
+            <p>版本：v1.0 | 更新日期：2026-09-07</p>
+            <a href="games/activate.html" class="back-link">← 返回激活页面</a>
+        </div>
+    </div>
+</body>
+</html>

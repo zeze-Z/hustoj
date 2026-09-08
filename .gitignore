@@ -10,4 +10,8 @@ test_machine_ssh_key
 oj运营/
 TODO.md
 docs/竞赛真题/GESP_2026_03_Cpp/*
-trunk/web/offline-games/
+
+# 离线游戏：排除敏感文件和打包产物
+**/private_key.pem
+**/license.dat
+trunk/web/offline-games/dist/

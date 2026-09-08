@@ -1,5 +1,80 @@
-<?php $show_title="气球打字 - $OJ_NAME"; ?>
-<?php include("template/$OJ_TEMPLATE/header.php");?>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>气球打字</title>
+    <script src="../js/confetti.min.js"></script>
+    <script src="../js/game_confetti.js"></script>
+    <style>
+    .offline-back-btn {
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        z-index: 9999;
+        background: rgba(255,255,255,0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 14px;
+        color: #333;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.2s;
+    }
+    .offline-back-btn:hover {
+        background: #667eea;
+        color: #fff;
+        transform: translateY(-2px);
+    }
+    #auth-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        text-align: center;
+        padding: 8px;
+        font-size: 12px;
+        z-index: 9999;
+    }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="offline-back-btn">← 返回游戏大厅</a>
+    <div id="auth-footer"></div>
+    <!-- 未授权提示遮罩 -->
+    <div id="no-auth-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:white; border-radius:20px; padding:40px; max-width:400px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="font-size:50px; margin-bottom:15px;">🔐</div>
+            <h2 style="color:#333; margin-bottom:15px;">需要激活授权</h2>
+            <p style="color:#666; margin-bottom:20px; line-height:1.6;">检测到未授权或授权文件无效。<br>请先激活后再使用游戏。</p>
+            <a href="activate.html" style="display:inline-block; background:linear-gradient(135deg, #667eea, #764ba2); color:white; text-decoration:none; padding:12px 25px; border-radius:10px; font-weight:600;">前往激活</a>
+            <p style="margin-top:15px; font-size:0.8rem; color:#888;">推荐：在本页同目录的 activate.html 验证授权码后下载 license.js，放入离线包 js 文件夹，即可直接使用</p>
+        </div>
+    </div>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/license.js"></script>
+    <script src="../js/rsa_verify.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+    $(document).ready(function() {
+        Auth.checkAuth().then(function(result) {
+            if (!result.valid) {
+                // 显示未授权提示遮罩
+                $('#no-auth-overlay').css('display', 'flex');
+                // 隐藏游戏内容
+                $('body > *:not(#no-auth-overlay):not(.offline-back-btn):not(#auth-footer)').hide();
+                return;
+            }
+            if (result.license) {
+                Auth.displayAuthInfo(result.license);
+            }
+        });
+    });
+    </script>
 
 <div class="padding">
 <style>
@@ -1191,8 +1266,6 @@
     </style>
 
     <!-- 通关礼花：canvas-confetti CDN + 项目公共 game_confetti.js（规范第九节） -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-    <script src="template/<?php echo $OJ_TEMPLATE?>/game_confetti.js"></script>
 
     <!-- 背景装饰光斑 -->
     <div class="particle particle-1"></div>
@@ -2036,4 +2109,5 @@
         initGame();
     </script>
 </div>
-<?php include("template/$OJ_TEMPLATE/footer.php");?>
+
+</html>

@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时钟认读</title>
+    <style>
+    .offline-back-btn {
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        z-index: 9999;
+        background: rgba(255,255,255,0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 14px;
+        color: #333;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.2s;
+    }
+    .offline-back-btn:hover {
+        background: #667eea;
+        color: #fff;
+        transform: translateY(-2px);
+    }
+    #auth-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        text-align: center;
+        padding: 8px;
+        font-size: 12px;
+        z-index: 9999;
+    }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="offline-back-btn">← 返回游戏大厅</a>
+    <div id="auth-footer"></div>
+    <!-- 未授权提示遮罩 -->
+    <div id="no-auth-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:white; border-radius:20px; padding:40px; max-width:400px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="font-size:50px; margin-bottom:15px;">🔐</div>
+            <h2 style="color:#333; margin-bottom:15px;">需要激活授权</h2>
+            <p style="color:#666; margin-bottom:20px; line-height:1.6;">检测到未授权或授权文件无效。<br>请先激活后再使用游戏。</p>
+            <a href="activate.html" style="display:inline-block; background:linear-gradient(135deg, #667eea, #764ba2); color:white; text-decoration:none; padding:12px 25px; border-radius:10px; font-weight:600;">前往激活</a>
+            <p style="margin-top:15px; font-size:0.8rem; color:#888;">推荐：在本页同目录的 activate.html 验证授权码后下载 license.js，放入离线包 js 文件夹，即可直接使用</p>
+        </div>
+    </div>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/license.js"></script>
+    <script src="../js/rsa_verify.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+    $(document).ready(function() {
+        Auth.checkAuth().then(function(result) {
+            if (!result.valid) {
+                // 显示未授权提示遮罩
+                $('#no-auth-overlay').css('display', 'flex');
+                // 隐藏游戏内容
+                $('body > *:not(#no-auth-overlay):not(.offline-back-btn):not(#auth-footer)').hide();
+                return;
+            }
+            if (result.license) {
+                Auth.displayAuthInfo(result.license);
+            }
+        });
+    });
+    </script>
+
+<style>
+/* ===== CSS Custom Properties (used by JS via getComputedStyle) ===== */
+:root {
+    --primary-color: #6366f1;
+    --secondary-color: #818cf8;
+    --clock-face: #ffffff;
+    --text-color: #1e293b;
+    --hour-hand: #1e293b;
+    --minute-hand: #6366f1;
+    --success-color: #10b981;
+    --error-color: #ef4444;
+    --accent-pink: #ec4899;
+    --accent-amber: #f59e0b;
+    --accent-cyan: #06b6d4;
+}
+
+/* ===== 统一游戏基础样式 ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+/* 游戏外层 wrapper：占满视口高度，内部 flex 靠上 */
+.game-wrap {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* 活泼的渐变背景 + 浮动装饰 */
+.game-bg-decor {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(135deg, #eef2ff 0%, #fdf2f8 50%, #ecfeff 100%);
+    overflow: hidden;
+}
+.game-bg-decor::before,
+.game-bg-decor::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.5;
+}
+.game-bg-decor::before {
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, #c7d2fe, transparent 70%);
+    top: -80px; left: -60px;
+    animation: float-blob 8s ease-in-out infinite;
+}
+.game-bg-decor::after {
+    width: 380px; height: 380px;
+    background: radial-gradient(circle, #fbcfe8, transparent 70%);
+    bottom: -100px; right: -80px;
+    animation: float-blob 10s ease-in-out infinite reverse;
+}
+@keyframes float-blob {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(20px, 30px) scale(1.1); }
+}
+
+.game-container {
+    width: 100%;
+    max-width: 820px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: clamp(16px, 2.5vw, 28px);
+    padding: clamp(1rem, 2.5vh, 2rem) clamp(1rem, 3vw, 2rem);
+    box-shadow: 0 20px 60px rgba(99, 102, 241, 0.12), 0 4px 20px rgba(0,0,0,0.04);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    /* 一屏内 flex 列布局，内容均匀分布 */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: clamp(0.6rem, 1.5vh, 1.2rem);
+    max-height: 100dvh;
+}
+.game-container::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #6366f1, #ec4899, #f59e0b, #06b6d4, #6366f1);
+    background-size: 300% 100%;
+    animation: gradient-shift 6s linear infinite;
+}
+@keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+}
+
+.game-header {
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+.game-title {
+    font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.2rem;
+    letter-spacing: 0.5px;
+    line-height: 1.1;
+}
+
+.game-subtitle {
+    font-size: clamp(0.85rem, 2vw, 1.05rem);
+    color: #64748b;
+    margin-bottom: 0;
+}
+
+/* 统计栏 */
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(6px, 1.5vw, 12px);
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+.stat-item {
+    background: linear-gradient(135deg, #ffffff, #f8fafc);
+    border: 1px solid #e2e8f0;
+    border-radius: clamp(10px, 2vw, 16px);
+    padding: clamp(8px, 1.8vh, 14px) clamp(6px, 1.5vw, 12px);
+    min-width: 0;
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.stat-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.12);
+}
+.stat-item:nth-child(1) { border-top: 3px solid #6366f1; }
+.stat-item:nth-child(2) { border-top: 3px solid #ec4899; }
+.stat-item:nth-child(3) { border-top: 3px solid #f59e0b; }
+.stat-item:nth-child(4) { border-top: 3px solid #06b6d4; }
+
+.stat-icon {
+    font-size: clamp(1rem, 2.5vh, 1.3rem);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.stat-label {
+    font-size: clamp(0.62rem, 1.6vw, 0.72rem);
+    color: #94a3b8;
+    display: block;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.stat-value {
+    font-size: clamp(1.2rem, 3.5vh, 1.6rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+}
+.stat-item:nth-child(2) .stat-value { background: linear-gradient(135deg, #ec4899, #f472b6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.stat-item:nth-child(3) .stat-value { background: linear-gradient(135deg, #f59e0b, #fbbf24); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.stat-item:nth-child(4) .stat-value { background: linear-gradient(135deg, #06b6d4, #22d3ee); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+/* 主按钮 */
+.btn-primary {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    border: none;
+    border-radius: clamp(10px, 2vw, 14px);
+    padding: clamp(10px, 2vh, 13px) clamp(24px, 4vw, 36px);
+    color: #fff;
+    font-size: clamp(0.9rem, 2.2vw, 1rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+    margin: 0.25rem;
+    letter-spacing: 0.5px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 10px 28px rgba(99, 102, 241, 0.45);
+}
+
+.btn-primary:active {
+    transform: translateY(-1px) scale(1.01);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+/* 选项按钮 */
+.options-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: clamp(8px, 2vw, 14px);
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.btn-option {
+    padding: clamp(12px, 2.5vh, 18px) clamp(12px, 2vw, 20px);
+    font-size: clamp(1rem, 3vw, 1.25rem);
+    font-weight: 700;
+    border: 2px solid #e2e8f0;
+    border-radius: clamp(12px, 2vw, 16px);
+    background: linear-gradient(135deg, #ffffff, #f8fafc);
+    color: #1e293b;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 1px;
+}
+
+.btn-option:hover {
+    border-color: #6366f1;
+    background: linear-gradient(135deg, #eef2ff, #ffffff);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.18);
+}
+
+.btn-option.correct {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-color: #10b981;
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.btn-option.incorrect {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-color: #ef4444;
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+/* 难度选择器 */
+.difficulty-selector {
+    margin-bottom: 0;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: clamp(6px, 1.5vw, 8px);
+    flex-shrink: 0;
+}
+
+.difficulty-btn {
+    padding: clamp(7px, 1.8vh, 10px) clamp(14px, 3vw, 22px);
+    border: 2px solid #6366f1;
+    background: #fff;
+    color: #6366f1;
+    border-radius: clamp(10px, 2vw, 14px);
+    font-size: clamp(0.8rem, 2vw, 0.95rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.difficulty-btn.active {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+    transform: translateY(-2px);
+}
+
+.difficulty-btn:hover:not(.active) {
+    background: #eef2ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+
+/* 时钟容器 - 游戏特有样式 */
+.clock-container {
+    margin: 0 auto;
+    /* 按视口高度自适应，保证一屏内放下；同时不超过 300px */
+    width: min(38vh, 300px, 80vw);
+    height: min(38vh, 300px, 80vw);
+    position: relative;
+    padding: clamp(8px, 1.5vh, 14px);
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, #6366f1, #ec4899, #f59e0b, #06b6d4, #6366f1);
+    box-shadow: 0 20px 50px rgba(99, 102, 241, 0.25), 0 0 0 1px rgba(99,102,241,0.1);
+    animation: clock-glow 4s ease-in-out infinite;
+    flex-shrink: 0;
+}
+@keyframes clock-glow {
+    0%, 100% { box-shadow: 0 20px 50px rgba(99, 102, 241, 0.25), 0 0 0 1px rgba(99,102,241,0.1); }
+    50% { box-shadow: 0 20px 60px rgba(236, 72, 153, 0.3), 0 0 0 1px rgba(236,72,153,0.15); }
+}
+
+#clock-canvas {
+    width: 100%;
+    height: 100%;
+    background-color: #ffffff;
+    border-radius: 50%;
+    display: block;
+}
+
+/* 计时条 - 游戏特有样式 */
+.timer-bar {
+    width: 100%;
+    height: clamp(8px, 1.5vh, 12px);
+    background-color: #e2e8f0;
+    border-radius: 6px;
+    margin-bottom: 0;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+    flex-shrink: 0;
+}
+
+.timer-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #6366f1, #ec4899, #ef4444);
+    background-size: 100% 100%;
+    width: 100%;
+    transition: width 0.3s ease;
+    border-radius: 6px;
+}
+
+/* 反馈区 */
+.feedback {
+    margin: 0;
+    padding: clamp(8px, 1.8vh, 16px);
+    border-radius: clamp(10px, 2vw, 14px);
+    font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+    font-weight: 700;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    flex-shrink: 0;
+    min-height: 0;
+}
+.feedback:not(.show) {
+    padding: 0;
+    margin: 0;
+}
+
+.feedback.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.feedback.correct {
+    background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(5,150,105,0.08));
+    color: #059669;
+    border: 2px solid #10b981;
+}
+
+.feedback.incorrect {
+    background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(220,38,38,0.08));
+    color: #dc2626;
+    border: 2px solid #ef4444;
+}
+
+/* 游戏结束弹窗 */
+.game-over {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fade-in 0.3s ease;
+}
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.game-over-card {
+    background: #fff;
+    border-radius: 28px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
+    max-width: 420px;
+    width: 90%;
+    position: relative;
+    animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+}
+.game-over-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #6366f1, #ec4899, #f59e0b);
+}
+@keyframes pop-in {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.game-over-card h2 {
+    font-size: 2rem;
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.25rem;
+    font-weight: 800;
+}
+
+.game-over-card p {
+    font-size: 1.1rem;
+    color: #475569;
+    margin-bottom: 0.6rem;
+}
+
+.game-over-card strong {
+    color: #6366f1;
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+/* 隐藏类 */
+.hidden {
+    display: none !important;
+}
+
+/* 控制按钮区 */
+.game-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+/* 响应式 - 移动端竖屏 */
+@media (max-width: 768px) {
+    .game-container {
+        margin: 0;
+        padding: clamp(0.8rem, 2vh, 1.2rem) clamp(0.8rem, 3vw, 1rem);
+        border-radius: 18px;
+        gap: clamp(0.5rem, 1.2vh, 0.8rem);
+    }
+    .options-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .stats-bar {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+    }
+    .stat-item {
+        padding: 8px 4px;
+    }
+    .stat-icon {
+        font-size: 1rem;
+    }
+    .stat-label {
+        font-size: 0.6rem;
+    }
+    .stat-value {
+        font-size: 1.1rem;
+    }
+    .difficulty-btn {
+        padding: 7px 12px;
+        font-size: 0.8rem;
+    }
+    .btn-primary {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+    }
+    .game-controls {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+    }
+}
+
+/* 超小屏 / 矮屏（如手机横屏）进一步压缩 */
+@media (max-width: 480px), (max-height: 500px) {
+    .game-subtitle {
+        display: none;
+    }
+    .clock-container {
+        width: min(32vh, 220px, 70vw);
+        height: min(32vh, 220px, 70vw);
+        padding: 8px;
+    }
+    .stats-bar {
+        gap: 5px;
+    }
+    .stat-item {
+        padding: 6px 3px;
+    }
+    .stat-icon {
+        font-size: 0.9rem;
+    }
+    .stat-label {
+        font-size: 0.55rem;
+        letter-spacing: 0.3px;
+    }
+    .stat-value {
+        font-size: 1rem;
+    }
+    .btn-option {
+        padding: 10px 8px;
+        font-size: 1rem;
+    }
+}
+
+/* 横屏短高度设备（手机横放）*/
+@media (orientation: landscape) and (max-height: 500px) {
+    .game-container {
+        max-width: 700px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 0.8rem 1.2rem;
+    }
+    .game-header {
+        width: 100%;
+    }
+    .game-title {
+        font-size: 1.3rem;
+        margin-bottom: 0;
+    }
+    .timer-bar {
+        width: 100%;
+    }
+    .stats-bar {
+        width: 100%;
+    }
+    .clock-container {
+        width: min(60vh, 180px);
+        height: min(60vh, 180px);
+    }
+    .options-container {
+        width: 100%;
+        grid-template-columns: repeat(4, 1fr);
+    }
+    .difficulty-selector {
+        width: 100%;
+    }
+    .game-controls {
+        width: 100%;
+    }
+}
+</style>
+
+<div class="game-bg-decor"></div>
+
+<div class="game-wrap">
+<div class="game-container">
+    <div class="game-header">
+        <h1 class="game-title">⏰ 时钟认读小游戏</h1>
+        <p class="game-subtitle">小朋友，看看时钟上的时间，选择正确的答案吧！</p>
+    </div>
+
+    <div class="timer-bar">
+        <div class="timer-fill" id="timer-fill"></div>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-icon">⭐</span>
+            <span class="stat-label">得分</span>
+            <span class="stat-value" id="score">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-icon">🏆</span>
+            <span class="stat-label">关卡</span>
+            <span class="stat-value" id="level">1</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-icon">🎯</span>
+            <span class="stat-label">正确率</span>
+            <span class="stat-value" id="accuracy">0%</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-icon">⏳</span>
+            <span class="stat-label">剩余时间</span>
+            <span class="stat-value" id="time-left">60</span>
+        </div>
+    </div>
+
+    <div class="difficulty-selector">
+        <button class="difficulty-btn active" data-difficulty="easy">简单（整点）</button>
+        <button class="difficulty-btn" data-difficulty="medium">普通（半点）</button>
+        <button class="difficulty-btn" data-difficulty="hard">困难（任意时间）</button>
+    </div>
+
+    <div class="clock-container">
+        <canvas id="clock-canvas" width="300" height="300"></canvas>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="options-container" id="options-container"></div>
+
+    <div class="game-controls">
+        <button class="btn-primary" id="start-btn">开始游戏</button>
+        <button class="btn-primary" id="reset-btn">重新开始</button>
+    </div>
+
+    <!-- 游戏结束弹窗 -->
+    <div class="game-over hidden" id="game-over-screen">
+        <div class="game-over-card">
+            <h2>🎉 游戏结束！</h2>
+            <p>最终得分：<strong id="final-score">0</strong></p>
+            <p>回答正确：<strong id="final-correct">0</strong>/<strong id="final-total">0</strong></p>
+            <p>正确率：<strong id="final-accuracy">0%</strong></p>
+            <p>达到关卡：<strong id="final-level">1</strong></p>
+            <button class="btn-primary" id="restart-btn" style="margin-top:1rem;">再来一局</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+class ClockReadingGame {
+    constructor() {
+        this.canvas = document.getElementById('clock-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.centerX = this.canvas.width / 2;
+        this.centerY = this.canvas.height / 2;
+        this.radius = Math.min(this.centerX, this.centerY) - 10;
+
+        this.difficulty = 'easy';
+        this.score = 0;
+        this.level = 1;
+        this.totalQuestions = 0;
+        this.correctAnswers = 0;
+        this.timeLeft = 60;
+        this.gameRunning = false;
+        this.currentHour = 0;
+        this.currentMinute = 0;
+        
+        this.lastTime = 0;
+        this.animationId = null;
+        this.timerAccumulator = 0;
+
+        this.initializeEventListeners();
+        this.drawClock(3, 0);
+    }
+
+    initializeEventListeners() {
+        document.getElementById('start-btn').addEventListener('click', () => this.startGame());
+        document.getElementById('reset-btn').addEventListener('click', () => this.resetGame());
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            document.getElementById('game-over-screen').classList.add('hidden');
+            this.resetGame();
+            this.startGame();
+        });
+
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                this.difficulty = e.target.dataset.difficulty;
+                if (!this.gameRunning) {
+                    this.generateNewQuestion();
+                }
+            });
+        });
+    }
+
+    startGame() {
+        if (this.gameRunning) return;
+        
+        this.gameRunning = true;
+        this.score = 0;
+        this.level = 1;
+        this.totalQuestions = 0;
+        this.correctAnswers = 0;
+        this.timeLeft = 60;
+        this.lastTime = performance.now();
+        this.timerAccumulator = 0;
+        
+        this.updateStats();
+        this.generateNewQuestion();
+        this.gameLoop();
+        
+        document.getElementById('start-btn').disabled = true;
+    }
+
+    resetGame() {
+        this.gameRunning = false;
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
+
+        document.getElementById('game-over-screen').classList.add('hidden');
+        this.score = 0;
+        this.level = 1;
+        this.totalQuestions = 0;
+        this.correctAnswers = 0;
+        this.timeLeft = 60;
+        
+        document.getElementById('timer-fill').style.width = '100%';
+        this.updateStats();
+        this.drawClock(3, 0);
+        document.getElementById('options-container').innerHTML = '';
+        document.getElementById('feedback').classList.remove('show');
+        document.getElementById('start-btn').disabled = false;
+    }
+
+    gameLoop(timestamp = performance.now()) {
+        if (!this.gameRunning) return;
+        
+        const dt = (timestamp - this.lastTime) / 1000;
+        this.lastTime = timestamp;
+        
+        this.timerAccumulator += dt;
+        if (this.timerAccumulator >= 1) {
+            this.timerAccumulator -= 1;
+            this.timeLeft--;
+            
+            const percentage = Math.max(0, (this.timeLeft / 60) * 100);
+            document.getElementById('timer-fill').style.width = percentage + '%';
+            document.getElementById('time-left').textContent = this.timeLeft;
+
+            if (this.timeLeft <= 0) {
+                this.endGame();
+                return;
+            }
+        }
+
+        this.animationId = requestAnimationFrame((t) => this.gameLoop(t));
+    }
+
+    endGame() {
+        this.gameRunning = false;
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+        }
+
+        const accuracy = this.totalQuestions > 0 ? Math.round((this.correctAnswers / this.totalQuestions) * 100) : 0;
+
+        document.getElementById('final-score').textContent = this.score;
+        document.getElementById('final-correct').textContent = this.correctAnswers;
+        document.getElementById('final-total').textContent = this.totalQuestions;
+        document.getElementById('final-accuracy').textContent = accuracy + '%';
+        document.getElementById('final-level').textContent = this.level;
+
+        document.getElementById('game-over-screen').classList.remove('hidden');
+    }
+
+    generateNewQuestion() {
+        this.totalQuestions++;
+        
+        let hour, minute;
+        
+        switch (this.difficulty) {
+            case 'easy':
+                hour = Math.floor(Math.random() * 12) + 1;
+                minute = 0;
+                break;
+            case 'medium':
+                hour = Math.floor(Math.random() * 12) + 1;
+                minute = Math.random() > 0.5 ? 0 : 30;
+                break;
+            case 'hard':
+                hour = Math.floor(Math.random() * 12) + 1;
+                minute = Math.floor(Math.random() * 12) * 5;
+                break;
+        }
+
+        this.currentHour = hour;
+        this.currentMinute = minute;
+
+        this.drawClock(hour, minute);
+        this.generateOptions(hour, minute);
+    }
+
+    generateOptions(correctHour, correctMinute) {
+        const options = [];
+        const correctTime = this.formatTime(correctHour, correctMinute);
+        options.push(correctTime);
+
+        while (options.length < 4) {
+            let hour, minute;
+            if (this.difficulty === 'easy') {
+                hour = Math.floor(Math.random() * 12) + 1;
+                minute = 0;
+            } else if (this.difficulty === 'medium') {
+                hour = Math.floor(Math.random() * 12) + 1;
+                minute = Math.random() > 0.5 ? 0 : 30;
+            } else {
+                hour = Math.floor(Math.random() * 12) + 1;
+                minute = Math.floor(Math.random() * 12) * 5;
+            }
+            
+            const time = this.formatTime(hour, minute);
+            if (!options.includes(time)) {
+                options.push(time);
+            }
+        }
+
+        options.sort(() => Math.random() - 0.5);
+
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+
+        options.forEach(option => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-option';
+            btn.textContent = option;
+            btn.addEventListener('click', () => this.checkAnswer(option, btn));
+            container.appendChild(btn);
+        });
+    }
+
+    formatTime(hour, minute) {
+        const h = hour < 10 ? `0${hour}` : hour;
+        const m = minute < 10 ? `0${minute}` : minute;
+        return `${h}:${m}`;
+    }
+
+    checkAnswer(selectedOption, selectedBtn) {
+        if (!this.gameRunning) return;
+
+        const correctTime = this.formatTime(this.currentHour, this.currentMinute);
+        const isCorrect = selectedOption === correctTime;
+
+        const feedback = document.getElementById('feedback');
+        feedback.className = 'feedback';
+
+        if (isCorrect) {
+            this.correctAnswers++;
+            this.score += 10 * this.level;
+            feedback.textContent = '🎉 答对了！真棒！';
+            feedback.classList.add('correct', 'show');
+            selectedBtn.classList.add('correct');
+
+            this.animatePulse(selectedBtn);
+
+            if (this.correctAnswers % 5 === 0) {
+                this.level++;
+            }
+        } else {
+            feedback.textContent = `❌ 答错了，正确答案是 ${correctTime}`;
+            feedback.classList.add('incorrect', 'show');
+            selectedBtn.classList.add('incorrect');
+
+            this.animateShake(selectedBtn);
+
+            document.querySelectorAll('.btn-option').forEach(btn => {
+                if (btn.textContent === correctTime) {
+                    btn.classList.add('correct');
+                    this.animatePulse(btn);
+                }
+            });
+        }
+
+        this.updateStats();
+
+        setTimeout(() => {
+            feedback.classList.remove('show');
+            this.generateNewQuestion();
+        }, 2000);
+    }
+
+    animatePulse(element) {
+        let start = performance.now();
+        const duration = 600;
+
+        function pulse(timestamp) {
+            const elapsed = timestamp - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const scale = 1 + 0.05 * Math.sin(progress * Math.PI);
+            
+            element.style.transform = `scale(${scale})`;
+            
+            if (progress < 1) {
+                requestAnimationFrame(pulse);
+            } else {
+                element.style.transform = '';
+            }
+        }
+
+        requestAnimationFrame(pulse);
+    }
+
+    animateShake(element) {
+        let start = performance.now();
+        const duration = 400;
+
+        function shake(timestamp) {
+            const elapsed = timestamp - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const offset = 5 * Math.sin(progress * 4 * Math.PI);
+            
+            element.style.transform = `translateX(${offset}px)`;
+            
+            if (progress < 1) {
+                requestAnimationFrame(shake);
+            } else {
+                element.style.transform = '';
+            }
+        }
+
+        requestAnimationFrame(shake);
+    }
+
+    updateStats() {
+        document.getElementById('score').textContent = this.score;
+        document.getElementById('level').textContent = this.level;
+        const accuracy = this.totalQuestions > 0 ? Math.round((this.correctAnswers / this.totalQuestions) * 100) : 0;
+        document.getElementById('accuracy').textContent = accuracy + '%';
+    }
+
+    drawClock(hour, minute) {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.drawClockFace();
+        this.drawNumbers();
+        this.drawHands(hour, minute);
+        this.drawCenterDot();
+    }
+
+    drawClockFace() {
+        this.ctx.beginPath();
+        this.ctx.arc(this.centerX, this.centerY, this.radius, 0, 2 * Math.PI);
+        this.ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--clock-face').trim();
+        this.ctx.fill();
+        this.ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+        this.ctx.lineWidth = 8;
+        this.ctx.stroke();
+    }
+
+    drawNumbers() {
+        this.ctx.font = 'bold 24px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim();
+
+        for (let num = 1; num <= 12; num++) {
+            const angle = (num * Math.PI) / 6;
+            const x = this.centerX + (this.radius - 35) * Math.sin(angle);
+            const y = this.centerY - (this.radius - 35) * Math.cos(angle);
+            this.ctx.fillText(num.toString(), x, y);
+        }
+
+        for (let i = 0; i < 60; i++) {
+            const angle = (i * Math.PI) / 30;
+            const length = i % 5 === 0 ? 15 : 8;
+            const width = i % 5 === 0 ? 3 : 1;
+            
+            this.ctx.beginPath();
+            this.ctx.lineWidth = width;
+            this.ctx.strokeStyle = '#666';
+            
+            const x1 = this.centerX + (this.radius - 15) * Math.sin(angle);
+            const y1 = this.centerY - (this.radius - 15) * Math.cos(angle);
+            const x2 = this.centerX + (this.radius - 15 - length) * Math.sin(angle);
+            const y2 = this.centerY - (this.radius - 15 - length) * Math.cos(angle);
+            
+            this.ctx.moveTo(x1, y1);
+            this.ctx.lineTo(x2, y2);
+            this.ctx.stroke();
+        }
+    }
+
+    drawHands(hour, minute) {
+        const hourAngle = (hour % 12) * 30 + minute * 0.5;
+        const minuteAngle = minute * 6;
+
+        this.drawHand(hourAngle, this.radius * 0.5, 6, getComputedStyle(document.documentElement).getPropertyValue('--hour-hand').trim());
+        this.drawHand(minuteAngle, this.radius * 0.7, 4, getComputedStyle(document.documentElement).getPropertyValue('--minute-hand').trim());
+    }
+
+    drawHand(angle, length, width, color) {
+        this.ctx.save();
+        this.ctx.translate(this.centerX, this.centerY);
+        this.ctx.rotate((angle * Math.PI) / 180);
+        this.ctx.beginPath();
+        this.ctx.lineWidth = width;
+        this.ctx.lineCap = 'round';
+        this.ctx.strokeStyle = color;
+        this.ctx.moveTo(0, 10);
+        this.ctx.lineTo(0, -length);
+        this.ctx.stroke();
+        this.ctx.restore();
+    }
+
+    drawCenterDot() {
+        this.ctx.beginPath();
+        this.ctx.arc(this.centerX, this.centerY, 6, 0, 2 * Math.PI);
+        this.ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+        this.ctx.fill();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    new ClockReadingGame();
+});
+</script>
+
+</html>

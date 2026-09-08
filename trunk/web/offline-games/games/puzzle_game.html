@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拼图游戏</title>
+    <script src="../js/confetti.min.js"></script>
+    <script src="../js/game_confetti.js"></script>
+    <style>
+    .offline-back-btn {
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        z-index: 9999;
+        background: rgba(255,255,255,0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 14px;
+        color: #333;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.2s;
+    }
+    .offline-back-btn:hover {
+        background: #667eea;
+        color: #fff;
+        transform: translateY(-2px);
+    }
+    #auth-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        text-align: center;
+        padding: 8px;
+        font-size: 12px;
+        z-index: 9999;
+    }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="offline-back-btn">← 返回游戏大厅</a>
+    <div id="auth-footer"></div>
+    <!-- 未授权提示遮罩 -->
+    <div id="no-auth-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:white; border-radius:20px; padding:40px; max-width:400px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="font-size:50px; margin-bottom:15px;">🔐</div>
+            <h2 style="color:#333; margin-bottom:15px;">需要激活授权</h2>
+            <p style="color:#666; margin-bottom:20px; line-height:1.6;">检测到未授权或授权文件无效。<br>请先激活后再使用游戏。</p>
+            <a href="activate.html" style="display:inline-block; background:linear-gradient(135deg, #667eea, #764ba2); color:white; text-decoration:none; padding:12px 25px; border-radius:10px; font-weight:600;">前往激活</a>
+            <p style="margin-top:15px; font-size:0.8rem; color:#888;">推荐：在本页同目录的 activate.html 验证授权码后下载 license.js，放入离线包 js 文件夹，即可直接使用</p>
+        </div>
+    </div>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/license.js"></script>
+    <script src="../js/rsa_verify.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+    $(document).ready(function() {
+        Auth.checkAuth().then(function(result) {
+            if (!result.valid) {
+                // 显示未授权提示遮罩
+                $('#no-auth-overlay').css('display', 'flex');
+                // 隐藏游戏内容
+                $('body > *:not(#no-auth-overlay):not(.offline-back-btn):not(#auth-footer)').hide();
+                return;
+            }
+            if (result.license) {
+                Auth.displayAuthInfo(result.license);
+            }
+        });
+    });
+    </script>
+
+
+<style>
+/* ===== 拼图游戏 pz- 前缀，统一规范 ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+/* 背景装饰层：紫粉暖底 + 点纹 + 浮动光斑 */
+.pz-bg-decor {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+        radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.08) 1px, transparent 0) 0 0/22px 22px,
+        linear-gradient(135deg, #ede9fe 0%, #fce7f3 50%, #ede9fe 100%);
+    overflow: hidden;
+}
+.pz-bg-decor::before,
+.pz-bg-decor::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.5;
+    animation: pz-float-blob 8s ease-in-out infinite;
+}
+.pz-bg-decor::before {
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, #a78bfa, transparent 70%);
+    top: -60px; left: -60px;
+}
+.pz-bg-decor::after {
+    width: 360px; height: 360px;
+    background: radial-gradient(circle, #f9a8d4, transparent 70%);
+    bottom: -80px; right: -80px;
+    animation-delay: 4s;
+}
+@keyframes pz-float-blob {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, 20px) scale(1.1); }
+}
+
+/* 外层 wrapper：靠上居中 */
+.pz-wrap {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* 玻璃拟态主容器 */
+.game-container {
+    width: 100%;
+    max-width: 1120px;
+    margin: clamp(0.5rem, 1.5vh, 1rem) auto;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: clamp(18px, 3vw, 30px);
+    padding: clamp(1.2rem, 3vh, 2.2rem) clamp(1.2rem, 3vw, 2rem);
+    box-shadow: 0 20px 60px rgba(99, 102, 241, 0.15), 0 4px 20px rgba(236, 72, 153, 0.08);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.5rem, 1.5vh, 1rem);
+    max-height: 100dvh;
+    overflow-y: auto;
+}
+
+/* 容器顶部彩虹条 */
+.game-container::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #6366f1, #ec4899, #f59e0b, #6366f1);
+    background-size: 300% 100%;
+    animation: pz-gradient-shift 6s linear infinite;
+}
+@keyframes pz-gradient-shift {
+    0% { background-position: 0% 0; }
+    100% { background-position: 300% 0; }
+}
+
+/* 标题：渐变文字 */
+.game-title {
+    font-size: clamp(1.5rem, 4.5vw, 2.3rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #6366f1 0%, #ec4899 50%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.25));
+    margin: 0;
+}
+.game-title::after {
+    content: "";
+    display: block;
+    width: 60px;
+    height: 4px;
+    margin: 6px auto 0;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #6366f1, #ec4899);
+}
+
+/* 统计栏 */
+.stats-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(6px, 1.5vw, 10px);
+    width: 100%;
+    flex-shrink: 0;
+    margin: 0;
+}
+.stat-item {
+    background: linear-gradient(135deg, #ffffff, #f5f3ff);
+    border: 1px solid rgba(167, 139, 250, 0.2);
+    border-radius: clamp(12px, 2vw, 16px);
+    padding: clamp(8px, 1.8vh, 12px) clamp(6px, 1.5vw, 12px);
+    box-shadow: 0 2px 10px rgba(99, 102, 241, 0.06);
+    text-align: center;
+    min-width: 0;
+}
+.stat-item:nth-child(1) { border-top: 3px solid #6366f1; }
+.stat-item:nth-child(2) { border-top: 3px solid #ec4899; }
+.stat-item:nth-child(3) { border-top: 3px solid #f59e0b; }
+.stat-icon { font-size: 1.1rem; display: block; line-height: 1.2; }
+.stat-label {
+    font-size: clamp(0.55rem, 1.5vw, 0.8rem);
+    color: #6b7280;
+    display: block;
+    margin: 2px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.stat-value {
+    font-size: clamp(1rem, 3vw, 1.3rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    word-break: break-word;
+    display: inline-block;
+}
+.stat-value.stat-bounce { animation: pz-stat-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes pz-stat-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.35); }
+    100% { transform: scale(1); }
+}
+
+/* 介绍卡 */
+.puzzle-intro {
+    background: linear-gradient(135deg, #f5f3ff, #fce7f3);
+    border: 1px solid rgba(167, 139, 250, 0.25);
+    border-left: 4px solid #6366f1;
+    padding: clamp(0.7rem, 2vh, 1rem);
+    border-radius: 12px;
+    margin: 0;
+    text-align: left;
+}
+.puzzle-intro p {
+    color: #374151;
+    font-size: clamp(0.8rem, 2vw, 0.95rem);
+    line-height: 1.6;
+}
+
+/* 难度药丸按钮组 */
+.difficulty-pills {
+    display: flex;
+    gap: clamp(4px, 1vw, 8px);
+    width: 100%;
+    flex-wrap: wrap;
+}
+.diff-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: clamp(0.5rem, 1.5vh, 0.7rem) clamp(4px, 1vw, 8px);
+    border-radius: 999px;
+    border: 2px solid #a78bfa;
+    background: #fff;
+    color: #6366f1;
+    font-size: clamp(0.72rem, 1.8vw, 0.9rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+.diff-btn:hover { background: #f5f3ff; transform: translateY(-1px); }
+.diff-btn.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    border-color: #6366f1;
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.35);
+}
+/* 困难档（7、9）用红/橙对比色 */
+.diff-btn[data-size="7"] { border-color: #fb923c; color: #ea580c; }
+.diff-btn[data-size="7"].active {
+    background: linear-gradient(135deg, #fb923c, #f59e0b);
+    color: #fff; border-color: #fb923c;
+    box-shadow: 0 6px 18px rgba(251, 146, 60, 0.4);
+}
+.diff-btn[data-size="9"] { border-color: #ef4444; color: #dc2626; }
+.diff-btn[data-size="9"].active {
+    background: linear-gradient(135deg, #ef4444, #ec4899);
+    color: #fff; border-color: #ef4444;
+    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.4);
+}
+
+/* 主按钮 + 次级按钮 */
+.btn {
+    padding: clamp(0.6rem, 1.8vh, 0.75rem) clamp(1rem, 3vw, 1.5rem);
+    border: none;
+    border-radius: 999px;
+    font-size: clamp(0.85rem, 2vw, 1rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(99, 102, 241, 0.4);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(99, 102, 241, 0.5); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+#restart, #playAgain {
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(99, 102, 241, 0.4);
+}
+.btn-secondary, #changeImg, #challengeHarder {
+    background: #fff;
+    color: #6366f1;
+    border: 2px solid rgba(99, 102, 241, 0.4);
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.1);
+}
+.btn-secondary:hover, #changeImg:hover, #challengeHarder:hover {
+    background: #f5f3ff;
+    transform: translateY(-1px);
+}
+
+/* 按钮波纹 */
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(0);
+    animation: pz-ripple-anim 0.6s ease-out;
+    pointer-events: none;
+}
+@keyframes pz-ripple-anim {
+    to { transform: scale(4); opacity: 0; }
+}
+
+.hidden { display: none !important; }
+
+/* 控制区 */
+.puzzle-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
+}
+.controls-row {
+    display: flex;
+    gap: 0.75rem;
+}
+.controls-row .btn { flex: 1; }
+
+/* 主布局：sidebar + 拼图区 */
+.game-layout {
+    display: flex;
+    gap: clamp(1rem, 2vw, 1.5rem);
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+    justify-content: center;
+}
+.game-sidebar {
+    width: clamp(260px, 30vw, 320px);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.6rem, 1.8vh, 1rem);
+}
+.puzzle-main {
+    flex: 1;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    justify-content: center;
+    min-width: 0;
+}
+
+/* 拼图网格：保留原有定位逻辑，仅外观升级 */
+.puzzle-grid {
+    flex: none;
+    width: min(560px, calc(100% - 136px), calc(100dvh - 220px));
+    aspect-ratio: 1 / 1;
+    background: linear-gradient(135deg, #f1f5f9, #ede9fe);
+    border: 1px solid rgba(167, 139, 250, 0.25);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.target-highlight {
+    position: absolute;
+    pointer-events: none;
+    border: 2px dashed #22c55e;
+    border-radius: 4px;
+    opacity: 0;
+    z-index: 5;
+    display: none;
+    background: rgba(34, 197, 94, 0.08);
+}
+.target-highlight.active {
+    display: block;
+    animation: pz-breathe 1s ease-in-out infinite;
+}
+@keyframes pz-breathe {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+.piece {
+    position: absolute;
+    background-size: cover;
+    background-repeat: no-repeat;
+    border-radius: 4px;
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    background-color: #f1f5f9;
+    cursor: grab;
+    z-index: 1;
+    will-change: transform;
+    box-sizing: border-box;
+    transition: box-shadow 0.2s ease;
+}
+.piece:active { cursor: grabbing; }
+.piece.dragging {
+    cursor: grabbing;
+    z-index: 10;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+.piece.correct {
+    border-color: #22c55e;
+    border-width: 2px;
+    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3);
+}
+.piece.correct.flash-correct { animation: pz-flash-correct 0.6s ease; }
+@keyframes pz-flash-correct {
+    0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    40% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.5); }
+    100% { box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3); }
+}
+.piece.selected {
+    border: 2px solid #6366f1;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+}
+.piece.transitioning { transition: transform 0.2s ease; }
+
+/* 预览面板 */
+.preview-panel {
+    width: clamp(96px, 12vw, 120px);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(167, 139, 250, 0.25);
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(99, 102, 241, 0.1);
+    padding: 0.5rem;
+    text-align: center;
+    position: relative;
+    flex-shrink: 0;
+}
+.preview-panel img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    display: block;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+.preview-toggle {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    font-size: 14px;
+    color: #64748b;
+    padding: 0; line-height: 26px; text-align: center;
+}
+.preview-toggle:hover { background: #f5f3ff; }
+
+.puzzle-footer {
+    text-align: left;
+    color: #6b7280;
+    font-size: clamp(0.72rem, 1.8vw, 0.875rem);
+}
+
+/* 胜利弹窗 */
+.victory-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 27, 75, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.victory-modal.hidden { display: none !important; }
+.victory-content {
+    background: linear-gradient(160deg, #ffffff, #fce7f3);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 30px;
+    padding: clamp(1.5rem, 4vh, 2.5rem);
+    text-align: center;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(99, 102, 241, 0.1);
+    max-width: 400px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    animation: pz-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes pz-pop-in {
+    0% { transform: scale(0.7); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.victory-content::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #6366f1, #ec4899, #f59e0b, #6366f1);
+    background-size: 300% 100%;
+    animation: pz-gradient-shift 6s linear infinite;
+}
+.victory-content h2 {
+    font-size: clamp(1.4rem, 4vw, 1.8rem);
+    font-weight: 800;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #6366f1, #ec4899, #f59e0b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+}
+.victory-stats {
+    margin: 1.5rem 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(8px, 2vw, 1.5rem);
+    justify-content: center;
+}
+.victory-stats .stat-item { min-width: 0; }
+.victory-btns {
+    display: flex;
+    gap: 0.75rem;
+    flex-direction: column;
+}
+
+/* 移动端 */
+@media (max-width: 768px) {
+    .game-container {
+        padding: clamp(0.8rem, 2vh, 1.2rem) clamp(0.8rem, 3vw, 1rem);
+    }
+    .game-layout {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .game-sidebar { width: 100%; }
+    .puzzle-main { flex-direction: row; align-items: center; }
+    .puzzle-grid {
+        width: min(420px, 100%, calc(100dvh - 320px));
+    }
+}
+@media (max-width: 480px), (max-height: 560px) {
+    .stat-icon { font-size: 0.8rem; }
+    .stat-label { font-size: 0.55rem; }
+    .stat-value { font-size: 1rem; }
+    .puzzle-grid {
+        width: min(360px, 100%, calc(100dvh - 340px));
+    }
+}
+</style>
+
+<div class="pz-bg-decor"></div>
+<div class="pz-wrap">
+<div class="game-container">
+    <h1 class="game-title">🧩 拼图游戏</h1>
+
+    <div class="game-layout">
+        <div class="game-sidebar">
+            <div class="puzzle-intro">
+                <p>🎮 <strong>玩法说明：</strong>拖拽拼图碎片到正确位置还原图片，也可以点击两个碎片交换位置。训练观察力与空间思维，适合小学1-6年级。</p>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-icon">👣</span>
+                    <span class="stat-label">步数</span>
+                    <span class="stat-value" id="moves">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">⏱️</span>
+                    <span class="stat-label">用时</span>
+                    <span class="stat-value" id="time">00:00</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">🏆</span>
+                    <span class="stat-label">最佳记录</span>
+                    <span class="stat-value" id="best">--:--</span>
+                </div>
+            </div>
+
+            <div class="puzzle-controls">
+                <div class="difficulty-pills" id="difficultyPills">
+                    <button type="button" class="diff-btn" data-size="3">3×3</button>
+                    <button type="button" class="diff-btn active" data-size="5">5×5</button>
+                    <button type="button" class="diff-btn" data-size="7">7×7</button>
+                    <button type="button" class="diff-btn" data-size="9">9×9</button>
+                </div>
+                <select id="difficulty" class="difficulty-select hidden" aria-hidden="true">
+                    <option value="3">3×3</option>
+                    <option value="5" selected>5×5</option>
+                    <option value="7">7×7</option>
+                    <option value="9">9×9</option>
+                </select>
+                <div class="controls-row">
+                    <button id="restart" class="btn btn-primary">🔄 重新开始</button>
+                    <button id="changeImg" class="btn btn-secondary">🎲 换一张图</button>
+                </div>
+            </div>
+
+            <div class="puzzle-footer">
+                <p>适合小学1-6年级学生，拖动碎片还原图片，训练观察力与空间思维</p>
+            </div>
+        </div>
+
+        <div class="puzzle-main">
+            <div class="puzzle-grid" id="grid">
+                <div class="target-highlight" id="targetHighlight"></div>
+            </div>
+            <div class="preview-panel" id="previewPanel">
+                <img id="previewImg" src="" alt="预览原图" />
+                <button type="button" class="preview-toggle" id="previewToggle" title="切换预览显示">👁️</button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<div class="victory-modal hidden" id="victoryModal">
+    <div class="victory-content">
+        <h2>🎉 恭喜完成！</h2>
+        <div class="victory-stats">
+            <div class="stat-item">
+                <span class="stat-icon">👣</span>
+                <span class="stat-label">总步数</span>
+                <span class="stat-value" id="victoryMoves">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">⏱️</span>
+                <span class="stat-label">用时</span>
+                <span class="stat-value" id="victoryTime">00:00</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">🧩</span>
+                <span class="stat-label">难度</span>
+                <span class="stat-value" id="victoryDifficulty">5×5</span>
+            </div>
+        </div>
+        <div class="victory-btns">
+            <button id="playAgain" class="btn btn-primary">🔄 再玩一次</button>
+            <button id="challengeHarder" class="btn btn-secondary">🚀 挑战更难</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function(){
+var TOTAL_IMAGES = 6;
+var IMAGE_FILES = ['01.jpg', '02.jpg', '03.jpg', '04.jpg', '05.jpg', '06.jpg'];
+var DRAG_THRESHOLD = 5;
+var SNAP_THRESHOLD = 0.4;
+
+var grid = document.getElementById('grid');
+var movesEl = document.getElementById('moves');
+var timeEl = document.getElementById('time');
+var bestEl = document.getElementById('best');
+var difficultySelect = document.getElementById('difficulty');
+var difficultyPills = document.getElementById('difficultyPills');
+var restartBtn = document.getElementById('restart');
+var changeImgBtn = document.getElementById('changeImg');
+var targetHighlight = document.getElementById('targetHighlight');
+var previewImg = document.getElementById('previewImg');
+var previewToggle = document.getElementById('previewToggle');
+var victoryModal = document.getElementById('victoryModal');
+var playAgainBtn = document.getElementById('playAgain');
+var challengeHarderBtn = document.getElementById('challengeHarder');
+var victoryMovesEl = document.getElementById('victoryMoves');
+var victoryTimeEl = document.getElementById('victoryTime');
+var victoryDifficultyEl = document.getElementById('victoryDifficulty');
+
+var gridSize, pieces, pieceEls, steps, time, timer, started, won, imgSrc, imgIndex;
+var previewVisible = true;
+
+// Drag state
+var dragPiece = null;
+var dragStartX, dragStartY, dragOrigX, dragOrigY, dragDist;
+var rafId = null;
+
+// Click swap state
+var selectedPiece = null;
+
+/* ===== 通用动效辅助 ===== */
+function bounceStat(el) {
+    el.classList.remove('stat-bounce');
+    void el.offsetWidth;
+    el.classList.add('stat-bounce');
+    el.addEventListener('animationend', function(){ el.classList.remove('stat-bounce'); }, { once: true });
+}
+function addRipple(btn, e) {
+    var rect = btn.getBoundingClientRect();
+    var size = Math.max(rect.width, rect.height);
+    var x = (e.clientX || rect.left + rect.width/2) - rect.left - size/2;
+    var y = (e.clientY || rect.top + rect.height/2) - rect.top - size/2;
+    var span = document.createElement('span');
+    span.className = 'ripple';
+    span.style.width = span.style.height = size + 'px';
+    span.style.left = x + 'px';
+    span.style.top = y + 'px';
+    btn.appendChild(span);
+    span.addEventListener('animationend', function(){ span.remove(); }, { once: true });
+}
+document.querySelectorAll('.btn, .diff-btn').forEach(function(btn){
+    btn.addEventListener('click', function(e){ addRipple(btn, e); });
+});
+
+function fmtTime(s) {
+    var m = Math.floor(s / 60);
+    var sec = s % 60;
+    return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+}
+
+function ps() { return grid.clientWidth / gridSize; }
+
+function loadBest() {
+    var k = 'puzzle_best_' + gridSize;
+    var raw = localStorage.getItem(k);
+    if (raw) {
+        try { var d = JSON.parse(raw); bestEl.textContent = d.steps + '步/' + fmtTime(d.time); }
+        catch(e) { bestEl.textContent = '--:--'; }
+    } else { bestEl.textContent = '--:--'; }
+    bounceStat(bestEl);
+}
+
+function saveBest() {
+    var k = 'puzzle_best_' + gridSize;
+    var data = {steps: steps, time: time};
+    var prev = localStorage.getItem(k);
+    if (prev) {
+        try {
+            var old = JSON.parse(prev);
+            if (old.time < time) return;
+            if (old.time === time && old.steps <= steps) return;
+        } catch(e) {}
+    }
+    localStorage.setItem(k, JSON.stringify(data));
+    bestEl.textContent = steps + '步/' + fmtTime(time);
+}
+
+function updateMoves() {
+    movesEl.textContent = steps;
+    bounceStat(movesEl);
+}
+function updateTime() { timeEl.textContent = fmtTime(time); }
+
+function startTimer() {
+    if (timer) return;
+    started = true;
+    timer = setInterval(function(){ time++; updateTime(); }, 1000);
+}
+
+function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
+
+function randomImage() {
+    imgIndex = Math.floor(Math.random() * TOTAL_IMAGES);
+    imgSrc = 'image/puzzle/' + IMAGE_FILES[imgIndex];
+}
+
+function shuffleCount() {
+    switch(gridSize) { case 3: return 20; case 5: return 50; case 7: return 100; case 9: return 200; default: return 50; }
+}
+
+function findPieceAt(row, col) {
+    for (var i = 0; i < pieces.length; i++) {
+        if (pieces[i].currentRow === row && pieces[i].currentCol === col) return i;
+    }
+    return -1;
+}
+
+function getCellFromCenter(cx, cy) {
+    var psz = ps();
+    var col = Math.floor(cx / psz);
+    var row = Math.floor(cy / psz);
+    if (col < 0 || col >= gridSize || row < 0 || row >= gridSize) return null;
+    var cellCx = col * psz + psz / 2;
+    var cellCy = row * psz + psz / 2;
+    var dx = cx - cellCx, dy = cy - cellCy;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < SNAP_THRESHOLD * psz) return {row: row, col: col};
+    return null;
+}
+
+function showHighlight(col, row) {
+    var psz = ps();
+    targetHighlight.style.width = psz + 'px';
+    targetHighlight.style.height = psz + 'px';
+    targetHighlight.style.top = (row * psz) + 'px';
+    targetHighlight.style.left = (col * psz) + 'px';
+    targetHighlight.classList.add('active');
+}
+
+function hideHighlight() { targetHighlight.classList.remove('active'); }
+
+function checkWin() {
+    for (var i = 0; i < pieces.length; i++) { if (!pieces[i].correct) return false; }
+    return true;
+}
+
+/* 移动端礼花从弹窗中心绽开（不改共享 game_confetti.js） */
+function launchConfettiFromCard() {
+    if (typeof confetti !== 'function') return;
+    var card = document.querySelector('.victory-content');
+    var rect = card ? card.getBoundingClientRect() : { left: window.innerWidth/2, top: window.innerHeight/2, width: 0, height: 0 };
+    var ox = (rect.left + rect.width / 2) / window.innerWidth;
+    var oy = (rect.top + rect.height / 2) / window.innerHeight;
+    var colors = ['#6366f1', '#ec4899', '#f59e0b', '#a78bfa', '#22c55e'];
+    confetti({ particleCount: 80, spread: 70, origin: { x: ox, y: oy }, colors: colors });
+    setTimeout(function(){ confetti({ particleCount: 60, angle: 60, spread: 55, origin: { x: ox, y: oy }, colors: colors }); }, 150);
+    setTimeout(function(){ confetti({ particleCount: 60, angle: 120, spread: 55, origin: { x: ox, y: oy }, colors: colors }); }, 300);
+}
+
+function onVictory() {
+    won = true;
+    stopTimer();
+    saveBest();
+    hideHighlight();
+    clearSelection();
+
+    // 弹窗数据先填好
+    victoryMovesEl.textContent = steps;
+    victoryTimeEl.textContent = fmtTime(time);
+    victoryDifficultyEl.textContent = gridSize + '×' + gridSize;
+
+    // 弹窗和礼花同时出现
+    victoryModal.classList.remove('hidden');
+    // 移动端窄视口用弹窗中心绽开，桌面端用默认 launchConfetti
+    if (window.innerWidth <= 768) {
+        launchConfettiFromCard();
+    } else if (typeof launchConfetti === 'function') {
+        launchConfetti();
+    } else {
+        launchConfettiFromCard();
+    }
+}
+
+function clearSelection() {
+    if (selectedPiece !== null) {
+        pieceEls[selectedPiece].classList.remove('selected');
+        selectedPiece = null;
+    }
+}
+
+function updateCorrect(p) {
+    p.correct = (p.currentRow === p.targetRow && p.currentCol === p.targetCol);
+}
+
+function flashCorrect(idx) {
+    var el = pieceEls[idx];
+    el.classList.remove('flash-correct');
+    void el.offsetWidth;
+    el.classList.add('flash-correct');
+    el.addEventListener('animationend', function(){ el.classList.remove('flash-correct'); }, { once: true });
+}
+
+function updateCorrectClasses() {
+    for (var i = 0; i < pieces.length; i++) {
+        var wasCorrect = pieces[i].correct;
+        updateCorrect(pieces[i]);
+        if (pieces[i].correct) {
+            pieceEls[i].classList.add('correct');
+            pieceEls[i].classList.remove('selected');
+            if (!wasCorrect) flashCorrect(i);
+        } else {
+            pieceEls[i].classList.remove('correct');
+        }
+    }
+}
+
+function positionPiece(el, p) {
+    var psz = ps();
+    el.style.transform = 'translate(' + (p.currentCol * psz) + 'px, ' + (p.currentRow * psz) + 'px)';
+}
+
+function positionAll(instant) {
+    var psz = ps();
+    pieceEls.forEach(function(el) {
+        var i = parseInt(el.dataset.index);
+        var p = pieces[i];
+        if (instant) {
+            el.style.transition = 'none';
+            el.classList.remove('transitioning');
+            el.style.transform = 'translate(' + (p.currentCol * psz) + 'px, ' + (p.currentRow * psz) + 'px)';
+        } else {
+            el.classList.add('transitioning');
+            el.style.transform = 'translate(' + (p.currentCol * psz) + 'px, ' + (p.currentRow * psz) + 'px)';
+        }
+    });
+}
+
+function swapPieces(a, b) {
+    var tmpR = pieces[a].currentRow, tmpC = pieces[a].currentCol;
+    pieces[a].currentRow = pieces[b].currentRow;
+    pieces[a].currentCol = pieces[b].currentCol;
+    pieces[b].currentRow = tmpR;
+    pieces[b].currentCol = tmpC;
+    updateCorrect(pieces[a]);
+    updateCorrect(pieces[b]);
+    var psz = ps();
+    pieceEls[a].classList.add('transitioning');
+    pieceEls[a].style.transform = 'translate(' + (pieces[a].currentCol * psz) + 'px, ' + (pieces[a].currentRow * psz) + 'px)';
+    pieceEls[b].classList.add('transitioning');
+    pieceEls[b].style.transform = 'translate(' + (pieces[b].currentCol * psz) + 'px, ' + (pieces[b].currentRow * psz) + 'px)';
+    updateCorrectClasses();
+    steps++;
+    updateMoves();
+    if (!started) startTimer();
+    if (checkWin()) onVictory();
+}
+
+function handleClickSwap(idx) {
+    if (pieces[idx].correct) return;
+    if (selectedPiece === null) {
+        selectedPiece = idx;
+        pieceEls[idx].classList.add('selected');
+    } else if (selectedPiece === idx) {
+        pieceEls[idx].classList.remove('selected');
+        selectedPiece = null;
+    } else {
+        swapPieces(selectedPiece, idx);
+        pieceEls[selectedPiece].classList.remove('selected');
+        pieceEls[idx].classList.remove('selected');
+        selectedPiece = null;
+    }
+}
+
+function doSnap(idx, targetRow, targetCol) {
+    pieces[idx].currentRow = targetRow;
+    pieces[idx].currentCol = targetCol;
+    updateCorrect(pieces[idx]);
+    updateCorrectClasses();
+    var el = pieceEls[idx];
+    el.classList.add('transitioning');
+    el.style.transition = '';
+    positionPiece(el, pieces[idx]);
+    steps++;
+    updateMoves();
+    if (!started) startTimer();
+    if (checkWin()) onVictory();
+}
+
+function doBounceBack(idx) {
+    var el = pieceEls[idx];
+    el.classList.add('transitioning');
+    el.style.transition = '';
+    positionPiece(el, pieces[idx]);
+}
+
+// === Mouse Drag ===
+grid.addEventListener('mousedown', function(e) {
+    if (won || e.button !== 0) return;
+    var el = e.target.closest('.piece');
+    if (!el) return;
+    var idx = parseInt(el.dataset.index);
+    if (pieces[idx].correct) return;
+    e.preventDefault();
+    dragPiece = idx;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    dragDist = 0;
+    var m = (el.style.transform || '').match(/translate\(([^,]+)px,\s*([^)]+)px\)/);
+    dragOrigX = m ? parseFloat(m[1]) : (pieces[idx].currentCol * ps());
+    dragOrigY = m ? parseFloat(m[2]) : (pieces[idx].currentRow * ps());
+    el.classList.remove('transitioning');
+    el.style.transition = 'none';
+});
+
+document.addEventListener('mousemove', function(e) {
+    if (dragPiece === null || won) return;
+    if (rafId) return;
+    rafId = requestAnimationFrame(function() {
+        rafId = null;
+        var dx = e.clientX - dragStartX;
+        var dy = e.clientY - dragStartY;
+        dragDist = Math.sqrt(dx * dx + dy * dy);
+        if (dragDist < DRAG_THRESHOLD) { hideHighlight(); return; }
+        var el = pieceEls[dragPiece];
+        el.classList.add('dragging');
+        el.style.transform = 'translate(' + (dragOrigX + dx) + 'px, ' + (dragOrigY + dy) + 'px) scale(1.08)';
+        var psz = ps();
+        var cx = dragOrigX + dx + psz / 2;
+        var cy = dragOrigY + dy + psz / 2;
+        var t = getCellFromCenter(cx, cy);
+        if (t) showHighlight(t.col, t.row);
+        else hideHighlight();
+    });
+});
+
+function snapOrSwap(idx, toRow, toCol) {
+    var occupant = findPieceAt(toRow, toCol);
+    if (occupant === -1) {
+        doSnap(idx, toRow, toCol);
+    } else if (occupant !== idx && !pieces[occupant].correct) {
+        swapPieces(idx, occupant);
+    } else {
+        doBounceBack(idx);
+    }
+}
+
+document.addEventListener('mouseup', function(e) {
+    if (dragPiece === null || won) { dragPiece = null; return; }
+    var idx = dragPiece;
+    dragPiece = null;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    var el = pieceEls[idx];
+    el.classList.remove('dragging');
+    hideHighlight();
+    if (dragDist < DRAG_THRESHOLD) {
+        el.style.transition = '';
+        el.style.transform = 'translate(' + (pieces[idx].currentCol * ps()) + 'px, ' + (pieces[idx].currentRow * ps()) + 'px)';
+        handleClickSwap(idx);
+        return;
+    }
+    var dx = e.clientX - dragStartX;
+    var dy = e.clientY - dragStartY;
+    var psz = ps();
+    var cx = dragOrigX + dx + psz / 2;
+    var cy = dragOrigY + dy + psz / 2;
+    var t = getCellFromCenter(cx, cy);
+    if (t) snapOrSwap(idx, t.row, t.col);
+    else doBounceBack(idx);
+});
+
+// === Touch Drag ===
+grid.addEventListener('touchstart', function(e) {
+    if (won) return;
+    var el = e.target.closest('.piece');
+    if (!el) return;
+    var idx = parseInt(el.dataset.index);
+    if (pieces[idx].correct) return;
+    var touch = e.touches[0];
+    dragPiece = idx;
+    dragStartX = touch.clientX;
+    dragStartY = touch.clientY;
+    dragDist = 0;
+    var m = (el.style.transform || '').match(/translate\(([^,]+)px,\s*([^)]+)px\)/);
+    dragOrigX = m ? parseFloat(m[1]) : (pieces[idx].currentCol * ps());
+    dragOrigY = m ? parseFloat(m[2]) : (pieces[idx].currentRow * ps());
+    el.classList.remove('transitioning');
+    el.style.transition = 'none';
+}, {passive: true});
+
+grid.addEventListener('touchmove', function(e) {
+    if (dragPiece === null || won) return;
+    if (rafId) return;
+    rafId = requestAnimationFrame(function() {
+        rafId = null;
+        var touch = e.touches[0];
+        var dx = touch.clientX - dragStartX;
+        var dy = touch.clientY - dragStartY;
+        dragDist = Math.sqrt(dx * dx + dy * dy);
+        if (dragDist < DRAG_THRESHOLD) { hideHighlight(); return; }
+        var el = pieceEls[dragPiece];
+        el.classList.add('dragging');
+        el.style.transform = 'translate(' + (dragOrigX + dx) + 'px, ' + (dragOrigY + dy) + 'px) scale(1.08)';
+        var psz = ps();
+        var cx = dragOrigX + dx + psz / 2;
+        var cy = dragOrigY + dy + psz / 2;
+        var t = getCellFromCenter(cx, cy);
+        if (t) showHighlight(t.col, t.row);
+        else hideHighlight();
+    });
+}, {passive: true});
+
+grid.addEventListener('touchend', function(e) {
+    if (dragPiece === null || won) { dragPiece = null; return; }
+    var idx = dragPiece;
+    dragPiece = null;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    var el = pieceEls[idx];
+    el.classList.remove('dragging');
+    hideHighlight();
+    if (dragDist < DRAG_THRESHOLD) {
+        el.style.transition = '';
+        el.style.transform = 'translate(' + (pieces[idx].currentCol * ps()) + 'px, ' + (pieces[idx].currentRow * ps()) + 'px)';
+        handleClickSwap(idx);
+        return;
+    }
+    var touch = e.changedTouches[0];
+    var dx = touch.clientX - dragStartX;
+    var dy = touch.clientY - dragStartY;
+    var psz = ps();
+    var cx = dragOrigX + dx + psz / 2;
+    var cy = dragOrigY + dy + psz / 2;
+    var t = getCellFromCenter(cx, cy);
+    if (t) snapOrSwap(idx, t.row, t.col);
+    else doBounceBack(idx);
+}, {passive: true});
+
+// Prevent text selection during drag
+grid.addEventListener('selectstart', function(e) {
+    if (dragPiece !== null) e.preventDefault();
+});
+grid.addEventListener('dragstart', function(e) { e.preventDefault(); });
+
+// === Resize ===
+window.addEventListener('resize', function() {
+    if (won || dragPiece !== null) return;
+    positionAll(true);
+});
+
+// === Controls ===
+previewToggle.addEventListener('click', function() {
+    previewVisible = !previewVisible;
+    previewImg.style.display = previewVisible ? 'block' : 'none';
+    previewToggle.textContent = previewVisible ? '👁️' : '👁️‍🗨️';
+});
+
+// 难度药丸按钮 ↔ 隐藏 select 双向同步
+difficultyPills.addEventListener('click', function(e) {
+    var btn = e.target.closest('.diff-btn');
+    if (!btn) return;
+    var size = btn.dataset.size;
+    difficultyPills.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    difficultySelect.value = size;
+    startGame();
+});
+
+function syncPillsFromSelect() {
+    var cur = String(difficultySelect.value);
+    difficultyPills.querySelectorAll('.diff-btn').forEach(function(b){
+        b.classList.toggle('active', b.dataset.size === cur);
+    });
+}
+
+function startGame() {
+    gridSize = parseInt(difficultySelect.value);
+    syncPillsFromSelect();
+    // Reset state
+    won = false;
+    steps = 0;
+    time = 0;
+    started = false;
+    stopTimer();
+    timer = null;
+    dragPiece = null;
+    selectedPiece = null;
+    rafId = null;
+    updateMoves();
+    updateTime();
+    hideHighlight();
+    if (!imgSrc) randomImage();
+    loadBest();
+    initPieces();
+    shuffle();
+    positionAll(false);
+    updateCorrectClasses();
+    previewImg.src = imgSrc;
+    // Background: detect load failure and swap to fallback if needed
+    var testImg = new Image();
+    testImg.onerror = function() {
+        var c = document.createElement('canvas');
+        c.width = 600; c.height = 600;
+        var ctx = c.getContext('2d');
+        var colors = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6'];
+        var hue = colors[(imgIndex || 1) - 1];
+        ctx.fillStyle = hue;
+        ctx.fillRect(0, 0, 600, 600);
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        for (var i = 0; i < 8; i++) {
+            ctx.beginPath();
+            ctx.arc(100 + i * 55, 200 + (i % 3) * 120, 60, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        imgSrc = c.toDataURL();
+        previewImg.src = imgSrc;
+        Array.prototype.forEach.call(pieceEls, function(el) {
+            el.style.backgroundImage = 'url(' + imgSrc + ')';
+        });
+    };
+    testImg.src = imgSrc;
+}
+
+function initPieces() {
+    pieces = [];
+    grid.querySelectorAll('.piece').forEach(function(el) { el.remove(); });
+    var sz = gridSize;
+    var frag = document.createDocumentFragment();
+    for (var r = 0; r < sz; r++) {
+        for (var c = 0; c < sz; c++) {
+            var p = { targetRow: r, targetCol: c, currentRow: r, currentCol: c, correct: true };
+            pieces.push(p);
+            var el = document.createElement('div');
+            el.className = 'piece correct';
+            el.dataset.index = pieces.length - 1;
+            el.style.width = (100 / sz) + '%';
+            el.style.height = (100 / sz) + '%';
+            el.style.backgroundImage = 'url(' + imgSrc + ')';
+            el.style.backgroundSize = (sz * 100) + '% ' + (sz * 100) + '%';
+            el.style.backgroundPosition = (c * 100 / (sz - 1)) + '% ' + (r * 100 / (sz - 1)) + '%';
+            frag.appendChild(el);
+        }
+    }
+    grid.appendChild(frag);
+    pieceEls = grid.querySelectorAll('.piece');
+}
+
+function shuffle() {
+    var sz = gridSize;
+    var total = sz * sz;
+    var cnt = shuffleCount();
+    for (var i = 0; i < cnt; i++) {
+        var a = Math.floor(Math.random() * total);
+        var b = Math.floor(Math.random() * total);
+        while (b === a) b = Math.floor(Math.random() * total);
+        var tmpR = pieces[a].currentRow, tmpC = pieces[a].currentCol;
+        pieces[a].currentRow = pieces[b].currentRow;
+        pieces[a].currentCol = pieces[b].currentCol;
+        pieces[b].currentRow = tmpR;
+        pieces[b].currentCol = tmpC;
+    }
+    var allCorrect = true;
+    for (var j = 0; j < total; j++) {
+        if (pieces[j].currentRow !== pieces[j].targetRow || pieces[j].currentCol !== pieces[j].targetCol) {
+            allCorrect = false;
+            break;
+        }
+    }
+    if (allCorrect) {
+        for (var k = 0; k < 20; k++) {
+            var a2 = Math.floor(Math.random() * total);
+            var b2 = Math.floor(Math.random() * total);
+            while (b2 === a2) b2 = Math.floor(Math.random() * total);
+            var tr = pieces[a2].currentRow, tc = pieces[a2].currentCol;
+            pieces[a2].currentRow = pieces[b2].currentRow;
+            pieces[a2].currentCol = pieces[b2].currentCol;
+            pieces[b2].currentRow = tr;
+            pieces[b2].currentCol = tc;
+        }
+    }
+}
+
+restartBtn.addEventListener('click', startGame);
+changeImgBtn.addEventListener('click', function() {
+    randomImage();
+    previewImg.src = imgSrc;
+    startGame();
+});
+
+playAgainBtn.addEventListener('click', function() {
+    victoryModal.classList.add('hidden');
+    startGame();
+});
+
+challengeHarderBtn.addEventListener('click', function() {
+    victoryModal.classList.add('hidden');
+    var sizes = [3, 5, 7, 9];
+    var cur = sizes.indexOf(gridSize);
+    if (cur < sizes.length - 1) difficultySelect.value = sizes[cur + 1];
+    startGame();
+});
+
+// Start
+randomImage();
+startGame();
+
+})();
+</script>
+
+</html>

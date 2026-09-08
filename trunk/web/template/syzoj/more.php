@@ -1,4 +1,43 @@
-<?php require("header.php"); ?>
+<?php require("header.php");
+
+// 离线游戏兑换：获取用户登录状态和积分余额
+$og_logged_in = isset($_SESSION[$OJ_NAME . '_' . 'user_id']);
+$og_user_id = $og_logged_in ? $_SESSION[$OJ_NAME . '_' . 'user_id'] : '';
+$og_balance = $og_logged_in ? intval(point_get_balance($og_user_id)) : 0;
+$og_price = 50;
+
+// 检查是否已有未过期订单
+$og_has_order = false;
+$og_order_expire = '';
+$og_order_no = '';
+$og_order_school = '';
+$og_order_room = '';
+$og_license_code = '';
+if ($og_logged_in) {
+    $og_rows = pdo_query(
+        "SELECT order_no, expire_date, school_name, room_name, license_code FROM `offline_game_order`
+          WHERE user_id = ? AND expire_date >= CURDATE()
+          ORDER BY id DESC LIMIT 1",
+        $og_user_id
+    );
+    if (!empty($og_rows)) {
+        $og_has_order = true;
+        $og_order_expire = $og_rows[0]['expire_date'];
+        $og_order_no = $og_rows[0]['order_no'];
+        $og_order_school = $og_rows[0]['school_name'];
+        $og_order_room = $og_rows[0]['room_name'];
+        $og_license_code = $og_rows[0]['license_code'];
+    }
+}
+
+$og_download_url = 'https://pan.baidu.com/s/1M5u9sYrioG123AFO4ob81g?pwd=fi7u';
+
+// 生成postkey（供弹窗表单使用）
+$og_postkey = '';
+if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
+    $og_postkey = $_SESSION[$OJ_NAME.'_'.'postkey'];
+}
+?>
 
 <style>
 /* 更多功能页面样式 */
@@ -69,11 +108,12 @@
 /* 二级 Tab（小游戏内部分类） */
 .sub-tabs {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     flex-wrap: wrap;
     gap: 6px;
-    margin-bottom: 30px;
-    padding: 0 10px;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
 }
 
 .sub-tab-item {
@@ -197,7 +237,853 @@
     line-height: 1.5;
 }
 
-/* 响应式调整 */
+/* ===== 小游戏 Tab 布局 ===== */
+/* 必须用 .tab-panel.active#panel-games 提升 specificity，
+   否则 #panel-games 的 display:flex 会覆盖 .tab-panel { display:none }，
+   导致 games 面板永远无法隐藏、其他 tab 看起来"打不开" */
+.tab-panel.active#panel-games {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 二级Tab */
+.tab-panel.active#panel-games > .og-subtabs-row {
+    margin-bottom: 0;
+}
+
+/* ===== 离线游戏横幅（顶部全宽卡片） ===== */
+.og-banner-top {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 45%, #f093fb 100%);
+    border-radius: 14px;
+    padding: 14px 24px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 28px rgba(102, 126, 234, 0.35);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    animation: og-banner-pulse 3s ease-in-out infinite;
+}
+
+@keyframes og-banner-pulse {
+    0%, 100% { box-shadow: 0 8px 28px rgba(102, 126, 234, 0.35); }
+    50% { box-shadow: 0 8px 36px rgba(102, 126, 234, 0.5); }
+}
+
+.og-banner-top:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 36px rgba(102, 126, 234, 0.5);
+}
+
+.og-banner-top::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -40px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 65%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.og-banner-top::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 30%;
+    width: 150px; height: 150px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 65%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.og-banner-top-badge {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #78350f;
+    font-size: 1rem;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 5px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    margin-right: 6px;
+}
+
+@keyframes og-badge-bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.og-banner-top-icon {
+    width: 50px; height: 50px;
+    min-width: 50px;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: og-icon-float 3s ease-in-out infinite;
+}
+
+@keyframes og-icon-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.og-banner-top-icon svg {
+    width: 28px; height: 28px;
+    fill: #fff;
+}
+
+.og-banner-top-close {
+    position: absolute;
+    top: 6px; right: 8px;
+    width: 20px; height: 20px;
+    background: rgba(255,255,255,0.25);
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    z-index: 10;
+    line-height: 1;
+}
+
+.og-banner-top-close:hover {
+    background: rgba(255,255,255,0.4);
+    transform: scale(1.1);
+}
+
+.og-banner-top-content {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.og-banner-top-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+
+.og-banner-top-desc {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    line-height: 1.4;
+    margin-bottom: 0;
+}
+
+.og-banner-top-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.og-banner-top-tags-inline {
+    display: inline-flex;
+    gap: 6px;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+.og-banner-top-tag {
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    white-space: nowrap;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.og-banner-top-action {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.og-banner-top-price {
+    text-align: right;
+    line-height: 1.1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.og-banner-top-price-old {
+    font-size: 0.85rem;
+    text-decoration: line-through;
+    opacity: 0.7;
+    font-weight: 500;
+}
+
+.og-banner-top-price-num {
+    font-size: 1.8rem;
+    font-weight: 800;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.og-banner-top-price-unit {
+    font-size: 0.7rem;
+    opacity: 0.85;
+}
+
+.og-banner-top-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    color: #667eea;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.25s;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.og-banner-top-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+.og-banner-top-btn-success {
+    background: rgba(255,255,255,0.22);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.4);
+}
+
+/* 横幅移动端适配 */
+@media (max-width: 768px) {
+    .og-banner-top {
+        flex-direction: column;
+        text-align: center;
+        padding: 24px 20px;
+        gap: 16px;
+    }
+
+    .og-banner-top-tags {
+        justify-content: center;
+    }
+
+    .og-banner-top-badge {
+        position: relative;
+        top: auto;
+        right: auto;
+        display: inline-block;
+        margin-bottom: 8px;
+    }
+}
+
+/* ===== 离线游戏兑换弹窗 ===== */
+/* 遮罩：毛玻璃 + 淡入 */
+.og-modal-mask {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 99999 !important;
+    padding: 20px;
+    box-sizing: border-box !important;
+    animation: og-fade-in 0.25s ease;
+    margin: 0 !important;
+}
+
+@keyframes og-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.og-modal-mask.show {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-direction: column !important;
+}
+
+/* 弹窗主体：flex 居中 + 弹性弹入 */
+.og-modal {
+    background: #fff;
+    border-radius: 20px;
+    max-width: 480px !important;
+    width: 100% !important;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.35);
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    transform: none !important;
+    margin: 0 !important;
+    float: none !important;
+    animation: og-modal-in 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+@keyframes og-modal-in {
+    from { opacity: 0; transform: scale(0.92) translateY(16px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 关闭按钮：悬浮于渐变头部之上 */
+.og-modal-close {
+    position: absolute;
+    top: 14px; right: 14px;
+    z-index: 5;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    color: #fff;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s;
+}
+
+.og-modal-close:hover {
+    background: rgba(255, 255, 255, 0.32);
+    transform: rotate(90deg);
+}
+
+/* 弹窗渐变头部（表单态） */
+.og-modal-header {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px 20px 0 0;
+    padding: 24px 28px 24px 28px;
+    padding-right: 52px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: #fff;
+}
+
+.og-modal-header::before,
+.og-result-header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -40px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(255,255,255,0.16) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.og-modal-header::after {
+    content: '';
+    position: absolute;
+    bottom: -70px; left: -30px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.og-modal-logo {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    width: 52px; height: 52px;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.og-modal-title {
+    position: relative;
+    z-index: 1;
+    margin: 0 0 2px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.og-modal-subtitle {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.82);
+}
+
+.og-modal-header-text {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+}
+
+/* 弹窗内容区：统一水平内边距（修复原内容贴边问题） */
+.og-modal-body {
+    padding: 22px 28px 28px;
+}
+
+/* 特性标签（标题下方横排） */
+.og-feature-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+.og-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+.og-tag-blue  { background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.35); }
+.og-tag-green { background: rgba(255,255,255,0.18); color: #fff; border-color: rgba(255,255,255,0.3); }
+.og-tag-amber { background: rgba(255,255,255,0.16); color: #fff; border-color: rgba(255,255,255,0.28); }
+
+/* 信息卡片（兑换流程 / 激活步骤） */
+.og-info-card {
+    background: linear-gradient(135deg, #f8f9ff, #f1f4ff);
+    border: 1px solid #e6eaff;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+}
+
+.og-info-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.og-info-badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px; height: 20px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 0.72rem;
+    font-style: italic;
+    font-weight: 700;
+}
+
+/* 步骤列表（带连接线） */
+.og-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.og-step {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding-left: 32px;
+}
+
+.og-step-num {
+    position: absolute;
+    left: 0;
+    top: 1px;
+    flex-shrink: 0;
+    width: 22px; height: 22px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(102,126,234,0.35);
+}
+
+.og-step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 26px;
+    bottom: -12px;
+    width: 2px;
+    background: linear-gradient(to bottom, #c7d2fe, rgba(199, 210, 254, 0.25));
+}
+
+.og-step-text {
+    font-size: 0.83rem;
+    color: #555;
+    line-height: 1.6;
+}
+
+/* 表单 */
+.og-form-group {
+    margin-bottom: 14px;
+}
+
+.og-form-group label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 7px;
+    font-size: 0.9rem;
+}
+
+.og-form-group input {
+    width: 100%;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 0.95rem;
+    color: #1f2937;
+    background: #fafbff;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.og-form-group input::placeholder {
+    color: #b0b7c3;
+}
+
+.og-form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12);
+}
+
+/* 余额 / 费用 对比条 */
+.og-balance-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid #eceef5;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+    margin: 4px 0 16px;
+}
+
+.og-balance-item {
+    flex: 1;
+    text-align: center;
+}
+
+.og-balance-label {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-bottom: 3px;
+}
+
+.og-balance-value {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #1f2937;
+}
+
+.og-balance-value span {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #9ca3af;
+    margin-left: 2px;
+}
+
+.og-balance-price {
+    color: #667eea;
+}
+
+.og-balance-divider {
+    width: 1px;
+    height: 32px;
+    background: linear-gradient(to bottom, #f3f4f6, #e5e7eb, #f3f4f6);
+}
+
+/* 积分不足警告 */
+.og-warn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 12px;
+    padding: 11px 14px;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+    color: #92400e;
+    line-height: 1.5;
+}
+
+.og-warn a {
+    color: #667eea;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+/* 主按钮 */
+.og-submit-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border: none;
+    padding: 13px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.25s;
+    box-shadow: 0 6px 18px rgba(102, 126, 234, 0.35);
+}
+
+.og-submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(102, 126, 234, 0.45);
+}
+
+.og-submit-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.og-submit-btn:disabled {
+    background: #cbd5e1;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* 成功结果 */
+.og-result {
+    display: none;
+}
+
+.og-result.show {
+    display: block;
+    animation: og-fade-up 0.35s ease;
+}
+
+@keyframes og-fade-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.og-result-header {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #34d399 0%, #16a34a 100%);
+    border-radius: 20px 20px 0 0;
+    padding: 30px 28px 26px;
+    text-align: center;
+    color: #fff;
+}
+
+.og-result-icon {
+    position: relative;
+    z-index: 1;
+    width: 60px; height: 60px;
+    background: rgba(255,255,255,0.2);
+    border: 1.5px solid rgba(255,255,255,0.4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: og-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+
+@keyframes og-pop {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+}
+
+.og-check-path {
+    stroke-dasharray: 30;
+    stroke-dashoffset: 30;
+    animation: og-check-draw 0.45s ease 0.4s forwards;
+}
+
+@keyframes og-check-draw {
+    to { stroke-dashoffset: 0; }
+}
+
+.og-result-title {
+    position: relative;
+    z-index: 1;
+    margin: 0 0 4px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.og-result-subtitle {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.85);
+}
+
+/* 授权码 */
+.og-license-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.og-license-box {
+    font-family: Consolas, Monaco, 'Courier New', monospace;
+    font-size: 0.8rem;
+    word-break: break-all;
+    color: #333;
+    line-height: 1.6;
+    background: #f8f9fc;
+    border: 1.5px dashed #c7d2fe;
+    border-radius: 12px;
+    padding: 12px 14px;
+    max-height: 110px;
+    overflow-y: auto;
+}
+
+/* 复制按钮（次级按钮） */
+.og-copy-btn {
+    display: block;
+    width: 100%;
+    background: #eef2ff;
+    color: #4f46e5;
+    border: 1px solid #e0e7ff;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 10px;
+}
+
+.og-copy-btn:hover {
+    background: #e0e7ff;
+}
+
+.og-copy-btn.og-copied {
+    background: #ecfdf5;
+    color: #059669;
+    border-color: #a7f3d0;
+}
+
+/* 下载按钮（主按钮） */
+.og-download-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff;
+    padding: 13px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-decoration: none;
+    text-align: center;
+    margin: 4px 0 16px;
+    transition: all 0.25s;
+    box-shadow: 0 6px 18px rgba(34, 197, 94, 0.3);
+}
+
+.og-download-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(34, 197, 94, 0.42);
+    text-decoration: none;
+    color: #fff;
+}
+
+/* 激活步骤紧凑版 */
+.og-info-card-compact {
+    margin-bottom: 0;
+    padding: 14px 16px;
+}
+
+.og-info-card-compact .og-steps {
+    gap: 10px;
+}
+
+.og-info-card-compact .og-step {
+    padding-left: 28px;
+}
+
+.og-info-card-compact .og-step-num {
+    width: 20px; height: 20px;
+    font-size: 0.68rem;
+}
+
+.og-info-card-compact .og-step:not(:last-child)::before {
+    top: 24px;
+    bottom: -10px;
+}
+
+.og-info-card-compact .og-step-text {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* 弹窗移动端适配 */
+@media (max-width: 768px) {
+    .og-modal-body {
+        padding: 18px 20px 22px;
+    }
+
+    .og-modal-header,
+    .og-result-header {
+        padding: 26px 20px 22px;
+    }
+}
+
 @media (max-width: 768px) {
     .more-page {
         padding: 20px 15px;
@@ -254,16 +1140,62 @@
 
     <!-- ============ 小游戏 Tab ============ -->
     <div class="tab-panel active" id="panel-games">
+        <!-- 离线游戏推广横幅（二级Tab上方） -->
+        <div class="og-banner-top" id="og-banner" onclick="<?php if (!$og_logged_in): ?>location.href='loginpage.php?return=more.php%23games'<?php else: ?>ogOpenModal()<?php endif; ?>">
+            <div class="og-banner-top-close" onclick="event.stopPropagation(); document.getElementById('og-banner').style.display='none';">✕</div>
+            <div class="og-banner-top-icon">
+                <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="8" y="18" width="48" height="34" rx="6" fill="#fff" fill-opacity="0.95"/>
+                    <rect x="8" y="18" width="48" height="10" rx="6" fill="#fff"/>
+                    <path d="M8 24 h48" stroke="rgba(102,126,234,0.2)" stroke-width="1"/>
+                    <rect x="14" y="32" width="16" height="3" rx="1.5" fill="#667eea" fill-opacity="0.5"/>
+                    <rect x="14" y="38" width="10" height="3" rx="1.5" fill="#667eea" fill-opacity="0.3"/>
+                    <circle cx="46" cy="36" r="8" fill="#667eea" fill-opacity="0.15"/>
+                    <path d="M43 36 l2 2 4-4" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <rect x="24" y="12" width="16" height="8" rx="3" fill="#fff" fill-opacity="0.9"/>
+                    <path d="M28 16 h8" stroke="#667eea" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="og-banner-top-content">
+                <div class="og-banner-top-title">
+                    📦 课前游戏集合 · 离线安装包
+                    <span class="og-banner-top-tags-inline">
+                        <span class="og-banner-top-tag">✅ 无需联网</span>
+                        <span class="og-banner-top-tag">✅ 单机运行</span>
+                        <span class="og-banner-top-tag">✅ 授权管理</span>
+                        <span class="og-banner-top-tag">✅ 一年有效期</span>
+                    </span>
+                </div>
+                <div class="og-banner-top-desc">机房没网也能玩！包含全部17款教育游戏的离线版本，适合无网络的教学环境</div>
+            </div>
+            <div class="og-banner-top-action" onclick="event.stopPropagation()">
+                <div class="og-banner-top-price">
+                    <span class="og-banner-top-badge">🔥 限时特惠</span>
+                    <span class="og-banner-top-price-old">199</span>
+                    <span class="og-banner-top-price-num">50</span>
+                    <span class="og-banner-top-price-unit">积分/年</span>
+                </div>
+                <?php if (!$og_logged_in): ?>
+                    <button class="og-banner-top-btn" onclick="location.href='loginpage.php?return=more.php%23games'">登录后兑换</button>
+                <?php elseif ($og_has_order): ?>
+                    <button class="og-banner-top-btn og-banner-top-btn-success" onclick="ogOpenModal()">🔑 我的授权码</button>
+                <?php else: ?>
+                    <button class="og-banner-top-btn" onclick="ogOpenModal()">立即兑换</button>
+                <?php endif; ?>
+            </div>
+        </div>
+
         <!-- 二级 Tab -->
-        <div class="sub-tabs">
-            <div class="sub-tab-item active" data-subtab="lower" onclick="switchSubTab('lower')">🎒 低年级专区（1-3年级）</div>
-            <div class="sub-tab-item" data-subtab="upper" onclick="switchSubTab('upper')">📚 高年级专区（4-6年级）</div>
-            <div class="sub-tab-item" data-subtab="typing" onclick="switchSubTab('typing')">⌨️ 打字练习</div>
+        <div class="og-subtabs-row">
+            <div class="sub-tabs">
+                <div class="sub-tab-item active" data-subtab="lower" onclick="switchSubTab('lower')">🎒 低年级专区（1-3年级）</div>
+                <div class="sub-tab-item" data-subtab="upper" onclick="switchSubTab('upper')">📚 高年级专区（4-6年级）</div>
+                <div class="sub-tab-item" data-subtab="typing" onclick="switchSubTab('typing')">⌨️ 打字练习</div>
+            </div>
         </div>
 
         <!-- 二级面板：低年级专区 -->
         <div class="sub-panel active" id="subpanel-lower">
-        <!-- 低年级专区（1-3年级） -->
         <div class="section">
             <h2 class="section-title">🎒 低年级专区（1-3年级） <span class="auth-tag tag-public">无需登录</span></h2>
         <div class="cards-grid">
@@ -531,6 +1463,7 @@
         </div>
     </div>
         </div><!-- /subpanel-typing -->
+
     </div><!-- /panel-games -->
 
     <!-- ============ AI Tab ============ -->
@@ -702,6 +1635,306 @@
     </div>
     </div><!-- /panel-teacher -->
 </div>
+
+<!-- 离线游戏兑换弹窗 -->
+<div class="og-modal-mask" id="og-modal-mask">
+    <div class="og-modal" role="dialog" aria-modal="true" aria-labelledby="og-modal-title">
+        <button type="button" class="og-modal-close" onclick="ogCloseModal()" aria-label="关闭">&times;</button>
+
+        <!-- 兑换表单 -->
+        <div id="og-form-section">
+            <!-- 顶部渐变头部 -->
+            <div class="og-modal-header">
+                <div class="og-modal-logo">
+                    <svg viewBox="0 0 64 64" width="32" height="32" fill="none">
+                        <rect x="8" y="18" width="48" height="34" rx="6" fill="#fff" fill-opacity="0.95"/>
+                        <rect x="8" y="18" width="48" height="10" rx="6" fill="#fff"/>
+                        <path d="M8 24 h48" stroke="rgba(102,126,234,0.2)" stroke-width="1"/>
+                        <rect x="14" y="32" width="16" height="3" rx="1.5" fill="#667eea" fill-opacity="0.5"/>
+                        <rect x="14" y="38" width="10" height="3" rx="1.5" fill="#667eea" fill-opacity="0.3"/>
+                        <circle cx="46" cy="36" r="8" fill="#667eea" fill-opacity="0.15"/>
+                        <path d="M43 36 l2 2 4-4" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="24" y="12" width="16" height="8" rx="3" fill="#fff" fill-opacity="0.9"/>
+                        <path d="M28 16 h8" stroke="#667eea" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="og-modal-header-text">
+                    <h3 class="og-modal-title" id="og-modal-title">离线游戏安装包</h3>
+                    <p class="og-modal-subtitle">50积分兑换 · 一年有效期</p>
+                    <!-- 特性标签 -->
+                    <div class="og-feature-tags">
+                        <span class="og-tag og-tag-blue">🎮 17款游戏</span>
+                        <span class="og-tag og-tag-green">📶 无需联网</span>
+                        <span class="og-tag og-tag-amber">🔒 授权管理</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="og-modal-body">
+                <!-- 兑换流程 -->
+                <div class="og-info-card">
+                    <div class="og-info-title">
+                        <span class="og-info-badge">i</span>
+                        兑换流程
+                    </div>
+                    <div class="og-steps">
+                        <div class="og-step">
+                            <span class="og-step-num">1</span>
+                            <span class="og-step-text">填写学校和机房名称，系统生成专属授权码</span>
+                        </div>
+                        <div class="og-step">
+                            <span class="og-step-num">2</span>
+                            <span class="og-step-text">下载安装包，解压到教师机</span>
+                        </div>
+                        <div class="og-step">
+                            <span class="og-step-num">3</span>
+                            <span class="og-step-text">在 games/activate.html 验证授权码，下载 license.js 放入 js 目录</span>
+                        </div>
+                        <div class="og-step">
+                            <span class="og-step-num">4</span>
+                            <span class="og-step-text">整包拷贝到学生机，双击 index.html 直接使用（无需再激活）</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 填写信息 -->
+                <div class="og-form-group">
+                    <label for="og-school">学校名称</label>
+                    <input type="text" id="og-school" placeholder="如：XX市第一小学" maxlength="100">
+                </div>
+                <div class="og-form-group">
+                    <label for="og-room">机房名称</label>
+                    <input type="text" id="og-room" placeholder="如：计算机教室1" maxlength="100">
+                </div>
+
+                <!-- 余额与费用 -->
+                <div class="og-balance-row">
+                    <div class="og-balance-item">
+                        <div class="og-balance-label">当前余额</div>
+                        <div class="og-balance-value"><?php echo $og_balance; ?> <span>积分</span></div>
+                    </div>
+                    <div class="og-balance-divider"></div>
+                    <div class="og-balance-item">
+                        <div class="og-balance-label">兑换费用</div>
+                        <div class="og-balance-value og-balance-price">50 <span>积分</span></div>
+                    </div>
+                </div>
+
+                <?php if ($og_balance < $og_price): ?>
+                <div class="og-warn">
+                    <span>⚠️</span>
+                    <span>积分不足，请先<a href="point_index.php">兑换充值卡</a></span>
+                </div>
+                <?php endif; ?>
+
+                <button type="button" class="og-submit-btn" id="og-submit-btn" onclick="ogSubmit()"
+                    <?php if ($og_balance < $og_price) echo 'disabled'; ?>>
+                    📦 确认兑换（50积分）
+                </button>
+            </div>
+        </div>
+
+        <!-- 兑换成功结果 -->
+        <div class="og-result" id="og-result-section">
+            <!-- 成功头部 -->
+            <div class="og-result-header">
+                <div class="og-result-icon">
+                    <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path class="og-check-path" d="M20 6L9 17l-5-5"/>
+                    </svg>
+                </div>
+                <h4 class="og-result-title" id="og-result-title">兑换成功</h4>
+                <p class="og-result-subtitle" id="og-result-subtitle">请复制授权码并下载安装包</p>
+            </div>
+
+            <div class="og-modal-body">
+                <!-- 授权码 -->
+                <div>
+                    <div class="og-license-label">授权码</div>
+                    <div class="og-license-box" id="og-license-box"></div>
+                    <button type="button" class="og-copy-btn" id="og-copy-btn" onclick="ogCopyLicense()">📋 复制授权码</button>
+                </div>
+
+                <!-- 下载按钮 -->
+                <a id="og-download-link" href="#" target="_blank" class="og-download-link">⬇️ 离线包下载</a>
+
+                <!-- 激活步骤 -->
+                <div class="og-info-card og-info-card-compact">
+                    <div class="og-info-title">激活步骤</div>
+                    <div class="og-steps">
+                        <div class="og-step">
+                            <span class="og-step-num">1</span>
+                            <span class="og-step-text">离线包下载并解压</span>
+                        </div>
+                        <div class="og-step">
+                            <span class="og-step-num">2</span>
+                            <span class="og-step-text">打开 index.html 粘贴授权码验证，按照引导激活离线包</span>
+                        </div>
+                        <div class="og-step">
+                            <span class="og-step-num">3</span>
+                            <span class="og-step-text">将激活的离线包整体拷贝到学生机，双击 index.html 直接使用（无需再激活）</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ===== 离线游戏兑换 =====
+var ogLoggedin = <?php echo $og_logged_in ? 'true' : 'false'; ?>;
+var ogPostkey = '<?php echo addslashes($og_postkey); ?>';
+var ogBalance = <?php echo $og_balance; ?>;
+var ogPrice = <?php echo $og_price; ?>;
+var ogHasOrder = <?php echo $og_has_order ? 'true' : 'false'; ?>;
+var ogMyLicense = <?php echo json_encode($og_license_code, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+var ogDownloadUrl = <?php echo json_encode($og_download_url, JSON_HEX_TAG); ?>;
+var ogOrderExpire = <?php echo json_encode($og_order_expire); ?>;
+var ogOrderSchool = <?php echo json_encode($og_order_school); ?>;
+var ogOrderRoom = <?php echo json_encode($og_order_room); ?>;
+
+// 弹窗顶部标题/副标题（兑换表单态）
+function ogShowForm() {
+    document.getElementById('og-form-section').style.display = '';
+    document.getElementById('og-result-section').classList.remove('show');
+    document.getElementById('og-school').value = '';
+    document.getElementById('og-room').value = '';
+}
+
+// 结果视图：复用兑换成功结果区（新兑换 / 我的授权码 共用）
+function ogShowResult(title, subtitle, licenseCode, downloadUrl) {
+    document.getElementById('og-form-section').style.display = 'none';
+    document.getElementById('og-result-title').textContent = title;
+    document.getElementById('og-result-subtitle').textContent = subtitle;
+    document.getElementById('og-license-box').textContent = licenseCode;
+    document.getElementById('og-download-link').href = downloadUrl;
+    document.getElementById('og-result-section').classList.add('show');
+}
+
+// "我的授权码"视图：展示已有授权码与下载链接
+function ogShowMyLicense() {
+    ogShowResult('🔑 我的授权码',
+        ogOrderSchool + ' · ' + ogOrderRoom + ' · 有效期至 ' + ogOrderExpire,
+        ogMyLicense, ogDownloadUrl);
+}
+
+function ogOpenModal() {
+    document.getElementById('og-modal-mask').classList.add('show');
+    // 锁定背景滚动
+    document.body.style.overflow = 'hidden';
+    if (ogHasOrder) {
+        ogShowMyLicense();
+    } else {
+        ogShowForm();
+    }
+}
+
+function ogCloseModal() {
+    document.getElementById('og-modal-mask').classList.remove('show');
+    // 恢复背景滚动
+    document.body.style.overflow = '';
+}
+
+// 点击遮罩关闭
+document.getElementById('og-modal-mask').addEventListener('click', function(e) {
+    if (e.target === this) ogCloseModal();
+});
+
+// ESC 键关闭弹窗
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('og-modal-mask').classList.contains('show')) {
+        ogCloseModal();
+    }
+});
+
+function ogSubmit() {
+    var school = document.getElementById('og-school').value.trim();
+    var room = document.getElementById('og-room').value.trim();
+
+    if (!school) { alert('请输入学校名称'); return; }
+    if (!room) { alert('请输入机房名称'); return; }
+
+    var btn = document.getElementById('og-submit-btn');
+    btn.disabled = true;
+    btn.textContent = '正在处理...';
+
+    var formData = new FormData();
+    formData.append('school_name', school);
+    formData.append('room_name', room);
+    formData.append('postkey', ogPostkey);
+
+    fetch('offline_game_redeem.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.code === 0) {
+            // 成功：更新本地状态，弹窗切换为结果视图
+            ogHasOrder = true;
+            ogMyLicense = data.data.license_code;
+            ogDownloadUrl = data.data.download_url;
+            ogOrderExpire = data.data.expire_date;
+            ogOrderSchool = data.data.school_name;
+            ogOrderRoom = data.data.room_name;
+
+            ogShowResult('兑换成功', '请复制授权码并下载安装包',
+                data.data.license_code, data.data.download_url);
+
+            // 更新横幅按钮为"我的授权码"
+            var bannerAction = document.querySelector('.og-banner-top-action');
+            if (bannerAction) {
+                bannerAction.innerHTML = '<div class="og-banner-top-price"><span class="og-banner-top-price-num">✓</span><span class="og-banner-top-price-unit">已兑换</span></div><button class="og-banner-top-btn og-banner-top-btn-success" onclick="ogOpenModal()">🔑 我的授权码</button>';
+            }
+        } else {
+            alert(data.msg);
+            btn.disabled = false;
+            btn.textContent = '📦 确认兑换（50积分）';
+        }
+    })
+    .catch(function(err) {
+        console.error('ogSubmit error:', err);
+        alert('网络错误，请稍后重试');
+        btn.disabled = false;
+        btn.textContent = '📦 确认兑换（50积分）';
+    });
+}
+
+function ogCopyLicense() {
+    var text = document.getElementById('og-license-box').textContent;
+    var btn = document.getElementById('og-copy-btn');
+
+    function ogCopied() {
+        // 按钮内联反馈，避免 alert 打断
+        btn.classList.add('og-copied');
+        btn.textContent = '✓ 已复制到剪贴板';
+        setTimeout(function() {
+            btn.classList.remove('og-copied');
+            btn.textContent = '📋 复制授权码';
+        }, 2000);
+    }
+
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(ogCopied).catch(function() {
+            alert('复制失败，请手动选择授权码复制');
+        });
+    } else {
+        // 降级方案
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand('copy');
+            ogCopied();
+        } catch (err) {
+            alert('复制失败，请手动选择授权码复制');
+        }
+        document.body.removeChild(ta);
+    }
+}
+</script>
 
 <script>
 // 复现header中的openAIExperience函数

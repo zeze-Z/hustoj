@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>激活授权 - AI-OJ离线游戏</title>
+    <script src="../js/jquery.min.js"></script>
+    <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        padding: 30px 16px;
+    }
+
+    .activate-container {
+        background: rgba(255, 255, 255, 0.97);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 36px 28px 28px;
+        max-width: 1280px;
+        width: 100%;
+        margin: auto; /* flex 下水平居中，内容超高时不裁剪顶部 */
+        text-align: center;
+    }
+
+    .logo {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 14px;
+        font-size: 32px;
+    }
+
+    h1 {
+        font-size: 1.6rem;
+        color: #333;
+        margin-bottom: 6px;
+    }
+
+    .subtitle {
+        color: #666;
+        font-size: 0.95rem;
+    }
+
+    /* ===== 横向步骤条 ===== */
+    .stepper {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        margin: 26px auto 20px;
+        max-width: 900px;
+    }
+
+    .step-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 96px;
+    }
+
+    .step-node .dot {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.05rem;
+        transition: all 0.3s;
+    }
+
+    .step-node .lbl {
+        margin-top: 7px;
+        font-size: 0.85rem;
+        color: #94a3b8;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .step-node.active .dot {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: #fff;
+        box-shadow: 0 0 0 6px rgba(102, 126, 234, 0.15);
+    }
+
+    .step-node.active .lbl { color: #667eea; }
+
+    .step-node.done .dot { background: #10b981; color: #fff; }
+    .step-node.done .lbl { color: #10b981; }
+
+    .connector {
+        flex: 1;
+        max-width: 72px;
+        height: 3px;
+        border-radius: 2px;
+        background: #e2e8f0;
+        margin: 21px 8px 0;
+        transition: background 0.3s;
+    }
+
+    .connector.lit { background: #10b981; }
+
+    /* ===== 步骤卡片：从左到右平铺 ===== */
+    .cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        text-align: left;
+    }
+
+    .card {
+        background: #fff;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.3s;
+    }
+
+    .card.active {
+        border-color: #667eea;
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.18);
+    }
+
+    .card.done {
+        border-color: #a7f3d0;
+        background: #f0fdf4;
+    }
+
+    .card.locked { opacity: 0.6; }
+    .card.locked .card-body { display: none; }
+
+    .card .lock-hint {
+        display: none;
+        text-align: center;
+        color: #94a3b8;
+        padding: 26px 0;
+        font-size: 0.9rem;
+        line-height: 1.8;
+    }
+
+    .card.locked .lock-hint { display: block; }
+
+    .card-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .card-no {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+    }
+
+    .card-head h3 {
+        font-size: 0.98rem;
+        color: #333;
+    }
+
+    .chip {
+        margin-left: auto;
+        font-size: 0.72rem;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: #94a3b8;
+        font-weight: 600;
+        flex: none;
+    }
+
+    .card.active .chip { background: #eef2ff; color: #667eea; }
+    .card.done .chip { background: #d1fae5; color: #059669; }
+
+    .card-body { flex: 1; }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        font-size: 0.92rem;
+    }
+
+    .form-group textarea {
+        width: 100%;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 10px;
+        font-size: 0.88rem;
+        height: 96px;
+        resize: vertical;
+        transition: border-color 0.2s;
+    }
+
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .form-group .hint {
+        font-size: 0.8rem;
+        color: #888;
+        margin-top: 6px;
+        line-height: 1.6;
+    }
+
+    .btn-main {
+        width: 100%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 10px;
+        font-size: 0.98rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-main:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+
+    .btn-main:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .btn-secondary {
+        width: 100%;
+        background: #fff;
+        color: #667eea;
+        border: 2px solid #c7d2fe;
+        padding: 11px;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+        border-color: #667eea;
+        background: #eef2ff;
+    }
+
+    .btn-secondary:disabled {
+        color: #94a3b8;
+        border-color: #e2e8f0;
+        background: #f8fafc;
+        cursor: not-allowed;
+    }
+
+    .card-note {
+        font-size: 0.8rem;
+        color: #888;
+        line-height: 1.7;
+        margin-top: 10px;
+    }
+
+    .card-msg {
+        display: none;
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        line-height: 1.6;
+        word-break: break-all;
+    }
+
+    .card-msg.success {
+        display: block;
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .card-msg.error {
+        display: block;
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    /* 步骤1：验证通过后的展示区 */
+    .step1-done { display: none; text-align: center; }
+
+    .preview-box {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 10px;
+        padding: 14px 10px;
+        margin-bottom: 12px;
+    }
+
+    .preview-box .school-name {
+        font-size: 1.15rem;
+        font-weight: bold;
+        margin-bottom: 3px;
+        word-break: break-all;
+    }
+
+    .preview-box .room-name {
+        font-size: 0.85rem;
+        opacity: 0.92;
+    }
+
+    .link-btn {
+        background: none;
+        border: none;
+        color: #667eea;
+        font-size: 0.82rem;
+        cursor: pointer;
+        text-decoration: underline;
+        margin-top: 10px;
+    }
+
+    /* 步骤2：js 目录路径 */
+    .path-box {
+        margin-top: 10px;
+        padding: 9px;
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        color: #4338ca;
+    }
+
+    .path-box code {
+        word-break: break-all;
+        display: block;
+        margin-bottom: 6px;
+        line-height: 1.5;
+    }
+
+    .path-box button {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 4px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+    }
+
+    .step2-actions { margin-top: 12px; }
+
+    .step2-actions .btn-main { margin-bottom: 10px; }
+
+    /* 步骤4：分发引导 */
+    .guide-list {
+        padding-left: 18px;
+        color: #444;
+        line-height: 1.9;
+        font-size: 0.88rem;
+        margin-bottom: 14px;
+    }
+
+    .guide-list code {
+        background: #f1f5f9;
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 0.82rem;
+    }
+
+    /* 完成横幅 */
+    #finish-banner {
+        display: none;
+        margin: 20px auto 0;
+        max-width: 900px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff;
+        border-radius: 14px;
+        padding: 16px 20px;
+        font-size: 1.05rem;
+        font-weight: 600;
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+    }
+
+    .help-text {
+        margin-top: 20px;
+        font-size: 0.88rem;
+        color: #666;
+    }
+
+    @media (max-width: 1080px) {
+        .cards { grid-template-columns: 1fr; }
+        .activate-container { max-width: 560px; }
+        .step-node { min-width: 64px; }
+        .step-node .lbl { font-size: 0.72rem; }
+        .step-node .dot { width: 36px; height: 36px; font-size: 0.9rem; }
+        .connector { margin-top: 17px; }
+    }
+    </style>
+</head>
+<body>
+    <div class="activate-container">
+        <div class="logo">🎮</div>
+        <h1>激活授权</h1>
+        <p class="subtitle">教师机按以下 4 步完成激活，整包分发到学生机即可直接使用</p>
+
+        <!-- 横向步骤条 -->
+        <div class="stepper">
+            <div class="step-node" id="rail-1">
+                <div class="dot" id="dot-1">1</div>
+                <div class="lbl">验证授权码</div>
+            </div>
+            <div class="connector" id="conn-1"></div>
+            <div class="step-node" id="rail-2">
+                <div class="dot" id="dot-2">2</div>
+                <div class="lbl">部署 license.js</div>
+            </div>
+            <div class="connector" id="conn-2"></div>
+            <div class="step-node" id="rail-3">
+                <div class="dot" id="dot-3">3</div>
+                <div class="lbl">进入游戏</div>
+            </div>
+            <div class="connector" id="conn-3"></div>
+            <div class="step-node" id="rail-4">
+                <div class="dot" id="dot-4">4</div>
+                <div class="lbl">分发学生机</div>
+            </div>
+        </div>
+
+        <!-- 4 步卡片：从左到右平铺 -->
+        <div class="cards">
+            <!-- 第1步：验证授权码 -->
+            <div class="card" id="card-1">
+                <div class="card-head">
+                    <span class="card-no">1</span>
+                    <h3>验证授权码</h3>
+                    <span class="chip" id="chip-1">进行中</span>
+                </div>
+                <div class="lock-hint">🔒</div>
+                <div class="card-body">
+                    <div id="step1-form">
+                        <div class="form-group">
+                            <label for="license-input">🔑 请输入授权码：</label>
+                            <textarea id="license-input" placeholder="粘贴从 aioj.top/more.php 兑换获取的授权码..."></textarea>
+                            <div class="hint">在 <a href="https://aioj.top/more.php" target="_blank" style="color:#667eea;">aioj.top/more.php</a> 使用积分兑换授权码</div>
+                        </div>
+
+                        <div class="preview-box" id="preview-box" style="display:none;">
+                            <div class="school-name" id="preview-school">--</div>
+                            <div class="room-name" id="preview-room">--</div>
+                        </div>
+
+                        <button class="btn-main" id="activate-btn" onclick="activate()" style="margin-top:12px;">验证授权码</button>
+                    </div>
+
+                    <div class="step1-done" id="step1-done">
+                        <div class="preview-box">
+                            <div class="school-name" id="done-school">--</div>
+                            <div class="room-name" id="done-room">--</div>
+                        </div>
+                        <div class="card-note" style="margin-top:0;">✅ 本机已激活</div>
+                        <button class="link-btn" onclick="showStep1Form()">更换授权码</button>
+                    </div>
+
+                    <div class="card-msg" id="msg-1"></div>
+                </div>
+            </div>
+
+            <!-- 第2步：下载 license.js 并放入 js 目录 -->
+            <div class="card" id="card-2">
+                <div class="card-head">
+                    <span class="card-no">2</span>
+                    <h3>部署 license.js</h3>
+                    <span class="chip" id="chip-2">未解锁</span>
+                </div>
+                <div class="lock-hint">🔒<br>完成第 1 步后解锁</div>
+                <div class="card-body">
+                    <p class="card-note" style="margin-top:0;">下载 license.js 授权文件，放入下方指定文件夹：</p>
+
+                    <div class="step2-actions">
+                        <button class="btn-main" onclick="downloadLicenseJs()">⬇️ 下载 license.js</button>
+                        <button class="btn-secondary" id="verify-copy-btn" onclick="verifyLicenseCopied()">✅ 我已拷贝，验证</button>
+                    </div>
+
+                    <div class="path-box">
+                        <code id="package-root-path">离线包内的 js 文件夹（与 auth.js 同级）</code>
+                        <button id="copy-path-btn" onclick="copyPackagePath()">📋 复制路径</button>
+                    </div>
+
+                    <p class="card-note">提示：若之前已把 license.js 放入 js 目录，可直接点击「验证」</p>
+                    <div class="card-msg" id="msg-2"></div>
+                </div>
+            </div>
+
+            <!-- 第3步：进入游戏 -->
+            <div class="card" id="card-3">
+                <div class="card-head">
+                    <span class="card-no">3</span>
+                    <h3>进入游戏</h3>
+                    <span class="chip" id="chip-3">未解锁</span>
+                </div>
+                <div class="lock-hint">🔒<br>完成第 2 步后解锁</div>
+                <div class="card-body">
+                    <p class="card-note" style="margin-top:0;">点击下方按钮，新开页面进入游戏主页：</p>
+                    <div style="margin-top:14px;">
+                        <a class="btn-main" href="../index.html" target="_blank" onclick="completeStep3()">🚀 打开游戏主页</a>
+                    </div>
+                    <p class="card-note">请确认能正常进入游戏并试玩一局，再进行第 4 步。<br>若提示未激活，请检查第 2 步 license.js 是否已放入 js 目录。</p>
+                    <div class="card-msg" id="msg-3"></div>
+                </div>
+            </div>
+
+            <!-- 第4步：分发学生机 -->
+            <div class="card" id="card-4">
+                <div class="card-head">
+                    <span class="card-no">4</span>
+                    <h3>分发学生机</h3>
+                    <span class="chip" id="chip-4">未解锁</span>
+                </div>
+                <div class="lock-hint">🔒<br>完成第 3 步后解锁</div>
+                <div class="card-body">
+                    <p class="card-note" style="margin-top:0;">教师机游戏正常后，把整个离线包分发出去：</p>
+                    <ol class="guide-list">
+                        <li>将<strong>整个离线包文件夹</strong>拷贝到学生机（U 盘 / 局域网共享均可）</li>
+                        <li>学生双击 <code>index.html</code> 即可直接进入游戏，<strong>无需任何操作</strong></li>
+                    </ol>
+                    <button class="btn-main" id="finish-btn" onclick="completeStep4()">🎉 完成激活</button>
+                    <div class="card-msg" id="msg-4"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="finish-banner">🎉 激活完成！整个离线包现已可直接分发到学生机，学生双击 index.html 即可游戏。</div>
+
+        <div class="help-text">
+            <p>遇到问题？联系客服 QQ：2326077585</p>
+        </div>
+    </div>
+
+    <script src="../js/rsa_verify.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/confetti.min.js"></script>
+    <script src="../js/game_confetti.js"></script>
+    <script>
+    // ===== 步骤状态机 =====
+    var STEPS_DONE = { 1: false, 2: false, 3: false, 4: false };
+    var currentLicense = null;
+
+    // 根据状态刷新步骤条与卡片（done > active > locked）
+    function refreshSteps() {
+        for (var i = 1; i <= 4; i++) {
+            var done = STEPS_DONE[i];
+            var prevDone = (i === 1) ? true : STEPS_DONE[i - 1];
+            var card = $('#card-' + i), rail = $('#rail-' + i), chip = $('#chip-' + i);
+            card.removeClass('locked active done');
+            rail.removeClass('locked active done');
+            if (done) {
+                card.addClass('done'); rail.addClass('done');
+                chip.text('已完成');
+                $('#dot-' + i).text('✓');
+            } else if (prevDone) {
+                card.addClass('active'); rail.addClass('active');
+                chip.text('进行中');
+                $('#dot-' + i).text(i);
+            } else {
+                card.addClass('locked'); rail.addClass('locked');
+                chip.text('未解锁');
+                $('#dot-' + i).text(i);
+            }
+        }
+        for (var j = 1; j <= 3; j++) {
+            $('#conn-' + j).toggleClass('lit', STEPS_DONE[j]);
+        }
+    }
+
+    // 卡片内消息提示
+    function setCardMsg(step, msg, type) {
+        var $msg = $('#msg-' + step);
+        $msg.removeClass('success error');
+        if (!msg) { return; }
+        $msg.addClass(type).text(msg);
+    }
+
+    // ===== 第1步：验证授权码 =====
+    // 输入时实时预览授权信息
+    $('#license-input').on('input', function() {
+        var input = $(this).val().trim();
+        if (!input) {
+            $('#preview-box').hide();
+            return;
+        }
+        try {
+            var license = JSON.parse(input);
+            if (license.school && license.room) {
+                $('#preview-school').text(license.school);
+                $('#preview-room').text(license.room + ' · 授权至 ' + license.expire);
+                $('#preview-box').show();
+            } else {
+                $('#preview-box').hide();
+            }
+        } catch (e) {
+            $('#preview-box').hide();
+        }
+    });
+
+    async function activate() {
+        var licenseInput = $('#license-input').val().trim();
+        if (!licenseInput) {
+            setCardMsg(1, '请输入授权码', 'error');
+            return;
+        }
+
+        var btn = $('#activate-btn');
+        btn.prop('disabled', true).text('正在验证...');
+
+        try {
+            var license = JSON.parse(licenseInput);
+            var result = await Auth.validateLicense(license);
+
+            if (result.valid) {
+                // 主路径：写入 localStorage 完成本机自动激活
+                // （Chrome/Edge 在 file:// 下禁用 fetch/XHR，localStorage 是教师机本机的可靠通道）
+                var saved = Auth.persistLicense(license);
+                completeStep1(license);
+                setCardMsg(1, saved ? '✅ 授权验证通过！请进行第 2 步' :
+                    '✅ 授权验证通过！当前浏览器无法自动保存，不影响激活流程，请继续第 2 步', 'success');
+            } else {
+                setCardMsg(1, '❌ ' + result.message, 'error');
+            }
+        } catch (e) {
+            setCardMsg(1, '❌ 授权码格式错误，请检查后重试', 'error');
+        }
+        btn.prop('disabled', false).text('重新验证');
+    }
+
+    function completeStep1(license) {
+        currentLicense = license;
+        // 同步备用区授权内容（第 2 步下载 license.js 也从这里取）
+        $('#license-content').val(JSON.stringify(license, null, 2));
+        $('#done-school').text(license.school);
+        $('#done-room').text(license.room + ' · 授权至 ' + license.expire);
+        $('#step1-form').hide();
+        $('#step1-done').show();
+        STEPS_DONE[1] = true;
+        refreshSteps();
+    }
+
+    // 更换授权码：重新显示表单（已解锁的后续步骤不回退）
+    function showStep1Form() {
+        $('#step1-done').hide();
+        $('#step1-form').show();
+        $('#license-input').val(currentLicense ? JSON.stringify(currentLicense) : '');
+        $('#activate-btn').text('重新验证');
+    }
+
+    // ===== 第2步：下载 license.js 并验证拷贝 =====
+
+    /**
+     * 从当前页面路径计算 license.js 存放目录（离线包根目录下的 js 文件夹）
+     * 本页位于包内 games/ 目录：file:///D:/a/b/games/activate.html → D:\a\b\js\
+     * 非 Windows 路径保持正斜杠；非 file:// 协议返回 null，由调用方显示通用文案
+     */
+    function getLicenseJsDir() {
+        if (window.location.protocol !== 'file:') {
+            return null;
+        }
+        try {
+            var path = decodeURIComponent(window.location.pathname);
+            var dir = path.replace(/[^/\\]*$/, ''); // 去掉文件名，保留目录及结尾分隔符
+            dir = dir.replace(/([\/\\])games[\/\\]$/, '$1');  // 本页在 games/ 下，剥掉该段保留分隔符（games 前必须有分隔符，避免误剥 mygames 类目录名）
+            if (/^\/[A-Za-z]:[\/\\]/.test(dir)) {
+                // Windows file 路径形如 /D:/dir/：去掉开头斜杠并把 / 换成 \
+                dir = dir.substring(1).replace(/\//g, '\\') + 'js\\';
+            } else {
+                dir = dir + 'js/';
+            }
+            return dir;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // 显示 license.js 存放目录 + 复制按钮（非 file:// 时显示通用文案并隐藏复制按钮）
+    function updatePackagePathUI() {
+        var dir = getLicenseJsDir();
+        if (dir) {
+            $('#package-root-path').text(dir);
+            $('#copy-path-btn').show();
+        } else {
+            $('#package-root-path').text('离线包内的 js 文件夹（与 auth.js 同级）');
+            $('#copy-path-btn').hide();
+        }
+    }
+
+    // 复制 license.js 存放目录路径到剪贴板
+    function copyPackagePath() {
+        var dir = getLicenseJsDir();
+        if (!dir) {
+            setCardMsg(2, '❌ 当前环境无法定位包目录，请手动确认 license.js 与 auth.js 同级放入 js 文件夹', 'error');
+            return;
+        }
+        try {
+            var tmp = $('<textarea>').val(dir).appendTo('body').select();
+            document.execCommand('copy');
+            tmp.remove();
+            setCardMsg(2, '✅ 已复制 js 目录路径，将 license.js 移入该目录即可', 'success');
+        } catch (err) {
+            navigator.clipboard.writeText(dir).then(function() {
+                setCardMsg(2, '✅ 已复制 js 目录路径，将 license.js 移入该目录即可', 'success');
+            }).catch(function() {
+                setCardMsg(2, '❌ 复制失败，请手动记录路径', 'error');
+            });
+        }
+    }
+
+    // 下载 license.js（window.OG_LICENSE_DATA = {...授权JSON...};）
+    // 学生机页面经 <script src="js/license.js"> 加载本地文件不受 file:// 限制，双击 index.html 即可自动验签
+    function downloadLicenseJs() {
+        if (!currentLicense) {
+            setCardMsg(2, '❌ 请先完成第 1 步验证授权码', 'error');
+            return;
+        }
+        var jsContent = 'window.OG_LICENSE_DATA = ' + JSON.stringify(currentLicense, null, 2) + ';\n';
+        var blob = new Blob([jsContent], { type: 'application/javascript' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'license.js';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function() { URL.revokeObjectURL(url); }, 100);
+        setCardMsg(2, '✅ license.js 已开始下载，请将其移入离线包 js 文件夹（与 auth.js 同级），再点击「我已拷贝，验证」', 'success');
+    }
+
+    /**
+     * 通过 <script> 标签加载 license.js（file:// 协议下 <script> 可加载本地文件）
+     */
+    function loadLicenseScript(srcs, cb) {
+        var callbackDone = false;
+        function doCallback(success) {
+            if (!callbackDone) {
+                callbackDone = true;
+                cb(success);
+            }
+        }
+
+        var srcIndex = 0;
+        function tryNext() {
+            if (srcIndex >= srcs.length) {
+                doCallback(false);
+                return;
+            }
+            var src = srcs[srcIndex++];
+            console.log('[license] 尝试加载:', src);
+
+            var s = document.createElement('script');
+            s.onload = function() {
+                console.log('[license] 加载成功:', src);
+                doCallback(true);
+            };
+            s.onerror = function() {
+                console.log('[license] 加载失败:', src);
+                tryNext();
+            };
+            // 设置 src 必须在 onload/onerror 之后，确保回调已绑定
+            document.head.appendChild(s);
+            s.src = src;
+        }
+        tryNext();
+    }
+
+    // 拷贝验证：尝试从 ../js/license.js 加载授权并验签，通过则解锁第 3 步
+    var verifyingCopy = false;
+    function verifyLicenseCopied() {
+        if (verifyingCopy) return;
+        verifyingCopy = true;
+        var btn = $('#verify-copy-btn');
+        btn.prop('disabled', true).text('正在验证...');
+        setCardMsg(2, '', null);
+
+        // 清掉上次注入结果，避免旧值造成误判
+        window.OG_LICENSE_DATA = undefined;
+
+        loadLicenseScript(['../js/license.js?t=' + Date.now(), '../js/license.js'], function(loaded) {
+            verifyingCopy = false;
+            btn.prop('disabled', false).text('✅ 我已拷贝，验证');
+            if (!loaded || !window.OG_LICENSE_DATA) {
+                setCardMsg(2, '❌ 未在 js 目录找到有效的 license.js。请确认已将下载的文件移入 js 文件夹（与 auth.js 同级）后重试', 'error');
+                return;
+            }
+            Auth.validateLicense(window.OG_LICENSE_DATA).then(function(result) {
+                if (result.valid) {
+                    STEPS_DONE[2] = true;
+                    refreshSteps();
+                    setCardMsg(2, '✅ 验证通过！license.js 已在 js 目录就位', 'success');
+                } else {
+                    setCardMsg(2, '❌ js 目录中的 license.js 无效：' + result.message, 'error');
+                }
+            });
+        });
+    }
+
+    // ===== 第3步：进入游戏 =====
+    function completeStep3() {
+        if (STEPS_DONE[3]) return;
+        STEPS_DONE[3] = true;
+        refreshSteps();
+        setCardMsg(3, '✅ 游戏主页已在新页面打开，确认可正常游戏后回到本页完成第 4 步', 'success');
+    }
+
+    // ===== 第4步：分发学生机 =====
+    function completeStep4() {
+        if (STEPS_DONE[4]) return;
+        STEPS_DONE[4] = true;
+        refreshSteps();
+        $('#finish-banner').show();
+        var btn = $('#finish-btn');
+        btn.prop('disabled', true).text('🎉 已完成');
+        setCardMsg(4, '✅ 全部步骤完成，随时可将整个离线包拷贝到学生机使用', 'success');
+        launchConfetti(); // 依赖 ../js/confetti.min.js，缺失时函数内部静默跳过
+    }
+
+    // ===== 页面初始化 =====
+    $(document).ready(function() {
+        refreshSteps();
+        updatePackagePathUI();
+
+        // 本机已有有效授权（教师机重新打开本页）：自动完成第 1 步，直达第 2 步
+        // 键名与 js/auth.js 的 LICENSE_STORAGE_KEY 保持一致
+        try {
+            var raw = localStorage.getItem('og_license');
+            if (raw) {
+                var stored = JSON.parse(raw);
+                Auth.validateLicense(stored).then(function(result) {
+                    if (result.valid) {
+                        $('#license-input').val(JSON.stringify(stored));
+                        completeStep1(stored);
+                    }
+                });
+            }
+        } catch (e) { /* localStorage 不可用时按首次激活流程走 */ }
+    });
+    </script>
+</body>
+</html>

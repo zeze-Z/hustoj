@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>颜色匹配</title>
+    <style>
+    .offline-back-btn {
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        z-index: 9999;
+        background: rgba(255,255,255,0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 14px;
+        color: #333;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.2s;
+    }
+    .offline-back-btn:hover {
+        background: #667eea;
+        color: #fff;
+        transform: translateY(-2px);
+    }
+    #auth-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        text-align: center;
+        padding: 8px;
+        font-size: 12px;
+        z-index: 9999;
+    }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="offline-back-btn">← 返回游戏大厅</a>
+    <div id="auth-footer"></div>
+    <!-- 未授权提示遮罩 -->
+    <div id="no-auth-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:white; border-radius:20px; padding:40px; max-width:400px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="font-size:50px; margin-bottom:15px;">🔐</div>
+            <h2 style="color:#333; margin-bottom:15px;">需要激活授权</h2>
+            <p style="color:#666; margin-bottom:20px; line-height:1.6;">检测到未授权或授权文件无效。<br>请先激活后再使用游戏。</p>
+            <a href="activate.html" style="display:inline-block; background:linear-gradient(135deg, #667eea, #764ba2); color:white; text-decoration:none; padding:12px 25px; border-radius:10px; font-weight:600;">前往激活</a>
+            <p style="margin-top:15px; font-size:0.8rem; color:#888;">推荐：在本页同目录的 activate.html 验证授权码后下载 license.js，放入离线包 js 文件夹，即可直接使用</p>
+        </div>
+    </div>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/license.js"></script>
+    <script src="../js/rsa_verify.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+    $(document).ready(function() {
+        Auth.checkAuth().then(function(result) {
+            if (!result.valid) {
+                // 显示未授权提示遮罩
+                $('#no-auth-overlay').css('display', 'flex');
+                // 隐藏游戏内容
+                $('body > *:not(#no-auth-overlay):not(.offline-back-btn):not(#auth-footer)').hide();
+                return;
+            }
+            if (result.license) {
+                Auth.displayAuthInfo(result.license);
+            }
+        });
+    });
+    </script>
+
+<style>
+/* ===== 统一游戏基础样式 ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* 浮动装饰粒子 */
+.bg-particles {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.particle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.15;
+    animation: floatUp linear infinite;
+}
+
+@keyframes floatUp {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 0.15; }
+    90% { opacity: 0.15; }
+    100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+}
+
+.game-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 8px 40px rgba(102,126,234,0.25), 0 2px 8px rgba(0,0,0,0.06);
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    border: 1px solid rgba(255,255,255,0.6);
+}
+
+.game-title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #FF6B9C, #C850C0, #4158D0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.4rem;
+    letter-spacing: -0.5px;
+}
+
+.game-subtitle {
+    font-size: 0.95rem;
+    color: #888;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+}
+
+/* ===== 统计栏 - 玻璃态 ===== */
+.stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    background: linear-gradient(135deg, rgba(255,107,156,0.08), rgba(200,80,192,0.08));
+    border: 1px solid rgba(255,107,156,0.12);
+    border-radius: 16px;
+    padding: 14px 28px;
+    min-width: 110px;
+    backdrop-filter: blur(10px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(255,107,156,0.15);
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #999;
+    display: block;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #FF6B9C, #C850C0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    transition: transform 0.15s ease;
+}
+
+.stat-value.bump {
+    transform: scale(1.25);
+}
+
+/* ===== 连击提示 ===== */
+.combo-display {
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #FF6B9C;
+    text-shadow: 0 2px 12px rgba(255,107,156,0.5);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.combo-display.show {
+    opacity: 1;
+    top: -50px;
+}
+
+.combo-display.hide {
+    opacity: 0;
+    top: -70px;
+}
+
+/* ===== 计时进度条 ===== */
+.timer-bar-wrapper {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto 1.5rem;
+    height: 8px;
+    background: rgba(0,0,0,0.06);
+    border-radius: 100px;
+    overflow: hidden;
+    position: relative;
+}
+
+.timer-bar {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, #FF6B9C, #C850C0, #4158D0);
+    width: 100%;
+    transition: width 1s linear;
+    position: relative;
+}
+
+.timer-bar::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.timer-bar.warning {
+    background: linear-gradient(90deg, #f59e0b, #ef4444);
+}
+
+.timer-bar.danger {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+    animation: pulse-bar 0.5s ease infinite;
+}
+
+@keyframes pulse-bar {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* ===== 色块展示区 ===== */
+.color-display-wrapper {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    margin: 0 auto 2rem;
+}
+
+.color-display {
+    width: 100%;
+    height: 100%;
+    border-radius: 24px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.3);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
+    border: 5px solid rgba(255,255,255,0.8);
+    position: relative;
+    z-index: 1;
+}
+
+.color-display.pop {
+    transform: scale(1.08);
+}
+
+/* 色块光晕 */
+.color-glow {
+    position: absolute;
+    top: -20px; left: -20px; right: -20px; bottom: -20px;
+    border-radius: 32px;
+    opacity: 0.3;
+    filter: blur(30px);
+    z-index: 0;
+    transition: background 0.5s ease, opacity 0.5s ease;
+}
+
+/* 色块高光 */
+.color-highlight {
+    position: absolute;
+    top: 12px; left: 12px;
+    width: 60%;
+    height: 40%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, transparent 60%);
+    border-radius: 18px 18px 50% 50%;
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* 问号提示（游戏未开始） */
+.color-question {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 4rem;
+    font-weight: 900;
+    color: rgba(255,255,255,0.6);
+    z-index: 3;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    pointer-events: none;
+}
+
+/* ===== 选项网格 ===== */
+.options-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-bottom: 2rem;
+    max-width: 440px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ===== 选项按钮 ===== */
+.btn-option {
+    padding: 18px 20px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    border: 2px solid rgba(0,0,0,0.08);
+    border-radius: 16px;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 0.5px;
+}
+
+.btn-option::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(255,107,156,0.06), rgba(200,80,192,0.06));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 14px;
+}
+
+.btn-option:hover {
+    border-color: rgba(255,107,156,0.4);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 20px rgba(255,107,156,0.2);
+}
+
+.btn-option:hover::before {
+    opacity: 1;
+}
+
+.btn-option:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+.btn-option.correct {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-color: #10b981;
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    transform: scale(1.05);
+}
+
+.btn-option.incorrect {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-color: #ef4444;
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+    transform: scale(0.95);
+}
+
+/* 正确答案提示（选错时高亮正确项） */
+.btn-option.reveal-correct {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    font-weight: 800;
+}
+
+/* ===== 分数飘字 ===== */
+.score-popup {
+    position: absolute;
+    font-size: 1.5rem;
+    font-weight: 900;
+    pointer-events: none;
+    z-index: 100;
+    animation: scoreFloat 0.8s ease-out forwards;
+}
+
+.score-popup.plus {
+    color: #10b981;
+    text-shadow: 0 2px 8px rgba(16,185,129,0.4);
+}
+
+.score-popup.minus {
+    color: #ef4444;
+    text-shadow: 0 2px 8px rgba(239,68,68,0.4);
+}
+
+@keyframes scoreFloat {
+    0% { opacity: 1; transform: translateY(0) scale(0.5); }
+    30% { transform: translateY(-10px) scale(1.2); }
+    100% { opacity: 0; transform: translateY(-50px) scale(1); }
+}
+
+/* ===== 主按钮 ===== */
+.btn-primary {
+    background: linear-gradient(135deg, #FF6B9C, #C850C0);
+    border: none;
+    border-radius: 14px;
+    padding: 14px 40px;
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 6px 20px rgba(255, 107, 156, 0.35);
+    margin: 0.5rem;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; right: 0; bottom: 0;
+    width: 200%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+    transition: left 0.5s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 10px 30px rgba(255, 107, 156, 0.5);
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-primary:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ===== 游戏结束弹窗 ===== */
+.game-over {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.game-over-card {
+    background: #fff;
+    border-radius: 28px;
+    padding: 3rem 2.5rem;
+    text-align: center;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.3);
+    max-width: 420px;
+    width: 90%;
+    animation: cardPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+@keyframes cardPop {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* 弹窗顶部渐变装饰 */
+.game-over-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #FF6B9C, #C850C0, #4158D0);
+}
+
+.game-over-card .result-emoji {
+    font-size: 4rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    animation: bounce 1s ease infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.game-over-card h2 {
+    font-size: 1.8rem;
+    background: linear-gradient(135deg, #FF6B9C, #C850C0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1.5rem;
+    font-weight: 800;
+}
+
+.game-over-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 2rem;
+}
+
+.game-over-stat {
+    background: linear-gradient(135deg, rgba(255,107,156,0.06), rgba(200,80,192,0.06));
+    border-radius: 14px;
+    padding: 12px 8px;
+}
+
+.game-over-stat .stat-label {
+    font-size: 0.7rem;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.game-over-stat .stat-val {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #FF6B9C, #C850C0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.game-over-rank {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 1.5rem;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, rgba(255,107,156,0.05), rgba(200,80,192,0.05));
+    border-radius: 12px;
+    border: 1px solid rgba(255,107,156,0.1);
+}
+
+.game-over-rank strong {
+    color: #C850C0;
+}
+
+/* 隐藏类 */
+.hidden {
+    display: none !important;
+}
+
+/* ===== 等待状态 ===== */
+.waiting-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 2rem 0;
+}
+
+.waiting-icon {
+    width: 100px;
+    height: 100px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #FF6B9C, #C850C0, #4158D0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    box-shadow: 0 8px 30px rgba(255,107,156,0.3);
+    animation: breathe 3s ease-in-out infinite;
+}
+
+@keyframes breathe {
+    0%, 100% { transform: scale(1); box-shadow: 0 8px 30px rgba(255,107,156,0.3); }
+    50% { transform: scale(1.05); box-shadow: 0 12px 40px rgba(255,107,156,0.5); }
+}
+
+.waiting-text {
+    color: #999;
+    font-size: 1rem;
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 768px) {
+    .game-container {
+        margin: 1rem;
+        padding: 1.5rem 1rem;
+        border-radius: 20px;
+    }
+    .game-title {
+        font-size: 1.6rem;
+    }
+    .game-subtitle {
+        font-size: 0.85rem;
+        margin-bottom: 1.5rem;
+    }
+    .color-display-wrapper {
+        width: 180px;
+        height: 180px;
+    }
+    .options-container {
+        grid-template-columns: 1fr;
+        max-width: 300px;
+        gap: 10px;
+    }
+    .btn-option {
+        font-size: 1rem;
+        padding: 15px 16px;
+    }
+    .stats-bar {
+        gap: 8px;
+    }
+    .stat-item {
+        padding: 10px 16px;
+        min-width: 85px;
+    }
+    .stat-value {
+        font-size: 1.3rem;
+    }
+    .game-over-card {
+        padding: 2rem 1.5rem;
+    }
+    .game-over-stats {
+        gap: 8px;
+    }
+    .game-over-stat .stat-val {
+        font-size: 1.2rem;
+    }
+}
+</style>
+
+<!-- 浮动粒子背景 -->
+<div class="bg-particles" id="bg-particles"></div>
+
+<div class="game-container">
+  <!-- 连击提示 -->
+  <div class="combo-display" id="combo-display"></div>
+
+  <h1 class="game-title">🎨 颜色匹配小天才</h1>
+  <p class="game-subtitle">点击和上方颜色对应的文字，看看你60秒能得多少分！</p>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-label">得分</span>
+      <span class="stat-value" id="score">0</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">剩余时间</span>
+      <span class="stat-value" id="time-left">60</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">正确率</span>
+      <span class="stat-value" id="accuracy">0%</span>
+    </div>
+  </div>
+
+  <!-- 计时进度条 -->
+  <div class="timer-bar-wrapper">
+    <div class="timer-bar" id="timer-bar"></div>
+  </div>
+
+  <!-- 色块展示区 -->
+  <div class="color-display-wrapper" id="color-display-wrapper">
+    <div class="color-glow" id="color-glow"></div>
+    <div class="color-display" id="color-block" style="background:#ddd;">
+      <div class="color-highlight"></div>
+    </div>
+    <div class="color-question" id="color-question">?</div>
+  </div>
+
+  <div class="options-container" id="options-container">
+    <!-- 选项按钮将由JS动态生成 -->
+  </div>
+
+  <div class="controls" id="controls-area">
+    <button class="btn-primary" id="start-button">🎮 开始游戏</button>
+    <button class="btn-primary hidden" id="restart-button">🔄 再来一局</button>
+  </div>
+
+  <div class="game-over hidden" id="game-over-screen">
+    <div class="game-over-card">
+      <span class="result-emoji" id="result-emoji">🏆</span>
+      <h2>游戏结束！</h2>
+      <div class="game-over-stats">
+        <div class="game-over-stat">
+          <div class="stat-label">得分</div>
+          <div class="stat-val" id="final-score">0</div>
+        </div>
+        <div class="game-over-stat">
+          <div class="stat-label">答题</div>
+          <div class="stat-val" id="total-questions">0</div>
+        </div>
+        <div class="game-over-stat">
+          <div class="stat-label">正确率</div>
+          <div class="stat-val" id="final-accuracy">0%</div>
+        </div>
+      </div>
+      <div class="game-over-rank" id="game-over-rank">
+        评价：<strong id="rank-text">加油</strong>
+      </div>
+      <button class="btn-primary" id="restart-button-2">🔄 再来一局</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 背景粒子 =====
+(function createParticles() {
+  const container = document.getElementById('bg-particles');
+  const colors = ['#FF6B9C', '#C850C0', '#4158D0', '#10b981', '#f59e0b', '#ef4444'];
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 60 + 20;
+    p.style.width = size + 'px';
+    p.style.height = size + 'px';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.animationDuration = (Math.random() * 15 + 10) + 's';
+    p.style.animationDelay = (Math.random() * 10) + 's';
+    container.appendChild(p);
+  }
+})();
+
+// ===== 游戏逻辑 =====
+const colorData = [
+  { name: '红色', value: '#FF0000' },
+  { name: '蓝色', value: '#0000FF' },
+  { name: '绿色', value: '#00AA00' },
+  { name: '黄色', value: '#FFD700' },
+  { name: '紫色', value: '#800080' },
+  { name: '橙色', value: '#FF8C00' },
+  { name: '粉色', value: '#FF69B4' },
+  { name: '黑色', value: '#1a1a1a' },
+  { name: '白色', value: '#F5F5F5' },
+  { name: '灰色', value: '#808080' },
+  { name: '棕色', value: '#8B4513' },
+  { name: '青色', value: '#00CED1' }
+];
+
+let currentColor = null;
+let score = 0;
+let correctCount = 0;
+let totalCount = 0;
+let timeLeft = 60;
+let totalTime = 60;
+let gameActive = false;
+let timer = null;
+let combo = 0;
+let maxCombo = 0;
+
+const colorBlock = document.getElementById('color-block');
+const colorGlow = document.getElementById('color-glow');
+const colorQuestion = document.getElementById('color-question');
+const colorDisplayWrapper = document.getElementById('color-display-wrapper');
+const optionsContainer = document.getElementById('options-container');
+const scoreElement = document.getElementById('score');
+const timeLeftElement = document.getElementById('time-left');
+const accuracyElement = document.getElementById('accuracy');
+const timerBar = document.getElementById('timer-bar');
+const startButton = document.getElementById('start-button');
+const restartButton = document.getElementById('restart-button');
+const comboDisplay = document.getElementById('combo-display');
+const gameOverScreen = document.getElementById('game-over-screen');
+const finalScoreElement = document.getElementById('final-score');
+const totalQuestionsElement = document.getElementById('total-questions');
+const finalAccuracyElement = document.getElementById('final-accuracy');
+const resultEmoji = document.getElementById('result-emoji');
+const rankText = document.getElementById('rank-text');
+
+function getRandomColors(count) {
+  const shuffled = [...colorData].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+}
+
+function generateQuestion() {
+  const colors = getRandomColors(4);
+  currentColor = colors[Math.floor(Math.random() * 4)];
+
+  colorBlock.style.backgroundColor = currentColor.value;
+  colorGlow.style.background = currentColor.value;
+  colorGlow.style.opacity = '0.3';
+  colorQuestion.style.display = 'none';
+
+  // 弹跳动画
+  colorBlock.classList.add('pop');
+  setTimeout(() => colorBlock.classList.remove('pop'), 300);
+
+  optionsContainer.innerHTML = '';
+  colors.forEach(color => {
+    const button = document.createElement('button');
+    button.className = 'btn-option';
+    button.textContent = color.name;
+    button.dataset.colorName = color.name;
+    button.addEventListener('click', () => checkAnswer(color.name, button));
+    optionsContainer.appendChild(button);
+  });
+}
+
+function showScorePopup(text, isPlus) {
+  const popup = document.createElement('div');
+  popup.className = 'score-popup ' + (isPlus ? 'plus' : 'minus');
+  popup.textContent = text;
+  // 放在色块附近
+  const rect = colorDisplayWrapper.getBoundingClientRect();
+  const containerRect = document.querySelector('.game-container').getBoundingClientRect();
+  popup.style.left = (rect.left - containerRect.left + rect.width / 2 - 20) + 'px';
+  popup.style.top = (rect.top - containerRect.top + rect.height / 2) + 'px';
+  document.querySelector('.game-container').appendChild(popup);
+  setTimeout(() => popup.remove(), 800);
+}
+
+function showCombo() {
+  if (combo >= 2) {
+    comboDisplay.textContent = '🔥 ' + combo + ' 连击！';
+    comboDisplay.className = 'combo-display show';
+    clearTimeout(comboDisplay._hideTimer);
+    comboDisplay._hideTimer = setTimeout(() => {
+      comboDisplay.className = 'combo-display hide';
+    }, 1200);
+  }
+}
+
+function checkAnswer(selectedName, button) {
+  if (!gameActive) return;
+
+  totalCount++;
+  const correct = selectedName === currentColor.name;
+
+  // 禁用所有按钮
+  const allBtns = optionsContainer.querySelectorAll('.btn-option');
+  allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+  if (correct) {
+    combo++;
+    if (combo > maxCombo) maxCombo = combo;
+    const comboBonus = Math.min(combo, 5); // 最多5倍加成
+    const points = 1 + (comboBonus > 1 ? comboBonus - 1 : 0);
+    score += points;
+    correctCount++;
+    button.classList.add('correct');
+
+    showScorePopup('+' + points, true);
+    showCombo();
+
+    // 分数跳动
+    scoreElement.classList.add('bump');
+    setTimeout(() => scoreElement.classList.remove('bump'), 150);
+  } else {
+    combo = 0;
+    button.classList.add('incorrect');
+
+    // 显示正确答案
+    allBtns.forEach(btn => {
+      if (btn.dataset.colorName === currentColor.name) {
+        btn.classList.add('reveal-correct');
+      }
+    });
+
+    showScorePopup('✗', false);
+
+    // 隐藏连击
+    comboDisplay.className = 'combo-display hide';
+  }
+
+  updateStats();
+
+  gameActive = false;
+  setTimeout(() => {
+    if (timeLeft > 0) {
+      gameActive = true;
+      generateQuestion();
+    }
+  }, 800);
+}
+
+function updateStats() {
+  scoreElement.textContent = score;
+  const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+  accuracyElement.textContent = accuracy + '%';
+}
+
+function updateTimerBar() {
+  const pct = (timeLeft / totalTime) * 100;
+  timerBar.style.width = pct + '%';
+
+  timerBar.classList.remove('warning', 'danger');
+  if (pct <= 16) {
+    timerBar.classList.add('danger');
+  } else if (pct <= 33) {
+    timerBar.classList.add('warning');
+  }
+}
+
+function getRank(score, accuracy) {
+  if (score >= 50 && accuracy >= 90) return { emoji: '👑', text: '颜色大师' };
+  if (score >= 35 && accuracy >= 80) return { emoji: '🏆', text: '色彩达人' };
+  if (score >= 20 && accuracy >= 60) return { emoji: '⭐', text: '眼力不错' };
+  if (score >= 10) return { emoji: '👍', text: '继续加油' };
+  return { emoji: '💪', text: '再接再厉' };
+}
+
+function startGame() {
+  score = 0;
+  correctCount = 0;
+  totalCount = 0;
+  timeLeft = totalTime;
+  gameActive = true;
+  combo = 0;
+  maxCombo = 0;
+
+  updateStats();
+  timeLeftElement.textContent = timeLeft;
+  updateTimerBar();
+
+  startButton.classList.add('hidden');
+  restartButton.classList.add('hidden');
+  gameOverScreen.classList.add('hidden');
+
+  generateQuestion();
+
+  timer = setInterval(() => {
+    timeLeft--;
+    timeLeftElement.textContent = timeLeft;
+    updateTimerBar();
+
+    if (timeLeft <= 0) {
+      endGame();
+    }
+  }, 1000);
+}
+
+function endGame() {
+  clearInterval(timer);
+  gameActive = false;
+
+  const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+  const rank = getRank(score, accuracy);
+
+  finalScoreElement.textContent = score;
+  totalQuestionsElement.textContent = totalCount;
+  finalAccuracyElement.textContent = accuracy + '%';
+  resultEmoji.textContent = rank.emoji;
+  rankText.textContent = rank.text;
+
+  gameOverScreen.classList.remove('hidden');
+  restartButton.classList.remove('hidden');
+}
+
+startButton.addEventListener('click', startGame);
+restartButton.addEventListener('click', startGame);
+document.getElementById('restart-button-2').addEventListener('click', startGame);
+</script>
+
+</html>

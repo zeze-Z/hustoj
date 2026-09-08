@@ -1,0 +1,7 @@
+# 离线游戏目录仅通过网盘 zip 分发，禁止 web 直接访问
+# （Apache 2.4+ 语法；连同 dist/、games/、admin/ 等子目录一并拒绝；
+#   nginx 请在 server 配置中对 /offline-games/ 返回 404 或 deny all）
+Require all denied
+
+# 禁止目录浏览
+Options -Indexes

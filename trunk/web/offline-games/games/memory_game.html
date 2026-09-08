@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡片配对</title>
+    <script src="../js/confetti.min.js"></script>
+    <script src="../js/game_confetti.js"></script>
+    <style>
+    .offline-back-btn {
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        z-index: 9999;
+        background: rgba(255,255,255,0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0,0,0,0.1);
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 14px;
+        color: #333;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.2s;
+    }
+    .offline-back-btn:hover {
+        background: #667eea;
+        color: #fff;
+        transform: translateY(-2px);
+    }
+    #auth-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0,0,0,0.8);
+        color: white;
+        text-align: center;
+        padding: 8px;
+        font-size: 12px;
+        z-index: 9999;
+    }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="offline-back-btn">← 返回游戏大厅</a>
+    <div id="auth-footer"></div>
+    <!-- 未授权提示遮罩 -->
+    <div id="no-auth-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:white; border-radius:20px; padding:40px; max-width:400px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="font-size:50px; margin-bottom:15px;">🔐</div>
+            <h2 style="color:#333; margin-bottom:15px;">需要激活授权</h2>
+            <p style="color:#666; margin-bottom:20px; line-height:1.6;">检测到未授权或授权文件无效。<br>请先激活后再使用游戏。</p>
+            <a href="activate.html" style="display:inline-block; background:linear-gradient(135deg, #667eea, #764ba2); color:white; text-decoration:none; padding:12px 25px; border-radius:10px; font-weight:600;">前往激活</a>
+            <p style="margin-top:15px; font-size:0.8rem; color:#888;">推荐：在本页同目录的 activate.html 验证授权码后下载 license.js，放入离线包 js 文件夹，即可直接使用</p>
+        </div>
+    </div>
+    <script src="../js/jquery.min.js"></script>
+    <script src="../js/license.js"></script>
+    <script src="../js/rsa_verify.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+    $(document).ready(function() {
+        Auth.checkAuth().then(function(result) {
+            if (!result.valid) {
+                // 显示未授权提示遮罩
+                $('#no-auth-overlay').css('display', 'flex');
+                // 隐藏游戏内容
+                $('body > *:not(#no-auth-overlay):not(.offline-back-btn):not(#auth-footer)').hide();
+                return;
+            }
+            if (result.license) {
+                Auth.displayAuthInfo(result.license);
+            }
+        });
+    });
+    </script>
+
+
+<div class="padding">
+<style>
+        /* ===== 统一游戏基础样式 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
+        /* 游戏外层 wrapper：占满视口高度，内部 flex 靠上 */
+        .mg-wrap {
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        /* 活泼的渐变背景 + 浮动装饰 + 点纹 */
+        .mg-bg-decor {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 1px 1px, rgba(255,152,0,0.08) 1px, transparent 0) 0 0/22px 22px,
+                linear-gradient(135deg, #fff7ed 0%, #fef3c7 50%, #fff7ed 100%);
+            overflow: hidden;
+        }
+        .mg-bg-decor::before,
+        .mg-bg-decor::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(70px);
+            opacity: 0.5;
+        }
+        .mg-bg-decor::before {
+            width: 360px; height: 360px;
+            background: radial-gradient(circle, #fdba74, transparent 70%);
+            top: -90px; left: -70px;
+            animation: mg-float-blob 8s ease-in-out infinite;
+        }
+        .mg-bg-decor::after {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, #fcd34d, transparent 70%);
+            bottom: -110px; right: -90px;
+            animation: mg-float-blob 10s ease-in-out infinite reverse;
+        }
+        @keyframes mg-float-blob {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            50% { transform: translate(20px, 30px) scale(1.1); }
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: clamp(18px, 3vw, 30px);
+            padding: clamp(1.2rem, 3vh, 2.2rem) clamp(1rem, 3vw, 2rem);
+            box-shadow:
+                0 24px 70px rgba(255, 152, 0, 0.12),
+                0 8px 24px rgba(251, 191, 36, 0.08),
+                0 2px 8px rgba(0,0,0,0.04),
+                inset 0 1px 0 rgba(255,255,255,0.9);
+            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(0.5rem, 1.5vh, 1rem);
+        }
+        .game-container::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #FF9800, #f59e0b, #ef4444, #FF9800);
+            background-size: 300% 100%;
+            animation: mg-gradient-shift 6s linear infinite;
+            border-radius: clamp(18px, 3vw, 30px) clamp(18px, 3vw, 30px) 0 0;
+        }
+        @keyframes mg-gradient-shift {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 300% 50%; }
+        }
+
+        .game-title {
+            font-size: clamp(1.5rem, 4.5vw, 2.3rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, #FF9800 0%, #f59e0b 50%, #ef4444 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent !important;
+            color: transparent !important;
+            margin-bottom: 0.1rem;
+            letter-spacing: 0.5px;
+            line-height: 1.1;
+            filter: drop-shadow(0 2px 8px rgba(255,152,0,0.25));
+        }
+        .game-title::after {
+            content: "";
+            display: block;
+            width: 50px;
+            height: 4px;
+            margin: 6px auto 0;
+            border-radius: 2px;
+            background: linear-gradient(90deg, #FF9800, #ef4444);
+        }
+        .game-title-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: clamp(28px, 5vw, 36px);
+            height: clamp(28px, 5vw, 36px);
+            border-radius: 50%;
+            vertical-align: middle;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #6366f1, #06b6d4) !important;
+            -webkit-background-clip: unset !important;
+            background-clip: unset !important;
+            -webkit-text-fill-color: initial !important;
+        }
+        .game-title-icon svg {
+            width: 60%;
+            height: 60%;
+            display: block;
+        }
+
+        /* 难度选择器 */
+        .difficulty-selector {
+            margin-bottom: 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: clamp(6px, 1.5vw, 10px);
+            flex-shrink: 0;
+        }
+
+        .diff-btn {
+            padding: clamp(7px, 1.8vh, 10px) clamp(14px, 3vw, 22px);
+            border: 2px solid #FF9800;
+            background: #fff;
+            color: #ea580c;
+            border-radius: 999px;
+            font-size: clamp(0.8rem, 2vw, 0.95rem);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 2px 8px rgba(255,152,0,0.08);
+        }
+
+        .diff-btn.active {
+            background: linear-gradient(135deg, #FF9800, #f59e0b);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+            transform: translateY(-2px);
+        }
+        /* 困难按钮用红色区分 */
+        .diff-btn[data-cols="5"].active {
+            background: linear-gradient(135deg, #ef4444, #f97316);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+        .diff-btn[data-cols="5"] {
+            border-color: #ef4444;
+            color: #dc2626;
+        }
+        .diff-btn[data-cols="5"]:hover:not(.active) {
+            background: #fef2f2;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+        }
+
+        .diff-btn:hover:not(.active) {
+            background: #fff7ed;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(255, 152, 0, 0.18);
+        }
+
+        /* 统计栏 */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: clamp(6px, 1.5vw, 10px);
+            margin-bottom: 0;
+            flex-shrink: 0;
+            width: 100%;
+        }
+
+        .stat-item {
+            background: linear-gradient(135deg, #ffffff, #fff7ed);
+            border: 1px solid #fed7aa;
+            border-radius: clamp(12px, 2vw, 16px);
+            padding: clamp(8px, 1.8vh, 12px) clamp(6px, 1.5vw, 12px);
+            min-width: 0;
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 10px rgba(255,152,0,0.06);
+        }
+        .stat-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px rgba(255, 152, 0, 0.16);
+        }
+        .stat-item:nth-child(1) { border-top: 3px solid #FF9800; }
+        .stat-item:nth-child(2) { border-top: 3px solid #10b981; }
+        .stat-item:nth-child(3) { border-top: 3px solid #ef4444; }
+
+        .stat-icon {
+            font-size: clamp(0.9rem, 2.2vh, 1.1rem);
+            display: block;
+            margin-bottom: 1px;
+        }
+
+        .stat-label {
+            font-size: clamp(0.6rem, 1.6vw, 0.72rem);
+            color: #94a3b8;
+            display: block;
+            margin-bottom: 1px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: clamp(1.1rem, 3vh, 1.5rem);
+            font-weight: 800;
+            line-height: 1;
+        }
+        .stat-item:nth-child(1) .stat-value {
+            background: linear-gradient(135deg, #FF9800, #f59e0b);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent !important; color: transparent !important;
+        }
+        .stat-item:nth-child(2) .stat-value {
+            background: linear-gradient(135deg, #10b981, #34d399);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent !important; color: transparent !important;
+        }
+        .stat-item:nth-child(3) .stat-value {
+            background: linear-gradient(135deg, #ef4444, #f97316);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent !important; color: transparent !important;
+        }
+
+        /* ===== 卡片翻转3D效果（必须保留） ===== */
+        .memory-grid {
+            display: grid;
+            gap: clamp(8px, 2vw, 14px);
+            margin: 0 auto;
+            width: 100%;
+            justify-content: center;
+            perspective: 1000px;
+            flex-shrink: 0;
+        }
+
+        .grid-auto {
+            grid-template-columns: repeat(var(--grid-cols, 4), var(--card-size, 80px));
+            grid-template-rows: repeat(var(--grid-rows, 4), var(--card-size, 80px));
+            max-width: calc(var(--card-size, 80px) * var(--grid-cols, 4) + 14px * (var(--grid-cols, 4) - 1));
+        }
+        .grid-auto .card {
+            aspect-ratio: auto;
+        }
+
+        .card {
+            aspect-ratio: 1;
+            position: relative;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.6s ease;
+            border-radius: clamp(10px, 2vw, 15px);
+        }
+
+        .card.flipped,
+        .card.matched {
+            transform: rotateY(180deg);
+            pointer-events: none;
+        }
+
+        .card-front,
+        .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: clamp(10px, 2vw, 15px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            border: 3px solid #FF9800;
+            box-shadow: 0 4px 14px rgba(255, 152, 0, 0.15);
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #FF9800 0%, #FFB74D 100%);
+            color: white;
+            font-weight: bold;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+        }
+
+        .card-front::before {
+            content: "?";
+        }
+
+        .card-back {
+            background-color: #FFF3E0;
+            transform: rotateY(180deg);
+        }
+
+        .card.matched .card-back {
+            background-color: #d1fae5;
+            border-color: #10b981;
+            animation: match-pulse 0.6s ease;
+            box-shadow: 0 4px 18px rgba(16, 185, 129, 0.3);
+        }
+
+        /* 匹配成功闪光 */
+        .card.match-flash .card-back {
+            animation: match-glow 0.5s ease;
+        }
+        @keyframes match-glow {
+            0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
+            50% { box-shadow: 0 0 20px 8px rgba(16,185,129,0.4); }
+            100% { box-shadow: 0 4px 18px rgba(16,185,129,0.3); }
+        }
+
+        /* 不匹配抖动 */
+        .card.shake-miss {
+            animation: card-shake 0.4s ease;
+        }
+        @keyframes card-shake {
+            0%, 100% { transform: rotateY(180deg) translateX(0); }
+            25% { transform: rotateY(180deg) translateX(-6px); }
+            75% { transform: rotateY(180deg) translateX(6px); }
+        }
+
+        .game-win {
+            font-size: clamp(1.3rem, 4vw, 1.8rem);
+            background: linear-gradient(135deg, #FF9800, #f59e0b, #ef4444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent !important;
+            color: transparent !important;
+            margin: 0;
+            font-weight: 800;
+            animation: celebration 1s ease infinite;
+        }
+
+        @keyframes match-pulse {
+            0%, 100% { transform: rotateY(180deg) scale(1); }
+            50% { transform: rotateY(180deg) scale(1.1); }
+        }
+
+        @keyframes celebration {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-3deg) scale(1.03); }
+            75% { transform: rotate(3deg) scale(1.03); }
+        }
+
+        /* 主按钮 */
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #FF9800, #f59e0b);
+            border: none;
+            border-radius: 999px;
+            padding: clamp(10px, 2vh, 13px) clamp(24px, 4vw, 36px);
+            color: #fff;
+            font-size: clamp(0.9rem, 2.2vw, 1rem);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 8px 22px rgba(255, 152, 0, 0.4);
+            margin: 0;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.04);
+            box-shadow: 0 12px 30px rgba(255, 152, 0, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px) scale(1.01);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2);
+        }
+
+        /* 重新开始 = 次级描边按钮 */
+        #reset-btn, #overlay-restart-btn {
+            background: #fff;
+            color: #ea580c;
+            border: 2px solid #fdba74;
+            box-shadow: 0 4px 14px rgba(255,152,0,0.1);
+        }
+        #reset-btn:hover, #overlay-restart-btn:hover {
+            background: #fff7ed;
+            box-shadow: 0 8px 22px rgba(255,152,0,0.2);
+            transform: translateY(-3px) scale(1.04);
+        }
+
+        /* 按钮点击波纹 */
+        .btn-primary .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.45);
+            transform: scale(0);
+            animation: ripple-anim 0.6s ease-out forwards;
+            pointer-events: none;
+        }
+        @keyframes ripple-anim {
+            to { transform: scale(4); opacity: 0; }
+        }
+
+        /* 统计数字跳动 */
+        .stat-bounce {
+            animation: stat-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes stat-pop {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        /* 游戏结束弹窗 */
+        .game-over {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: mg-fade-in 0.3s ease;
+        }
+        @keyframes mg-fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .game-over-card {
+            background: linear-gradient(160deg, #ffffff, #fff7ed);
+            border-radius: 30px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255,152,0,0.1);
+            max-width: 420px;
+            width: 90%;
+            position: relative;
+            animation: mg-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+        }
+        .game-over-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #FF9800, #f59e0b, #ef4444);
+        }
+        @keyframes mg-pop-in {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .game-over-card h2 {
+            font-size: clamp(1.4rem, 4vw, 1.9rem);
+            background: linear-gradient(135deg, #FF9800, #f59e0b, #ef4444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent !important;
+            color: transparent !important;
+            margin-bottom: 1.25rem;
+            font-weight: 800;
+        }
+
+        .game-over-card p {
+            font-size: 1.1rem;
+            color: #475569;
+            margin-bottom: 0.6rem;
+        }
+
+        .game-over-card strong {
+            color: #ea580c;
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+
+        /* 隐藏类 */
+        .hidden {
+            display: none !important;
+        }
+
+        /* 响应式 - 移动端 */
+        @media (max-width: 768px) {
+            .game-container {
+                margin: 0;
+                padding: clamp(0.8rem, 2vh, 1.2rem) clamp(0.8rem, 3vw, 1rem);
+                border-radius: 18px;
+                gap: clamp(0.4rem, 1.2vh, 0.8rem);
+            }
+            .game-container::before {
+                border-radius: 18px 18px 0 0;
+            }
+            .stats-bar {
+                gap: 6px;
+            }
+            .stat-item {
+                padding: 8px 6px;
+            }
+            .diff-btn {
+                padding: 7px 14px;
+                font-size: 0.8rem;
+            }
+            .btn-primary {
+                padding: 10px 22px;
+                font-size: 0.9rem;
+            }
+            .card-front, .card-back {
+                font-size: 1.6rem;
+                border-width: 2px;
+            }
+        }
+
+        /* 超小屏 / 矮屏 */
+        @media (max-width: 480px), (max-height: 560px) {
+            .game-container {
+                gap: clamp(0.3rem, 1vh, 0.6rem);
+            }
+            .stats-bar {
+                gap: 5px;
+            }
+            .stat-item {
+                padding: 6px 4px;
+            }
+            .stat-icon { font-size: 0.8rem; }
+            .stat-label { font-size: 0.55rem; }
+            .stat-value { font-size: 1rem; }
+            .card-front, .card-back {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+    <div class="mg-bg-decor"></div>
+    <div class="mg-wrap">
+    <div class="game-container">
+        <h1 class="game-title"><span class="game-title-icon" style="background: linear-gradient(135deg, #6366f1, #06b6d4);"><svg viewBox="0 0 64 64"><rect x="10" y="16" width="24" height="32" rx="5" fill="#fff" transform="rotate(-8 22 32)"/><rect x="32" y="20" width="24" height="32" rx="5" fill="#fff" transform="rotate(7 44 36)"/><path d="M39 34 l3 4 5 1 -4 4 1 5 -5 -3 -5 3 1 -5 -4 -4 5 -1 z" fill="rgba(0,0,0,0.3)"/></svg></span> 卡片配对游戏</h1>
+
+        <div class="difficulty-selector">
+            <button class="diff-btn" data-rows="2" data-cols="3">简单 (2×3)</button>
+            <button class="diff-btn active" data-rows="4" data-cols="4">普通 (4×4)</button>
+            <button class="diff-btn" data-rows="4" data-cols="5">困难 (4×5)</button>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-icon">🔄</span>
+                <span class="stat-label">翻牌次数</span>
+                <span class="stat-value" id="flip-count">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">✅</span>
+                <span class="stat-label">已配对</span>
+                <span class="stat-value"><span id="matched-count">0</span>/<span id="total-pairs">8</span></span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">⏱️</span>
+                <span class="stat-label">用时</span>
+                <span class="stat-value" id="time">00:00</span>
+            </div>
+        </div>
+
+        <div class="memory-grid grid-normal" id="memory-grid">
+            <!-- 卡片将通过JS动态生成 -->
+        </div>
+
+        <div id="game-win-message" class="game-win"></div>
+
+        <div class="game-over hidden" id="game-over-screen">
+            <div class="game-over-card">
+                <h2>🎉 恭喜通关！</h2>
+                <p>翻牌次数：<strong id="final-flip-count">0</strong> 次</p>
+                <p>用时：<strong id="final-time">00:00</strong></p>
+                <p>正确率：<strong id="final-accuracy">0%</strong></p>
+                <button class="btn-primary" id="overlay-restart-btn" style="margin-top:1rem;">再来一局</button>
+            </div>
+        </div>
+
+        <div class="game-controls">
+            <button class="btn-primary" id="reset-btn">重新开始</button>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const diffBtns = document.querySelectorAll('.diff-btn');
+        const flipCountEl = document.getElementById('flip-count');
+        const matchedCountEl = document.getElementById('matched-count');
+        const totalPairsEl = document.getElementById('total-pairs');
+        const timeEl = document.getElementById('time');
+        const memoryGridEl = document.getElementById('memory-grid');
+        const resetBtn = document.getElementById('reset-btn');
+        const gameWinMessage = document.getElementById('game-win-message');
+
+        // 游戏配置
+        const emojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔'];
+        
+        // 游戏状态变量
+        let rows = 4;
+        let cols = 4;
+        let totalPairs = 8;
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let flipCount = 0;
+        let gameStarted = false;
+        let startTime = 0;
+        let timerInterval = null;
+        let isProcessing = false;
+
+        // 初始化游戏
+        function initGame() {
+            // 重置状态
+            cards = [];
+            flippedCards = [];
+            matchedPairs = 0;
+            flipCount = 0;
+            gameStarted = false;
+            isProcessing = false;
+            
+            // 停止计时器
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            
+            // 更新UI
+            flipCountEl.textContent = flipCount;
+            matchedCountEl.textContent = matchedPairs;
+            totalPairsEl.textContent = totalPairs;
+            timeEl.textContent = '00:00';
+            gameWinMessage.textContent = '';
+            document.getElementById('game-over-screen').classList.add('hidden');
+
+            // 生成卡片数组
+            const selectedEmojis = emojis.slice(0, totalPairs);
+            const cardValues = [...selectedEmojis, ...selectedEmojis];
+            
+            // 洗牌
+            for (let i = cardValues.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cardValues[i], cardValues[j]] = [cardValues[j], cardValues[i]];
+            }
+            
+            // 设置网格类 - 所有模式统一用动态计算卡片尺寸
+            memoryGridEl.className = 'memory-grid grid-auto';
+            memoryGridEl.style.removeProperty('--card-size');
+            memoryGridEl.style.setProperty('--grid-cols', cols);
+            memoryGridEl.style.setProperty('--grid-rows', rows);
+
+            // 动态计算卡片尺寸：根据视口高度减去非网格元素占位
+            const containerEl = document.querySelector('.game-container');
+            const contStyle = getComputedStyle(containerEl);
+            const contPadTop = parseFloat(contStyle.paddingTop);
+            const contPadBot = parseFloat(contStyle.paddingBottom);
+            const contGap = parseFloat(contStyle.gap) || 0;
+            // 非网格子元素高度之和
+            const allChildren = Array.from(containerEl.children);
+            let nonGridH = 0;
+            let childCount = 0;
+            allChildren.forEach(child => {
+                if (child !== memoryGridEl && child.id !== 'game-over-screen') {
+                    nonGridH += child.offsetHeight;
+                    childCount++;
+                }
+            });
+            // 间距总数 = 所有子元素数 - 1（grid也算一个子元素）
+            const totalGaps = contGap * (childCount + 1 - 1); // +1 for grid itself
+            const availH = window.innerHeight - contPadTop - contPadBot - nonGridH - totalGaps - 4; // 4px安全边距
+            const gridGap = parseFloat(getComputedStyle(memoryGridEl).gap) || 10;
+            const cardH = Math.floor((availH - gridGap * (rows - 1)) / rows);
+            const cardW = Math.floor((containerEl.clientWidth - gridGap * (cols - 1)) / cols);
+            const maxSize = rows === 2 ? 120 : (cols === 4 ? 100 : 90);
+            const cardSize = Math.max(36, Math.min(cardH, cardW, maxSize));
+            memoryGridEl.style.setProperty('--card-size', cardSize + 'px');
+            
+            // 清空网格
+            memoryGridEl.innerHTML = '';
+            
+            // 创建卡片
+            cardValues.forEach((value, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.value = value;
+                card.dataset.index = index;
+                
+                const cardFront = document.createElement('div');
+                cardFront.className = 'card-front';
+                
+                const cardBack = document.createElement('div');
+                cardBack.className = 'card-back';
+                cardBack.textContent = value;
+                
+                card.appendChild(cardFront);
+                card.appendChild(cardBack);
+                
+                card.addEventListener('click', () => flipCard(card));
+                
+                memoryGridEl.appendChild(card);
+                cards.push(card);
+            });
+        }
+
+        // 翻转卡片
+        function flipCard(card) {
+            // 处理中、已翻转、已匹配的卡片不能点击
+            if (isProcessing || card.classList.contains('flipped') || card.classList.contains('matched')) {
+                return;
+            }
+
+            // 游戏开始时启动计时器
+            if (!gameStarted) {
+                gameStarted = true;
+                startTime = Date.now();
+                timerInterval = setInterval(updateTime, 1000);
+            }
+            
+            // 翻转卡片
+            card.classList.add('flipped');
+            flippedCards.push(card);
+            flipCount++;
+            flipCountEl.textContent = flipCount;
+            bounceStat(flipCountEl);
+            
+            // 两张卡片已翻转，检查是否匹配
+            if (flippedCards.length === 2) {
+                isProcessing = true;
+                setTimeout(checkMatch, 800);
+            }
+        }
+
+        // 检查匹配
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            const value1 = card1.dataset.value;
+            const value2 = card2.dataset.value;
+
+            if (value1 === value2) {
+                // 匹配成功
+                card1.classList.add('matched', 'match-flash');
+                card2.classList.add('matched', 'match-flash');
+                matchedPairs++;
+                matchedCountEl.textContent = matchedPairs;
+                bounceStat(matchedCountEl);
+
+                // 检查游戏是否结束
+                if (matchedPairs === totalPairs) {
+                    endGame();
+                }
+
+                flippedCards = [];
+                isProcessing = false;
+            } else {
+                // 匹配失败，先抖动，再翻回
+                card1.classList.add('shake-miss');
+                card2.classList.add('shake-miss');
+                setTimeout(() => {
+                    card1.classList.remove('flipped', 'shake-miss');
+                    card2.classList.remove('flipped', 'shake-miss');
+                    flippedCards = [];
+                    isProcessing = false;
+                }, 500);
+            }
+        }
+
+        // 结束游戏
+        function endGame() {
+            clearInterval(timerInterval);
+            const totalTime = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(totalTime / 60).toString().padStart(2, '0');
+            const seconds = (totalTime % 60).toString().padStart(2, '0');
+
+            // 填充弹窗数据
+            const accuracy = Math.round(totalPairs * 2 / flipCount * 100);
+            document.getElementById('final-flip-count').textContent = flipCount;
+            document.getElementById('final-time').textContent = `${minutes}:${seconds}`;
+            document.getElementById('final-accuracy').textContent = accuracy + '%';
+            document.getElementById('game-over-screen').classList.remove('hidden');
+
+            // 通关烟花效果 - 从弹窗中心绽开
+            launchConfettiFromCard();
+        }
+
+        // 更新时间
+        function updateTime() {
+            const totalTime = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(totalTime / 60).toString().padStart(2, '0');
+            const seconds = (totalTime % 60).toString().padStart(2, '0');
+            timeEl.textContent = `${minutes}:${seconds}`;
+        }
+
+        // 切换难度
+        function changeDifficulty(e) {
+            if (gameStarted) {
+                if (!confirm('切换难度将重新开始游戏，确定吗？')) {
+                    return;
+                }
+            }
+
+            // 移除所有active类
+            diffBtns.forEach(btn => btn.classList.remove('active'));
+            
+            // 添加当前active类
+            const btn = e.target;
+            btn.classList.add('active');
+            
+            // 更新尺寸
+            rows = parseInt(btn.dataset.rows);
+            cols = parseInt(btn.dataset.cols);
+            totalPairs = (rows * cols) / 2;
+            
+            // 重新初始化游戏
+            initGame();
+        }
+
+        // 事件监听
+        diffBtns.forEach(btn => btn.addEventListener('click', changeDifficulty));
+        resetBtn.addEventListener('click', function() { createRipple(this); initGame(); });
+
+        // 弹窗重新开始按钮
+        document.getElementById('overlay-restart-btn').addEventListener('click', function() {
+            createRipple(this);
+            document.getElementById('game-over-screen').classList.add('hidden');
+            initGame();
+        });
+
+        // ===== 动效辅助函数 =====
+
+        // 按钮波纹
+        function createRipple(btn) {
+            const existing = btn.querySelector('.ripple');
+            if (existing) existing.remove();
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            const rect = btn.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = (rect.width / 2 - size / 2) + 'px';
+            ripple.style.top = (rect.height / 2 - size / 2) + 'px';
+            btn.appendChild(ripple);
+            ripple.addEventListener('animationend', () => ripple.remove());
+        }
+
+        // 统计数字跳动
+        function bounceStat(el) {
+            el.classList.remove('stat-bounce');
+            void el.offsetWidth;
+            el.classList.add('stat-bounce');
+            el.addEventListener('animationend', () => el.classList.remove('stat-bounce'), { once: true });
+        }
+
+        // 从弹窗中心绽开礼花
+        function launchConfettiFromCard() {
+            if (typeof confetti !== 'function' || typeof confetti.create !== 'function') return;
+
+            var canvas = document.createElement('canvas');
+            canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483647;';
+            document.body.appendChild(canvas);
+
+            var fire = confetti.create(canvas, { resize: true, useWorker: false });
+
+            // 从弹窗中心绽开
+            var card = document.querySelector('.game-over-card');
+            var origin = { x: 0.5, y: 0.5 };
+            if (card) {
+                var rect = card.getBoundingClientRect();
+                origin.x = Math.max(0.1, Math.min(0.9, (rect.left + rect.width / 2) / window.innerWidth));
+                origin.y = Math.max(0.2, Math.min(0.8, (rect.top + rect.height / 2) / window.innerHeight));
+            }
+
+            var duration = 1500;
+            var end = Date.now() + duration;
+            (function frame() {
+                fire({
+                    particleCount: 5,
+                    spread: 60,
+                    origin: origin,
+                    colors: ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#ef4444'],
+                    disableForReducedMotion: true
+                });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            })();
+
+            setTimeout(function () {
+                try { fire.reset(); } catch (e) {}
+                if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+            }, duration + 2000);
+        }
+
+        // 初始化游戏
+        initGame();
+    </script>
+</div>
+
+</html>

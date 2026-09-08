@@ -1,0 +1,7 @@
+# 禁止直接访问私钥和Python脚本
+<FilesMatch "\.(pem|py)$">
+    Require all denied
+</FilesMatch>
+
+# 禁止目录浏览
+Options -Indexes
