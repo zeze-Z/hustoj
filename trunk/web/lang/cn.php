@@ -553,7 +553,7 @@ $MSG_FAILED="失败";
   // Course Get & My Course
   $MSG_COURSE_GET="课程获取";
   $MSG_MY_COURSE="我的获取";
-  $MSG_MY_COURSE_DESC="查看您已获取的所有课程";
+  $MSG_MY_COURSE_DESC="查看您已获取的所有教学资源订单";
   $MSG_RECEIVER_EMAIL="收件邮箱";
   $MSG_EMAIL_PLACEHOLDER="请输入邮箱地址";
   $MSG_EMAIL_TIP="下载链接将发送至该邮箱";

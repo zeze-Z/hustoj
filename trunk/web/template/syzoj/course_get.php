@@ -40,7 +40,7 @@
           <i class="arrow right icon"></i> 立即查看课程
         </a>
         <a href="course_my.php" class="ui large positive button" style="flex: 1;">
-          <i class="shopping bag icon"></i> 查看我的课件
+          <i class="shopping bag icon"></i> 查看我的订单
         </a>
       </div>
     </div>

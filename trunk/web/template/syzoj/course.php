@@ -17,7 +17,7 @@
       </form>
       <?php if (isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
       <a href="course_my.php" class="ui positive button" style="white-space: nowrap;">
-        <i class="shopping bag icon"></i>我的课件
+        <i class="shopping bag icon"></i>我的订单
       </a>
       <?php endif; ?>
     </div>

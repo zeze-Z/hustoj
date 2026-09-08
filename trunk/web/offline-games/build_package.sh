@@ -102,7 +102,7 @@ fi
 # 1. 创建打包目录
 echo "[1/4] 准备打包目录..."
 if [ "$GENERIC_MODE" = true ]; then
-    PACKAGE_NAME="aioj.top离线游戏包-$(date +%Y%m%d)"
+    PACKAGE_NAME="aioj.top离线游戏包"
 else
     PACKAGE_NAME="aioj.top离线游戏包-${SCHOOL}-$(date +%Y%m%d)"
 fi

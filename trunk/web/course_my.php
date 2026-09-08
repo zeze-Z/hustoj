@@ -1,7 +1,7 @@
 <?php
 /**
- * 我的获取页面
- * 显示用户已获取的所有课程
+ * 我的订单页面
+ * 显示用户的课件订单与离线游戏安装包订单
  */
 
 require_once('./include/db_info.inc.php');
@@ -35,6 +35,13 @@ $sql = "SELECT co.*, c.title
         ORDER BY co.created_at DESC
         LIMIT $per_page OFFSET $offset";
 $courses = pdo_query($sql, $user_id);
+
+// 离线游戏安装包订单（含已过期历史；同用户未过期订单唯一，总量小，不分页）
+$view_og_orders = pdo_query(
+    "SELECT order_no, school_name, room_name, license_code, expire_date, point_amount, create_time
+       FROM `offline_game_order` WHERE user_id = ? ORDER BY id DESC LIMIT 50",
+    $user_id
+);
 
 // 模板变量
 $view_courses = $courses;

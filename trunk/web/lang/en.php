@@ -32,7 +32,7 @@
 	$MSG_LESSON_PLAN="Lesson Plan";
 	$MSG_PREVIEW_URL="Preview URL";
 	$MSG_DOWNLOAD_LINK="Download Link";
-	$MSG_ACCESS_CODE="="Access Code";
+	$MSG_ACCESS_CODE="Access Code";
 	$MSG_TAGS="Tags";
 	$MSG_DESCRIPTION="Description";
 	$MSG_SORT="Sort";
@@ -528,8 +528,8 @@ $MSG_FAILED="Failed";
 
 	// Course Get & My Course
 	$MSG_COURSE_GET="Get Course";
-	$MSG_MY_COURSE="My Courses";
-	$MSG_MY_COURSE_DESC="View all courses you have acquired";
+	$MSG_MY_COURSE="My Orders";
+	$MSG_MY_COURSE_DESC="View all your orders";
 	$MSG_RECEIVER_EMAIL="Email Address";
 	$MSG_EMAIL_PLACEHOLDER="Please enter your email";
 	$MSG_EMAIL_TIP="Download link will be sent to this email";

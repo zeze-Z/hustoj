@@ -30,7 +30,7 @@ if ($og_logged_in) {
     }
 }
 
-$og_download_url = 'https://pan.baidu.com/s/1M5u9sYrioG123AFO4ob81g?pwd=fi7u';
+$og_download_url = 'https://pan.baidu.com/s/1-UdKyErT22pWEs7PFAs4Ag?pwd=ykp6';
 
 // 生成postkey（供弹窗表单使用）
 $og_postkey = '';
@@ -1768,11 +1768,11 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                         </div>
                         <div class="og-step">
                             <span class="og-step-num">2</span>
-                            <span class="og-step-text">打开 index.html 粘贴授权码验证，按照引导激活离线包</span>
+                            <span class="og-step-text">复制上述授权码</span>
                         </div>
                         <div class="og-step">
                             <span class="og-step-num">3</span>
-                            <span class="og-step-text">将激活的离线包整体拷贝到学生机，双击 index.html 直接使用（无需再激活）</span>
+                            <span class="og-step-text">解压后的离线包中，双击打开 index.html，按照引导激活离线包</span>
                         </div>
                     </div>
                 </div>
