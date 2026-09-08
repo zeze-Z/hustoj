@@ -57,7 +57,7 @@ if (mb_strlen($school_name) > 100 || mb_strlen($room_name) > 100) {
 }
 
 // 离线游戏价格（积分）
-$point_amount = 50;
+$point_amount = 99;
 $expire_days = 365; // 1年有效期
 
 // 生成订单号（事务外预生成，事务内防重）
