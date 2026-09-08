@@ -497,7 +497,7 @@ $('.message .close').on('click', function() {
             <button type="button" class="ogd-copy-btn" id="ogd-copy-btn" onclick="ogdCopyLicense()">📋 复制授权码</button>
 
             <!-- 下载按钮 -->
-            <a class="ogd-download" href="https://pan.baidu.com/s/1Q0SuVxrL84WWOVeIbFztnA?pwd=hmkm" target="_blank" rel="noopener">⬇️ 离线包下载</a>
+            <a class="ogd-download" href="https://pan.baidu.com/s/1myPtSsTkkTfrAr5QgnIWsQ?pwd=wzdf" target="_blank" rel="noopener">⬇️ 离线包下载</a>
 
             <!-- 激活步骤 -->
             <div class="ogd-steps">

@@ -153,7 +153,7 @@ if command -v terser &> /dev/null; then
     for js_file in "$PACKAGE_DIR"/js/*.js; do
         if [ -f "$js_file" ]; then
             filename=$(basename "$js_file")
-            if [ "$filename" = "auth.js" ] || [ "$filename" = "license.js" ]; then
+            if [ "$filename" = "auth.js" ] || [ "$filename" = "license.js" ] || [ "$filename" = "bead_images.js" ]; then
                 echo "   - $filename (跳过混淆，保持原样)"
                 continue
             fi

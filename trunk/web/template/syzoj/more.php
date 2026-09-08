@@ -4,7 +4,7 @@
 $og_logged_in = isset($_SESSION[$OJ_NAME . '_' . 'user_id']);
 $og_user_id = $og_logged_in ? $_SESSION[$OJ_NAME . '_' . 'user_id'] : '';
 $og_balance = $og_logged_in ? intval(point_get_balance($og_user_id)) : 0;
-$og_price = 50;
+$og_price = 99;
 
 // 检查是否已有未过期订单
 $og_has_order = false;
@@ -30,7 +30,7 @@ if ($og_logged_in) {
     }
 }
 
-$og_download_url = 'https://pan.baidu.com/s/1Q0SuVxrL84WWOVeIbFztnA?pwd=hmkm';
+$og_download_url = 'https://pan.baidu.com/s/1myPtSsTkkTfrAr5QgnIWsQ?pwd=wzdf';
 
 // 生成postkey（供弹窗表单使用）
 $og_postkey = '';
@@ -1172,7 +1172,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                 <div class="og-banner-top-price">
                     <span class="og-banner-top-badge">🔥 限时特惠</span>
                     <span class="og-banner-top-price-old">199</span>
-                    <span class="og-banner-top-price-num">50</span>
+                    <span class="og-banner-top-price-num">99</span>
                     <span class="og-banner-top-price-unit">积分/年</span>
                 </div>
                 <?php if (!$og_logged_in): ?>
@@ -1660,7 +1660,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                 </div>
                 <div class="og-modal-header-text">
                     <h3 class="og-modal-title" id="og-modal-title">离线游戏安装包</h3>
-                    <p class="og-modal-subtitle">50积分兑换 · 一年有效期</p>
+                    <p class="og-modal-subtitle">99积分兑换 · 一年有效期</p>
                     <!-- 特性标签 -->
                     <div class="og-feature-tags">
                         <span class="og-tag og-tag-blue">🎮 17款游戏</span>
@@ -1712,7 +1712,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                     <div class="og-balance-divider"></div>
                     <div class="og-balance-item">
                         <div class="og-balance-label">兑换费用</div>
-                        <div class="og-balance-value og-balance-price">50 <span>积分</span></div>
+                        <div class="og-balance-value og-balance-price">99 <span>积分</span></div>
                     </div>
                 </div>
 
@@ -1725,7 +1725,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 
                 <button type="button" class="og-submit-btn" id="og-submit-btn" onclick="ogSubmit()"
                     <?php if ($og_balance < $og_price) echo 'disabled'; ?>>
-                    📦 确认兑换（50积分）
+                    📦 确认兑换（99积分）
                 </button>
             </div>
         </div>
@@ -1886,14 +1886,14 @@ function ogSubmit() {
         } else {
             alert(data.msg);
             btn.disabled = false;
-            btn.textContent = '📦 确认兑换（50积分）';
+            btn.textContent = '📦 确认兑换（99积分）';
         }
     })
     .catch(function(err) {
         console.error('ogSubmit error:', err);
         alert('网络错误，请稍后重试');
         btn.disabled = false;
-        btn.textContent = '📦 确认兑换（50积分）';
+        btn.textContent = '📦 确认兑换（99积分）';
     });
 }
 

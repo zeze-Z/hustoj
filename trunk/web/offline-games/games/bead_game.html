@@ -476,9 +476,9 @@ body {
             </div>
 
             <div class="default-imgs" id="defaultImgs">
-                <img src="image/puzzle/02.jpg" data-src="image/puzzle/02.jpg" alt="默认图2" title="默认图2">
-                <img src="image/puzzle/04.jpg" data-src="image/puzzle/04.jpg" alt="默认图4" title="默认图4">
-                <img src="image/puzzle/06.jpg" data-src="image/puzzle/06.jpg" alt="默认图6" title="默认图6">
+                <img src="image/puzzle/02.jpg" data-img="02" alt="默认图2" title="默认图2">
+                <img src="image/puzzle/04.jpg" data-img="04" alt="默认图4" title="默认图4">
+                <img src="image/puzzle/06.jpg" data-img="06" alt="默认图6" title="默认图6">
             </div>
 
             <div class="ref-section-title">🛠️ 工具</div>
@@ -517,6 +517,9 @@ body {
 
 <div class="toast" id="toast"></div>
 
+<!-- 默认参考图数据（data URI）：file:// 下 canvas 读本地图片像素会因跨域污染抛
+     SecurityError，导致蒙版无法生成；data URI 同源干净。见 js/bead_images.js -->
+<script src="../js/bead_images.js"></script>
 <script>
 (function () {
     "use strict";
@@ -544,7 +547,7 @@ body {
     var maskVisible = false;    // 蒙版是否显示
     var isDrawing = false;
     var isErasing = false;
-    var currentRefSrc = null;   // 当前参考图源（DataURL 或 image/puzzle 路径）
+    var currentRefSrc = null;   // 当前参考图源（DataURL；本地路径会污染canvas，禁用）
 
     var beadCanvas = document.getElementById('beadCanvas');
     var beadCtx = beadCanvas.getContext('2d');
@@ -593,8 +596,9 @@ body {
                 initGrid();
                 loadFromStorage();
                 renderBoard();
+                // 尺寸变化后蒙版由 loadImageToRef 的 onload 异步重绘；
+                // 此处同步调用会以旧尺寸 refData 按新 gridSize 遍历，小→大切换时数组越界
                 recomputeRef();
-                renderMask();
             }
         });
     });
@@ -798,22 +802,28 @@ body {
     function loadImageToRef(src) {
         var img = new Image();
         img.onload = function () {
-            // 离屏缩放到 gridSize
-            var off = document.createElement('canvas');
-            off.width = gridSize;
-            off.height = gridSize;
-            var offCtx = off.getContext('2d');
-            offCtx.imageSmoothingEnabled = true;
-            offCtx.drawImage(img, 0, 0, gridSize, gridSize);
-            var data = offCtx.getImageData(0, 0, gridSize, gridSize).data;
-            refData = [];
-            for (var y = 0; y < gridSize; y++) {
-                var row = [];
-                for (var x = 0; x < gridSize; x++) {
-                    var idx = (y * gridSize + x) * 4;
-                    row.push([data[idx], data[idx + 1], data[idx + 2]]);
+            try {
+                // 离屏缩放到 gridSize
+                var off = document.createElement('canvas');
+                off.width = gridSize;
+                off.height = gridSize;
+                var offCtx = off.getContext('2d');
+                offCtx.imageSmoothingEnabled = true;
+                offCtx.drawImage(img, 0, 0, gridSize, gridSize);
+                var data = offCtx.getImageData(0, 0, gridSize, gridSize).data;
+                refData = [];
+                for (var y = 0; y < gridSize; y++) {
+                    var row = [];
+                    for (var x = 0; x < gridSize; x++) {
+                        var idx = (y * gridSize + x) * 4;
+                        row.push([data[idx], data[idx + 1], data[idx + 2]]);
+                    }
+                    refData.push(row);
                 }
-                refData.push(row);
+            } catch (e) {
+                // 跨域图片污染canvas（如file://下的本地路径），蒙版无法生成
+                toast('无法读取图片数据（跨域限制），请换内置图或重新上传');
+                return;
             }
             renderMask();
             // 选图后自动显示蒙版
@@ -863,7 +873,8 @@ body {
                 el.classList.remove('active');
             });
             im.classList.add('active');
-            currentRefSrc = im.dataset.src;
+            currentRefSrc = (window.BEAD_IMAGES || {})[im.dataset.img];
+            if (!currentRefSrc) { toast('内置图数据缺失'); return; }
             loadImageToRef(currentRefSrc);
         });
     });
@@ -952,8 +963,8 @@ body {
     var firstImg = document.querySelector('#defaultImgs img');
     if (firstImg) {
         firstImg.classList.add('active');
-        currentRefSrc = firstImg.dataset.src;
-        loadImageToRef(currentRefSrc);
+        currentRefSrc = (window.BEAD_IMAGES || {})[firstImg.dataset.img];
+        if (currentRefSrc) loadImageToRef(currentRefSrc);
     }
 })();
 </script>

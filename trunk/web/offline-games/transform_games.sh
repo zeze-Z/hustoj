@@ -82,6 +82,9 @@ for src_name in "${!GAMES[@]}"; do
     content=$(echo "$content" | sed "s|template/<?php echo \$OJ_TEMPLATE?>/game_confetti.js|../js/game_confetti.js|g")
     content=$(echo "$content" | sed 's|template/syzoj/game_confetti.js|../js/game_confetti.js|g')
 
+    # 替换内嵌PHP的session注入（如frog_typing的USER_ID）；离线包无session，统一为guest
+    content=$(echo "$content" | sed 's|var USER_ID = "<?php.*?>";|var USER_ID = "guest";|')
+
     # 移除body中的重复script标签（已经在head中添加了）
     content=$(echo "$content" | grep -v '<script src="../js/confetti.min.js"></script>')
     content=$(echo "$content" | grep -v '<script src="../js/game_confetti.js"></script>')
@@ -184,6 +187,12 @@ STYLE
     if ! tail -1 "$dst_file" | grep -q "</html>"; then
         echo "" >> "$dst_file"
         echo "</html>" >> "$dst_file"
+    fi
+
+    # 兜底检查：静态HTML不解析PHP，残留的<?php会原样显示在页面上
+    if grep -q '<?php' "$dst_file"; then
+        echo "⚠️  警告: $dst_name 仍残留PHP代码，需手动处理（参考bead_game.html的做法）:"
+        grep -n '<?php' "$dst_file"
     fi
 
     echo "✅ 完成: $dst_name"
