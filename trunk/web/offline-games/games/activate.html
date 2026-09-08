@@ -811,7 +811,7 @@
             verifyingCopy = false;
             btn.prop('disabled', false).text('✅ 我已拷贝，验证');
             if (!loaded || !window.OG_LICENSE_DATA) {
-                setCardMsg(2, '❌ 未在 js 目录找到有效的 license.js。请确认已将下载的文件移入 js 文件夹（与 auth.js 同级）后重试', 'error');
+                setCardMsg(2, '❌ 未在上述目录找到有效的 license.js。请将下载的license.js拷贝到指定目录后重试', 'error');
                 return;
             }
             Auth.validateLicense(window.OG_LICENSE_DATA).then(function(result) {

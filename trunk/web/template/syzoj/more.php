@@ -30,7 +30,7 @@ if ($og_logged_in) {
     }
 }
 
-$og_download_url = 'https://pan.baidu.com/s/1-UdKyErT22pWEs7PFAs4Ag?pwd=ykp6';
+$og_download_url = 'https://pan.baidu.com/s/1Q0SuVxrL84WWOVeIbFztnA?pwd=hmkm';
 
 // 生成postkey（供弹窗表单使用）
 $og_postkey = '';

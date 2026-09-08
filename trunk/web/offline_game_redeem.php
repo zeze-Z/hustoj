@@ -231,7 +231,7 @@ try {
             'school_name' => $school_name,
             'room_name' => $room_name,
             'expire_date' => $expire_date,
-            'download_url' => 'https://pan.baidu.com/s/1-UdKyErT22pWEs7PFAs4Ag?pwd=ykp6',
+            'download_url' => 'https://pan.baidu.com/s/1Q0SuVxrL84WWOVeIbFztnA?pwd=hmkm',
             'balance' => $apply['balance'],
         ]
     ]);
