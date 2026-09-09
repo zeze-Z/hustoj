@@ -138,12 +138,12 @@
     <?php endif; ?>
   <?php endif; ?>
 
-  <!-- 离线游戏安装包订单区块 -->
-  <h3 style="margin: 32px 0 12px 0; font-size: 1.15em; color: #333;"><span style="color: #667eea;">▌</span>离线游戏安装包订单</h3>
+  <!-- 积分商品订单区块 -->
+  <h3 style="margin: 32px 0 12px 0; font-size: 1.15em; color: #333;"><span style="color: #667eea;">▌</span>积分商品订单</h3>
   <?php if (empty($view_og_orders)): ?>
     <div class="ui info message" style="text-align: center; padding: 40px 20px;">
       <i class="inbox icon" style="font-size: 3em; margin-bottom: 15px;"></i>
-      <p>暂无离线游戏安装包订单</p>
+      <p>暂无积分商品订单</p>
       <a href="more.php#games" class="ui primary button" style="margin-top: 15px;">
         <i class="gamepad icon"></i>去兑换离线游戏安装包
       </a>
@@ -157,11 +157,12 @@
             <div class="row">
               <div class="twelve wide column">
                 <h3 style="margin: 0 0 10px 0; color: #333; font-size: 1em;">
-                  订单号: <?php echo htmlentities($og_order['order_no'], ENT_QUOTES, 'UTF-8'); ?>
+                  <?php echo htmlentities($view_goods_titles[$og_order['product_key']] ?? $og_order['product_key'], ENT_QUOTES, 'UTF-8'); ?>
+                  <span style="color: #999; font-weight: normal; font-size: 0.9em;">订单号: <?php echo htmlentities($og_order['order_no'], ENT_QUOTES, 'UTF-8'); ?></span>
                 </h3>
                 <div style="color: #666; font-size: 0.9em;">
-                  <span><i class="building icon"></i> <?php echo htmlentities($og_order['school_name'], ENT_QUOTES, 'UTF-8'); ?> · <?php echo htmlentities($og_order['room_name'], ENT_QUOTES, 'UTF-8'); ?></span>
-                  <span style="margin: 0 15px;">|</span>
+                  <?php if ($og_order['school_name'] !== ''): ?><span><i class="building icon"></i> <?php echo htmlentities($og_order['school_name'], ENT_QUOTES, 'UTF-8'); ?> · <?php echo htmlentities($og_order['room_name'], ENT_QUOTES, 'UTF-8'); ?></span>
+                  <span style="margin: 0 15px;">|</span><?php endif; ?>
                   <?php if ($og_expired): ?>
                     <span style="color: #999;"><i class="calendar times icon"></i>已过期</span>
                   <?php else: ?>
@@ -491,13 +492,15 @@ $('.message .close').on('click', function() {
                 </div>
             </div>
 
-            <!-- 授权码 -->
-            <div class="ogd-license-label">授权码</div>
-            <pre class="ogd-license" id="ogd-license"></pre>
-            <button type="button" class="ogd-copy-btn" id="ogd-copy-btn" onclick="ogdCopyLicense()">📋 复制授权码</button>
+            <!-- 授权码（无授权码的商品订单隐藏此区） -->
+            <div id="ogd-license-area">
+                <div class="ogd-license-label">授权码</div>
+                <pre class="ogd-license" id="ogd-license"></pre>
+                <button type="button" class="ogd-copy-btn" id="ogd-copy-btn" onclick="ogdCopyLicense()">📋 复制授权码</button>
+            </div>
 
-            <!-- 下载按钮 -->
-            <a class="ogd-download" href="https://pan.baidu.com/s/1myPtSsTkkTfrAr5QgnIWsQ?pwd=wzdf" target="_blank" rel="noopener">⬇️ 离线包下载</a>
+            <!-- 下载按钮（href 由 ogdShowDetail 按商品配置注入；无链接商品隐藏） -->
+            <a class="ogd-download" id="ogd-download" href="#" target="_blank" rel="noopener">⬇️ 离线包下载</a>
 
             <!-- 激活步骤 -->
             <div class="ogd-steps">
@@ -522,6 +525,7 @@ $('.message .close').on('click', function() {
 <script>
 // ===== 离线游戏安装包订单详情弹窗 =====
 var ogOrders = <?php echo json_encode($view_og_orders, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
+var ogGoodsUrls = <?php echo json_encode(isset($view_goods_urls) ? $view_goods_urls : [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 var ogToday = '<?php echo date('Y-m-d'); ?>';
 
 // 打开详情：按索引填充弹窗（全部用 textContent，license_code 不进 HTML/属性）
@@ -532,9 +536,19 @@ function ogdShowDetail(idx) {
     document.getElementById('ogd-f-order-no').textContent = o.order_no;
     document.getElementById('ogd-f-school').textContent = o.school_name;
     document.getElementById('ogd-f-room').textContent = o.room_name;
+    // 学校/机房为空（非机房履约商品）时隐藏对应字段容器
+    document.getElementById('ogd-f-school').parentNode.style.display = (o.school_name && String(o.school_name) !== '') ? '' : 'none';
+    document.getElementById('ogd-f-room').parentNode.style.display = (o.room_name && String(o.room_name) !== '') ? '' : 'none';
     document.getElementById('ogd-f-expire').textContent = o.expire_date + (expired ? '（已过期）' : '（有效）');
     document.getElementById('ogd-f-point').textContent = o.point_amount + ' 积分';
     document.getElementById('ogd-license').textContent = o.license_code;
+    // 授权码为空时隐藏整个授权码区（含复制按钮）
+    document.getElementById('ogd-license-area').style.display = (o.license_code && String(o.license_code) !== '') ? '' : 'none';
+    // 下载链接跟随商品表配置（换链不再改代码）
+    var dl = document.getElementById('ogd-download');
+    var dlUrl = ogGoodsUrls[o.product_key] || '';
+    dl.style.display = dlUrl ? '' : 'none';
+    dl.href = dlUrl;
     // 重置复制按钮状态
     var btn = document.getElementById('ogd-copy-btn');
     btn.classList.remove('ogd-copied');

@@ -17,19 +17,22 @@ if (isset($OJ_ON_SITE_CONTEST_ID)) {
 ///////////////////////////MAIN	
 
 $view_news = "";
-$sql = "select * "
-    . "FROM `news` "
-    . "WHERE `defunct`!='Y' && `news_id`='$news_id'"
-    . "ORDER BY `importance` ASC,`time` DESC "
-    . "LIMIT 50";
+// 两个分支统一用 ? 占位符：此前非 MENU_NEWS 分支 SQL 无占位符却传了绑定变量，
+// 触发 SQLSTATE[HY093]: number of bound variables does not match number of tokens
 if ($OJ_MENU_NEWS) {
     $sql = "select * "
         . "FROM `news` "
         . "WHERE (`defunct`!='Y' or `menu` = 1) && `news_id`= ? "
         . "ORDER BY `importance` ASC,`time` DESC "
         . "LIMIT 50";
+}else{
+    $sql = "select * "
+        . "FROM `news` "
+        . "WHERE `defunct`!='Y' && `news_id`= ? "
+        . "ORDER BY `importance` ASC,`time` DESC "
+        . "LIMIT 50";
 }
-$result = mysql_query_cache($sql, $news_id); //mysql_escape_string($sql));
+$result = mysql_query_cache($sql, $news_id);
 if (!$result) {
     $new_title = $news_content = "公告不存在!";
 } else {

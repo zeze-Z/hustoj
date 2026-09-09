@@ -203,7 +203,7 @@
                     </button>
                     <div class="dropdown-menu">
     <?php if (isset($_SESSION[$OJ_NAME.'_'.'administrator'])){?>
-                        <?php if ($OJ_TP=="bs3"){?>
+                        <?php if ($OJ_TP=="bs3" || $OJ_TP=="syzoj"){?>
                             <a class="dropdown-item btn-sm" href="setmsg.php" target="main" title="<?php echo $MSG_HELP_SETMESSAGE?>"><i class="glyphicon glyphicon-edit"></i> <?php echo $MSG_NEWS."-".$MSG_SETMESSAGE?></a>
                         <?php }?>
                         <a class="dropdown-item btn-sm" href="news_list.php" target="main" title="<?php echo $MSG_HELP_NEWS_LIST?>"><i class="glyphicon glyphicon-list"></i> <?php echo $MSG_NEWS."-".$MSG_LIST?></a>
@@ -270,6 +270,7 @@
                         <a class="dropdown-item btn-sm" href="point_log_list.php" target="main" title="积分流水"><i class="glyphicon glyphicon-list"></i> 积分流水</a>
                         <a class="dropdown-item btn-sm" href="point_adjust.php" target="main" title="手动调整积分"><i class="glyphicon glyphicon-edit"></i> 手动调整</a>
                         <a class="dropdown-item btn-sm" href="teacher_promo_list.php" target="main" title="教师推广统计"><i class="glyphicon glyphicon-bullhorn"></i> 教师推广统计</a>
+                        <a class="dropdown-item btn-sm" href="point_goods_list.php" target="main" title="积分商品管理"><i class="glyphicon glyphicon-shopping-cart"></i> 积分商品管理</a>
                     </div>
                 </div>
     <?php }?>

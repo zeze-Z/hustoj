@@ -2,7 +2,7 @@
 
 ## 基础信息
 
-- 路径: `/Users/zhangmaofan/PycharmProjects/hustoj`
+- 路径: 多端开发——Mac `/Users/zhangmaofan/PycharmProjects/hustoj`、Windows `D:\source_code\hustoj`
 - 分支: `my_oj`
 - 模板: syzoj
 - 数据库: jol
@@ -76,6 +76,8 @@
 - 测试虚机：web-2204，部署路径：/home/judge/src/web/，sudo密码：judge
 - 虚机执行命令格式：`multipass exec web-2204 -- sudo -S [shell命令] <<< "judge"`
 - 测试账号：教师用户zezhang/zezhang123，学生用户test/test123，管理员admin/admin123
-- 文件同步：先传文件到虚机/tmp目录`multipass transfer [本地文件路径] web-2204:/tmp/[文件名]`，再mv到部署路径
-- 代码更新生效：执行`php -r 'opcache_reset();'`即可，无需重启php-fpm服务（避免服务名找不到的坑）
+- 文件同步（标准方式）：用仓库根的`deploy_test_env.sh`，Windows Git Bash / macOS 通用，仓库根自动探测（脚本须放仓库根），支持多文件与绝对路径，已内置 MSYS 路径转换规避与远端字节数校验：
+  `bash deploy_test_env.sh [-f] trunk/web/xxx.php ...`；`-f` = 追加重启 php8.1-fpm；REPO/VM/SUDOPW/WEBROOT/FPM 可用环境变量覆盖
+- 手动同步（仅脚本不可用时）：先传虚机/tmp再mv。Windows Git Bash 两大坑：①`multipass transfer`源路径必须用相对路径（`/d/...`会被MSYS转成`D:/...`，盘符冒号被当实例名报错）；②须先`export MSYS2_ARG_CONV_EXCL="*" MSYS_NO_PATHCONV=1`（否则exec里的`/tmp`、`/home`路径被转成`C:/...`，虚机内mv/stat找不到文件）
+- 代码更新生效：`php -r 'opcache_reset();'`清opcache；模板/页面内容改动另有FPM APCu缓存，须重启php8.1-fpm（即脚本`-f`）；虚机上校验部署文件须`sudo`（文件属主www-data，非sudo会Permission denied误判为不存在）
 

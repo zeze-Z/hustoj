@@ -1089,7 +1089,8 @@ function grant_course_license($user_id, $course_id, $license_type, $order_info =
 //   users        : 新增 INT NOT NULL DEFAULT 0 字段 `point`，记录积分余额
 //   point_card   : 充值卡（固定面额 10 积分）
 //   point_log    : 积分流水
-//                  type: 1=充值卡兑换, 2=课件购买, 3=管理员调整, 4=系统操作
+//                  type: 1=充值卡兑换, 2=课件购买, 3=管理员调整, 4=系统操作,
+//                        5=教师推广奖励, 6=积分商品兑换
 //
 // 设计约定：
 //   - 所有交易使用 InnoDB 事务 + SELECT ... FOR UPDATE
@@ -1108,6 +1109,7 @@ if (!defined('POINT_LOG_TYPE_COURSE')) define('POINT_LOG_TYPE_COURSE', 2); // �
 if (!defined('POINT_LOG_TYPE_ADMIN'))  define('POINT_LOG_TYPE_ADMIN',  3); // 管理员调整
 if (!defined('POINT_LOG_TYPE_SYSTEM')) define('POINT_LOG_TYPE_SYSTEM', 4); // 系统操作
 if (!defined('POINT_LOG_TYPE_PROMO'))  define('POINT_LOG_TYPE_PROMO',  5); // 教师推广奖励
+if (!defined('POINT_LOG_TYPE_GOODS'))  define('POINT_LOG_TYPE_GOODS',  6); // 积分商品兑换
 
 /** 充值卡状态常量 */
 if (!defined('POINT_CARD_STATUS_UNUSED'))   define('POINT_CARD_STATUS_UNUSED',   0);
@@ -1228,6 +1230,49 @@ function point_apply_change($user_id, $delta, $type, $relation_id = null, $remar
     pdo_query("UPDATE `users` SET `point` = ? WHERE user_id = ?", $new_balance, $user_id);
     point_add_log($user_id, $delta, $new_balance, $type, $relation_id, $remark);
     return ['success' => true, 'message' => 'ok', 'balance' => $new_balance];
+}
+
+/**
+ * 积分商品履约路由表（单一数据源）。
+ * product_key => 履约配置：
+ *   order_prefix      订单号前缀
+ *   need_school_room  是否要求填写学校/机房（license 类商品需写入授权信息）
+ * 兑换 API（point_goods_redeem.php）与管理端商品列表（admin/point_goods_list.php）
+ * 共用此表：新增履约路由只需在此登记一次，管理界面的「未接入履约」提示自动同步，
+ * 无需在两处分别维护白名单。
+ *
+ * @return array
+ */
+function point_goods_routes() {
+    return [
+        'offline_game' => ['order_prefix' => 'OG', 'need_school_room' => true],
+    ];
+}
+
+/**
+ * 按 product_key 查询积分商品（point_goods 表）。
+ * 兑换 API / 前端模板共用：价格、划线价、下载链接、有效期等配置统一读商品行，
+ * 不再在代码中硬编码。
+ *
+ * @param string $product_key  商品唯一标识（^[a-z0-9_]{1,32}$）
+ * @param bool   $only_on_sale 是否仅返回上架商品（status=1），默认 true
+ * @return array|false 命中返回商品行数组（含 title/price/original_price/download_url/
+ *                     validity_days/status/sort 等），否则返回 false
+ */
+function point_get_goods($product_key, $only_on_sale = true) {
+    $product_key = trim(strval($product_key));
+    if ($product_key === '' || !preg_match('/^[a-z0-9_]{1,32}$/', $product_key)) {
+        return false;
+    }
+    $sql = "SELECT * FROM `point_goods` WHERE `product_key` = ?";
+    if ($only_on_sale) {
+        $sql .= " AND `status` = 1";
+    }
+    $rows = pdo_query($sql . " LIMIT 1", $product_key);
+    if (empty($rows)) {
+        return false;
+    }
+    return $rows[0];
 }
 
 /**

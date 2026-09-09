@@ -319,54 +319,6 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
 
     <div class="ui three column grid">
         <div class="eleven wide column">
-            <?php
-                        $sql_news = "select * FROM `news` WHERE `defunct`!='Y' AND `title`!='faqs.cn' ORDER BY `importance` desc,`time` DESC LIMIT 10";
-                        $result_news = mysql_query_cache( $sql_news );
-                        if ( $result_news && !empty($result_news) ) {
-                        ?>
-            <h4 class="ui top attached block header" style="border-radius: 12px 12px 0 0;"><i class="ui info icon"></i><?php echo $MSG_NEWS;?></h4>
-            <div class="ui bottom attached segment" style="border-radius: 0 0 12px 12px;">
-                <table class="ui very basic table">
-                    <thead>
-                        <tr>
-                            <th><?php echo $MSG_TITLE;?></th>
-                            <th><?php echo $MSG_CONTENTS;?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                            foreach ( $result_news as $row ) {
-                                $content_preview = mb_strlen($row["content"]) > 60 ? mb_substr($row["content"], 0, 60) . '...' : $row["content"];
-                                echo "<tr>" . "<td style='white-space:nowrap;'>"
-                                    . "<a href=\"viewnews.php?id=" . $row["news_id"] . "\" style='color: #333;'>"
-                                    . $row["title"] . "</a></td>"
-                                    . "<td style='color: #888;'>" . htmlspecialchars($content_preview, ENT_QUOTES, 'UTF-8') . "</td>" . "</tr>";
-                            }
-                        ?>
-                    </tbody>
-                </table>
-            </div>
-			<?php
-if(isset($pages) && $pages>1 ){
-  echo "<div style='display:inline;'>";
-  echo "<nav class='center'>";
-  echo "<ul class='pagination pagination-sm'>";
-  echo "<li class='page-item'><a href='index.php?page=".(strval(1))."'>&lt;&lt;</a></li>";
-  echo "<li class='page-item'><a href='index.php?page=".($page==1?strval(1):strval($page-1))."'>&lt;</a></li>";
-  for($i=$spage; $i<=$epage; $i++){
-    echo "<li class='".($page==$i?"active ":"")."page-item'><a title='go to page' href='index.php?page=".$i."'>".$i."</a></li>";
-  }
-  echo "<li class='page-item'><a href='index.php?page=".($page==$pages?strval($page):strval($page+1))."'>&gt;</a></li>";
-  echo "<li class='page-item'><a href='index.php?page=".(strval($pages))."'>&gt;&gt;</a></li>";
-  echo "</ul>";
-  echo "</nav>";
-  echo "</div>";
-}
-?>
-
-<?php
-                        }
-                        ?>
 <?php
 /* 本月之星  */
 function mask_text($text) {

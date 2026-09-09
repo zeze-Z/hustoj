@@ -13,6 +13,8 @@ include_once("kindeditor.php");
 ?>
 
 <?php
+$is_copy = false;
+$edit_id = 0;
 if(isset($_GET['cid'])){
   $cid = intval($_GET['cid']);
   $sql = "SELECT * FROM news WHERE `news_id`=?";
@@ -21,6 +23,18 @@ if(isset($_GET['cid'])){
   $title = $row['title'];
   $content = $row['content'];
   $defunct = $row['defunct'];
+  $is_copy = true;
+}else if(isset($_GET['id'])){
+  // 编辑模式：回填原内容，标题不加 -Copy 后缀
+  $edit_id = intval($_GET['id']);
+  $sql = "SELECT `title`,`content`,`importance` FROM news WHERE `news_id`=?";
+  $result = pdo_query($sql,$edit_id);
+  if(isset($result[0])){
+    $row = $result[0];
+    $title = $row['title'];
+    $content = $row['content'];
+    $importance = intval($row['importance']);
+  }
 }
 $plist = "";
 if(isset($_POST['pid'])){
@@ -44,16 +58,17 @@ if(isset($_POST['pid'])){
 
 <div class="padding">
   <form method=POST action=news_add.php>
+    <?php if($edit_id>0){?><input type="hidden" name="news_id" value="<?php echo $edit_id?>"><?php }?>
     <p align=left>
       <label class="col control-label"><?php echo $MSG_TITLE?></label>
-	  <input class="input input-large" style="width:100%;" size=71 value='<?php echo isset($title)?$title."-Copy":""?>' type=text name='title' id='title' > 
-	  <input type=submit class='btn btn-success' value='<?php echo $MSG_SAVE?>' name=submit> 
+	  <input class="input input-large" style="width:100%;" size=71 value='<?php echo isset($title)?htmlentities($title.($is_copy?"-Copy":""),ENT_QUOTES,'UTF-8'):''?>' type=text name='title' id='title' >
+	  <input type=submit class='btn btn-success' value='<?php echo $MSG_SAVE?>' name=submit>
 	  <input class='btn btn-primary' id='ai_bt' type=button value='AI一下' onclick='ai_gen()' >
 	  <input class='btn btn-danger'  type=reset value='<?php echo $MSG_RESET?>' onclick='setTimeout("ai_gen()",500);' >
     </p>
     <p align=left>
-      <label class="col control-label"><?php echo $MSG_NEWS_MENU?>
-        <input style="display: inline-block;" type="checkbox" name=showInMenu />
+      <label class="col control-label">置顶公告
+        <input style="display: inline-block;" type="checkbox" name=top <?php if(isset($importance)&&$importance>0)echo "checked"?>/>
       </label>
     </p>
     <p align=left>

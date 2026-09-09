@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 清理测试账号离线游戏包购买记录脚本
-# 功能：清空 offline_game_order 表中的测试记录，并退还扣除的积分
+# 功能：清空 point_goods_order 表中的测试记录，并退还扣除的积分
 
 # 从配置文件读取数据库连接信息
 config="/home/judge/etc/judge.conf"
@@ -31,15 +31,15 @@ echo ""
 echo "正在查询待清理的离线游戏包购买记录..."
 
 if [ "$MODE" = "user" ]; then
-    echo -e "\n===== offline_game_order表记录（用户: $USER_ID）====="
-    mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT id, user_id, school_name, room_name, order_no, point_amount, create_time FROM offline_game_order WHERE user_id = '$USER_ID' ORDER BY create_time DESC;"
-    RECORD_COUNT=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT COUNT(*) FROM offline_game_order WHERE user_id = '$USER_ID';" | tail -1)
-    TOTAL_POINTS=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT COALESCE(SUM(point_amount), 0) FROM offline_game_order WHERE user_id = '$USER_ID';" | tail -1)
+    echo -e "\n===== point_goods_order表记录（用户: $USER_ID）====="
+    mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT id, user_id, school_name, room_name, order_no, point_amount, create_time FROM point_goods_order WHERE user_id = '$USER_ID' ORDER BY create_time DESC;"
+    RECORD_COUNT=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT COUNT(*) FROM point_goods_order WHERE user_id = '$USER_ID';" | tail -1)
+    TOTAL_POINTS=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT COALESCE(SUM(point_amount), 0) FROM point_goods_order WHERE user_id = '$USER_ID';" | tail -1)
 else
-    echo -e "\n===== offline_game_order表全部记录 ====="
-    mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT id, user_id, school_name, room_name, order_no, point_amount, create_time FROM offline_game_order ORDER BY create_time DESC;"
-    RECORD_COUNT=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT COUNT(*) FROM offline_game_order;" | tail -1)
-    TOTAL_POINTS=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT COALESCE(SUM(point_amount), 0) FROM offline_game_order;" | tail -1)
+    echo -e "\n===== point_goods_order表全部记录 ====="
+    mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT id, user_id, school_name, room_name, order_no, point_amount, create_time FROM point_goods_order ORDER BY create_time DESC;"
+    RECORD_COUNT=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT COUNT(*) FROM point_goods_order;" | tail -1)
+    TOTAL_POINTS=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT COALESCE(SUM(point_amount), 0) FROM point_goods_order;" | tail -1)
 fi
 
 echo -e "\n待清理的记录总数：$RECORD_COUNT 条"
@@ -62,30 +62,31 @@ echo ""
 echo "正在执行清理操作..."
 
 if [ "$MODE" = "user" ]; then
-    # 获取订单号列表（用于积分退还记录）
-    ORDER_LIST=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -N -e "SELECT order_no FROM offline_game_order WHERE user_id = '$USER_ID';" 2>/dev/null)
+    # 获取订单号与扣费积分明细（须在删除前抓取，用于按订单实际扣费逐条退还）
+    ORDER_DATA=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -N -e "SELECT order_no, point_amount FROM point_goods_order WHERE user_id = '$USER_ID';" 2>/dev/null)
 
     # 删除订单记录
     echo "正在删除 $USER_ID 的离线游戏包购买记录..."
-    mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "DELETE FROM offline_game_order WHERE user_id = '$USER_ID';"
+    mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "DELETE FROM point_goods_order WHERE user_id = '$USER_ID';"
 
     # 更新用户积分（退还扣除的积分）
     echo "正在退还积分（+$TOTAL_POINTS）..."
     mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "UPDATE users SET point = point + $TOTAL_POINTS WHERE user_id = '$USER_ID';"
 
-    # 记录积分退还日志（每笔订单一条记录）
+    # 记录积分退还日志（每笔订单一条记录，按订单实际扣费 point_amount 退还）
     echo "正在记录积分退还日志..."
-    for ORDER_NO in $ORDER_LIST; do
-        mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "INSERT INTO point_log (user_id, change_point, balance, type, relation_id, remark) VALUES ('$USER_ID', 50, (SELECT point FROM users WHERE user_id = '$USER_ID'), 4, '$ORDER_NO', '测试数据清理：退还离线游戏兑换积分');"
-    done
+    while read -r ORDER_NO ORDER_POINTS; do
+        [ -z "$ORDER_NO" ] && continue
+        mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "INSERT INTO point_log (user_id, change_point, balance, type, relation_id, remark) VALUES ('$USER_ID', $ORDER_POINTS, (SELECT point FROM users WHERE user_id = '$USER_ID'), 6, '$ORDER_NO', '测试数据清理：退还积分商品兑换积分');"
+    done <<< "$ORDER_DATA"
 else
     # 清空全部模式
     # 获取所有订单号
-    ORDER_LIST=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -N -e "SELECT order_no FROM offline_game_order;" 2>/dev/null)
+    ORDER_LIST=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -N -e "SELECT order_no FROM point_goods_order;" 2>/dev/null)
 
     # 删除全部订单
     echo "正在清空全部离线游戏包购买记录..."
-    mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "DELETE FROM offline_game_order;"
+    mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "DELETE FROM point_goods_order;"
 
     # 更新所有受影响用户的积分
     echo "正在退还积分..."
@@ -93,7 +94,7 @@ else
         UPDATE users u
         INNER JOIN (
             SELECT user_id, SUM(point_amount) as total_points
-            FROM offline_game_order
+            FROM point_goods_order
             GROUP BY user_id
         ) o ON u.user_id = o.user_id
         SET u.point = u.point + o.total_points;"
@@ -101,7 +102,7 @@ fi
 
 # 4. 优化表结构
 echo "正在优化表结构..."
-mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "OPTIMIZE TABLE offline_game_order;"
+mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "OPTIMIZE TABLE point_goods_order;"
 
 # 5. 验证结果
 echo ""

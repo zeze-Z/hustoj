@@ -4,33 +4,43 @@
 $og_logged_in = isset($_SESSION[$OJ_NAME . '_' . 'user_id']);
 $og_user_id = $og_logged_in ? $_SESSION[$OJ_NAME . '_' . 'user_id'] : '';
 $og_balance = $og_logged_in ? intval(point_get_balance($og_user_id)) : 0;
-$og_price = 99;
 
-// 检查是否已有未过期订单
-$og_has_order = false;
-$og_order_expire = '';
-$og_order_no = '';
-$og_order_school = '';
-$og_order_room = '';
-$og_license_code = '';
-if ($og_logged_in) {
-    $og_rows = pdo_query(
-        "SELECT order_no, expire_date, school_name, room_name, license_code FROM `offline_game_order`
-          WHERE user_id = ? AND expire_date >= CURDATE()
-          ORDER BY id DESC LIMIT 1",
-        $og_user_id
-    );
-    if (!empty($og_rows)) {
-        $og_has_order = true;
-        $og_order_expire = $og_rows[0]['expire_date'];
-        $og_order_no = $og_rows[0]['order_no'];
-        $og_order_school = $og_rows[0]['school_name'];
-        $og_order_room = $og_rows[0]['room_name'];
-        $og_license_code = $og_rows[0]['license_code'];
+// 商品配置统一读 point_goods（下架/缺失时 $og_goods 为 false，横幅/弹窗/脚本均不渲染）
+$og_goods = point_get_goods('offline_game');
+if ($og_goods) {
+    $og_price         = intval($og_goods['price']);
+    $og_original_price = isset($og_goods['original_price']) ? intval($og_goods['original_price']) : 0;
+    $og_title         = $og_goods['title'];
+    $og_desc          = $og_goods['description'];
+    $og_validity_days = intval($og_goods['validity_days']);
+    $og_download_url  = $og_goods['download_url'];
+    $og_validity_text = ($og_validity_days == 365) ? '一年' : $og_validity_days . '天';
+    $og_validity_unit = ($og_validity_days == 365) ? '年' : $og_validity_days . '天';
+
+    // 检查是否已有未过期订单
+    $og_has_order = false;
+    $og_order_expire = '';
+    $og_order_no = '';
+    $og_order_school = '';
+    $og_order_room = '';
+    $og_license_code = '';
+    if ($og_logged_in) {
+        $og_rows = pdo_query(
+            "SELECT order_no, expire_date, school_name, room_name, license_code FROM `point_goods_order`
+              WHERE user_id = ? AND product_key = 'offline_game' AND expire_date >= CURDATE()
+              ORDER BY id DESC LIMIT 1",
+            $og_user_id
+        );
+        if (!empty($og_rows)) {
+            $og_has_order = true;
+            $og_order_expire = $og_rows[0]['expire_date'];
+            $og_order_no = $og_rows[0]['order_no'];
+            $og_order_school = $og_rows[0]['school_name'];
+            $og_order_room = $og_rows[0]['room_name'];
+            $og_license_code = $og_rows[0]['license_code'];
+        }
     }
 }
-
-$og_download_url = 'https://pan.baidu.com/s/1myPtSsTkkTfrAr5QgnIWsQ?pwd=wzdf';
 
 // 生成postkey（供弹窗表单使用）
 $og_postkey = '';
@@ -1140,6 +1150,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 
     <!-- ============ 小游戏 Tab ============ -->
     <div class="tab-panel active" id="panel-games">
+        <?php if ($og_goods): ?>
         <!-- 离线游戏推广横幅（二级Tab上方） -->
         <div class="og-banner-top" id="og-banner" onclick="<?php if (!$og_logged_in): ?>location.href='loginpage.php?return=more.php%23games'<?php else: ?>ogOpenModal()<?php endif; ?>">
             <div class="og-banner-top-close" onclick="event.stopPropagation(); document.getElementById('og-banner').style.display='none';">✕</div>
@@ -1158,22 +1169,22 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
             </div>
             <div class="og-banner-top-content">
                 <div class="og-banner-top-title">
-                    📦 课前游戏集合 · 离线安装包
+                    📦 <?php echo htmlentities($og_title, ENT_QUOTES, 'UTF-8'); ?>
                     <span class="og-banner-top-tags-inline">
                         <span class="og-banner-top-tag">✅ 无需联网</span>
                         <span class="og-banner-top-tag">✅ 单机运行</span>
                         <span class="og-banner-top-tag">✅ 授权管理</span>
-                        <span class="og-banner-top-tag">✅ 一年有效期</span>
+                        <span class="og-banner-top-tag">✅ <?php echo $og_validity_text; ?>有效期</span>
                     </span>
                 </div>
-                <div class="og-banner-top-desc">机房没网也能玩！包含全部17款教育游戏的离线版本，适合无网络的教学环境</div>
+                <div class="og-banner-top-desc"><?php echo htmlentities($og_desc, ENT_QUOTES, 'UTF-8'); ?></div>
             </div>
             <div class="og-banner-top-action" onclick="event.stopPropagation()">
                 <div class="og-banner-top-price">
                     <span class="og-banner-top-badge">🔥 限时特惠</span>
-                    <span class="og-banner-top-price-old">199</span>
-                    <span class="og-banner-top-price-num">99</span>
-                    <span class="og-banner-top-price-unit">积分/年</span>
+                    <?php if ($og_original_price > 0): ?><span class="og-banner-top-price-old"><?php echo $og_original_price; ?></span><?php endif; ?>
+                    <span class="og-banner-top-price-num"><?php echo intval($og_price); ?></span>
+                    <span class="og-banner-top-price-unit">积分/<?php echo $og_validity_unit; ?></span>
                 </div>
                 <?php if (!$og_logged_in): ?>
                     <button class="og-banner-top-btn" onclick="location.href='loginpage.php?return=more.php%23games'">登录后兑换</button>
@@ -1184,6 +1195,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                 <?php endif; ?>
             </div>
         </div>
+        <?php endif; // $og_goods 横幅 ?>
 
         <!-- 二级 Tab -->
         <div class="og-subtabs-row">
@@ -1636,6 +1648,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     </div><!-- /panel-teacher -->
 </div>
 
+<?php if ($og_goods): ?>
 <!-- 离线游戏兑换弹窗 -->
 <div class="og-modal-mask" id="og-modal-mask">
     <div class="og-modal" role="dialog" aria-modal="true" aria-labelledby="og-modal-title">
@@ -1659,8 +1672,8 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                     </svg>
                 </div>
                 <div class="og-modal-header-text">
-                    <h3 class="og-modal-title" id="og-modal-title">离线游戏安装包</h3>
-                    <p class="og-modal-subtitle">99积分兑换 · 一年有效期</p>
+                    <h3 class="og-modal-title" id="og-modal-title"><?php echo htmlentities($og_title, ENT_QUOTES, 'UTF-8'); ?></h3>
+                    <p class="og-modal-subtitle"><?php echo intval($og_price); ?>积分兑换 · <?php echo $og_validity_text; ?>有效期</p>
                     <!-- 特性标签 -->
                     <div class="og-feature-tags">
                         <span class="og-tag og-tag-blue">🎮 17款游戏</span>
@@ -1712,7 +1725,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                     <div class="og-balance-divider"></div>
                     <div class="og-balance-item">
                         <div class="og-balance-label">兑换费用</div>
-                        <div class="og-balance-value og-balance-price">99 <span>积分</span></div>
+                        <div class="og-balance-value og-balance-price"><?php echo intval($og_price); ?> <span>积分</span></div>
                     </div>
                 </div>
 
@@ -1725,7 +1738,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 
                 <button type="button" class="og-submit-btn" id="og-submit-btn" onclick="ogSubmit()"
                     <?php if ($og_balance < $og_price) echo 'disabled'; ?>>
-                    📦 确认兑换（99积分）
+                    📦 确认兑换（<?php echo intval($og_price); ?>积分）
                 </button>
             </div>
         </div>
@@ -1776,16 +1789,19 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
         </div>
     </div>
 </div>
+<?php endif; // $og_goods 兑换弹窗 ?>
 
+<?php if ($og_goods): ?>
 <script>
 // ===== 离线游戏兑换 =====
 var ogLoggedin = <?php echo $og_logged_in ? 'true' : 'false'; ?>;
 var ogPostkey = '<?php echo addslashes($og_postkey); ?>';
 var ogBalance = <?php echo $og_balance; ?>;
-var ogPrice = <?php echo $og_price; ?>;
+var ogPrice = <?php echo intval($og_price); ?>;
 var ogHasOrder = <?php echo $og_has_order ? 'true' : 'false'; ?>;
 var ogMyLicense = <?php echo json_encode($og_license_code, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 var ogDownloadUrl = <?php echo json_encode($og_download_url, JSON_HEX_TAG); ?>;
+var ogBtnText = <?php echo json_encode('📦 确认兑换（' . intval($og_price) . '积分）', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
 var ogOrderExpire = <?php echo json_encode($og_order_expire); ?>;
 var ogOrderSchool = <?php echo json_encode($og_order_school); ?>;
 var ogOrderRoom = <?php echo json_encode($og_order_room); ?>;
@@ -1856,11 +1872,12 @@ function ogSubmit() {
     btn.textContent = '正在处理...';
 
     var formData = new FormData();
+    formData.append('product_key', 'offline_game');
     formData.append('school_name', school);
     formData.append('room_name', room);
     formData.append('postkey', ogPostkey);
 
-    fetch('offline_game_redeem.php', {
+    fetch('point_goods_redeem.php', {
         method: 'POST',
         body: formData
     })
@@ -1886,14 +1903,14 @@ function ogSubmit() {
         } else {
             alert(data.msg);
             btn.disabled = false;
-            btn.textContent = '📦 确认兑换（99积分）';
+            btn.textContent = ogBtnText;
         }
     })
     .catch(function(err) {
         console.error('ogSubmit error:', err);
         alert('网络错误，请稍后重试');
         btn.disabled = false;
-        btn.textContent = '📦 确认兑换（99积分）';
+        btn.textContent = ogBtnText;
     });
 }
 
@@ -1931,6 +1948,7 @@ function ogCopyLicense() {
     }
 }
 </script>
+<?php endif; // $og_goods 脚本块 ?>
 
 <script>
 // 复现header中的openAIExperience函数

@@ -50,8 +50,16 @@ if(!kindeditorSeted){
 	}
 
 
-        $(document).ready(window.setTimeout(function (){
+        // 原写法 $(document).ready(setTimeout(...,100)) 会立即执行 setTimeout 并把定时器ID
+        // 传给 jQuery.ready, 实际等于"脚本执行后100ms"碰运气初始化; 首次加载(冷缓存)时
+        // 常早于页面就绪, 编辑框变纯文本框。改为 DOM 就绪事件驱动 + 目标 textarea 缺失重试。
+        var keTries = 0;
+        function keInitEditor(){
                 KindEditor.ready(function(K) {
+                        if (!document.querySelector('textarea[class="kindeditor"]')) {
+                                if (++keTries < 50) setTimeout(keInitEditor, 200);
+                                return;
+                        }
                         let editor1 = K.create('textarea[class="kindeditor"]', {
                                 width : '100%',
                                 cssPath : '../kindeditor/plugins/code/prettify.css',
@@ -117,7 +125,12 @@ if(!kindeditorSeted){
                         });
                         prettyPrint();
                 });
-        }),100);
+        }
+        if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', keInitEditor);
+        } else {
+                keInitEditor();
+        }
          kindeditorSeted=true;
 }
 

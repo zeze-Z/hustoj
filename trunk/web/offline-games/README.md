@@ -97,7 +97,7 @@ hustoj-games/
 ### 授权生成
 
 - `admin/generate_license.py` 与 `build_package.sh` 均支持 `--private-key` 参数指定私钥路径
-- 网站兑换入口 `trunk/web/offline_game_redeem.php` 通过配置常量 `OG_KEY_DIR`（默认 `/home/judge/etc/offline_games`）显式传入私钥路径
+- 网站兑换入口 `trunk/web/point_goods_redeem.php`（原 offline_game_redeem.php，V2.9 起通用化）通过配置常量 `OG_KEY_DIR`（默认 `/home/judge/etc/offline_games`）显式传入私钥路径
 
 ### Web 服务器防护
 

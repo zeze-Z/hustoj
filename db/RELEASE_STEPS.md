@@ -1,6 +1,6 @@
 # OJ 功能发布步骤
 
-## 当前版本：V2.8（2026-09-05）
+## 当前版本：V2.9（2026-09-09）
 
 ---
 
@@ -27,6 +27,7 @@
 | V2.6 | 2026-08-30 | 课件学科Tab新增"精选PPT模板"（位于小学电子教材之后） |
 | V2.7 | 2026-09-02 | 教师推广积分奖励（bind_teacher_id + teacher_promo_stat 结算表） |
 | V2.8 | 2026-09-05 | 离线游戏积分兑换订单表 offline_game_order |
+| V2.9 | 2026-09-09 | 积分商品通用化（point_goods 商品表 + offline_game_order 重命名为 point_goods_order） |
 
 ---
 
@@ -105,6 +106,12 @@ mysql -u root -p jol < db/V2.7_20260902_teacher_promo_reward.sql
 # 17. 离线游戏积分兑换订单表（V2.8）
 #     新建 offline_game_order：记录积分兑换离线游戏的订单与授权信息
 mysql -u root -p jol < db/V2.8_20260905_offline_game_order.sql
+
+# 18. 积分商品通用化（V2.9）
+#     新建 point_goods 商品表；offline_game_order 加 product_key 后重命名为 point_goods_order；
+#     存量离线游戏积分流水 type 4→6
+#     ⚠️ 必须与代码同窗口部署（新代码查询新表名，SQL 先行窗口内旧兑换入口短暂失效）
+mysql -u root -p jol < db/V2.9_20260909_point_goods.sql
 ```
 
 **验证：**
@@ -220,6 +227,17 @@ SHOW INDEX FROM jol.teacher_promo_stat WHERE Key_name='uk_teacher_week';  -- UNI
 SHOW TABLES IN jol LIKE 'offline_game_order';   -- 预期存在
 DESCRIBE jol.offline_game_order;                -- user_id/school_name/room_name/license_code/expire_date/order_no/point_amount(默认50)/create_time
 SHOW INDEX FROM jol.offline_game_order WHERE Key_name='uk_user_order';  -- UNIQUE(user_id, order_no)
+
+-- 积分商品通用化（V2.9）
+SHOW TABLES IN jol LIKE 'point_goods%';
+-- 预期输出：point_goods, point_goods_order（两张）
+DESCRIBE jol.point_goods;                        -- product_key(唯一)/title/price/original_price(NULL=不展示)/download_url/validity_days/status/sort
+DESCRIBE jol.point_goods_order product_key;      -- varchar(32), NOT NULL, Default: offline_game
+SELECT product_key, price, original_price, validity_days, status FROM jol.point_goods;
+-- 预期：1 行 offline_game / 99 / 199 / 365 / 1
+-- 存量订单回填核对（生产应无订单）
+SELECT COUNT(*) FROM jol.point_goods_order WHERE product_key <> 'offline_game';
+-- 预期：0
 ```
 
 ---
@@ -386,3 +404,34 @@ mysql -u root -p jol < db/V2.8_20260905_offline_game_order.sql
 DROP TABLE IF EXISTS `offline_game_order`;
 ```
 > 完整回滚 SQL 见 `db/V2.8_20260905_offline_game_order.sql` 文件尾部。
+
+---
+
+## V2.9 发布文件清单（积分商品通用化）
+
+### 变更内容
+
+- 新建表 `point_goods`：积分商品配置表（价格/划线价/下载链接/有效期/上下架/排序），离线游戏离线包为首条记录，改价换链不再改代码
+- `offline_game_order` 重命名为 `point_goods_order` 并新增 `product_key` 列，支撑多商品订单
+- 兑换入口通用化：`trunk/web/point_goods_redeem.php` 按 `product_key` 读商品配置并路由履约（当前实现离线游戏 license 类），删除 `offline_game_redeem.php`
+- 历史离线游戏积分流水 type 4→6（积分商品），流水页正确归类
+
+### 数据库
+```
+db/V2.9_20260909_point_goods.sql   # 新建 point_goods（含首条商品数据）+ offline_game_order 加列/重命名 + 存量流水 type 对齐
+```
+
+### 执行方式
+```bash
+mysql -u root -p jol < db/V2.9_20260909_point_goods.sql
+```
+
+### 回滚
+```sql
+RENAME TABLE `point_goods_order` TO `offline_game_order`;
+ALTER TABLE `offline_game_order` DROP INDEX `idx_product_key`, DROP COLUMN `product_key`;
+UPDATE `point_log` SET `type` = 4 WHERE `type` = 6 AND `change_point` < 0 AND `relation_id` LIKE 'OG%';
+DELETE FROM `point_goods` WHERE `product_key` = 'offline_game';
+DROP TABLE IF EXISTS `point_goods`;
+```
+> 完整回滚 SQL 见 `db/V2.9_20260909_point_goods.sql` 文件尾部（注释状态，逆序执行）。

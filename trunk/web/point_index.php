@@ -43,6 +43,7 @@ $valid_types = [
     POINT_LOG_TYPE_ADMIN,
     POINT_LOG_TYPE_SYSTEM,
     POINT_LOG_TYPE_PROMO,
+    POINT_LOG_TYPE_GOODS,
 ];
 if (!in_array($type_filter, $valid_types, true)) {
     $type_filter = 0;
@@ -52,9 +53,10 @@ $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $per_page = 20;
 $offset = ($page - 1) * $per_page;
 
-// 流水主表 LEFT JOIN 课件订单 + 课件标题：
+// 流水主表 LEFT JOIN 课件订单 + 课件标题 / 积分商品订单 + 商品标题：
 //   - type=2 (课件购买) 时 relation_id 是 order_no，可关联到 course_order
-//   - 其他类型不会命中 JOIN，course_* 字段为 NULL
+//   - type=6 (积分商品) 时 relation_id 是 order_no，可关联到 point_goods_order
+//   - 其他类型不会命中 JOIN，course_* / goods_title 字段为 NULL
 $where_sql = "WHERE pl.user_id = ?";
 $params = [$user_id];
 if ($type_filter > 0) {
@@ -71,7 +73,8 @@ $logs_sql = "SELECT pl.id, pl.change_point, pl.balance, pl.type, pl.relation_id,
                     co.course_id    AS co_course_id,
                     co.license_type AS co_license_type,
                     co.pay_channel  AS co_pay_channel,
-                    c.title         AS co_course_title
+                    c.title         AS co_course_title,
+                    pg.title        AS goods_title
                FROM point_log pl
           LEFT JOIN course_order co
                  ON pl.type = " . POINT_LOG_TYPE_COURSE . "
@@ -79,6 +82,12 @@ $logs_sql = "SELECT pl.id, pl.change_point, pl.balance, pl.type, pl.relation_id,
                 AND co.user_id = pl.user_id
           LEFT JOIN course c
                  ON c.id = co.course_id
+          LEFT JOIN point_goods_order pgo
+                 ON pl.type = " . POINT_LOG_TYPE_GOODS . "
+                AND pl.relation_id = pgo.order_no
+                AND pgo.user_id = pl.user_id
+          LEFT JOIN point_goods pg
+                 ON pg.product_key = pgo.product_key
               $where_sql
            ORDER BY pl.id DESC
               LIMIT $per_page OFFSET $offset";

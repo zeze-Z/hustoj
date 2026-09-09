@@ -13,16 +13,10 @@ require_once("../include/my_func.inc.php");
 //contest_id
 $title = $_POST['title'];
 $content = $_POST['content'];
-$showInMenu = isset($_POST['showInMenu']) ? $_POST['showInMenu'] : "";
-$menu = $showInMenu == "on" ? 1 : 0;
+$top = isset($_POST['top']) && $_POST['top']=="on" ? 1 : 0;
 
 $user_id = $_SESSION[$OJ_NAME.'_'.'user_id'];
 
-
-
-$content = str_replace("<p>", "", $content);
-$content = str_replace("</p>", "<br />", $content);
-//$content = str_replace(",", "&#44;", $content);
 
 
 
@@ -30,12 +24,12 @@ $content = str_replace("</p>", "<br />", $content);
 if (isset($_POST['news_id']) && $_POST['news_id'] != '') {
     // 更新新闻
     $news_id = intval($_POST['news_id']);
-    $sql = "UPDATE news SET `title`=?,`content`=?,`time`=now(),`menu`=? WHERE `news_id`=?";
-    pdo_query($sql,$title,$content,$menu,$news_id);
+    $sql = "UPDATE news SET `title`=?,`content`=?,`time`=now(),`importance`=? WHERE `news_id`=?";
+    pdo_query($sql,$title,$content,$top,$news_id);
 } else {
     // 插入新新闻
-    $sql = "INSERT INTO news(`user_id`,`title`,`content`,`time`,`menu`) VALUES(?,?,?,now(),?)";
-    pdo_query($sql,$user_id,$title,$content,$menu);
+    $sql = "INSERT INTO news(`user_id`,`title`,`content`,`time`,`importance`) VALUES(?,?,?,now(),?)";
+    pdo_query($sql,$user_id,$title,$content,$top);
 }
 $sessionDataKey = $OJ_NAME.'_'."_MENU_NEWS_CACHE";
 unset($_SESSION[$sessionDataKey]);

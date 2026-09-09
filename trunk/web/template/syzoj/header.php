@@ -13,7 +13,7 @@
 
         function get_menu_news() {
             $result = "";
-            $sql_news_menu = "select `news_id`,`title` FROM `news` WHERE `menu`=1 AND `title`!='faqs.cn' ORDER BY `importance` ASC,`time` DESC LIMIT 10";
+            $sql_news_menu = "select `news_id`,`title` FROM `news` WHERE `menu`=1 AND `title`!='faqs.cn' ORDER BY `importance` DESC,`time` DESC LIMIT 10";
             $sql_news_menu_result = mysql_query_cache( $sql_news_menu );
             if ( $sql_news_menu_result ) {
                 foreach ( $sql_news_menu_result as $row ) {
@@ -76,6 +76,8 @@
             'ai_drawing_game.php',
             'course.php',           // 课件列表
             'course_info.php',      // 课件详情（游客可查看，购买时再要求登录）
+            'news.php',             // 动态列表
+            'viewnews.php',         // 动态详情
         ];
 
         // 游客模式访问限制
@@ -586,12 +588,12 @@
 <?php if(isset($OJ_RECENT_CONTEST)&&$OJ_RECENT_CONTEST){    ?>
             <a class="item <?php if ($url=="recent-contest.php") echo "active";?>" href="<?php echo $path_fix?>recent-contest.php" style="font-weight: 500;"><?php echo $MSG_RECENT_CONTEST?></a>
 <?php } ?>
-            <a class="item <?php if ($url=="faqs.php") echo "active";?>" href="<?php echo $path_fix?>faqs.php" style="font-weight: 500;"><?php echo $MSG_FAQ?></a>
+            <!-- 课件功能：对所有用户开放 -->
+            <a class="item <?php if ($url=="course.php") echo "active";?>" href="<?php echo $path_fix?>course.php" style="font-weight: 500;">课件</a>
             <?php if (isset($OJ_BBS)&& $OJ_BBS){ ?>
                 <a class='item' href="discuss.php" style="font-weight: 500;"><?php echo $MSG_BBS?></a>
             <?php } ?>
-            <!-- 课件功能：对所有用户开放 -->
-            <a class="item <?php if ($url=="course.php") echo "active";?>" href="<?php echo $path_fix?>course.php" style="font-weight: 500;">课件</a>
+            <a class="item <?php if ($url=="news.php") echo "active";?>" href="<?php echo $path_fix?>news.php" style="font-weight: 500;">动态</a>
             
             <!-- 更多功能 -->
             <a class="item <?php if ($url=="more.php") echo "active";?>" href="<?php echo $path_fix?>more.php" style="font-weight: 500;">更多</a>

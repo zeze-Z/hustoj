@@ -1,15 +1,28 @@
  <?php $show_title="$MSG_NEWS - $OJ_NAME"; ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 <script src="<?php echo "template/bs3/"?>marked.min.js"></script>
-<div class="padding">
-    <h1><?php echo htmlentities($news_title) ?></h1>
-    <p style="margin-bottom: 5px; ">
-        <b style="margin-right: 30px; "><i class="edit icon"></i><a class="black-link"
-                href="userinfo.php?user=<?php echo $news_writer ?>"> <?php echo $news_writer ?></a></b>
-        <b style="margin-right: 30px; "><i class="calendar icon"></i> <?php echo $news_date ?></b>
-    </p>
-    <div class="ui existing segment" style="overflow-y:overlay;">
-        <div id="content" class="font-content"><?php echo bbcode_to_html($news_content)?></div>
+<style>
+.news-page-bg { background: #ededed; border-radius: 10px; padding: 16px; }
+.news-article { max-width: 680px; margin: 0 auto; background: #fff; border-radius: 8px; padding: 28px 24px; }
+.news-article h1 { font-size: 24px; font-weight: 700; color: #333; line-height: 1.4; margin: 0 0 10px; }
+.news-article .news-back { display: inline-block; font-size: 13px; font-weight: 600; color: #fff !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 8px 18px; text-decoration: none !important; margin-bottom: 18px; box-shadow: 0 2px 6px rgba(102,126,234,0.35); transition: all 0.25s ease; }
+.news-article .news-back:hover { color: #fff !important; text-decoration: none !important; transform: translateX(-3px); box-shadow: 0 4px 12px rgba(102,126,234,0.45); }
+.news-article .news-meta { font-size: 13px; color: #999; margin: 0 0 12px; }
+.news-article .news-meta a { color: #7b8ba5; }
+.news-article .news-divider { border: none; border-top: 1px solid #eee; margin: 0 0 18px; }
+</style>
+<div class="news-page-bg">
+    <div class="news-article">
+        <a class="news-back" href="news.php">← 返回动态</a>
+        <h1><?php echo htmlentities($news_title, ENT_QUOTES, 'UTF-8') ?></h1>
+        <p class="news-meta">
+            <i class="calendar icon"></i> <?php echo $news_date ?>
+        </p>
+        <hr class="news-divider">
+        <?php /* 正文双模式：KindEditor 富文本(HTML)原样渲染+RemoveXSS 防护；
+                 含 [plist 题单短代码的旧格式公告仍走 bbcode 管线(bbcode_to_html 会
+                 把标签间文本 HTML 转义, 不能用于富文本) */ ?>
+        <div id="content" class="font-content"><?php echo (strpos($news_content,'[plist')!==false) ? bbcode_to_html($news_content) : RemoveXSS($news_content) ?></div>
     </div>
 </div>
 <script>
@@ -19,7 +32,7 @@
                   async: true,
                   pedantic: false,
                   gfm: true,
-                  mangle: false,  
+                  mangle: false,
                   headerIds: false
                 });
                 $(".md").each(function(){

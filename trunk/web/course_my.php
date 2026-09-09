@@ -36,12 +36,31 @@ $sql = "SELECT co.*, c.title
         LIMIT $per_page OFFSET $offset";
 $courses = pdo_query($sql, $user_id);
 
-// 离线游戏安装包订单（含已过期历史；同用户未过期订单唯一，总量小，不分页）
+// 积分商品订单（含已过期历史；同用户未过期订单唯一，总量小，不分页）
 $view_og_orders = pdo_query(
-    "SELECT order_no, school_name, room_name, license_code, expire_date, point_amount, create_time
-       FROM `offline_game_order` WHERE user_id = ? ORDER BY id DESC LIMIT 50",
+    "SELECT order_no, product_key, school_name, room_name, license_code, expire_date, point_amount, create_time
+       FROM `point_goods_order` WHERE user_id = ? ORDER BY id DESC LIMIT 50",
     $user_id
 );
+
+// 商品 key → 名称映射（订单列表/详情展示用，兜底覆盖内置商品）
+$view_goods_titles = [];
+$_goods_rows = pdo_query("SELECT product_key, title FROM `point_goods`");
+if (is_array($_goods_rows)) {
+    foreach ($_goods_rows as $_goods_row) {
+        $view_goods_titles[$_goods_row['product_key']] = $_goods_row['title'];
+    }
+}
+$view_goods_titles += ['offline_game' => '离线游戏安装包'];
+
+// 商品 key → 下载链接映射（详情弹窗下载按钮跟随商品表配置；无链接的商品隐藏按钮）
+$view_goods_urls = [];
+$_goods_url_rows = pdo_query("SELECT product_key, download_url FROM `point_goods` WHERE download_url <> ''");
+if (is_array($_goods_url_rows)) {
+    foreach ($_goods_url_rows as $_goods_url_row) {
+        $view_goods_urls[$_goods_url_row['product_key']] = $_goods_url_row['download_url'];
+    }
+}
 
 // 模板变量
 $view_courses = $courses;
