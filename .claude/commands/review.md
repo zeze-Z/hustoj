@@ -9,11 +9,11 @@ argument-hint: 可选审查范围，如"git diff"或具体文件路径；缺省�
 
 执行步骤：
 
-1. 确定审查范围：
-   - 未指定：默认 `git diff`（当前未提交改动）；若为空则审查最近一次提交 `git show --stat HEAD` 的改动
-   - 指定了文件或范围：按给定范围审查
+1. 确定审查范围（**未跟踪新文件必须显式纳入，`git diff` 看不到它们**）：
+   - 未指定：`git diff HEAD`（已提交+未提交改动）+ `git status --porcelain` 里的 ?? 新文件逐个列入；两者皆空则审查最近一次提交 `git show --stat HEAD`
+   - 指定了文件或范围：按给定范围审查，但仍需 `git status --porcelain` 比对有无遗漏的 ?? 新文件
 2. 若有相关 `.claude/plans/*.md` 验收标准，一并作为审查依据
-3. 派 reviewer 子代理（glm-5.3），输入 = 审查范围 + 验收标准，要求输出：
+3. 派 reviewer 子代理（glm-5.3），输入 = 审查范围（含未跟踪文件）+ 验收标准，要求输出：
    - 按严重度排序的问题清单，每条附 file:line 与修复建议
    - 末尾结论：BLOCKING / NON-BLOCKING；无问题则明确写"通过"
 4. 汇总给用户：BLOCKING 问题列出并建议打回 coder 修复；NON-BLOCKING 问题列出，可放行后跟进

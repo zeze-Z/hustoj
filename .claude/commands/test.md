@@ -1,23 +1,15 @@
 ---
-description: 在 web-2204 测试环境对当前改动做端到端验证：部署 → 清缓存 → browser-use 跑流程 → 汇报结果
+description: 在 web-2204 测试环境对当前改动做端到端验证：派 tester 子代理执行 部署 → 清缓存 → browser-use 跑流程，主会话只收结论
 argument-hint: 可选测试场景描述，如"存量用户登录不再跳welcome"
 ---
 
-按 HUSTOJ 测试规范在 web-2204 测试环境验证当前改动：
+对当前改动做端到端验证。**执行全部交给 tester 子代理，主会话不直接跑部署/浏览器/DB 命令**（测试中间输出大，落主会话上下文费 token）。
 
 **测试场景：** {{$1:（未指定场景，先向用户确认要验证什么行为）}}
 
-执行步骤：
+步骤：
 
-1. **确认改动范围**：`git diff --stat` 看本次改了哪些文件
-2. **同步到测试虚机**：先传到 /tmp（`multipass transfer [本地文件] web-2204:/tmp/[文件名]`），再 mv 到部署路径 `/home/judge/src/web/`
-3. **清缓存**：`multipass exec web-2204 -- sudo -S php -r 'opcache_reset();' <<< "judge"`（无需重启 php-fpm）
-4. **端到端验证**：用 browser-use skill 驱动页面，按场景走流程
-   - 普通用户：zezhang / zezhang123
-   - 管理员：admin / admin123
-5. **DB 状态核对**（按需）：用 Bash 只读查 `jol` 库确认字段/状态。**注意 jol 表是 MyISAM，勿用事务回滚测试**
-6. **汇报结果**：
-   - 通过：明确写"通过" + 关键验证点
-   - 失败：复现步骤 + 现象 + file:line 定位建议，交回主会话/coder 处理
-
-注意：只做验证与只读检查，不修改业务代码；测试中产生的测试数据在汇报里说明，由用户决定是否清理。
+1. **主会话**：`git diff --stat` 确认改动文件清单
+2. **派 tester 子代理**（Agent tool，subagent_type: tester），输入 = 测试场景 + 改动文件清单 + 验收标准（有 plan 文件附路径）
+3. **收结论**：tester 回传 通过（逐条验证点）或 失败（复现步骤 + 现象 + file:line 定位建议）
+4. **决策**：失败 → 主会话定位原因，打回 coder 修复后重测；通过 → 汇报用户放行

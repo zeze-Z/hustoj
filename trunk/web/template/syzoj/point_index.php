@@ -6,7 +6,7 @@
     <i class="dollar sign icon"></i>
     <div class="content">
       我的积分
-      <div class="sub header">积分用于购买课件，不支持提现，请按需充值。</div>
+      <div class="sub header">积分用于购买课件等教学资源，不支持提现，请按需充值。</div>
     </div>
   </h2>
 

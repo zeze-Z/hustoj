@@ -89,6 +89,29 @@ function send_order_feishu_notify($course, $user_id, $order_no, $license_type, $
 }
 
 /**
+ * 积分商品兑换订单通知（离线游戏授权包等 goods 类商品）。
+ * 不发送 license_code 等交付物内容（同卡密规则，敏感信息不得进入通知）。
+ */
+function send_goods_order_feishu_notify($goods, $user_id, $order_no, $point_amount, $school_name, $room_name, $expire_date, $balance) {
+    $product_key = isset($goods['product_key']) ? (string)$goods['product_key'] : '';
+    $title = isset($goods['title']) ? mb_substr((string)$goods['title'], 0, 120) : ('商品#' . $product_key);
+
+    $lines = [
+        _point_feishu_line('用户', $user_id),
+        _point_feishu_line('订单号', $order_no),
+        _point_feishu_line('商品', $title . '（' . $product_key . '）'),
+        _point_feishu_line('消耗积分', intval($point_amount)),
+    ];
+    if ($school_name !== '' && $room_name !== '') {
+        $lines[] = _point_feishu_line('学校/机房', $school_name . ' - ' . $room_name);
+    }
+    $lines[] = _point_feishu_line('有效期至', $expire_date);
+    $lines[] = _point_feishu_line('当前余额', intval($balance));
+
+    return _point_feishu_notify('积分商品兑换成功', implode("\n", $lines), 'info');
+}
+
+/**
  * 积分充值卡生成成功通知（不发送 card_secret）。
  */
 function send_point_card_generate_success_notify($batch_no, $count, $admin_id = '') {

@@ -269,6 +269,9 @@ try {
 
     point_tx_commit();
 
+    // 兑换成功飞书通知（commit 后发送，失败静默不影响主业务；不发送 license_code）
+    send_goods_order_feishu_notify($goods, $user_id, $order_no, $point_amount, $store_school, $store_room, $expire_date, $apply['balance']);
+
     // 返回成功结果
     echo json_encode([
         'code' => 0,

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # 清理测试账号离线游戏包购买记录脚本
 # 功能：清空 point_goods_order 表中的测试记录，并退还扣除的积分
@@ -31,18 +31,18 @@ echo ""
 echo "正在查询待清理的离线游戏包购买记录..."
 
 if [ "$MODE" = "user" ]; then
-    echo -e "\n===== point_goods_order表记录（用户: $USER_ID）====="
+    printf '\n===== point_goods_order表记录（用户: %s）=====\n' "$USER_ID"
     mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT id, user_id, school_name, room_name, order_no, point_amount, create_time FROM point_goods_order WHERE user_id = '$USER_ID' ORDER BY create_time DESC;"
     RECORD_COUNT=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT COUNT(*) FROM point_goods_order WHERE user_id = '$USER_ID';" | tail -1)
     TOTAL_POINTS=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT COALESCE(SUM(point_amount), 0) FROM point_goods_order WHERE user_id = '$USER_ID';" | tail -1)
 else
-    echo -e "\n===== point_goods_order表全部记录 ====="
+    printf '\n===== point_goods_order表全部记录 =====\n'
     mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT id, user_id, school_name, room_name, order_no, point_amount, create_time FROM point_goods_order ORDER BY create_time DESC;"
     RECORD_COUNT=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT COUNT(*) FROM point_goods_order;" | tail -1)
     TOTAL_POINTS=$(mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "SELECT COALESCE(SUM(point_amount), 0) FROM point_goods_order;" | tail -1)
 fi
 
-echo -e "\n待清理的记录总数：$RECORD_COUNT 条"
+printf '\n待清理的记录总数：%s 条\n' "$RECORD_COUNT"
 echo "待退还的积分总数：$TOTAL_POINTS 分"
 
 if [ "$RECORD_COUNT" = "0" ]; then
@@ -51,7 +51,8 @@ if [ "$RECORD_COUNT" = "0" ]; then
 fi
 
 # 2. 确认是否执行清理
-read -p "确认执行清理操作（删除订单 + 退还 $TOTAL_POINTS 积分）？(y/N): " CONFIRM
+printf '%s' "确认执行清理操作（删除订单 + 退还 $TOTAL_POINTS 积分）？(y/N): "
+read CONFIRM
 if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
     echo "取消清理操作"
     exit 0
@@ -75,10 +76,13 @@ if [ "$MODE" = "user" ]; then
 
     # 记录积分退还日志（每笔订单一条记录，按订单实际扣费 point_amount 退还）
     echo "正在记录积分退还日志..."
-    while read -r ORDER_NO ORDER_POINTS; do
+    # 用管道替代 bash 专属的 here-string(<<<)，保证 sh/bash 均可执行；
+    # 管道 while 在子 shell 中运行，但循环仅执行 mysql 写库（数据库副作用不受影响），
+    # 循环变量 ORDER_NO/ORDER_POINTS 为循环局部，后续代码均不依赖，故子 shell 隔离无影响
+    echo "$ORDER_DATA" | while read -r ORDER_NO ORDER_POINTS; do
         [ -z "$ORDER_NO" ] && continue
         mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -e "INSERT INTO point_log (user_id, change_point, balance, type, relation_id, remark) VALUES ('$USER_ID', $ORDER_POINTS, (SELECT point FROM users WHERE user_id = '$USER_ID'), 6, '$ORDER_NO', '测试数据清理：退还积分商品兑换积分');"
-    done <<< "$ORDER_DATA"
+    done
 else
     # 清空全部模式
     # 获取所有订单号

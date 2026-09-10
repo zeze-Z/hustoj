@@ -17,6 +17,9 @@ tools: Read, Edit, Write, Glob, Grep, Bash
 - 先读 plan 文件确认改动范围与验收标准；发现 plan 与代码现状不符时停下回报
 - 只读探索优先 Grep/Glob，避免全量 Read
 
+自测：
+- `php -l` 必须在虚机跑（本机无 PHP）；部署方式先读 `.claude/skills/deploy-test-env/SKILL.md`
+
 完成后汇报（结构化，3 行左右）：
 - 改了哪些文件（file:line）
 - 如何自测（命令 + 结果）

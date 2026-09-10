@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fps version="1.0">
+    <item>
+        <title>GESP2026.06-L1-P1 去旅行</title>
+        <score>25</score>
+        <time_limit>1</time_limit>
+        <memory_limit>512</memory_limit>
+        <description><![CDATA[
+快暑假了，小杨同学正在计划出去旅行，前往目的地的方案多种多样，小杨同学想知道如何前往目的地最便宜。
+
+小杨同学住在 A 市，旅行目的地是 B 市，小杨同学前往目的地有三种方案：
+
+1. 从 A 市直飞 B 市；
+2. 从 A 市坐高铁到 C 市，然后坐飞机到 B 市；
+3. 从 A 市坐高铁到 C 市，然后坐高铁到 B 市。
+
+请帮小杨同学求出最便宜的出行方案的价格。
+        ]]></description>
+        <input><![CDATA[
+输入包含 4 行，每行一个正整数：
+第 1 行的正整数表示「从 A 市直飞 B 市」的价格；
+第 2 行的正整数表示「从 A 市坐高铁到 C 市」的价格；
+第 3 行的正整数表示「从 C 市坐飞机到 B 市」的价格；
+第 4 行的正整数表示「从 C 市坐高铁到 B 市」的价格。
+        ]]></input>
+        <output><![CDATA[
+输出一个正整数，表示 3 种方式中，最便宜的出行方案的价格。
+        ]]></output>
+        <sample_input>999
+105
+699
+588</sample_input>
+        <sample_output>693</sample_output>
+        <hint><![CDATA[
+样例1：直飞 999；高铁+飞机 105+699=804；高铁+高铁 105+588=693。最便宜的价格是 693。
+
+样例2（输入 9/3/8/7）：直飞 9；高铁+飞机 3+8=11；高铁+高铁 3+7=10。最便宜的价格是 9。
+
+数据范围：所有输入均为正整数，且不超过 10000。
+        ]]></hint>
+        <source>GESP-2026.06 一级 分支结构 最值</source>
+        <difficulty>1</difficulty>
+        <test_input name="test1"><![CDATA[999
+105
+699
+588]]></test_input>
+        <test_output name="test1"><![CDATA[693]]></test_output>
+        <test_input name="test2"><![CDATA[9
+3
+8
+7]]></test_input>
+        <test_output name="test2"><![CDATA[9]]></test_output>
+        <test_input name="test3"><![CDATA[100
+100
+100
+100]]></test_input>
+        <test_output name="test3"><![CDATA[100]]></test_output>
+        <test_input name="test4"><![CDATA[1000
+100
+200
+300]]></test_input>
+        <test_output name="test4"><![CDATA[300]]></test_output>
+        <test_input name="test5"><![CDATA[10000
+10000
+10000
+10000]]></test_input>
+        <test_output name="test5"><![CDATA[10000]]></test_output>
+        <test_input name="test6"><![CDATA[500
+100
+150
+150]]></test_input>
+        <test_output name="test6"><![CDATA[250]]></test_output>
+        <test_input name="test7"><![CDATA[1
+1
+1
+1]]></test_input>
+        <test_output name="test7"><![CDATA[1]]></test_output>
+        <test_input name="test8"><![CDATA[10000
+1
+1
+1]]></test_input>
+        <test_output name="test8"><![CDATA[2]]></test_output>
+    </item>
+
+    <item>
+        <title>GESP2026.06-L1-P2 交税</title>
+        <score>25</score>
+        <time_limit>1</time_limit>
+        <memory_limit>512</memory_limit>
+        <description><![CDATA[
+根据国家税收相关规定，劳务报酬需要按月预交个税，预交税率如下：
+
+1. 劳务报酬不超过 800 的，不需要预交个税；
+2. 劳务报酬超过 800 的，仅超过 800 的部分按照 20%（即 1/5）税率预交个税（不超过 800 的部分不需要预交个税）。
+
+例如，月劳务报酬为 1000.0，则按照规则 2 需要预交个税 (1000.0 - 800.0) × 20% = 40.00。
+
+现在给定小杨同学 12 个月的月度劳务报酬，请帮小杨同学计算他这 12 个月应预交个税的总和。
+        ]]></description>
+        <input><![CDATA[
+输入 12 行，每行一个浮点数，表示小杨同学 12 个月中每个月的劳务报酬。
+每个浮点数恰好有一位小数。
+        ]]></input>
+        <output><![CDATA[
+输出 1 行，一个浮点数，保留两位小数，表示小杨同学 12 个月应预交个税的总和。
+        ]]></output>
+        <sample_input>932.0
+1634.3
+1790.4
+2172.9
+378.1
+283.4
+2761.9
+3583.5
+10.1
+2324.9
+1111.6
+3812.3</sample_input>
+        <sample_output>2584.76</sample_output>
+        <hint><![CDATA[
+样例解释：
+1. 932.0 符合规则 2，超过 800 的部分为 132.0，预交 132.0 × 20% = 26.40；
+2. 1634.3 符合规则 2，超过 800 的部分为 834.3，预交 834.3 × 20% = 166.86；
+3. 1790.4 符合规则 2，超过 800 的部分为 990.4，预交 990.4 × 20% = 198.08；
+4. 2172.9 符合规则 2，超过 800 的部分为 1372.9，预交 1372.9 × 20% = 274.58；
+5. 378.1 符合规则 1，不需要预交个税；
+6. 283.4 符合规则 1，不需要预交个税；
+7. 2761.9 符合规则 2，超过 800 的部分为 1961.9，预交 1961.9 × 20% = 392.38；
+8. 3583.5 符合规则 2，超过 800 的部分为 2783.5，预交 2783.5 × 20% = 556.70；
+9. 10.1 符合规则 1，不需要预交个税；
+10. 2324.9 符合规则 2，超过 800 的部分为 1524.9，预交 1524.9 × 20% = 304.98；
+11. 1111.6 符合规则 2，超过 800 的部分为 311.6，预交 311.6 × 20% = 62.32；
+12. 3812.3 符合规则 2，超过 800 的部分为 3012.3，预交 3012.3 × 20% = 602.46。
+
+总和为 2584.76。
+
+数据范围：小杨同学每月劳务报酬收入均为正，且恰好有一位小数，且不超过 4000.0。
+        ]]></hint>
+        <source>GESP-2026.06 一级 循环 浮点数 条件判断</source>
+        <difficulty>1</difficulty>
+        <test_input name="test1"><![CDATA[932.0
+1634.3
+1790.4
+2172.9
+378.1
+283.4
+2761.9
+3583.5
+10.1
+2324.9
+1111.6
+3812.3]]></test_input>
+        <test_output name="test1"><![CDATA[2584.76]]></test_output>
+        <test_input name="test2"><![CDATA[500.0
+500.0
+500.0
+500.0
+500.0
+500.0
+500.0
+500.0
+500.0
+500.0
+500.0
+500.0]]></test_input>
+        <test_output name="test2"><![CDATA[0.00]]></test_output>
+        <test_input name="test3"><![CDATA[800.0
+800.0
+800.0
+800.0
+800.0
+800.0
+800.0
+800.0
+800.0
+800.0
+800.0
+800.0]]></test_input>
+        <test_output name="test3"><![CDATA[0.00]]></test_output>
+        <test_input name="test4"><![CDATA[800.1
+800.1
+800.1
+800.1
+800.1
+800.1
+800.1
+800.1
+800.1
+800.1
+800.1
+800.1]]></test_input>
+        <test_output name="test4"><![CDATA[0.24]]></test_output>
+        <test_input name="test5"><![CDATA[4000.0
+4000.0
+4000.0
+4000.0
+4000.0
+4000.0
+4000.0
+4000.0
+4000.0
+4000.0
+4000.0
+4000.0]]></test_input>
+        <test_output name="test5"><![CDATA[7680.00]]></test_output>
+        <test_input name="test6"><![CDATA[100.0
+100.0
+100.0
+100.0
+100.0
+100.0
+1000.0
+1000.0
+1000.0
+1000.0
+1000.0
+1000.0]]></test_input>
+        <test_output name="test6"><![CDATA[240.00]]></test_output>
+        <test_input name="test7"><![CDATA[800.5
+800.5
+800.5
+800.5
+800.5
+800.5
+800.5
+800.5
+800.5
+800.5
+800.5
+800.5]]></test_input>
+        <test_output name="test7"><![CDATA[1.20]]></test_output>
+    </item>
+</fps>
