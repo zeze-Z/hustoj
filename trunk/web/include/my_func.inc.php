@@ -1013,8 +1013,8 @@ function validate_course_cover_upload() {
 }
 
 /**
- * 压缩保存课件封面：统一压为最长边 ≤800px、体积 ≤20KB 的 JPEG，写 upload/course_cover/{course_id}.jpg
- * 压缩策略：先逐级降质量（82→70→…→10），仍超 20KB 再等比缩小尺寸（×0.85/轮）重压
+ * 压缩保存课件封面：统一压为最长边 ≤800px、体积 ≤10KB 的 JPEG，写 upload/course_cover/{course_id}.jpg
+ * 压缩策略：先逐级降质量（82→70→…→10），仍超 10KB 再等比缩小尺寸（×0.85/轮）重压
  * 输入：$_FILES['cover_image']（调用方需已通过 validate_course_cover_upload 校验）
  * @param int $course_id 课程ID
  * @return bool 是否成功（GD 未启用 / 解码失败 / 写盘失败均返回 false）
