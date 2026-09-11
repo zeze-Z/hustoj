@@ -97,6 +97,7 @@ try {
                     </td>
                     <td>
                         <a href="course_edit.php?id=<?php echo $row['id'] ?>"><?php echo $MSG_EDIT ?></a>
+                        | <a href="course_add.php?copy_from=<?php echo $row['id'] ?>">复制</a>
                         <?php if ($row['status'] == 1) { ?>
                             | <a href="#" onclick="changeStatus(<?php echo $row['id'] ?>, 0, '<?php echo $MSG_RESERVED ?>')"><?php echo $MSG_RESERVED ?></a>
                         <?php } else { ?>

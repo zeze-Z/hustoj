@@ -172,6 +172,25 @@ if (isset($_POST['do'])) {
 // 获取学科列表
 $sql = "SELECT * FROM `course_subject` WHERE `status` = 1 ORDER BY `sort_order` ASC, `id` ASC";
 $subject_list = pdo_query($sql);
+
+// 复制：从已有课件预填表单（title 加"（副本）"后缀，status 默认保留避免误上架）
+$copy_row = null;
+$copy_title = '';
+if (isset($_GET['copy_from'])) {
+    $copy_id = intval($_GET['copy_from']);
+    $copy_result = pdo_query("SELECT * FROM `course` WHERE `id` = ?", $copy_id);
+    if ($copy_result === -1) {
+        echo "<script>alert('数据库查询失败'); history.go(-1);</script>";
+        exit();
+    }
+    if (count($copy_result) == 0) {
+        echo "<script>alert('源课件不存在'); history.go(-1);</script>";
+        exit();
+    }
+    $copy_row = $copy_result[0];
+    // 截断到251字符，加"（副本）"后不超 varchar(255)
+    $copy_title = htmlentities(mb_substr($copy_row['title'] ?? '', 0, 251, 'UTF-8'), ENT_QUOTES, 'UTF-8') . '（副本）';
+}
 ?>
 
 <title><?php echo $view_title ?></title>
@@ -185,7 +204,7 @@ $subject_list = pdo_query($sql);
         <div class="form-group">
             <label class="col-sm-2 control-label"><?php echo $MSG_COURSE_TITLE ?> <span class="text-danger">*</span></label>
             <div class="col-sm-6">
-                <input type="text" name="title" class="form-control" placeholder="<?php echo $MSG_COURSE_TITLE ?>" maxlength="255" required>
+                <input type="text" name="title" class="form-control" value="<?php echo $copy_title ?>" placeholder="<?php echo $MSG_COURSE_TITLE ?>" maxlength="255" required>
             </div>
         </div>
 
@@ -195,7 +214,7 @@ $subject_list = pdo_query($sql);
                 <select name="subject_id" class="form-control" required>
                     <option value="">-- <?php echo $MSG_COURSE_SUBJECT ?> --</option>
                     <?php foreach ($subject_list as $subject): ?>
-                        <option value="<?php echo $subject['id'] ?>">
+                        <option value="<?php echo $subject['id'] ?>" <?php echo ($copy_row && $copy_row['subject_id'] == $subject['id']) ? 'selected' : '' ?>>
                             <?php echo htmlentities($subject['name'], ENT_QUOTES, 'UTF-8') ?>
                         </option>
                     <?php endforeach; ?>
@@ -206,28 +225,28 @@ $subject_list = pdo_query($sql);
         <div class="form-group">
             <label class="col-sm-2 control-label"><?php echo $MSG_TAGS ?></label>
             <div class="col-sm-6">
-                <input type="text" name="tags" class="form-control" placeholder="Tag1, Tag2, Tag3" maxlength="255">
+                <input type="text" name="tags" class="form-control" value="<?php echo $copy_row ? htmlentities($copy_row['tags'] ?? '', ENT_QUOTES, 'UTF-8') : '' ?>" placeholder="Tag1, Tag2, Tag3" maxlength="255">
             </div>
         </div>
 
         <div class="form-group">
             <label class="col-sm-2 control-label"><?php echo $MSG_LESSON_COUNT ?></label>
             <div class="col-sm-6">
-                <input type="number" name="lesson_count" class="form-control" value="0" min="0">
+                <input type="number" name="lesson_count" class="form-control" value="<?php echo $copy_row ? intval($copy_row['lesson_count']) : 0 ?>" min="0">
             </div>
         </div>
 
         <div class="form-group">
             <label class="col-sm-2 control-label"><?php echo $MSG_DESCRIPTION ?></label>
             <div class="col-sm-6">
-                <textarea name="description" class="form-control" rows="4"></textarea>
+                <textarea name="description" class="form-control" rows="4"><?php echo $copy_row ? htmlentities($copy_row['description'] ?? '', ENT_QUOTES, 'UTF-8') : '' ?></textarea>
             </div>
         </div>
 
         <div class="form-group">
             <label class="col-sm-2 control-label">完整预览版价格（积分，1积分=1元）</label>
             <div class="col-sm-6">
-                <input type="number" name="preview_price" class="form-control" value="0" min="0" step="1">
+                <input type="number" name="preview_price" class="form-control" value="<?php echo $copy_row ? intval($copy_row['preview_price']) : 0 ?>" min="0" step="1">
                 <small class="text-muted">0表示免费；大于0表示需消耗对应积分，1积分=1元</small>
             </div>
         </div>
@@ -235,7 +254,7 @@ $subject_list = pdo_query($sql);
         <div class="form-group">
             <label class="col-sm-2 control-label">原文件版价格（积分，1积分=1元）</label>
             <div class="col-sm-6">
-                <input type="number" name="source_price" class="form-control" value="0" min="0" step="1">
+                <input type="number" name="source_price" class="form-control" value="<?php echo $copy_row ? intval($copy_row['source_price']) : 0 ?>" min="0" step="1">
                 <small class="text-muted">0表示免费；大于0表示需消耗对应积分，1积分=1元</small>
             </div>
         </div>
@@ -244,10 +263,10 @@ $subject_list = pdo_query($sql);
             <label class="col-sm-2 control-label"><?php echo $MSG_STATUS ?></label>
             <div class="col-sm-6">
                 <label class="radio-inline">
-                    <input type="radio" name="status" value="1" checked> <?php echo $MSG_AVAILABLE ?>
+                    <input type="radio" name="status" value="1" <?php echo $copy_row ? '' : 'checked' ?>> <?php echo $MSG_AVAILABLE ?>
                 </label>
                 <label class="radio-inline">
-                    <input type="radio" name="status" value="0"> <?php echo $MSG_RESERVED ?>
+                    <input type="radio" name="status" value="0" <?php echo $copy_row ? 'checked' : '' ?>> <?php echo $MSG_RESERVED ?>
                 </label>
             </div>
         </div>
@@ -255,7 +274,7 @@ $subject_list = pdo_query($sql);
         <div class="form-group">
             <label class="col-sm-2 control-label"><?php echo $MSG_COURSEWARE ?> <?php echo $MSG_PREVIEW_URL ?></label>
             <div class="col-sm-6">
-                <input type="url" name="courseware_preview_url" class="form-control" placeholder="金山文档URL" maxlength="500">
+                <input type="url" name="courseware_preview_url" class="form-control" value="<?php echo $copy_row ? htmlentities($copy_row['courseware_preview_url'] ?? '', ENT_QUOTES, 'UTF-8') : '' ?>" placeholder="金山文档URL" maxlength="500">
                 <small class="text-muted">未购买用户可见的免费预览链接</small>
             </div>
         </div>
@@ -263,7 +282,7 @@ $subject_list = pdo_query($sql);
         <div class="form-group">
             <label class="col-sm-2 control-label"><?php echo $MSG_LESSON_PLAN ?> <?php echo $MSG_PREVIEW_URL ?></label>
             <div class="col-sm-6">
-                <input type="url" name="lesson_plan_preview_url" class="form-control" placeholder="金山文档URL" maxlength="500">
+                <input type="url" name="lesson_plan_preview_url" class="form-control" value="<?php echo $copy_row ? htmlentities($copy_row['lesson_plan_preview_url'] ?? '', ENT_QUOTES, 'UTF-8') : '' ?>" placeholder="金山文档URL" maxlength="500">
                 <small class="text-muted">未购买用户可见的免费预览链接</small>
             </div>
         </div>
@@ -271,7 +290,7 @@ $subject_list = pdo_query($sql);
         <div class="form-group">
             <label class="col-sm-2 control-label"><?php echo $MSG_COURSEWARE ?> <?php echo $MSG_FULL_PREVIEW_URL ?></label>
             <div class="col-sm-6">
-                <input type="url" name="courseware_full_preview_url" class="form-control" placeholder="金山文档完整版URL" maxlength="500">
+                <input type="url" name="courseware_full_preview_url" class="form-control" value="<?php echo $copy_row ? htmlentities($copy_row['courseware_full_preview_url'] ?? '', ENT_QUOTES, 'UTF-8') : '' ?>" placeholder="金山文档完整版URL" maxlength="500">
                 <small class="text-muted">购买预览版后用户可见的完整版课件预览链接</small>
             </div>
         </div>
@@ -279,7 +298,7 @@ $subject_list = pdo_query($sql);
         <div class="form-group">
             <label class="col-sm-2 control-label"><?php echo $MSG_LESSON_PLAN ?> <?php echo $MSG_FULL_PREVIEW_URL ?></label>
             <div class="col-sm-6">
-                <input type="url" name="lesson_plan_full_preview_url" class="form-control" placeholder="金山文档完整版URL" maxlength="500">
+                <input type="url" name="lesson_plan_full_preview_url" class="form-control" value="<?php echo $copy_row ? htmlentities($copy_row['lesson_plan_full_preview_url'] ?? '', ENT_QUOTES, 'UTF-8') : '' ?>" placeholder="金山文档完整版URL" maxlength="500">
                 <small class="text-muted">购买预览版后用户可见的完整版教案预览链接</small>
             </div>
         </div>
@@ -287,7 +306,7 @@ $subject_list = pdo_query($sql);
         <div class="form-group">
             <label class="col-sm-2 control-label"><?php echo $MSG_COURSEWARE ?> 原文件链接</label>
             <div class="col-sm-6">
-                <input type="url" name="courseware_link" class="form-control" placeholder="百度网盘/下载链接" maxlength="500">
+                <input type="url" name="courseware_link" class="form-control" value="<?php echo $copy_row ? htmlentities($copy_row['courseware_link'] ?? '', ENT_QUOTES, 'UTF-8') : '' ?>" placeholder="百度网盘/下载链接" maxlength="500">
                 <small class="text-muted">购买原文件权限后用户可见的下载链接</small>
             </div>
         </div>
@@ -295,7 +314,7 @@ $subject_list = pdo_query($sql);
         <div class="form-group">
             <label class="col-sm-2 control-label"><?php echo $MSG_LESSON_PLAN ?> 原文件链接</label>
             <div class="col-sm-6">
-                <input type="url" name="lesson_plan_link" class="form-control" placeholder="百度网盘/下载链接" maxlength="500">
+                <input type="url" name="lesson_plan_link" class="form-control" value="<?php echo $copy_row ? htmlentities($copy_row['lesson_plan_link'] ?? '', ENT_QUOTES, 'UTF-8') : '' ?>" placeholder="百度网盘/下载链接" maxlength="500">
                 <small class="text-muted">购买原文件权限后用户可见的下载链接</small>
             </div>
         </div>
@@ -303,7 +322,7 @@ $subject_list = pdo_query($sql);
         <div class="form-group">
             <label class="col-sm-2 control-label"><?php echo $MSG_LINK_EXPIRE_DATE ?></label>
             <div class="col-sm-6">
-                <input type="date" name="link_expire_date" class="form-control">
+                <input type="date" name="link_expire_date" class="form-control" value="<?php echo $copy_row ? htmlentities($copy_row['link_expire_date'] ?? '', ENT_QUOTES, 'UTF-8') : '' ?>">
             </div>
         </div>
 
