@@ -48,13 +48,28 @@ if (!empty($search_keyword)) {
 
 $where_sql = implode(" AND ", $where_conditions);
 
+// 分页
+$page_size = 20;
+$page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+if ($page < 1) $page = 1;
+$offset = ($page - 1) * $page_size;
+
+// 总记录数
+$count_sql = "SELECT COUNT(*) FROM course c WHERE $where_sql";
+$total = pdo_query($count_sql, ...$params);
+$total = $total[0][0];
+$total_pages = $total > 0 ? intval(ceil($total / $page_size)) : 1;
+if ($page > $total_pages) $page = $total_pages;
+$offset = ($page - 1) * $page_size;
+
 // 查询课程列表（is_new 标记近30天内上架的课件）
 $sql = "SELECT c.*, s.name as subject_name,
         (c.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)) AS is_new
         FROM course c
         INNER JOIN course_subject s ON c.subject_id = s.id
         WHERE $where_sql
-        ORDER BY c.sort_order ASC, c.id ASC";
+        ORDER BY c.sort_order ASC, c.id ASC
+        LIMIT $page_size OFFSET $offset";
 $courses = pdo_query($sql, ...$params);
 
 // 获取当前用户已购买的课程
@@ -82,6 +97,9 @@ $view_purchased = $purchased_courses;
 $view_current_subject = $subject_id;
 $view_current_tag = $tag_filter;
 $view_search_keyword = $search_keyword;
+$view_page = $page;
+$view_total_pages = $total_pages;
+$view_total_courses = $total;
 
 require("template/" . $OJ_TEMPLATE . "/course.php");
 

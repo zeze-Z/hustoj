@@ -55,6 +55,30 @@ cp "$SRC_CONF" "$CONF_DST"
 chmod 644 "$CONF_DST"   # 权限确定性兜底（cp 新建文件时继承源权限，显式归一 644 root:root）
 echo -e "${GREEN}nginx配置已写入${NC}"
 
+# 3.5 检测实际 PHP-FPM 版本并替换 fastcgi_pass 路径
+# 配置模板中 php7.4 为占位符，不同系统 PHP 版本可能不同（如 php8.1-fpm.sock）
+# 优先从运行中的 socket 文件检测；回退到 apt-cache 检测包版本
+# 优先版本特定 socket（php8.1-fpm.sock），回退通用软链接（php-fpm.sock）
+PHP_FPM_SOCK=$(ls /var/run/php/php[0-9]*-fpm.sock 2>/dev/null | head -1)
+if [ -z "$PHP_FPM_SOCK" ]; then
+    PHP_FPM_SOCK=$(ls /var/run/php/php-fpm.sock 2>/dev/null | head -1)
+fi
+if [ -n "$PHP_FPM_SOCK" ]; then
+    ACTUAL_SOCK=$(basename "$PHP_FPM_SOCK")
+    if [ "$ACTUAL_SOCK" != "php7.4-fpm.sock" ]; then
+        sed -i "s|php7.4-fpm.sock|$ACTUAL_SOCK|g" "$CONF_DST"
+        echo -e "${GREEN}检测到 PHP-FPM socket: $ACTUAL_SOCK，已自动替换 fastcgi_pass${NC}"
+    fi
+else
+    PHP_VER=$(apt-cache search php-fpm 2>/dev/null | grep -oe '[0-9]\.[0-9]' | head -1)
+    if [ -n "$PHP_VER" ] && [ "$PHP_VER" != "7.4" ]; then
+        sed -i "s|php7.4|php$PHP_VER|g" "$CONF_DST"
+        echo -e "${GREEN}检测到 PHP 版本: $PHP_VER，已自动替换 fastcgi_pass 路径${NC}"
+    else
+        echo -e "${YELLOW}未检测到 PHP-FPM，请确认 fastcgi_pass 路径是否正确（当前: php7.4-fpm.sock）${NC}"
+    fi
+fi
+
 # 前置提醒：配置里的 limit_conn 依赖 http 级 limit_conn_zone 定义（参考本目录 nginx.conf）
 if ! grep -q "limit_conn_zone" /etc/nginx/nginx.conf 2>/dev/null; then
     echo -e "${YELLOW}警告：/etc/nginx/nginx.conf 未定义 limit_conn_zone，nginx -t 可能报 unknown zone；请参考本目录 nginx.conf 的 http 块补充${NC}"

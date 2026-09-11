@@ -71,6 +71,7 @@ server {
         }
 
         # PHP解析配置 - 完全保留
+        # 注意：php7.4 为占位符，fix_nginx_conf.sh 部署时会自动检测并替换为实际版本
         location ~ \.php$ {
                 include snippets/fastcgi-php.conf;
                 fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;

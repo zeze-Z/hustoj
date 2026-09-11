@@ -178,6 +178,69 @@
     </div>
   <?php endif; ?>
 
+  <!-- 分页导航 -->
+  <?php if ($view_total_pages > 1): ?>
+    <?php
+      // 保留当前筛选参数，只替换 page
+      $base_params = array();
+      if ($view_current_subject > 0) $base_params['subject'] = $view_current_subject;
+      if (!empty($view_current_tag)) $base_params['tag'] = $view_current_tag;
+      if (!empty($view_search_keyword)) $base_params['search'] = $view_search_keyword;
+      $page_link = function($p) use ($base_params) {
+        $params = array_merge($base_params, array('page' => $p));
+        return 'course.php?' . http_build_query($params);
+      };
+      // 显示页码范围：当前页前后各 2 页，首尾必现
+      $start = max(1, $view_page - 2);
+      $end = min($view_total_pages, $view_page + 2);
+      if ($start > 1) $start = min($start, $end - 4 >= 1 ? $end - 4 : $start);
+      if ($end < $view_total_pages) $end = max($end, $start + 4 <= $view_total_pages ? $start + 4 : $end);
+      $start = max(1, $start);
+      $end = min($view_total_pages, $end);
+    ?>
+    <div style="text-align: center; margin: 20px 0;">
+      <div class="ui pagination menu" style="box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 8px;">
+        <?php if ($view_page > 1): ?>
+          <a class="item" href="<?php echo $page_link($view_page - 1); ?>">
+            <i class="angle left icon"></i>
+          </a>
+        <?php else: ?>
+          <a class="disabled item"><i class="angle left icon"></i></a>
+        <?php endif; ?>
+
+        <?php if ($start > 1): ?>
+          <a class="item" href="<?php echo $page_link(1); ?>">1</a>
+          <?php if ($start > 2): ?>
+            <div class="disabled item">...</div>
+          <?php endif; ?>
+        <?php endif; ?>
+
+        <?php for ($i = $start; $i <= $end; $i++): ?>
+          <a class="item <?php echo $i == $view_page ? 'active' : ''; ?>"
+             href="<?php echo $page_link($i); ?>"><?php echo $i; ?></a>
+        <?php endfor; ?>
+
+        <?php if ($end < $view_total_pages): ?>
+          <?php if ($end < $view_total_pages - 1): ?>
+            <div class="disabled item">...</div>
+          <?php endif; ?>
+          <a class="item" href="<?php echo $page_link($view_total_pages); ?>"><?php echo $view_total_pages; ?></a>
+        <?php endif; ?>
+
+        <?php if ($view_page < $view_total_pages): ?>
+          <a class="item" href="<?php echo $page_link($view_page + 1); ?>">
+            <i class="angle right icon"></i>
+          </a>
+        <?php else: ?>
+          <a class="disabled item"><i class="angle right icon"></i></a>
+        <?php endif; ?>
+      </div>
+      <div style="margin-top: 8px; color: #999; font-size: 0.85em;">
+        共 <?php echo $view_total_courses; ?> 个课件，第 <?php echo $view_page; ?>/<?php echo $view_total_pages; ?> 页
+      </div>
+    </div>
+  <?php endif; ?>
+
   <!-- 创作者入驻引导 -->
   <div class="ui segment" style="border-radius: 12px; margin-top: 20px; padding: 10px !important; background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border: 1px solid #667eea30;">
     <div style="text-align: center;">
