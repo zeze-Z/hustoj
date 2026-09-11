@@ -951,15 +951,20 @@ function get_user_course_permission($user_id, $course_id) {
 
 /**
  * 获取课件封面图相对路径（约定路径 upload/course_cover/{id}.jpg，上传时已统一压缩为 JPEG）
+ * URL 末尾带 ?v=文件修改时间 作为版本号：封面不变时 URL 稳定（浏览器可长期强缓存，不重复加载）；
+ * 封面被覆盖更新后 v 自动变化，URL 随之改变可立即拉取新图，避免旧缓存（需配合 nginx expires 强缓存）
  * @param int $course_id 课程ID
  * @return string web根相对路径，无封面返回空串
  */
 function get_course_cover($course_id) {
     $course_id = intval($course_id);
     if ($course_id <= 0) return '';
-    // 文件存在性用 __DIR__（= include/ 的上级即 web 根）判断，兼容 admin/ 目录下的调用（CWD 不同）
+    // 路径用 __DIR__（= include/ 的上级即 web 根）拼接，兼容 admin/ 目录下的调用（CWD 不同）
     $fs_path = __DIR__ . '/../upload/course_cover/' . $course_id . '.jpg';
-    return is_file($fs_path) ? 'upload/course_cover/' . $course_id . '.jpg' : '';
+    // 存在性判断与版本号合并为一次 filemtime stat：失败即文件不存在
+    $ver = @filemtime($fs_path);
+    if ($ver === false) return '';
+    return 'upload/course_cover/' . $course_id . '.jpg?v=' . $ver;
 }
 
 /**
