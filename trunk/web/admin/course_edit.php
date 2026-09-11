@@ -144,11 +144,32 @@ if (isset($_POST['do'])) {
         exit();
     }
 
+    // 封面图上传校验（可选字段；校验失败直接拒绝，不修改课程）
+    $cover = validate_course_cover_upload();
+    if ($cover['present'] && !$cover['ok']) {
+        echo "<script>alert('" . $cover['msg'] . "'); history.go(-1);</script>";
+        exit();
+    }
+
     $sql = "UPDATE `course` SET `title` = ?, `subject_id` = ?, `tags` = ?, `lesson_count` = ?, `description` = ?, `preview_price` = ?, `source_price` = ?, `status` = ?, `courseware_preview_url` = ?, `lesson_plan_preview_url` = ?, `courseware_full_preview_url` = ?, `lesson_plan_full_preview_url` = ?, `courseware_link` = ?, `lesson_plan_link` = ?, `link_expire_date` = ? WHERE `id` = ?";
 
     try {
         pdo_query($sql, $title, $subject_id, $tags, $lesson_count, $description, $preview_price, $source_price, $status, $courseware_preview_url, $lesson_plan_preview_url, $courseware_full_preview_url, $lesson_plan_full_preview_url, $courseware_link, $lesson_plan_link, $link_expire_date, $course_id);
-        echo "<script>alert('$MSG_EDIT $MSG_SUCCESS'); window.location.href='course_list.php';</script>";
+        // 封面操作优先级：新上传 > 删除复选框 > 保持原样
+        $cover_alert = '';
+        if ($cover['ok']) {
+            if (!function_exists('imagecreatefromstring')) {
+                $cover_alert = '，但服务器未启用 GD 图像库，封面未更新';
+            } elseif (!save_course_cover($course_id)) {
+                $cover_alert = '，但封面保存失败';
+            }
+        } elseif (isset($_POST['delete_cover'])) {
+            $cover_path = __DIR__ . '/../upload/course_cover/' . $course_id . '.jpg';
+            if (is_file($cover_path) && !@unlink($cover_path)) {
+                $cover_alert = '，但封面删除失败';
+            }
+        }
+        echo "<script>alert('$MSG_EDIT $MSG_SUCCESS$cover_alert'); window.location.href='course_list.php';</script>";
     } catch (Exception $e) {
         echo "<script>alert('$MSG_EDIT $MSG_FAILED: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "'); history.go(-1);</script>";
     }
@@ -165,7 +186,7 @@ $subject_list = pdo_query($sql);
 <center><h3><?php echo $view_title ?></h3></center>
 
 <div class="padding">
-    <form action="course_edit.php?id=<?php echo $course_id ?>" method="post" class="form-horizontal">
+    <form action="course_edit.php?id=<?php echo $course_id ?>" method="post" enctype="multipart/form-data" class="form-horizontal">
         <?php require_once("../include/set_post_key.php"); ?>
 
         <div class="form-group">
@@ -297,6 +318,23 @@ $subject_list = pdo_query($sql);
             <label class="col-sm-2 control-label"><?php echo $MSG_LINK_EXPIRE_DATE ?></label>
             <div class="col-sm-6">
                 <input type="date" name="link_expire_date" class="form-control" value="<?php echo $row['link_expire_date'] ?>">
+            </div>
+        </div>
+
+        <?php $current_cover = get_course_cover($course_id); ?>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">封面图</label>
+            <div class="col-sm-6">
+                <?php if ($current_cover): ?>
+                <div style="margin-bottom: 8px;">
+                    <img src="../<?php echo htmlspecialchars($current_cover, ENT_QUOTES, 'UTF-8') ?>" alt="当前封面" style="width: 120px; border-radius: 6px; border: 1px solid #ddd; display: block;">
+                </div>
+                <label style="font-weight: normal;">
+                    <input type="checkbox" name="delete_cover" value="1"> 删除封面
+                </label>
+                <?php endif; ?>
+                <input type="file" name="cover_image" accept="image/jpeg,image/png,image/webp">
+                <small class="text-muted">可选，上传新图将覆盖当前封面；jpg/png/webp，≤2MB，系统自动压缩为最长边800px的JPEG</small>
             </div>
         </div>
 

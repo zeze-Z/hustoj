@@ -23,7 +23,7 @@
     <?php include(dirname(__FILE__)."/js.php");?>
     <div class="footer">
         <div class="ui center aligned container">
-            <div>欢迎广大师生使用，问题咨询，商务合作，请联系客服QQ：<a href="https://wpa.qq.com/msgrd?v=3&uin=<?php echo htmlentities($OJ_CUSTOMER_QQ, ENT_QUOTES, 'UTF-8');?>&site=qq&menu=yes" target="_blank" style="color: inherit; text-decoration: underline;"><?php echo htmlentities($OJ_CUSTOMER_QQ, ENT_QUOTES, 'UTF-8');?></a> <a href="javascript:void(0);" onclick="copyFooterQQ(event)" style="color: inherit;">[复制]</a> ｜ <a href="<?php echo $path_fix?>teacher_guide.php" style="color: inherit;">学生账号开通指南</a></div>
+            <div>欢迎广大师生使用，问题咨询，商务合作，请联系客服QQ：<a href="https://wpa.qq.com/msgrd?v=3&uin=<?php echo htmlentities($OJ_CUSTOMER_QQ, ENT_QUOTES, 'UTF-8');?>&site=qq&menu=yes" target="_blank" style="color: inherit; text-decoration: underline;"><?php echo htmlentities($OJ_CUSTOMER_QQ, ENT_QUOTES, 'UTF-8');?></a> <a href="javascript:void(0);" onclick="copyFooterQQ(event)" style="color: inherit;">[复制]</a> ｜ <a href="<?php echo $path_fix?>teacher_guide.php" style="color: inherit; text-decoration: underline;">学生账号开通指南</a></div>
             <div style="margin-top: 8px; color: #aaa;">📱 关注小红书：@子昂老师 ITlizhi888 ｜ 获取更多教学资源动态</div>
             <!-- <div><?php echo $domain==$DOMAIN?$OJ_NAME:ucwords($OJ_NAME)."'s OJ"?> is powered by <a style="color: inherit !important;" class=" " title="GitHub"
                     target="_blank" rel="noreferrer noopener" href="https://github.com/zhblue/hustoj">HUSTOJ</a>, Theme

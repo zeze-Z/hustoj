@@ -138,11 +138,31 @@ if (isset($_POST['do'])) {
         exit();
     }
 
+    // 封面图上传校验（可选字段；校验失败直接拒绝，不创建课程）
+    $cover = validate_course_cover_upload();
+    if ($cover['present'] && !$cover['ok']) {
+        echo "<script>alert('" . $cover['msg'] . "'); history.go(-1);</script>";
+        exit();
+    }
+
     $sql = "INSERT INTO `course` (`title`, `subject_id`, `tags`, `lesson_count`, `description`, `preview_price`, `source_price`, `status`, `courseware_preview_url`, `lesson_plan_preview_url`, `courseware_full_preview_url`, `lesson_plan_full_preview_url`, `courseware_link`, `lesson_plan_link`, `link_expire_date`, `sort_order`, `created_at`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
 
     try {
-        pdo_query($sql, $title, $subject_id, $tags, $lesson_count, $description, $preview_price, $source_price, $status, $courseware_preview_url, $lesson_plan_preview_url, $courseware_full_preview_url, $lesson_plan_full_preview_url, $courseware_link, $lesson_plan_link, $link_expire_date, $sort_order);
-        echo "<script>alert('$MSG_ADD $MSG_SUCCESS'); window.location.href='course_list.php';</script>";
+        $new_id = pdo_query($sql, $title, $subject_id, $tags, $lesson_count, $description, $preview_price, $source_price, $status, $courseware_preview_url, $lesson_plan_preview_url, $courseware_full_preview_url, $lesson_plan_full_preview_url, $courseware_link, $lesson_plan_link, $link_expire_date, $sort_order);
+        if (!($new_id > 0)) {
+            echo "<script>alert('$MSG_ADD $MSG_FAILED'); history.go(-1);</script>";
+            exit();
+        }
+        // 课程创建成功后按新ID压缩落盘封面；失败不回滚课程，仅追加警告
+        $cover_alert = '';
+        if ($cover['ok']) {
+            if (!function_exists('imagecreatefromstring')) {
+                $cover_alert = '，但服务器未启用 GD 图像库，封面未保存';
+            } elseif (!save_course_cover($new_id)) {
+                $cover_alert = '，但封面保存失败';
+            }
+        }
+        echo "<script>alert('$MSG_ADD $MSG_SUCCESS$cover_alert'); window.location.href='course_list.php';</script>";
     } catch (Exception $e) {
         echo "<script>alert('$MSG_ADD $MSG_FAILED: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "'); history.go(-1);</script>";
     }
@@ -159,7 +179,7 @@ $subject_list = pdo_query($sql);
 <center><h3><?php echo $view_title ?></h3></center>
 
 <div class="padding">
-    <form action="course_add.php" method="post" class="form-horizontal">
+    <form action="course_add.php" method="post" enctype="multipart/form-data" class="form-horizontal">
         <?php require_once("../include/set_post_key.php"); ?>
 
         <div class="form-group">
@@ -284,6 +304,14 @@ $subject_list = pdo_query($sql);
             <label class="col-sm-2 control-label"><?php echo $MSG_LINK_EXPIRE_DATE ?></label>
             <div class="col-sm-6">
                 <input type="date" name="link_expire_date" class="form-control">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label">封面图</label>
+            <div class="col-sm-6">
+                <input type="file" name="cover_image" accept="image/jpeg,image/png,image/webp">
+                <small class="text-muted">可选，建议课件首页导出图；jpg/png/webp，≤2MB，系统自动压缩为最长边800px的JPEG</small>
             </div>
         </div>
 

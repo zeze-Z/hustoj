@@ -950,6 +950,158 @@ function get_user_course_permission($user_id, $course_id) {
 }
 
 /**
+ * 获取课件封面图相对路径（约定路径 upload/course_cover/{id}.jpg，上传时已统一压缩为 JPEG）
+ * @param int $course_id 课程ID
+ * @return string web根相对路径，无封面返回空串
+ */
+function get_course_cover($course_id) {
+    $course_id = intval($course_id);
+    if ($course_id <= 0) return '';
+    // 文件存在性用 __DIR__（= include/ 的上级即 web 根）判断，兼容 admin/ 目录下的调用（CWD 不同）
+    $fs_path = __DIR__ . '/../upload/course_cover/' . $course_id . '.jpg';
+    return is_file($fs_path) ? 'upload/course_cover/' . $course_id . '.jpg' : '';
+}
+
+/**
+ * 校验上传的课件封面图（扩展名白名单 / 大小 / is_uploaded_file / $_FILES error 码）
+ * @return array array('present'=>bool 是否选择了文件, 'ok'=>bool 是否通过校验, 'msg'=>string 失败原因)
+ */
+function validate_course_cover_upload() {
+    $result = array('present' => false, 'ok' => false, 'msg' => '');
+    if (!isset($_FILES['cover_image']) || !is_array($_FILES['cover_image'])
+        || !isset($_FILES['cover_image']['error'])) {
+        return $result; // 无上传字段，视为未选择
+    }
+    $err = intval($_FILES['cover_image']['error']);
+    if ($err == UPLOAD_ERR_NO_FILE) {
+        return $result; // error 4 = 未选文件，跳过
+    }
+    if ($err != UPLOAD_ERR_OK) {
+        $result['msg'] = '封面图片上传失败（错误码 ' . $err . '），请重试或检查文件大小是否超过服务器限制';
+        return $result;
+    }
+    $result['present'] = true;
+    $tmp = $_FILES['cover_image']['tmp_name'];
+    if (!is_uploaded_file($tmp)) {
+        $result['msg'] = '封面图片上传校验失败，请重试';
+        return $result;
+    }
+    if ($_FILES['cover_image']['size'] > 2 * 1024 * 1024) {
+        $result['msg'] = '封面图片不能超过 2MB';
+        return $result;
+    }
+    $ext = strtolower(pathinfo($_FILES['cover_image']['name'], PATHINFO_EXTENSION));
+    if (!in_array($ext, array('jpg', 'jpeg', 'png', 'webp'))) {
+        $result['msg'] = '封面图片仅支持 jpg/jpeg/png/webp 格式';
+        return $result;
+    }
+    // GD 内容校验前置：解码失败即拒绝，避免课程先创建再告警（GD 不可用时跳过，留给保存阶段告警）
+    if (function_exists('imagecreatefromstring')) {
+        $bin = @file_get_contents($tmp);
+        if ($bin === false || $bin === '' || @imagecreatefromstring($bin) === false) {
+            $result['msg'] = '封面图片内容无效或已损坏，请上传正确的图片文件';
+            return $result;
+        }
+    }
+    $result['ok'] = true;
+    return $result;
+}
+
+/**
+ * 压缩保存课件封面：统一压为最长边 ≤800px 的 JPEG（quality 82），写 upload/course_cover/{course_id}.jpg
+ * 输入：$_FILES['cover_image']（调用方需已通过 validate_course_cover_upload 校验）
+ * @param int $course_id 课程ID
+ * @return bool 是否成功（GD 未启用 / 解码失败 / 写盘失败均返回 false）
+ */
+function save_course_cover($course_id) {
+    if (!function_exists('imagecreatefromstring')) return false; // GD 未启用
+    if (!isset($_FILES['cover_image']['tmp_name'])) return false;
+    $tmp = $_FILES['cover_image']['tmp_name'];
+    if (!is_uploaded_file($tmp)) return false;
+
+    $bin = @file_get_contents($tmp);
+    if ($bin === false || $bin === '') return false;
+    $src = @imagecreatefromstring($bin); // 解码失败即非合法图片（兼作内容校验）
+    unset($bin);
+    if (!$src) return false;
+
+    $src_w = imagesx($src);
+    $src_h = imagesy($src);
+
+    // EXIF 旋转纠正（仅 JPEG 源且 exif_read_data 可用）
+    $ext = strtolower(pathinfo($_FILES['cover_image']['name'], PATHINFO_EXTENSION));
+    if (in_array($ext, array('jpg', 'jpeg')) && function_exists('exif_read_data')) {
+        $exif = @exif_read_data($tmp);
+        $orientation = (is_array($exif) && isset($exif['Orientation'])) ? intval($exif['Orientation']) : 1;
+        $rotate_angle = 0; // imagerotate 为逆时针角度
+        $flip_mode = '';
+        switch ($orientation) {
+            case 2: $flip_mode = 'h'; break;          // 水平镜像
+            case 3: $rotate_angle = 180; break;       // 旋转180
+            case 4: $flip_mode = 'v'; break;          // 垂直镜像
+            case 5: $rotate_angle = -90; $flip_mode = 'h'; break; // 转置
+            case 6: $rotate_angle = -90; break;       // 需顺时针90
+            case 7: $rotate_angle = -90; $flip_mode = 'v'; break; // 反转置
+            case 8: $rotate_angle = 90; break;        // 需逆时针90
+        }
+        if ($rotate_angle != 0 && function_exists('imagerotate')) {
+            $rotated = imagerotate($src, $rotate_angle, 0);
+            if ($rotated) {
+                imagedestroy($src);
+                $src = $rotated;
+                $src_w = imagesx($src);
+                $src_h = imagesy($src);
+            }
+        }
+        if ($flip_mode != '' && function_exists('imageflip')) {
+            imageflip($src, $flip_mode == 'h' ? IMG_FLIP_HORIZONTAL : IMG_FLIP_VERTICAL);
+        }
+    }
+
+    // 等比缩到最长边 ≤800，不足不放大
+    $max_side = 800;
+    $long_side = max($src_w, $src_h);
+    if ($long_side > $max_side) {
+        $scale = $max_side / $long_side;
+        $dst_w = max(1, intval(round($src_w * $scale)));
+        $dst_h = max(1, intval(round($src_h * $scale)));
+    } else {
+        $dst_w = $src_w;
+        $dst_h = $src_h;
+    }
+
+    // 白底 truecolor 画布（PNG 透明底平铺白色后统一压 JPEG）
+    $dst = imagecreatetruecolor($dst_w, $dst_h);
+    if (!$dst) {
+        imagedestroy($src);
+        return false;
+    }
+    $white = imagecolorallocate($dst, 255, 255, 255);
+    imagefill($dst, 0, 0, $white);
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $dst_w, $dst_h, $src_w, $src_h);
+    imagedestroy($src);
+
+    // 目录保障（首次写入前自动创建 + index.html 防列举，与 upload/ 根目录做法一致）
+    $dir = __DIR__ . '/../upload/course_cover';
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true)) {
+        imagedestroy($dst);
+        return false;
+    }
+    if (!file_exists($dir . '/index.html')) {
+        @file_put_contents($dir . '/index.html', '');
+    }
+
+    // 文件名由服务端按 id 生成，无用户输入进路径
+    $dest = $dir . '/' . intval($course_id) . '.jpg';
+    $ok = imagejpeg($dst, $dest, 82);
+    if ($ok) {
+        @chmod($dest, 0644);
+    }
+    imagedestroy($dst);
+    return $ok;
+}
+
+/**
  * 计算课程应付金额
  * @param array $course 课程信息
  * @param int $license_type 权限类型 1=完整预览版 2=原文件版

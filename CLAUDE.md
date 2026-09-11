@@ -65,11 +65,12 @@
    - 输出 = 按严重度排序的问题清单 + `BLOCKING` / `NON-BLOCKING` 结论
    - `BLOCKING` → 主会话打回 coder 修复后复验；`NON-BLOCKING` → 放行并记入跟进
    - 分级：仅文案/样式/模板展示层且单文件、无 SQL/权限逻辑的改动，不派 reviewer，主会话按 reviewer.md 清单自查
-4. **端到端验证（tester 子代理，glm-5.3-flash）——与步骤3并行派发**
-   - 触发条件：改动涉及页面/流程/DB 行为，需真实环境验证时（即 `/test` 命令）
-   - 输入 = 测试场景 + 改动文件清单（有 plan 则附路径与验收标准）；只验证不修改业务代码
-   - 输出 = 通过（逐条验证点）/ 失败（复现步骤 + 现象 + file:line 定位建议）
-   - 主会话只派发与决策，不亲自跑部署/浏览器/DB 命令
+4. **端到端验证——与步骤3并行派发，按场景选路径**
+   - **浏览器 UI 流 → tester 子代理（glm-5.3-flash）**：需要 browser-use 交互操作（登录点击、表单填写、截图断言）的场景；prompt 保持精简（场景清单 + 账号 + 入口 URL + 一两条实测坑提示），不塞 curl 配方等无关信息（信息过载会让 flash 模型陷入重试循环，2026-09-11 两次卡死实测）
+   - 浏览器断言图片类元素注意 lazy-load 假阴性：`loading="lazy"` 的图（如课件封面）瞬时滚动后立即截图会误判未显示，须等真实加载（`naturalWidth > 0`）再断言（2026-09-11 实测）
+   - **后端 curl/脚本场景 → 主会话直接跑**：登录态 POST、上传/拒绝、DB 断言等按 deploy-test-env skill 的"curl 模拟配方"执行，脚本输出收敛为 PASS/FAIL 结论行；不要为此派 tester（主会话已具备全部信息与配方，中转无增益）
+   - tester 输出 = 通过（逐条验证点）/ 失败（复现步骤 + 现象 + file:line 定位建议）
+   - **卡死保险丝**：后台 tester 运行 10 分钟输出文件仍 0 字节 = 卡死，立即 TaskStop 由主会话接管（实测两次卡死各浪费 20+ 分钟）
    - reviewer 本地只读、tester 虚机部署互不依赖：coder 完成后同一消息双派发，墙钟减半
 
 ### 省 token 原则
@@ -77,7 +78,7 @@
 - 子代理只回传结论（file:line 级摘要），禁止整文件 dump 回主会话
 - 只读探索优先 Grep/Glob，避免全量 Read
 - 小改动（单行修复、样式微调）跳过 coder/reviewer，主会话直接改并用 `php -l` 自测
-- 端到端测试（部署、浏览器操作、截图等大输出操作）一律派 tester 子代理执行，中间输出不进主会话上下文
+- 浏览器操作、截图等大输出交互派 tester 子代理执行；后端 curl 验证主会话按 skill 配方直接跑（输出收敛为结论行，成本低于派 tester 的 prompt + 等待 + 卡死重试）
 - 一个需求一个会话：完成即 `/clear`，别把上一个需求的上下文带进下一个（主会话上下文是最大的 recurring token 开销）
 - 规划期的宽搜索（找全部用例、跨文件排查）派 Explore 子代理只回收结论，决策与方案留主线
 - 委派前先判断：这个子代理能否拿到主会话没有的信息？拿不到就不派
@@ -87,5 +88,5 @@
 - 测试虚机：web-2204，部署路径：/home/judge/src/web/，sudo密码：judge
 - 虚机执行命令格式：`multipass exec web-2204 -- sudo -S [shell命令] <<< "judge"`
 - 测试账号：教师用户zezhang/zezhang123，学生用户test/test123，管理员admin/admin123
-- 文件部署/缓存清理/`php -l`自测：按 `.claude/skills/deploy-test-env/SKILL.md` 执行（引擎 = 仓库根`deploy_test_env.sh`；模板/页面内容改动须`-f`重启php8.1-fpm清APCu缓存）
+- 文件部署/缓存清理/`php -l`自测/VM 内 curl 模拟登录与表单验证：按 `.claude/skills/deploy-test-env/SKILL.md` 执行（引擎 = 仓库根`deploy_test_env.sh`；模板/页面内容改动须`-f`重启php8.1-fpm清APCu缓存；虚机 IP 动态须`multipass list`查；页面级 GET 须带浏览器 UA，curl 默认 UA 会被 nginx 反爬 403；复杂脚本本地写文件+base64 传输，禁止内联 multipass exec）
 

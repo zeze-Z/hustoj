@@ -77,6 +77,13 @@
               </span>
               <?php endif; ?>
               <i class="book icon" style="font-size: 4em; color: rgba(255,255,255,0.9);"></i>
+              <?php if (!empty($course['cover_url'])): ?>
+              <img src="<?php echo htmlspecialchars($course['cover_url'], ENT_QUOTES, 'UTF-8'); ?>"
+                   alt="<?php echo htmlspecialchars($course['title'], ENT_QUOTES, 'UTF-8'); ?>"
+                   loading="lazy" decoding="async"
+                   style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;"
+                   onerror="this.style.display='none'">
+              <?php endif; ?>
             </div>
 
             <div class="content" style="padding: 15px;">

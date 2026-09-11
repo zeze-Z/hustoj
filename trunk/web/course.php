@@ -9,6 +9,7 @@ require_once('./include/const.inc.php');
 require_once('./include/cache_start.php');
 require_once('./include/setlang.php');
 require_once("./include/set_get_key.php");
+require_once('./include/my_func.inc.php');
 
 $page_title = "$MSG_COURSE_LIST - $OJ_NAME";
 
@@ -64,6 +65,13 @@ if (isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
     $order_result = pdo_query($order_sql, $user_id);
     foreach ($order_result as $order) {
         $purchased_courses[$order['course_id']] = true;
+    }
+}
+
+// 注入封面图路径（约定 upload/course_cover/{id}.jpg，无封面为空串，模板回退渐变+图标占位）
+if (is_array($courses)) {
+    foreach ($courses as $i => $c) {
+        $courses[$i]['cover_url'] = get_course_cover($c['id']);
     }
 }
 
