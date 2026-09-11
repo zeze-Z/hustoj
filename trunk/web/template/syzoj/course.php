@@ -49,13 +49,23 @@
   <?php endif; ?>
 
   <!-- 课程卡片列表 -->
+  <style>
+    /* 响应式列数：宽屏 5 列、中屏 4 列、手机 3 列 */
+    .course-grid > .column { width: 20% !important; }
+    @media (max-width: 1199px) {
+      .course-grid > .column { width: 25% !important; }
+    }
+    @media (max-width: 767px) {
+      .course-grid > .column { width: 33.3333% !important; }
+    }
+  </style>
   <?php if (empty($view_courses)): ?>
     <div style="text-align: center; padding: 60px 20px; color: #999;">
       <i class="book icon" style="font-size: 4em; margin-bottom: 15px; display: block;"></i>
       <p>海量优质课件正在赶来</p>
     </div>
   <?php else: ?>
-    <div class="ui four column stackable grid" style="margin-bottom: 20px;">
+    <div class="ui five column grid course-grid" style="margin-bottom: 20px;">
       <?php foreach ($view_courses as $course):
         $is_purchased = isset($view_purchased[$course['id']]);
         $preview_price = floatval($course['preview_price']);

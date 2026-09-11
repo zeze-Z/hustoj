@@ -334,7 +334,7 @@ $subject_list = pdo_query($sql);
                 </label>
                 <?php endif; ?>
                 <input type="file" name="cover_image" accept="image/jpeg,image/png,image/webp">
-                <small class="text-muted">可选，上传新图将覆盖当前封面；jpg/png/webp，≤2MB，系统自动压缩为最长边800px的JPEG</small>
+                <small class="text-muted">可选，上传新图将覆盖当前封面；jpg/png/webp，≤2MB，系统自动压缩为最长边800px、10KB左右的JPEG</small>
             </div>
         </div>
 

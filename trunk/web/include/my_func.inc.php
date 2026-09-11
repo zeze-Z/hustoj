@@ -1013,7 +1013,8 @@ function validate_course_cover_upload() {
 }
 
 /**
- * 压缩保存课件封面：统一压为最长边 ≤800px 的 JPEG（quality 82），写 upload/course_cover/{course_id}.jpg
+ * 压缩保存课件封面：统一压为最长边 ≤800px、体积 ≤20KB 的 JPEG，写 upload/course_cover/{course_id}.jpg
+ * 压缩策略：先逐级降质量（82→70→…→10），仍超 20KB 再等比缩小尺寸（×0.85/轮）重压
  * 输入：$_FILES['cover_image']（调用方需已通过 validate_course_cover_upload 校验）
  * @param int $course_id 课程ID
  * @return bool 是否成功（GD 未启用 / 解码失败 / 写盘失败均返回 false）
@@ -1098,7 +1099,47 @@ function save_course_cover($course_id) {
 
     // 文件名由服务端按 id 生成，无用户输入进路径
     $dest = $dir . '/' . intval($course_id) . '.jpg';
-    $ok = imagejpeg($dst, $dest, 82);
+
+    // 目标体积 ≤10KB：先逐级降质量（82→70→…→10），仍超限再等比缩小尺寸（×0.85/轮）重压
+    $target_bytes = 10 * 1024;
+    $scale = 1.0;       // 相对首次缩放后画布的进一步缩小比例
+    $ok = false;
+    $last_data = false; // 兜底：轮次耗尽仍未达标时写最后一次编码结果
+    for ($round = 0; $round < 12; $round++) {
+        $canvas = $dst;
+        $own_canvas = false;
+        if ($scale < 1.0) {
+            $cw = max(1, intval(round($dst_w * $scale)));
+            $ch = max(1, intval(round($dst_h * $scale)));
+            $canvas = imagecreatetruecolor($cw, $ch);
+            if (!$canvas) break;
+            $white2 = imagecolorallocate($canvas, 255, 255, 255);
+            imagefill($canvas, 0, 0, $white2);
+            imagecopyresampled($canvas, $dst, 0, 0, 0, 0, $cw, $ch, $dst_w, $dst_h);
+            $own_canvas = true;
+        }
+        $encoded = false;
+        $data = false;
+        for ($quality = 82; $quality >= 10; $quality -= 12) {
+            ob_start();
+            $encoded = imagejpeg($canvas, null, $quality);
+            $data = ob_get_clean();
+            if ($encoded && $data !== false && strlen($data) <= $target_bytes) break;
+        }
+        if ($own_canvas) imagedestroy($canvas);
+        if (!$encoded || $data === false) break;
+        $last_data = $data;
+        if (strlen($data) <= $target_bytes) {
+            $ok = @file_put_contents($dest, $data) !== false;
+            break;
+        }
+        // 质量已到下限仍超 10KB：缩小尺寸后重试
+        $scale *= 0.85;
+    }
+    if (!$ok && $last_data !== false) {
+        // 兜底：极端复杂图像可能达不到 10KB，写入最后一次编码结果
+        $ok = @file_put_contents($dest, $last_data) !== false;
+    }
     if ($ok) {
         @chmod($dest, 0644);
     }

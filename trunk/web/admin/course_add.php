@@ -330,7 +330,7 @@ if (isset($_GET['copy_from'])) {
             <label class="col-sm-2 control-label">封面图</label>
             <div class="col-sm-6">
                 <input type="file" name="cover_image" accept="image/jpeg,image/png,image/webp">
-                <small class="text-muted">可选，建议课件首页导出图；jpg/png/webp，≤2MB，系统自动压缩为最长边800px的JPEG</small>
+                <small class="text-muted">可选，建议课件首页导出图；jpg/png/webp，≤2MB，系统自动压缩为最长边800px、10KB左右的JPEG</small>
             </div>
         </div>
 
