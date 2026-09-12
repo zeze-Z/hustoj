@@ -79,6 +79,8 @@ $view_courseware_link = validatePreviewUrl($course['courseware_link']);
 $view_lesson_plan_link = validatePreviewUrl($course['lesson_plan_link']);
 
 // 模板变量
+// 封面复用列表页同一 URL（upload/course_cover/{id}.jpg?v=filemtime），无封面为空串，浏览器直接命中缓存
+$course['cover_url'] = get_course_cover($course['id']);
 $view_course = $course;
 $view_has_preview_license = $has_preview_license;
 $view_has_source_license = $has_source_license;
@@ -90,6 +92,8 @@ $view_has_full_lesson_plan = !empty($course['lesson_plan_full_preview_url']);
 $view_has_full_preview = $view_has_full_courseware || $view_has_full_lesson_plan;
 $view_preview_price = $preview_price;
 $view_source_price = $source_price;
+// 顶部信息卡只显示价格摘要（详细版本价格以下方版本卡为准，避免重复）
+$view_min_price = min($preview_price, $source_price);
 $view_upgrade_price = $upgrade_price; // 升级补差价金额（公共函数统一计算，避免负数）
 $view_is_free = $is_free;
 $view_has_source_resource = $permission['has_source_resource'];

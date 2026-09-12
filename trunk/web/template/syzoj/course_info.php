@@ -1,6 +1,21 @@
 <?php $show_title="$MSG_COURSE - $OJ_NAME"; ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
-<div class="padding">
+<style>
+/* 以下样式仅作用于课件详情页（.course-info-page 作用域），避免覆盖 Semantic UI 全局类 */
+.course-info-page .course-cover { min-height: 220px; }
+.course-info-page .course-actions { display: flex; flex-direction: column; justify-content: center; align-items: flex-end; }
+/* 课程内容卡片：两列 flex 纵向，卡片 flex:1 实现版本卡与资源卡行对行等高对齐 */
+.course-content-grid > .column { display: flex; flex-direction: column; }
+.course-content-grid > .column > .ui.card { flex: 1 1 0; width: 100%; min-width: 0; box-sizing: border-box; display: flex; flex-direction: column; }
+.course-content-grid > .column > .ui.card > .content { flex: 1 1 auto; }
+@media (max-width: 767px) {
+  /* stackable 栅格在 <768px 竖排：封面降高，操作按钮通栏 */
+  .course-info-page .course-cover { min-height: 170px; }
+  .course-info-page .course-actions { align-items: stretch; }
+  .course-info-page .course-actions .ui.button { width: 100%; }
+}
+</style>
+<div class="padding course-info-page">
 
   <!-- 返回按钮 -->
   <div style="margin-bottom: 15px;">
@@ -11,9 +26,23 @@
 
   <!-- 课程基本信息 -->
   <div class="ui segment" style="border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-    <div class="ui grid">
+    <div class="ui stackable grid">
       <div class="row">
-        <div class="ten wide column">
+        <!-- 课程封面：复用列表页同款渐变占位与缓存 URL（?v=filemtime），高度吃满信息行 -->
+        <div class="five wide column" style="display: flex;">
+          <div class="course-cover" style="position: relative; flex: 1 1 auto; width: 100%; height: 100%; border-radius: 10px; overflow: hidden; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <i class="book icon" style="font-size: 4em; color: rgba(255,255,255,0.9);"></i>
+            <?php if (!empty($view_course['cover_url'])): ?>
+            <img src="<?php echo htmlspecialchars($view_course['cover_url'], ENT_QUOTES, 'UTF-8'); ?>"
+                 alt="<?php echo htmlspecialchars($view_course['title'], ENT_QUOTES, 'UTF-8'); ?>"
+                 loading="lazy" decoding="async"
+                 style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;"
+                 onerror="this.style.display='none'">
+            <?php endif; ?>
+          </div>
+        </div>
+
+        <div class="six wide column" style="display: flex; flex-direction: column; justify-content: center;">
           <h1 class="ui header" style="margin-bottom: 10px;">
             <?php echo htmlspecialchars($view_course['title'], ENT_QUOTES, 'UTF-8'); ?>
           </h1>
@@ -36,36 +65,25 @@
             <?php endforeach; endif; ?>
           </div>
 
-          <!-- 价格和课时数 -->
-          <div style="margin-bottom: 15px; font-size: 1.1em;">
-            <i class="clock icon"></i>
-            <span><?php echo $MSG_LESSON_COUNT; ?>: <?php echo intval($view_course['lesson_count']); ?></span>
-
-            <?php if ($view_preview_price > 0 || $view_source_price > 0): ?>
-              <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
-                  <div style="background:#f0f0ff;padding:12px 16px;border-radius:8px;margin-bottom:10px;">
-                      <i class="info circle icon"></i>
-                      <a href="javascript:void(0)" onclick="showLoginPrompt()">登录</a> 或 <a href="registerpage.php">注册</a> 后可购买此课件
-                  </div>
-              <?php endif; ?>
-              <span style="margin: 0 15px; color: #ddd;">|</span>
-              <?php if ($view_preview_price > 0 && $view_source_price > 0): ?>
-                <span style="color: #667eea; font-weight: 600;">预览版：<?php echo intval($view_preview_price); ?> 积分</span>
-                <span style="margin: 0 10px; color: #ddd;">/</span>
-                <span style="color: #52c41a; font-weight: 600;">原文件版：<?php echo intval($view_source_price); ?> 积分</span>
-              <?php elseif ($view_preview_price > 0): ?>
-                <span style="color: #667eea; font-weight: 600;">预览版：<?php echo intval($view_preview_price); ?> 积分</span>
-              <?php else: ?>
-                <span style="color: #52c41a; font-weight: 600;">原文件版：<?php echo intval($view_source_price); ?> 积分</span>
-              <?php endif; ?>
+          <!-- 课时数与价格摘要（一行，nowrap 防折行；详细版本价格以下方版本卡为准） -->
+          <div style="font-size: 1.05em; color: #555; display: flex; align-items: center; flex-wrap: wrap; gap: 14px;">
+            <span style="white-space: nowrap;">
+              <i class="clock icon"></i><?php echo $MSG_LESSON_COUNT; ?>: <?php echo intval($view_course['lesson_count']); ?>
+            </span>
+            <span style="color: #ddd;">|</span>
+            <?php if ($view_is_free): ?>
+              <span style="color: #52c41a; font-weight: 600; white-space: nowrap;"><?php echo $MSG_FREE; ?></span>
+            <?php elseif ($view_has_full_preview && $view_preview_price == 0 && $view_source_price > 0): ?>
+              <span style="color: #52c41a; font-weight: 600; white-space: nowrap;">预览免费</span>
+            <?php elseif ($view_has_full_preview && $view_preview_price > 0 && $view_source_price > 0): ?>
+              <span style="color: #667eea; font-weight: 600; white-space: nowrap;"><?php echo intval($view_min_price); ?> 积分起</span>
             <?php else: ?>
-              <span style="margin: 0 15px; color: #ddd;">|</span>
-              <span style="color: #52c41a; font-weight: 600; font-size: 1.2em;"><?php echo $MSG_FREE; ?></span>
+              <span style="color: #667eea; font-weight: 600; white-space: nowrap;"><?php echo intval(max($view_preview_price, $view_source_price)); ?> 积分</span>
             <?php endif; ?>
           </div>
         </div>
 
-        <div class="six wide column right aligned">
+        <div class="five wide column course-actions right aligned">
           <!-- 操作按钮 -->
           <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id'])): ?>
             <a class="ui teal button" href="javascript:void(0)" onclick="showLoginPrompt()">登录后购买</a>
@@ -151,6 +169,28 @@
     $has_courseware = !empty($view_courseware_url) || !empty($view_course['courseware_link']);
     $has_lesson_plan = !empty($view_lesson_plan_url) || !empty($view_course['lesson_plan_link']);
     $has_resource = $has_courseware || $has_lesson_plan;
+    // 资源区状态化展示：解锁时用彩色“可点击”视觉（绿=可下载、紫蓝=仅预览），未解锁保持中性灰
+    $resource_header_icon = 'file text';
+    $resource_header_color = '#999';
+    $resource_header_text = '课程资源 · 点击查看/下载';
+    $resource_section_hint = '';
+    if ($view_has_source_license) {
+      $resource_header_icon = 'check circle';
+      $resource_header_color = '#52c41a';
+      $resource_header_text = '课程资源 · 已解锁，点击即可查看/下载';
+    } elseif ($view_has_preview_license) {
+      $resource_header_icon = 'check circle';
+      $resource_header_color = '#667eea';
+      $resource_header_text = '课程资源 · 已解锁预览，点击即可在线查看';
+      $has_any_source_link = !empty($view_course['courseware_link']) || !empty($view_course['lesson_plan_link']);
+      $resource_section_hint = $has_any_source_link ? '下载原文件需升级至原文件版' : '';
+    } else {
+      $has_any_trial = !empty($view_courseware_url) || !empty($view_lesson_plan_url);
+      $resource_section_hint = $has_any_trial ? '完整内容需在左侧解锁' : '购买后可访问';
+    }
+    // 资源卡配色随权限状态变化（与左侧版本卡颜色语言一致）
+    $resource_card_border = $view_has_source_license ? '#52c41a' : ($view_has_preview_license ? '#667eea' : '#eaeaea');
+    $resource_bar_bg = $view_has_source_license ? '#f0fff4' : ($view_has_preview_license ? '#f8f9ff' : '#fafafa');
   ?>
 
   <!-- 课程内容：版本与购买（左） + 资源访问（右） -->
@@ -159,7 +199,7 @@
       <i class="cube icon"></i> 课程内容
     </h3>
 
-    <div class="ui stackable grid" style="margin: 0;">
+    <div class="ui stackable grid course-content-grid" style="margin: 0;">
       <!-- ===== 左列：版本与购买 ===== -->
       <div class="<?php echo $has_resource ? 'eight' : 'sixteen'; ?> wide column" style="padding: 6px;">
         <?php if ($view_has_full_preview || $view_has_source_resource): ?>
@@ -321,18 +361,22 @@
         <?php endif; ?>
       </div>
 
-      <!-- ===== 右列：资源访问（中性卡片 + 状态小标签，不与左侧定价卡抢色） ===== -->
+      <!-- ===== 右列：资源访问（配色随权限状态变化：绿=可下载、紫蓝=仅预览、灰=未解锁） ===== -->
       <?php if ($has_resource): ?>
       <div class="eight wide column" style="padding: 6px;">
         <div style="font-size: 0.85em; color: #999; margin-bottom: 6px; padding-left: 2px;">
-          <i class="file text icon"></i> 课程资源 · 点击查看/下载
+          <i class="<?php echo $resource_header_icon; ?> icon" style="color: <?php echo $resource_header_color; ?>;"></i><?php echo htmlspecialchars($resource_header_text, ENT_QUOTES, 'UTF-8'); ?>
+          <?php if (!empty($resource_section_hint)): ?>
+            <span style="color: #bbb; margin: 0 4px;">·</span>
+            <span style="color: #999;"><i class="lock icon"></i><?php echo htmlspecialchars($resource_section_hint, ENT_QUOTES, 'UTF-8'); ?></span>
+          <?php endif; ?>
         </div>
 
         <!-- 课件资源行 -->
         <?php if ($has_courseware): ?>
-        <div class="ui card" style="width: 100%; margin: 0 0 8px 0; border-radius: 8px; box-shadow: none; border: 1px solid #eaeaea;">
-          <div class="content" style="padding: 12px 14px;">
-            <div style="display: flex; align-items: center; margin-bottom: 6px;">
+        <div class="ui card" style="width: 100%; margin: 0 0 8px 0; border-radius: 8px; box-shadow: none; border: 1px solid <?php echo $resource_card_border; ?>; display: flex; flex-direction: column;">
+          <div class="content" style="padding: 12px 14px; flex: 1 1 auto;">
+            <div style="display: flex; align-items: center;">
               <i class="file alternate outline icon" style="color: #667eea; margin-right: 6px;"></i>
               <span style="font-weight: 600; font-size: 1em;"><?php echo $MSG_COURSEWARE; ?></span>
               <?php if ($view_has_source_license): ?>
@@ -340,12 +384,14 @@
               <?php elseif ($view_has_preview_license): ?>
                 <div class="ui mini blue label" style="margin-left: auto;"><i class="checkmark icon"></i>已解锁 · 仅预览</div>
               <?php elseif (!empty($view_courseware_url)): ?>
-                <div class="ui mini orange label" style="margin-left: auto;">试看版</div>
+                <div class="ui mini orange label" style="margin-left: auto;">试看</div>
               <?php else: ?>
                 <div class="ui mini grey label" style="margin-left: auto;"><i class="lock icon"></i>未解锁</div>
               <?php endif; ?>
             </div>
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          </div>
+          <div class="extra content" style="padding: 10px 14px; background: <?php echo $resource_bar_bg; ?>; border-radius: 0 0 8px 8px; text-align: center; flex-shrink: 0;">
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;">
               <?php if ($view_has_source_license): ?>
                 <!-- 已购原文件版：完整预览 + 下载 -->
                 <?php if (!empty($view_courseware_full_preview_url)): ?>
@@ -370,23 +416,15 @@
                 <?php else: ?>
                   <span style="color: #52c41a; font-size: 0.9em;"><i class="checkmark icon"></i> 已拥有完整预览</span>
                 <?php endif; ?>
-                <?php if (!empty($view_course['courseware_link'])): ?>
-                  <div style="width: 100%; margin-top: 4px; color: #999; font-size: 0.8em;">
-                    <i class="lock icon"></i> 下载原文件需升级原文件版
-                  </div>
-                <?php endif; ?>
               <?php else: ?>
                 <!-- 未购：仅部分内容预览 -->
                 <?php if (!empty($view_courseware_url)): ?>
                   <a href="<?php echo htmlspecialchars($view_courseware_url, ENT_QUOTES, 'UTF-8'); ?>"
                      target="_blank" rel="noopener noreferrer" class="ui small basic primary button">
-                    <i class="external alternate icon"></i> 查看免费试看
+                    <i class="external alternate icon"></i> 免费试看
                   </a>
-                  <div style="width: 100%; margin-top: 4px; color: #999; font-size: 0.8em;">
-                    <i class="lock icon"></i> 完整内容需在左侧解锁
-                  </div>
                 <?php else: ?>
-                  <span style="color: #999; font-size: 0.9em;"><i class="lock icon"></i> 购买后可访问</span>
+                  <span style="color: #999; font-size: 0.9em;"><i class="lock icon"></i> 解锁后可查看</span>
                 <?php endif; ?>
               <?php endif; ?>
             </div>
@@ -396,22 +434,24 @@
 
         <!-- 教案资源行 -->
         <?php if ($has_lesson_plan): ?>
-        <div class="ui card" style="width: 100%; margin: 0; border-radius: 8px; box-shadow: none; border: 1px solid #eaeaea;">
-          <div class="content" style="padding: 12px 14px;">
-            <div style="display: flex; align-items: center; margin-bottom: 6px;">
-              <i class="book outline icon" style="color: #52c41a; margin-right: 6px;"></i>
+        <div class="ui card" style="width: 100%; margin: 0; border-radius: 8px; box-shadow: none; border: 1px solid <?php echo $resource_card_border; ?>; display: flex; flex-direction: column;">
+          <div class="content" style="padding: 12px 14px; flex: 1 1 auto;">
+            <div style="display: flex; align-items: center;">
+              <i class="book icon" style="color: #52c41a; margin-right: 6px;"></i>
               <span style="font-weight: 600; font-size: 1em;"><?php echo $MSG_LESSON_PLAN; ?></span>
               <?php if ($view_has_source_license): ?>
                 <div class="ui mini green label" style="margin-left: auto;"><i class="checkmark icon"></i>已解锁 · 可下载</div>
               <?php elseif ($view_has_preview_license): ?>
                 <div class="ui mini blue label" style="margin-left: auto;"><i class="checkmark icon"></i>已解锁 · 仅预览</div>
               <?php elseif (!empty($view_lesson_plan_url)): ?>
-                <div class="ui mini orange label" style="margin-left: auto;">试看版</div>
+                <div class="ui mini orange label" style="margin-left: auto;">试看</div>
               <?php else: ?>
                 <div class="ui mini grey label" style="margin-left: auto;"><i class="lock icon"></i>未解锁</div>
               <?php endif; ?>
             </div>
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          </div>
+          <div class="extra content" style="padding: 10px 14px; background: <?php echo $resource_bar_bg; ?>; border-radius: 0 0 8px 8px; text-align: center; flex-shrink: 0;">
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;">
               <?php if ($view_has_source_license): ?>
                 <?php if (!empty($view_lesson_plan_full_preview_url)): ?>
                   <a href="<?php echo htmlspecialchars($view_lesson_plan_full_preview_url, ENT_QUOTES, 'UTF-8'); ?>"
@@ -434,22 +474,14 @@
                 <?php else: ?>
                   <span style="color: #52c41a; font-size: 0.9em;"><i class="checkmark icon"></i> 已拥有完整预览</span>
                 <?php endif; ?>
-                <?php if (!empty($view_course['lesson_plan_link'])): ?>
-                  <div style="width: 100%; margin-top: 4px; color: #999; font-size: 0.8em;">
-                    <i class="lock icon"></i> 下载原文件需升级原文件版
-                  </div>
-                <?php endif; ?>
               <?php else: ?>
                 <?php if (!empty($view_lesson_plan_url)): ?>
                   <a href="<?php echo htmlspecialchars($view_lesson_plan_url, ENT_QUOTES, 'UTF-8'); ?>"
                      target="_blank" rel="noopener noreferrer" class="ui small basic primary button">
-                    <i class="external alternate icon"></i> 查看免费试看
+                    <i class="external alternate icon"></i> 免费试看
                   </a>
-                  <div style="width: 100%; margin-top: 4px; color: #999; font-size: 0.8em;">
-                    <i class="lock icon"></i> 完整内容需在左侧解锁
-                  </div>
                 <?php else: ?>
-                  <span style="color: #999; font-size: 0.9em;"><i class="lock icon"></i> 购买后可访问</span>
+                  <span style="color: #999; font-size: 0.9em;"><i class="lock icon"></i> 解锁后可查看</span>
                 <?php endif; ?>
               <?php endif; ?>
             </div>
@@ -479,9 +511,7 @@
   </div>
   <?php endif; ?>
 
-</div>
-
-  <!-- 创作者入驻引导 -->
+  <!-- 创作者入驻引导（置于 .padding 容器内，与其他卡片左右对齐） -->
   <div class="ui segment" style="border-radius: 12px; margin-top: 20px; padding: 10px !important; background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border: 1px solid #667eea30;">
     <div style="text-align: center;">
       <div style="font-size: 1.1em; margin-bottom: 4px; font-weight: 600; color: #333;">
@@ -498,6 +528,9 @@
       </div>
     </div>
   </div>
+
+</div>
+<!-- /.course-info-page -->
 
 
 <script>
