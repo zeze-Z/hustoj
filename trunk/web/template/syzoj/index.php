@@ -4,6 +4,20 @@
 $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
 ?>
 <link rel="stylesheet" href="<?php echo "template/$OJ_TEMPLATE";?>/css/slide.css">
+<style>
+/* 首页信息卡布局：无本月之星数据时，四张卡片全宽 2×2 排列，消除左侧空白 */
+.home-card + .home-card { margin-top: 20px; }
+.home-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    align-items: start;
+}
+.home-cards-grid .home-card { margin-top: 0; min-width: 0; }
+@media (max-width: 767px) {
+    .home-cards-grid { grid-template-columns: 1fr; }
+}
+</style>
 
 <div class="padding" style="padding-top: 15px;">
 
@@ -25,20 +39,6 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
         </div>
     </div>
     <?php } ?>
-
-    <!-- 教师入驻引导 -->
-    <div style="margin-bottom: 20px; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 16px 20px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
-            <div style="display: flex; align-items: center;">
-                <i class="graduation icon" style="color: white; font-size: 1.5em;"></i>
-                <div style="margin-left: 12px;">
-                    <strong style="color: white; font-size: 1.1em;">👨‍🏫 老师您好：想给全班学生开通账号？</strong>
-                    <p style="margin: 5px 0 0 0; color: rgba(255,255,255,0.9); font-size: 0.95em;">添加客服QQ，提供学生名单，3步完成批量开通</p>
-                </div>
-            </div>
-            <a href="teacher_guide.php" class="ui small button" style="background: white; color: #667eea; font-weight: 600;">查看开通指南</a>
-        </div>
-    </div>
 
     <!-- 功能介绍轮播图 -->
     <div style="margin-bottom: 25px;">
@@ -317,8 +317,6 @@ $is_logged_in = isset($_SESSION[$OJ_NAME.'_user_id']);
         </div>
     </div>
 
-    <div class="ui three column grid">
-        <div class="eleven wide column">
 <?php
 /* 本月之星  */
 function mask_text($text) {
@@ -333,12 +331,16 @@ function mask_text($text) {
     }
 }
 
-$month_id=mysql_query_cache("select solution_id from solution where  in_date<date_add(curdate(),interval -1 month) order by solution_id desc limit 1;");
+$month_id=mysql_query_cache("select solution_id from solution where in_date<date_add(curdate(),interval -1 month) order by solution_id desc limit 1;");
 if(!empty( $month_id) && isset($month_id[0][0]) ) $month_id=$month_id[0][0];else $month_id=0;
 $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_id)) ac from solution where solution_id>$month_id and problem_id>0  $not_in_noip_contests and user_id not in (".$OJ_RANK_HIDDEN.")  and result=4 group by user_id,nick order by ac desc limit 10");
-            if ( !empty($view_month_rank) ) {
-        ?>
-            <h4 class="ui top attached block header" style="border-radius: 12px 12px 0 0; margin-top: 20px;"><i class="ui star icon"></i><?php echo "本月之星"?></h4>
+// 是否有本月之星数据，决定底部信息区采用左右分栏还是全宽卡片网格
+$has_month_rank = !empty($view_month_rank);
+?>
+<?php if ($has_month_rank) { ?>
+    <div class="ui three column grid">
+        <div class="eleven wide column">
+            <h4 class="ui top attached block header" style="border-radius: 12px 12px 0 0;"><i class="ui star icon"></i><?php echo "本月之星"?></h4>
             <div class="ui bottom attached segment" style="border-radius: 0 0 12px 12px;">
                 <table class="ui very basic center aligned table" style="table-layout: fixed; ">
                     <thead>
@@ -374,13 +376,12 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                     </tbody>
                 </table>
             </div>
-        <?php
-            }
-/* 本月之星  */
-?>
-
         </div>
         <div class="right floated five wide column">
+<?php } else { ?>
+    <div class="home-cards-grid">
+<?php } ?>
+            <div class="home-card">
             <!-- 热门题目/未解之谜 -->
             <h4 class="ui top attached block header" style="border-radius: 12px 12px 0 0;"><i class="ui fire icon" style="color: #f0932b;"></i> <?php echo $is_logged_in ? $MSG_RECENT_PROBLEM : "热门题目";?> </h4>
             <div class="ui bottom attached segment" style="border-radius: 0 0 12px 12px;">
@@ -443,9 +444,11 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                     </tbody>
                 </table>
             </div>
+            </div>
 
+            <div class="home-card">
             <!-- 最新题目 -->
-            <h4 class="ui top attached block header" style="border-radius: 12px 12px 0 0; margin-top: 20px;"><i class="ui clock icon" style="color: #4ecdc4;"></i> 最新题目 </h4>
+            <h4 class="ui top attached block header" style="border-radius: 12px 12px 0 0;"><i class="ui clock icon" style="color: #4ecdc4;"></i> 最新题目 </h4>
             <div class="ui bottom attached segment" style="border-radius: 0 0 12px 12px;">
                 <table class="ui very basic center aligned table">
                     <thead>
@@ -476,8 +479,10 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                     </tbody>
                 </table>
             </div>
+            </div>
 
-            <h4 class="ui top attached block header" style="border-radius: 12px 12px 0 0; margin-top: 20px;"><i class="ui search icon"></i><?php echo $MSG_SEARCH;?></h4>
+            <div class="home-card">
+            <h4 class="ui top attached block header" style="border-radius: 12px 12px 0 0;"><i class="ui search icon"></i><?php echo $MSG_SEARCH;?></h4>
             <div class="ui bottom attached segment" style="border-radius: 0 0 12px 12px;">
                 <form action="problem.php" method="get">
                     <div class="ui search" style="width: 100%; ">
@@ -489,7 +494,10 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                     </div>
                 </form>
             </div>
-            <h4 class="ui top attached block header" style="border-radius: 12px 12px 0 0; margin-top: 20px;"><i class="ui calendar icon"></i><?php echo $MSG_RECENT_CONTEST ;?></h4>
+            </div>
+
+            <div class="home-card">
+            <h4 class="ui top attached block header" style="border-radius: 12px 12px 0 0;"><i class="ui calendar icon"></i><?php echo $MSG_RECENT_CONTEST ;?></h4>
             <div class="ui bottom attached center aligned segment" style="border-radius: 0 0 12px 12px;">
                 <table class="ui very basic center aligned table">
                     <thead>
@@ -515,8 +523,13 @@ $view_month_rank=mysql_query_cache("select user_id,nick,count(distinct(problem_i
                     </tbody>
                 </table>
             </div>
+            </div>
+<?php if ($has_month_rank) { ?>
         </div>
     </div>
+<?php } else { ?>
+    </div>
+<?php } ?>
 </div>
 
 <?php include("template/$OJ_TEMPLATE/footer.php");?>
