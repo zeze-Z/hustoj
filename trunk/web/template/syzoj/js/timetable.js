@@ -2,7 +2,8 @@
  * 课程表生成器 渲染引擎 v2
  * 依赖：qrcode.min.js（本地 vendor，生成二维码 canvas；缺失时角标只显示文案）
  * 主题配置的 grid 为百分比坐标（相对底图宽高）。新增主题流程：
- *   1. 两张底图放 image/course_schedule/themeN_{h,s}.jpg
+ *   1. 两张底图放 image/course_schedule/themeN_{h,s}.jpg，并生成同目录 _sd 标清副本
+ *      （themeN_{h,s}_sd.jpg，长边 1280px、q≈0.65；展示/预览/游客导出走 _sd，登录高清导出走原图）
  *   2. 在 TIMETABLE_THEMES 加草稿条目（坐标随意占位，行列数按实际填）
  *   3. 页面加 ?calibrate=1 拖拽校准 → 复制配置代码 → 整段贴回 TIMETABLE_THEMES
  */
@@ -189,6 +190,9 @@
         for (var i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) % 997;
         return palette[h % palette.length];
     }
+
+    // 标清图路径：themeN_h.jpg → themeN_h_sd.jpg（展示/预览/游客导出用，登录高清导出走原图）
+    function sdImg(src) { return src.replace(/\.jpg$/, '_sd.jpg'); }
 
     function loadImg(src) {
         if (imgCache[src]) return imgCache[src];
@@ -427,7 +431,8 @@
         var my = ++previewSeq;
         var t = currentTheme();
         var cfg = t[state.orient];
-        Promise.all([loadImg(cfg.img), ensureWebFont()]).then(function (res) {
+        // 预览用标清图：画布内部宽 ≥1400 由 canvas 放大补足，标清 1280 足够且省 3/4 流量
+        Promise.all([loadImg(sdImg(cfg.img)), ensureWebFont()]).then(function (res) {
             var img = res[0];
             if (my !== previewSeq) return;
             var canvas = $('tt-preview');
@@ -455,7 +460,9 @@
     function renderExportCanvas(badgeOn) {
         var t = currentTheme();
         var cfg = t[state.orient];
-        return Promise.all([loadImg(cfg.img), ensureWebFont()]).then(function (res) {
+        // 游客导出走标清图（阶梯上限 1200px，标清 1280 够用）；登录高清导出走原图（2 倍分辨率）
+        var exportSrc = TT_LOGGED_IN ? cfg.img : sdImg(cfg.img);
+        return Promise.all([loadImg(exportSrc), ensureWebFont()]).then(function (res) {
             var img = res[0];
             var natW = img.naturalWidth, natH = img.naturalHeight;
             var cv = document.createElement('canvas');
@@ -505,11 +512,19 @@
     }
 
     function exportImage() {
+        // 登录用户首次导出需现拉原图（预览用的是标清），按钮置生成中态防重复点击
+        var btn = $('tt-btn-export');
+        if (TT_LOGGED_IN && btn) { btn.disabled = true; btn.textContent = '正在生成高清图...'; }
+        var done = function () {
+            if (btn) { btn.disabled = false; btn.textContent = '🖼 生成并导出课程表'; }
+        };
         renderExportCanvas(true).then(function (out) {
+            done();
             if (!out) return; // 渲染失败已在内部 toast
             downloadCanvas(out.url, out.tag);
             showModal(out.url, out.px, out.tag, { qrfree: true });
         }).catch(function (err) {
+            done();
             toast(err && err.message ? err.message : '模板图加载失败');
         });
     }
@@ -625,7 +640,7 @@
             d.className = 'tt-theme-item' + (t.id === state.themeId ? ' active' : '');
             d.setAttribute('data-theme', t.id);
             var img = document.createElement('img');
-            img.src = t.h.img;
+            img.src = sdImg(t.h.img); // 缩略图走标清，避免首屏 6 张全尺寸图（~3.4MB）造成卡顿
             img.alt = t.name;
             img.loading = 'lazy';
             var nm = document.createElement('div');

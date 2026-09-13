@@ -494,6 +494,6 @@ var TT_BALANCE = <?php echo json_encode($tt_balance, $tt_json_flags); ?>;
 </script>
 <link rel="stylesheet" href="template/<?php echo $OJ_TEMPLATE?>/fonts/zcool-kuaile.css?v=1">
 <script src="template/<?php echo $OJ_TEMPLATE?>/js/qrcode.min.js"></script>
-<script src="template/<?php echo $OJ_TEMPLATE?>/js/timetable.js?v=0.8"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/js/timetable.js?v=0.9"></script>
 
 <?php include("template/$OJ_TEMPLATE/footer.php");?>

@@ -80,6 +80,17 @@ try {
 
     point_tx_commit();
 
+    // 飞书通知：课程表去码扣费成功（失败静默不影响主业务）
+    require_once('./include/feishu_notify.php');
+    feishu_notify(
+        '课程表去码导出',
+        "**用户**: {$user_id}\n" .
+        "**流水号**: {$ref}\n" .
+        "**消耗积分**: {$cost}\n" .
+        "**当前余额**: {$apply['balance']}",
+        'info'
+    );
+
     echo json_encode([
         'code' => 0,
         'msg' => 'ok',
