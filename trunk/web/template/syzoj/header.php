@@ -42,7 +42,8 @@
                   $url!='lostpassword.php'&&
                   $url!='lostpassword2.php'&&
                   $url!='registerpage.php'&&
-                  $url!='teacher_guide.php'
+                  $url!='teacher_guide.php'&&
+                  $url!='timetable.php'
                   ) && !isset($_SESSION[$OJ_NAME.'_'.'user_id'])){
            $redirect = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'index.php';
            header("location:".$path_fix."loginpage.php?redirect=".urlencode($redirect));
@@ -78,6 +79,7 @@
             'course_info.php',      // 课件详情（游客可查看，购买时再要求登录）
             'news.php',             // 动态列表
             'viewnews.php',         // 动态详情
+            'timetable.php',        // 课程表生成（游客可用，登录后导出高清版）
         ];
 
         // 游客模式访问限制

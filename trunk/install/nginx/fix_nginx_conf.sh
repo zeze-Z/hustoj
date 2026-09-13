@@ -134,6 +134,17 @@ fi
 请先安装并启动 php-fpm（如：apt install php-fpm && systemctl start php8.1-fpm）后再运行本脚本。"
 ok "将使用 PHP-FPM socket: $PHP_SOCK"
 
+# ---------- 4.5 旧版 nginx（如 Ubuntu22.04 自带 1.18）mime.types 缺 woff2，
+#           缺失时 woff2 以 application/octet-stream 返回，部分浏览器拒绝加载 Web 字体 ----------
+MIME_TYPES="/etc/nginx/mime.types"
+if [ -f "$MIME_TYPES" ] && ! grep -q 'woff2' "$MIME_TYPES"; then
+    info "mime.types 缺少 woff2 映射，补充 font/woff2 ..."
+    awk '/^\}/&&!d{print "    font/woff2                                woff2;";d=1} {print}' \
+        "$MIME_TYPES" > "$MIME_TYPES.tmp" && mv -f "$MIME_TYPES.tmp" "$MIME_TYPES" \
+        || die "mime.types 补充 woff2 失败"
+    ok "已补充 font/woff2 MIME 映射"
+fi
+
 # ---------- 5. 原子部署：先写临时文件并完成全部改写/校验，最后 mv 一次性替换 ----------
 info "部署nginx配置（$SRC_CONF → $CONF_DST）..."
 cp -f "$SRC_CONF" "$TMP_CONF" || die "写入临时配置失败：$TMP_CONF"

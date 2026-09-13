@@ -1288,7 +1288,7 @@ function grant_course_license($user_id, $course_id, $license_type, $order_info =
 //   point_card   : 充值卡（固定面额 10 积分）
 //   point_log    : 积分流水
 //                  type: 1=充值卡兑换, 2=课件购买, 3=管理员调整, 4=系统操作,
-//                        5=教师推广奖励, 6=积分商品兑换
+//                        5=教师推广奖励, 6=积分商品兑换, 7=课程表去码导出
 //
 // 设计约定：
 //   - 所有交易使用 InnoDB 事务 + SELECT ... FOR UPDATE
@@ -1308,6 +1308,7 @@ if (!defined('POINT_LOG_TYPE_ADMIN'))  define('POINT_LOG_TYPE_ADMIN',  3); // �
 if (!defined('POINT_LOG_TYPE_SYSTEM')) define('POINT_LOG_TYPE_SYSTEM', 4); // 系统操作
 if (!defined('POINT_LOG_TYPE_PROMO'))  define('POINT_LOG_TYPE_PROMO',  5); // 教师推广奖励
 if (!defined('POINT_LOG_TYPE_GOODS'))  define('POINT_LOG_TYPE_GOODS',  6); // 积分商品兑换
+if (!defined('POINT_LOG_TYPE_TIMETABLE_QRFREE')) define('POINT_LOG_TYPE_TIMETABLE_QRFREE', 7); // 课程表去码导出（按次扣分）
 
 /** 充值卡状态常量 */
 if (!defined('POINT_CARD_STATUS_UNUSED'))   define('POINT_CARD_STATUS_UNUSED',   0);

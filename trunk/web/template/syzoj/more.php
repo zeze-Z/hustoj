@@ -1643,6 +1643,23 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                 <div class="card-title">学生账号批量开通</div>
                 <div class="card-desc">教师专属通道：联系客服QQ，一次开通全班学生账号（适合班级/年级统一使用）</div>
             </a>
+            <a href="timetable.php" class="card">
+                <div class="card-icon" style="background: linear-gradient(135deg, #f59e0b, #f97316);">
+                    <svg viewBox="0 0 64 64">
+                        <rect x="10" y="16" width="44" height="38" rx="5" fill="none" stroke="#fff" stroke-width="4"/>
+                        <line x1="10" y1="28" x2="54" y2="28" stroke="#fff" stroke-width="4"/>
+                        <line x1="24" y1="12" x2="24" y2="20" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="40" y1="12" x2="40" y2="20" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+                        <circle cx="20" cy="38" r="3" fill="#fff"/>
+                        <circle cx="32" cy="38" r="3" fill="#fff"/>
+                        <circle cx="44" cy="38" r="3" fill="#fff"/>
+                        <circle cx="20" cy="47" r="3" fill="#fff"/>
+                        <circle cx="32" cy="47" r="3" fill="#fff"/>
+                    </svg>
+                </div>
+                <div class="card-title">课程表生成器</div>
+                <div class="card-desc">挑选主题模板，一键生成可打印课程表；登录后免费导出高清版，可 1 积分去除二维码</div>
+            </a>
         </div>
     </div>
     </div><!-- /panel-teacher -->

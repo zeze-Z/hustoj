@@ -262,13 +262,11 @@
       </div>
       <div style="font-size: 1em;">
         <i class="qq icon" style="color: #12b7f5;"></i>
-        咨询客服QQ：
-        <a href="tencent://message/?uin=2326077585" style="color: #12b7f5; font-weight: 600;">
-          2326077585
-        </a>
+        咨询客服QQ：<strong onclick="copyCustomerQQ(this)" title="点击复制QQ号" style="color: #12b7f5; cursor: pointer; text-decoration: underline dotted #12b7f5; text-underline-offset: 3px;"><?php echo htmlentities($OJ_CUSTOMER_QQ, ENT_QUOTES, 'UTF-8');?></strong>
       </div>
     </div>
   </div>
 
 </div>
+<?php /* 复制客服QQ的公共方法 copyCustomerQQ() 定义在 footer.php，全站复用 */ ?>
 <?php include("template/$OJ_TEMPLATE/footer.php");?>

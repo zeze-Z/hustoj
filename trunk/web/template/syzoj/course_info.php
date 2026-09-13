@@ -304,7 +304,7 @@
             </div>
             <?php if ($view_has_only_preview && !$view_has_source_license && $view_upgrade_price > 0): ?>
               <div style="margin-top: 6px; color: #888; font-size: 0.8em; line-height: 1.5;">
-                原文件版原价 <?php echo intval($view_source_price); ?> 积分，已抵扣完整预览版 <?php echo intval($view_preview_price); ?> 积分，本次仅补差价 <?php echo intval($view_upgrade_price); ?> 积分
+                原文件版原价 <?php echo intval($view_source_price); ?> 积分，完整预览版已支付 <?php echo intval($view_preview_price); ?> 积分，本次仅补差价 <?php echo intval($view_upgrade_price); ?> 积分
               </div>
             <?php endif; ?>
           </div>
@@ -522,9 +522,7 @@
       </div>
       <div style="font-size: 1em;">
         <i class="qq icon" style="color: #12b7f5;"></i>
-        咨询客服QQ：<strong><?php echo htmlentities($OJ_CUSTOMER_QQ, ENT_QUOTES, 'UTF-8');?></strong>
-        <button type="button" onclick="copyCinfoQQ(this)" style="margin-left: 6px; color: #12b7f5; border: 1px solid #12b7f5; background: #fff; border-radius: 4px; padding: 2px 10px; cursor: pointer; font-size: 0.85em;">复制QQ号</button>
-        <div style="font-size: 0.82em; color: #888; margin-top: 6px;">💡 请打开QQ软件，搜索上方QQ号添加咨询</div>
+        咨询客服QQ：<strong onclick="copyCustomerQQ(this)" title="点击复制QQ号" style="color: #12b7f5; cursor: pointer; text-decoration: underline dotted #12b7f5; text-underline-offset: 3px;"><?php echo htmlentities($OJ_CUSTOMER_QQ, ENT_QUOTES, 'UTF-8');?></strong>
       </div>
     </div>
   </div>
@@ -540,30 +538,6 @@ function showLoginPrompt() {
     var returnUrl = window.location.pathname + window.location.search;
     window.location.href = 'loginpage.php?redirect=' + encodeURIComponent(returnUrl);
 }
-// 一键复制客服QQ号
-function copyCinfoQQ(btn) {
-    var qq = "<?php echo htmlentities($OJ_CUSTOMER_QQ, ENT_QUOTES, 'UTF-8');?>";
-    var done = function () {
-        var old = btn.textContent;
-        btn.textContent = '已复制';
-        setTimeout(function () { btn.textContent = old; }, 1500);
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(qq).then(done).catch(function () { fbCinfoCopy(qq, done); });
-    } else {
-        fbCinfoCopy(qq, done);
-    }
-}
-function fbCinfoCopy(text, done) {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand('copy'); } catch (err) {}
-    document.body.removeChild(ta);
-    done();
-}
+// 复制客服QQ的公共方法 copyCustomerQQ() 定义在 footer.php，全站复用
 </script>
 <?php include("template/$OJ_TEMPLATE/footer.php");?>

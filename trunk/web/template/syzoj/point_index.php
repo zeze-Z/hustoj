@@ -93,6 +93,7 @@
         <option value="<?php echo POINT_LOG_TYPE_SYSTEM; ?>" <?php if ($view_type_filter == POINT_LOG_TYPE_SYSTEM) echo 'selected'; ?>>系统操作</option>
         <option value="<?php echo POINT_LOG_TYPE_PROMO; ?>" <?php if ($view_type_filter == POINT_LOG_TYPE_PROMO) echo 'selected'; ?>>推广奖励</option>
         <option value="<?php echo POINT_LOG_TYPE_GOODS; ?>" <?php if ($view_type_filter == POINT_LOG_TYPE_GOODS) echo 'selected'; ?>>积分商品</option>
+        <option value="<?php echo POINT_LOG_TYPE_TIMETABLE_QRFREE; ?>" <?php if ($view_type_filter == POINT_LOG_TYPE_TIMETABLE_QRFREE) echo 'selected'; ?>>课程表去码</option>
       </select>
     </div>
     <table class="ui small table">
@@ -116,6 +117,7 @@
             POINT_LOG_TYPE_SYSTEM => '系统操作',
             POINT_LOG_TYPE_PROMO => '推广奖励',
             POINT_LOG_TYPE_GOODS => '积分商品',
+            POINT_LOG_TYPE_TIMETABLE_QRFREE => '课程表去码',
           ];
           $license_map = [1 => '完整预览版', 2 => '原文件版'];
           foreach ($view_logs as $log):

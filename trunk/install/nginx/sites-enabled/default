@@ -68,6 +68,23 @@ server {
                 }
         }
 
+        # 课程表主题底图：append-only（新主题=新文件名），改图走 TIMETABLE_THEMES
+        # img 路径加 ?v= 破缓存（仓库惯例）；结构与 /upload/ 块一致
+        location ^~ /image/course_schedule/ {
+                expires 30d;
+                access_log off;
+                location ~* \.(php|phtml)$ {
+                        return 403;
+                }
+        }
+
+        # 课程表圆体字体：woff2 按 unicode-range 切片，文件名固定内容不可变，长期强缓存；
+        # zcool-kuaile.css 靠 ?v= 破缓存（timetable.php 引用处递增版本号）
+        location ^~ /template/syzoj/fonts/ {
+                expires 1y;
+                access_log off;
+        }
+
         # 离线游戏包目录：仅供积分兑换流程内部使用（许可证由 PHP 调 Python 生成、
         # 安装包走外链下载），无任何合法 HTTP 直访场景，整体 404 防直链白嫖与源码/工具泄露。
         # ^~ 阻止该目录下任何请求（含混入的 .php）进入后续正则 location

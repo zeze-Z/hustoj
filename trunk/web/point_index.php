@@ -44,6 +44,7 @@ $valid_types = [
     POINT_LOG_TYPE_SYSTEM,
     POINT_LOG_TYPE_PROMO,
     POINT_LOG_TYPE_GOODS,
+    POINT_LOG_TYPE_TIMETABLE_QRFREE,
 ];
 if (!in_array($type_filter, $valid_types, true)) {
     $type_filter = 0;
