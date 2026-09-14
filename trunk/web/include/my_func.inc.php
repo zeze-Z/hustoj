@@ -1309,6 +1309,7 @@ if (!defined('POINT_LOG_TYPE_SYSTEM')) define('POINT_LOG_TYPE_SYSTEM', 4); // �
 if (!defined('POINT_LOG_TYPE_PROMO'))  define('POINT_LOG_TYPE_PROMO',  5); // 教师推广奖励
 if (!defined('POINT_LOG_TYPE_GOODS'))  define('POINT_LOG_TYPE_GOODS',  6); // 积分商品兑换
 if (!defined('POINT_LOG_TYPE_TIMETABLE_QRFREE')) define('POINT_LOG_TYPE_TIMETABLE_QRFREE', 7); // 课程表去码导出（按次扣分）
+if (!defined('POINT_LOG_TYPE_SHARE_REWARD')) define('POINT_LOG_TYPE_SHARE_REWARD', 8); // 课程分享返佣
 
 /** 充值卡状态常量 */
 if (!defined('POINT_CARD_STATUS_UNUSED'))   define('POINT_CARD_STATUS_UNUSED',   0);
@@ -1416,19 +1417,38 @@ function point_add_log($user_id, $change, $balance, $type, $relation_id = null, 
 function point_apply_change($user_id, $delta, $type, $relation_id = null, $remark = null) {
     $delta = intval($delta);
     if ($delta === 0) {
-        return ['success' => false, 'message' => '积分变化不能为 0'];
+        return ['success' => false, 'message' => '积分变化不能为 0', 'recharged_used' => 0];
     }
     $current = point_lock_user($user_id);
     if ($current === false) {
-        return ['success' => false, 'message' => '用户不存在'];
+        return ['success' => false, 'message' => '用户不存在', 'recharged_used' => 0];
+    }
+
+    // point 是总余额，point_recharged 是其中可用于返佣的充值卡余额。
+    $wallet_rows = pdo_query("SELECT `point_recharged` FROM `users` WHERE user_id = ? FOR UPDATE", $user_id);
+    $recharged = empty($wallet_rows) ? 0 : max(0, intval($wallet_rows[0]['point_recharged']));
+    $recharged_used = 0;
+    if ($delta < 0) {
+        $cost = -$delta;
+        if ($current < $cost) {
+            return ['success' => false, 'message' => '积分余额不足', 'recharged_used' => 0];
+        }
+        $recharged_used = min($recharged, $cost);
+        $new_recharged = $recharged - $recharged_used;
+    } else {
+        $new_recharged = $recharged;
+        // 只有充值卡兑换和管理员正向调整属于充值钱包。
+        if ($type == POINT_LOG_TYPE_CARD || ($type == POINT_LOG_TYPE_ADMIN && $delta > 0)) {
+            $new_recharged += $delta;
+        }
     }
     $new_balance = $current + $delta;
     if ($new_balance < 0) {
-        return ['success' => false, 'message' => '积分余额不足'];
+        return ['success' => false, 'message' => '积分余额不足', 'recharged_used' => 0];
     }
-    pdo_query("UPDATE `users` SET `point` = ? WHERE user_id = ?", $new_balance, $user_id);
+    pdo_query("UPDATE `users` SET `point` = ?, `point_recharged` = ? WHERE user_id = ?", $new_balance, $new_recharged, $user_id);
     point_add_log($user_id, $delta, $new_balance, $type, $relation_id, $remark);
-    return ['success' => true, 'message' => 'ok', 'balance' => $new_balance];
+    return ['success' => true, 'message' => 'ok', 'balance' => $new_balance, 'recharged_used' => $recharged_used];
 }
 
 /**
@@ -1444,7 +1464,40 @@ function point_apply_change($user_id, $delta, $type, $relation_id = null, $remar
  */
 function point_goods_routes() {
     return [
-        'offline_game' => ['order_prefix' => 'OG', 'need_school_room' => true],
+        'offline_game'        => ['order_prefix' => 'OG', 'need_school_room' => true],
+        // 促销包：29积分任选3款，履约同为 license 类，授权码 JSON 额外携带 games 白名单
+        'offline_game_pick3'  => ['order_prefix' => 'GP', 'need_school_room' => true],
+    ];
+}
+
+/**
+ * 离线游戏目录：id 必须与离线包 games/{id}.html 文件名、js/auth.js 内映射保持一致。
+ * 用途：
+ *   1. point_goods_redeem.php 对促销包 games 入参做服务端白名单校验（安全边界）；
+ *   2. more.php 弹窗渲染"任选3款"游戏选择网格（名称/emoji/分类的唯一数据源）。
+ * 新增/下线游戏时三处需同步：本函数、离线包 index.html 卡片、auth.js 的 OG_GAME_NAMES。
+ *
+ * @return array 以游戏 id 为键的数组，值含 name（中文名）、emoji、cat（lower/upper/typing/other）
+ */
+function point_offline_game_catalog() {
+    return [
+        'puzzle_game'       => ['name' => '拼图游戏',     'emoji' => '🧩', 'cat' => 'lower'],
+        'clock_reading'     => ['name' => '时钟认读',     'emoji' => '🕐', 'cat' => 'lower'],
+        'math_game'         => ['name' => '数学闯关',     'emoji' => '🔢', 'cat' => 'lower'],
+        'color_match'       => ['name' => '颜色匹配',     'emoji' => '🎨', 'cat' => 'lower'],
+        'guess_number'      => ['name' => '猜数字',       'emoji' => '❓', 'cat' => 'lower'],
+        'memory_game'       => ['name' => '卡片配对',     'emoji' => '🃏', 'cat' => 'lower'],
+        'sequence_memory'   => ['name' => '序列记忆',     'emoji' => '🧠', 'cat' => 'lower'],
+        'snake'             => ['name' => '贪吃蛇',       'emoji' => '🐍', 'cat' => 'upper'],
+        'bead_game'         => ['name' => '拼豆游戏',     'emoji' => '🔵', 'cat' => 'upper'],
+        'number_puzzle'     => ['name' => '数字华容道',   'emoji' => '🔢', 'cat' => 'upper'],
+        'idiom_chain'       => ['name' => '成语接龙',     'emoji' => '📖', 'cat' => 'upper'],
+        'minesweeper'       => ['name' => '扫雷',         'emoji' => '💣', 'cat' => 'upper'],
+        'keyboard_game'     => ['name' => '打字游戏',     'emoji' => '⌨️', 'cat' => 'typing'],
+        'balloon_typing'    => ['name' => '气球打字',     'emoji' => '🎈', 'cat' => 'typing'],
+        'frog_typing'       => ['name' => '青蛙过河',     'emoji' => '🐸', 'cat' => 'typing'],
+        'coding_game'       => ['name' => '编程启蒙',     'emoji' => '💻', 'cat' => 'other'],
+        'ai_drawing_game'   => ['name' => 'AI猜猜画',     'emoji' => '🎨', 'cat' => 'other'],
     ];
 }
 
@@ -1622,21 +1675,101 @@ function point_redeem_card($user_id, $card_no, $card_secret, $ip) {
 }
 
 /**
- * 课件积分支付：服务端重新计算价格、扣减积分、登记订单。
- *
- * @param string $user_id
- * @param int    $course_id
- * @param int    $license_type 1=完整预览版 2=原文件版
- * @param bool   $is_upgrade   是否预览版 -> 原文件版升级
- * @return array ['success'=>bool, 'message'=>string, 'order_no'=>string, 'balance'=>int, 'point'=>int]
+ * 课程分享码签名与 7 天归因 cookie。
+ * 签名只覆盖分享者 ID，避免客户端伪造返佣归属。
  */
-function point_pay_for_course($user_id, $course_id, $license_type, $is_upgrade = false) {
+function point_course_share_signature($referrer_id) {
+    global $OJ_NAME;
+    $referrer_id = trim((string)$referrer_id);
+    if ($referrer_id === '') return '';
+    return hash_hmac('sha256', $referrer_id, 'course-share:' . (string)$OJ_NAME);
+}
+
+function point_course_share_verify($referrer_id, $signature) {
+    $expected = point_course_share_signature($referrer_id);
+    return $expected !== '' && hash_equals($expected, trim((string)$signature));
+}
+
+/** 从已验证的分享参数建立 7 天 cookie，并返回当前归因者。 */
+function point_course_share_referrer() {
+    $sp = isset($_GET['sp']) ? trim((string)$_GET['sp']) : '';
+    // sp 格式：referrer_id.signature（分享链接唯一对外参数）。
+    $parts = explode('.', $sp, 2);
+    if (count($parts) === 2 && point_course_share_verify($parts[0], $parts[1])) {
+        if (!headers_sent()) {
+            setcookie('course_referrer_id', $parts[0], [
+                'expires' => time() + 7 * 86400,
+                'path' => '/', 'httponly' => true, 'samesite' => 'Lax',
+            ]);
+        }
+        return $parts[0];
+    }
+    $cookie_referrer = isset($_COOKIE['course_referrer_id']) ? trim((string)$_COOKIE['course_referrer_id']) : '';
+    return $cookie_referrer !== '' ? $cookie_referrer : null;
+}
+
+/** 生成分享链接参数 sp。 */
+function point_course_share_param($referrer_id) {
+    $referrer_id = trim((string)$referrer_id);
+    if ($referrer_id === '') return '';
+    return $referrer_id . '.' . point_course_share_signature($referrer_id);
+}
+
+function point_pay_course_share_reward($order_no, $referrer_id, $recharged_used) {
+    $order_no = trim((string)$order_no);
+    $referrer_id = trim((string)$referrer_id);
+    $recharged_used = max(0, intval($recharged_used));
+    $reward = intval(floor($recharged_used * 0.20));
+    if ($order_no === '' || $referrer_id === '' || $reward <= 0) return 0;
+    try {
+        point_tx_begin();
+        $rows = pdo_query("SELECT user_id FROM `users` WHERE user_id = ? AND defunct = 'N' FOR UPDATE", $referrer_id);
+        if (empty($rows)) {
+            pdo_query("UPDATE `course_order` SET share_reward = 0 WHERE order_no = ? AND share_reward IS NULL", $order_no);
+            point_tx_commit();
+            return 0;
+        }
+        $claimed = pdo_query("UPDATE `course_order` SET share_reward = 0 WHERE order_no = ? AND referrer_id = ? AND share_reward IS NULL", $order_no, $referrer_id);
+        if (intval($claimed) !== 1) {
+            point_tx_commit();
+            return 0;
+        }
+        $apply = point_apply_change($referrer_id, $reward, POINT_LOG_TYPE_SHARE_REWARD, $order_no, '课程分享返佣');
+        if (!$apply['success']) {
+            pdo_query("UPDATE `course_order` SET share_reward = 0 WHERE order_no = ?", $order_no);
+            point_tx_commit();
+            return 0;
+        }
+        pdo_query("UPDATE `course_order` SET share_reward = ? WHERE order_no = ?", $reward, $order_no);
+        point_tx_commit();
+        return $reward;
+    } catch (Exception $e) {
+        point_tx_rollback();
+        send_point_business_exception_notify('课程分享返佣', $e->getMessage(), ['order_no' => $order_no, 'referrer_id' => $referrer_id]);
+        return 0;
+    }
+}
+
+/**
+ * 课件积分支付：服务端重新计算价格、扣减积分、登记订单并发放分享返佣。
+ * @param bool $is_upgrade 是否预览版 -> 原文件版升级
+ * @param string|null $referrer_id 分享者 ID；省略时使用已验证的 7 天归因 cookie
+ */
+function point_pay_for_course($user_id, $course_id, $license_type, $is_upgrade = false, $referrer_id = null) {
     $license_type = intval($license_type);
     if (!in_array($license_type, [1, 2], true)) {
         return ['success' => false, 'message' => '权限类型不正确'];
     }
     if ($user_id === '' || intval($course_id) <= 0) {
         return ['success' => false, 'message' => '参数错误'];
+    }
+    if ($referrer_id === null) {
+        $referrer_id = point_course_share_referrer();
+    } else {
+        $referrer_id = trim((string)$referrer_id);
+    }
+    if ($referrer_id === '' || $referrer_id === $user_id) {
+        $referrer_id = null;
     }
 
     // 服务端权限 / 价格重算
@@ -1711,17 +1844,17 @@ function point_pay_for_course($user_id, $course_id, $license_type, $is_upgrade =
             $order_no = $existing[0]['order_no'];
             pdo_query(
                 "UPDATE `course_order`
-                    SET amount = ?, pay_status = 1, pay_time = NOW(), pay_channel = 'point'
+                    SET amount = ?, pay_status = 1, pay_time = NOW(), pay_channel = 'point', referrer_id = ?
                   WHERE id = ?",
-                $point_amount, $existing[0]['id']
+                $point_amount, $referrer_id, $existing[0]['id']
             );
         } else {
             $order_no = 'CO' . time() . random_int(1000, 9999);
             pdo_query(
                 "INSERT INTO `course_order`
-                    (order_no, user_id, course_id, license_type, amount, pay_status, pay_time, pay_channel, mail_status, counted)
-                 VALUES (?, ?, ?, ?, ?, 1, NOW(), 'point', 0, 0)",
-                $order_no, $user_id, $course_id, $license_type, $point_amount
+                    (order_no, user_id, course_id, license_type, amount, pay_status, pay_time, pay_channel, mail_status, counted, referrer_id)
+                 VALUES (?, ?, ?, ?, ?, 1, NOW(), 'point', 0, 0, ?)",
+                $order_no, $user_id, $course_id, $license_type, $point_amount, $referrer_id
             );
         }
 
@@ -1746,9 +1879,13 @@ function point_pay_for_course($user_id, $course_id, $license_type, $is_upgrade =
             'course_id' => $course_id,
             'license_type' => $license_type,
             'is_upgrade' => $is_upgrade ? '1' : '0',
+            'referrer_id' => $referrer_id,
         ]);
         return ['success' => false, 'message' => '系统繁忙，请稍后再试'];
     }
+
+    // 买家支付已提交后，返佣独立后置；分享者异常不得影响买家成交。
+    $share_reward = point_pay_course_share_reward($order_no, $referrer_id, $apply['recharged_used']);
 
     // 事务成功后再做幂等的下载次数刷新 / 通知
     update_course_download_count($user_id, $course_id);

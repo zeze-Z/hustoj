@@ -473,6 +473,7 @@
                         <div class="preview-box" id="preview-box" style="display:none;">
                             <div class="school-name" id="preview-school">--</div>
                             <div class="room-name" id="preview-room">--</div>
+                            <div class="room-name" id="preview-scope" style="display:none;color:#667eea;font-weight:600;"></div>
                         </div>
 
                         <button class="btn-main" id="activate-btn" onclick="activate()" style="margin-top:12px;">验证授权码</button>
@@ -482,6 +483,7 @@
                         <div class="preview-box">
                             <div class="school-name" id="done-school">--</div>
                             <div class="room-name" id="done-room">--</div>
+                            <div class="room-name" id="done-scope" style="display:none;color:#667eea;font-weight:600;"></div>
                         </div>
                         <div class="card-note" style="margin-top:0;">✅ 本机已激活</div>
                         <button class="link-btn" onclick="showStep1Form()">更换授权码</button>
@@ -607,6 +609,12 @@
     }
 
     // ===== 第1步：验证授权码 =====
+    // 授权范围文案：促销包列出3款游戏名，全套（无 games）显示全套
+    function licenseScopeText(license) {
+        var names = Auth.scopeGameNames(license);
+        return names ? ('🎮 授权游戏（任选3款）：' + names.join('、')) : '🎮 授权游戏：全套17款';
+    }
+
     // 输入时实时预览授权信息
     $('#license-input').on('input', function() {
         var input = $(this).val().trim();
@@ -619,6 +627,7 @@
             if (license.school && license.room) {
                 $('#preview-school').text(license.school);
                 $('#preview-room').text(license.room + ' · 授权至 ' + license.expire);
+                $('#preview-scope').text(licenseScopeText(license)).css('display', '');
                 $('#preview-box').show();
             } else {
                 $('#preview-box').hide();
@@ -664,6 +673,7 @@
         $('#license-content').val(JSON.stringify(license, null, 2));
         $('#done-school').text(license.school);
         $('#done-room').text(license.room + ' · 授权至 ' + license.expire);
+        $('#done-scope').text(licenseScopeText(license)).css('display', '');
         $('#step1-form').hide();
         $('#step1-done').show();
         STEPS_DONE[1] = true;

@@ -5,41 +5,85 @@ $og_logged_in = isset($_SESSION[$OJ_NAME . '_' . 'user_id']);
 $og_user_id = $og_logged_in ? $_SESSION[$OJ_NAME . '_' . 'user_id'] : '';
 $og_balance = $og_logged_in ? intval(point_get_balance($og_user_id)) : 0;
 
-// 商品配置统一读 point_goods（下架/缺失时 $og_goods 为 false，横幅/弹窗/脚本均不渲染）
-$og_goods = point_get_goods('offline_game');
-if ($og_goods) {
-    $og_price         = intval($og_goods['price']);
-    $og_original_price = isset($og_goods['original_price']) ? intval($og_goods['original_price']) : 0;
-    $og_title         = $og_goods['title'];
-    $og_desc          = $og_goods['description'];
-    $og_validity_days = intval($og_goods['validity_days']);
-    $og_download_url  = $og_goods['download_url'];
-    $og_validity_text = ($og_validity_days == 365) ? '一年' : $og_validity_days . '天';
-    $og_validity_unit = ($og_validity_days == 365) ? '年' : $og_validity_days . '天';
+// 两个在售套餐：全套 offline_game / 任选3款促销包 offline_game_pick3（价格均读 point_goods，不写死）
+$og_full_goods = point_get_goods('offline_game');
+$og_pick_goods = point_get_goods('offline_game_pick3');
+$og_catalog = point_offline_game_catalog();
+$og_any_goods = ($og_full_goods || $og_pick_goods);
 
-    // 检查是否已有未过期订单
-    $og_has_order = false;
-    $og_order_expire = '';
-    $og_order_no = '';
-    $og_order_school = '';
-    $og_order_room = '';
-    $og_license_code = '';
+// 组装套餐展示数据的小函数（有效期文案/划线价统一处理）
+$og_build_pkg = function ($g) {
+    if (!$g) return null;
+    $days = intval($g['validity_days']);
+    return array(
+        'key'            => $g['product_key'],
+        'title'          => $g['title'],
+        'desc'           => $g['description'],
+        'price'          => intval($g['price']),
+        'original_price' => isset($g['original_price']) ? intval($g['original_price']) : 0,
+        'download_url'   => $g['download_url'],
+        'validity_days'  => $days,
+        'validity_text'  => ($days == 365) ? '一年' : $days . '天',
+        'validity_unit'  => ($days == 365) ? '年' : $days . '天',
+    );
+};
+$og_full = $og_build_pkg($og_full_goods);
+$og_pick = $og_build_pkg($og_pick_goods);
+
+// 兼容历史变量：主套餐取全套；全套下架时回落到促销包（横幅/弹窗/脚本的渲染门槛见 $og_any_goods）
+$og_goods = $og_full_goods ? $og_full_goods : $og_pick_goods;
+if ($og_goods) {
+    $og_price          = intval($og_goods['price']);
+    $og_original_price = isset($og_goods['original_price']) ? intval($og_goods['original_price']) : 0;
+    $og_title          = $og_goods['title'];
+    $og_desc           = $og_goods['description'];
+    $og_validity_days  = intval($og_goods['validity_days']);
+    $og_download_url   = $og_goods['download_url'];
+    $og_validity_text  = ($og_validity_days == 365) ? '一年' : $og_validity_days . '天';
+    $og_validity_unit  = ($og_validity_days == 365) ? '年' : $og_validity_days . '天';
+
+    // 分别检查两个套餐是否已有未过期订单（同一套餐限购1份；两个套餐可并存）
+    $og_order_map = array('offline_game' => null, 'offline_game_pick3' => null);
     if ($og_logged_in) {
-        $og_rows = pdo_query(
-            "SELECT order_no, expire_date, school_name, room_name, license_code FROM `point_goods_order`
-              WHERE user_id = ? AND product_key = 'offline_game' AND expire_date >= CURDATE()
-              ORDER BY id DESC LIMIT 1",
-            $og_user_id
-        );
-        if (!empty($og_rows)) {
-            $og_has_order = true;
-            $og_order_expire = $og_rows[0]['expire_date'];
-            $og_order_no = $og_rows[0]['order_no'];
-            $og_order_school = $og_rows[0]['school_name'];
-            $og_order_room = $og_rows[0]['room_name'];
-            $og_license_code = $og_rows[0]['license_code'];
+        foreach (array('offline_game', 'offline_game_pick3') as $og_pk) {
+            $og_rows = pdo_query(
+                "SELECT order_no, expire_date, school_name, room_name, license_code FROM `point_goods_order`
+                  WHERE user_id = ? AND product_key = ? AND expire_date >= CURDATE()
+                  ORDER BY id DESC LIMIT 1",
+                $og_user_id, $og_pk
+            );
+            if (!empty($og_rows)) {
+                $og_order_map[$og_pk] = $og_rows[0];
+            }
         }
     }
+
+    // 从授权码 JSON 解析已购促销包的游戏列表并转中文名（"我的授权码"展示用）
+    $og_pick_games_ids = array();
+    if (!empty($og_order_map['offline_game_pick3']['license_code'])) {
+        $og_pick_lic = json_decode($og_order_map['offline_game_pick3']['license_code'], true);
+        if (is_array($og_pick_lic) && !empty($og_pick_lic['games']) && is_array($og_pick_lic['games'])) {
+            foreach ($og_pick_lic['games'] as $og_gid) {
+                if (isset($og_catalog[$og_gid])) $og_pick_games_ids[] = $og_gid;
+            }
+        }
+    }
+    $og_pick_games_text = '';
+    if ($og_pick_games_ids) {
+        $names = array();
+        foreach ($og_pick_games_ids as $og_gid) $names[] = $og_catalog[$og_gid]['name'];
+        $og_pick_games_text = implode('、', $names);
+    }
+
+    // 历史变量：优先全套订单，无全套时回落到促销包订单
+    $og_primary_order = $og_order_map['offline_game'] ? $og_order_map['offline_game']
+                                                      : $og_order_map['offline_game_pick3'];
+    $og_has_order = $og_primary_order !== null;
+    $og_order_expire = $og_has_order ? $og_primary_order['expire_date'] : '';
+    $og_order_no = $og_has_order ? $og_primary_order['order_no'] : '';
+    $og_order_school = $og_has_order ? $og_primary_order['school_name'] : '';
+    $og_order_room = $og_has_order ? $og_primary_order['room_name'] : '';
+    $og_license_code = $og_has_order ? $og_primary_order['license_code'] : '';
 }
 
 // 生成postkey（供弹窗表单使用）
@@ -452,6 +496,33 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     opacity: 0.85;
 }
 
+/* 双套餐价格区（促销包 + 全套，纵向堆叠右对齐） */
+.og-banner-top-price {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+.og-banner-pkg {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.16);
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 8px;
+    padding: 3px 10px;
+    white-space: nowrap;
+}
+.og-banner-pkg-pick {
+    background: linear-gradient(135deg, #fbbf24, #f97316);
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 12px rgba(249,115,22,0.35);
+}
+.og-banner-pkg-pick .og-banner-top-price-old { color: rgba(255,255,255,0.85); }
+.og-banner-pkg-badge { font-weight: 800; font-size: 0.82rem; }
+.og-banner-pkg-label { font-size: 0.72rem; opacity: 0.92; font-weight: 600; }
+.og-banner-pkg-single { background: transparent; border: none; padding: 0; }
+
 .og-banner-top-btn {
     display: inline-flex;
     align-items: center;
@@ -662,6 +733,122 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 .og-modal-body {
     padding: 22px 28px 28px;
 }
+
+/* ===== 套餐选择卡 ===== */
+.og-pkg-picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.og-pkg-card:only-child { grid-column: 1 / -1; }
+.og-pkg-card {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fafafa;
+    user-select: none;
+}
+.og-pkg-card:hover { border-color: #c7d2fe; background: #f5f7ff; }
+.og-pkg-card.selected {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+    box-shadow: 0 4px 14px rgba(102,126,234,0.18);
+}
+.og-pkg-card-pick.selected {
+    border-color: #f97316;
+    background: linear-gradient(135deg, #fff7ed, #fffbeb);
+    box-shadow: 0 4px 14px rgba(249,115,22,0.2);
+}
+.og-pkg-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.og-pkg-card-name { font-size: 0.98rem; font-weight: 700; color: #1f2937; }
+.og-pkg-card-tag {
+    font-size: 0.68rem; font-weight: 700; color: #fff;
+    background: linear-gradient(135deg, #fbbf24, #f97316);
+    padding: 2px 8px; border-radius: 10px;
+}
+.og-pkg-card-desc { font-size: 0.75rem; color: #6b7280; margin-bottom: 6px; line-height: 1.4; }
+.og-pkg-card-price { font-size: 0.85rem; color: #374151; display: flex; align-items: baseline; gap: 5px; }
+.og-pkg-card-price b { font-size: 1.35rem; color: #667eea; font-weight: 800; }
+.og-pkg-card-pick .og-pkg-card-price b { color: #ea580c; }
+.og-pkg-card-old { font-size: 0.78rem; color: #9ca3af; text-decoration: line-through; }
+.og-pkg-card-unit { font-size: 0.72rem; color: #9ca3af; }
+
+/* ===== 任选3款游戏网格 ===== */
+.og-game-picker {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    background: #fcfcfd;
+}
+.og-game-picker-head {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.85rem; color: #374151; margin-bottom: 8px; font-weight: 600;
+}
+.og-pick-count { font-weight: 500; color: #6b7280; }
+.og-pick-count b { color: #f97316; font-size: 0.95rem; }
+.og-game-group-label { font-size: 0.74rem; color: #9ca3af; margin: 8px 0 6px; font-weight: 600; }
+.og-game-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 7px; }
+.og-game-item {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    border: 1.5px solid #e5e7eb; border-radius: 10px;
+    padding: 9px 4px 8px; cursor: pointer; background: #fff;
+    transition: all 0.15s ease; user-select: none;
+}
+.og-game-item:hover { border-color: #a5b4fc; }
+.og-game-item-emoji { font-size: 1.3rem; line-height: 1; }
+.og-game-item-name { font-size: 0.74rem; color: #4b5563; text-align: center; }
+.og-game-item-check {
+    position: absolute; top: 3px; right: 4px;
+    width: 16px; height: 16px; line-height: 16px; text-align: center;
+    border-radius: 50%; font-size: 0.62rem; color: #fff; background: #d1d5db;
+}
+.og-game-item.selected {
+    border-color: #f97316; background: #fff7ed;
+    box-shadow: 0 2px 8px rgba(249,115,22,0.18);
+}
+.og-game-item.selected .og-game-item-name { color: #c2410c; font-weight: 700; }
+.og-game-item.selected .og-game-item-check { background: linear-gradient(135deg, #fbbf24, #f97316); }
+.og-game-item.disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ===== 结果区双授权切换条 ===== */
+.og-license-switch { display: flex; gap: 8px; justify-content: center; }
+.og-switch-btn {
+    border: 1.5px solid #d1d5db; background: #fff; color: #6b7280;
+    padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s ease;
+}
+.og-switch-btn.active { border-color: #667eea; background: #eef2ff; color: #4f46e5; }
+
+/* 升级全套入口（结果区，仅持有促销包时显示） */
+.og-upgrade-entry {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fff7ed, #fffbeb);
+    border: 1.5px solid #fed7aa;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.og-upgrade-text { flex: 1; min-width: 0; }
+.og-upgrade-title { font-size: 0.88rem; font-weight: 700; color: #c2410c; margin-bottom: 2px; }
+.og-upgrade-desc { font-size: 0.74rem; color: #9a3412; line-height: 1.4; }
+.og-upgrade-btn {
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: #fff; border: none;
+    padding: 8px 18px; border-radius: 20px;
+    font-size: 0.82rem; font-weight: 700;
+    cursor: pointer; white-space: nowrap;
+    transition: all 0.2s ease;
+}
+.og-upgrade-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(234,88,12,0.35); }
 
 /* 特性标签（标题下方横排） */
 .og-feature-tags {
@@ -1092,6 +1279,12 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     .og-result-header {
         padding: 26px 20px 22px;
     }
+
+    /* 窄屏套餐卡纵向排列；游戏网格每行3个 */
+    .og-pkg-picker { grid-template-columns: 1fr; }
+    .og-game-group { grid-template-columns: repeat(3, 1fr); }
+    .og-game-item-emoji { font-size: 1.15rem; }
+    .og-game-item-name { font-size: 0.68rem; }
 }
 
 @media (max-width: 768px) {
@@ -1150,7 +1343,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 
     <!-- ============ 小游戏 Tab ============ -->
     <div class="tab-panel active" id="panel-games">
-        <?php if ($og_goods): ?>
+        <?php if ($og_any_goods): ?>
         <!-- 离线游戏推广横幅（二级Tab上方） -->
         <div class="og-banner-top" id="og-banner" onclick="<?php if (!$og_logged_in): ?>location.href='loginpage.php?return=more.php%23games'<?php else: ?>ogOpenModal()<?php endif; ?>">
             <div class="og-banner-top-close" onclick="event.stopPropagation(); document.getElementById('og-banner').style.display='none';">✕</div>
@@ -1181,10 +1374,23 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
             </div>
             <div class="og-banner-top-action" onclick="event.stopPropagation()">
                 <div class="og-banner-top-price">
-                    <span class="og-banner-top-badge">🔥 限时特惠</span>
-                    <?php if ($og_original_price > 0): ?><span class="og-banner-top-price-old"><?php echo $og_original_price; ?></span><?php endif; ?>
-                    <span class="og-banner-top-price-num"><?php echo intval($og_price); ?></span>
-                    <span class="og-banner-top-price-unit">积分/<?php echo $og_validity_unit; ?></span>
+                    <?php if ($og_pick): ?>
+                    <div class="og-banner-pkg og-banner-pkg-pick">
+                        <span class="og-banner-pkg-badge">🎉 任选3款</span>
+                        <?php if ($og_pick['original_price'] > 0): ?><span class="og-banner-top-price-old"><?php echo $og_pick['original_price']; ?></span><?php endif; ?>
+                        <span class="og-banner-top-price-num"><?php echo $og_pick['price']; ?></span>
+                        <span class="og-banner-top-price-unit">积分/<?php echo $og_pick['validity_unit']; ?></span>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($og_full): ?>
+                    <div class="og-banner-pkg<?php echo $og_pick ? '' : ' og-banner-pkg-single'; ?>">
+                        <?php if (!$og_pick): ?><span class="og-banner-top-badge">🔥 限时特惠</span><?php endif; ?>
+                        <span class="og-banner-pkg-label">📦 全套17款</span>
+                        <?php if (!$og_pick && $og_full['original_price'] > 0): ?><span class="og-banner-top-price-old"><?php echo $og_full['original_price']; ?></span><?php endif; ?>
+                        <span class="og-banner-top-price-num"><?php echo $og_full['price']; ?></span>
+                        <span class="og-banner-top-price-unit">积分/<?php echo $og_full['validity_unit']; ?></span>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <?php if (!$og_logged_in): ?>
                     <button class="og-banner-top-btn" onclick="location.href='loginpage.php?return=more.php%23games'">登录后兑换</button>
@@ -1195,7 +1401,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                 <?php endif; ?>
             </div>
         </div>
-        <?php endif; // $og_goods 横幅 ?>
+        <?php endif; // $og_any_goods 横幅 ?>
 
         <!-- 二级 Tab -->
         <div class="og-subtabs-row">
@@ -1690,17 +1896,51 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                 </div>
                 <div class="og-modal-header-text">
                     <h3 class="og-modal-title" id="og-modal-title"><?php echo htmlentities($og_title, ENT_QUOTES, 'UTF-8'); ?></h3>
-                    <p class="og-modal-subtitle"><?php echo intval($og_price); ?>积分兑换 · <?php echo $og_validity_text; ?>有效期</p>
-                    <!-- 特性标签 -->
-                    <div class="og-feature-tags">
-                        <span class="og-tag og-tag-blue">🎮 17款游戏</span>
-                        <span class="og-tag og-tag-green">📶 无需联网</span>
-                        <span class="og-tag og-tag-amber">🔒 授权管理</span>
-                    </div>
+                    <p class="og-modal-subtitle" id="og-modal-subtitle"></p>
+                    <!-- 特性标签（随套餐切换） -->
+                    <div class="og-feature-tags" id="og-feature-tags"></div>
                 </div>
             </div>
 
             <div class="og-modal-body">
+                <!-- 套餐选择（促销包/全套，仅上架的套餐渲染卡片） -->
+                <div class="og-pkg-picker" id="og-pkg-picker">
+                    <?php if ($og_pick): ?>
+                    <div class="og-pkg-card og-pkg-card-pick" data-pkg="pick" onclick="ogSelectPkg('pick')">
+                        <div class="og-pkg-card-top">
+                            <span class="og-pkg-card-name">🎉 任选3款</span>
+                            <span class="og-pkg-card-tag">限时特惠</span>
+                        </div>
+                        <div class="og-pkg-card-desc">17款游戏中任选3款，单机离线运行</div>
+                        <div class="og-pkg-card-price">
+                            <?php if ($og_pick['original_price'] > 0): ?><span class="og-pkg-card-old"><?php echo $og_pick['original_price']; ?></span><?php endif; ?>
+                            <b><?php echo $og_pick['price']; ?></b> 积分<span class="og-pkg-card-unit">/<?php echo $og_pick['validity_unit']; ?></span>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    <?php if ($og_full): ?>
+                    <div class="og-pkg-card" data-pkg="full" onclick="ogSelectPkg('full')">
+                        <div class="og-pkg-card-top">
+                            <span class="og-pkg-card-name">📦 全套17款</span>
+                        </div>
+                        <div class="og-pkg-card-desc">全部游戏任意玩，一次兑换全解锁</div>
+                        <div class="og-pkg-card-price">
+                            <?php if ($og_full['original_price'] > 0): ?><span class="og-pkg-card-old"><?php echo $og_full['original_price']; ?></span><?php endif; ?>
+                            <b><?php echo $og_full['price']; ?></b> 积分<span class="og-pkg-card-unit">/<?php echo $og_full['validity_unit']; ?></span>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- 任选3款：游戏选择网格（JS 按 ogCatalog 渲染） -->
+                <div class="og-game-picker" id="og-game-picker" style="display:none;">
+                    <div class="og-game-picker-head">
+                        <span>🎮 从17款游戏中任选 <b>3</b> 款</span>
+                        <span class="og-pick-count">已选 <b id="og-pick-count">0</b>/3</span>
+                    </div>
+                    <div class="og-game-picker-grid" id="og-game-grid"></div>
+                </div>
+
                 <!-- 兑换流程 -->
                 <div class="og-info-card">
                     <div class="og-info-title">
@@ -1733,7 +1973,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                     <input type="text" id="og-room" placeholder="如：计算机教室1" maxlength="100">
                 </div>
 
-                <!-- 余额与费用 -->
+                <!-- 余额与费用（费用随套餐切换） -->
                 <div class="og-balance-row">
                     <div class="og-balance-item">
                         <div class="og-balance-label">当前余额</div>
@@ -1742,20 +1982,17 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                     <div class="og-balance-divider"></div>
                     <div class="og-balance-item">
                         <div class="og-balance-label">兑换费用</div>
-                        <div class="og-balance-value og-balance-price"><?php echo intval($og_price); ?> <span>积分</span></div>
+                        <div class="og-balance-value og-balance-price"><span id="og-fee-price">0</span> <span>积分</span></div>
                     </div>
                 </div>
 
-                <?php if ($og_balance < $og_price): ?>
-                <div class="og-warn">
+                <div class="og-warn" id="og-warn" style="display:none;">
                     <span>⚠️</span>
                     <span>积分不足，请先<a href="point_index.php">兑换充值卡</a></span>
                 </div>
-                <?php endif; ?>
 
-                <button type="button" class="og-submit-btn" id="og-submit-btn" onclick="ogSubmit()"
-                    <?php if ($og_balance < $og_price) echo 'disabled'; ?>>
-                    📦 确认兑换（<?php echo intval($og_price); ?>积分）
+                <button type="button" class="og-submit-btn" id="og-submit-btn" onclick="ogSubmit()">
+                    📦 确认兑换
                 </button>
             </div>
         </div>
@@ -1774,6 +2011,8 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
             </div>
 
             <div class="og-modal-body">
+                <!-- 同时持有两个套餐有效授权时的切换条（JS 控制显隐） -->
+                <div class="og-license-switch" id="og-license-switch" style="display:none;"></div>
                 <!-- 授权码 -->
                 <div>
                     <div class="og-license-label">授权码</div>
@@ -1802,26 +2041,55 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                         </div>
                     </div>
                 </div>
+
+                <!-- 升级全套入口：仅持有促销包授权且全套在售且未购全套时显示（JS 控制） -->
+                <div class="og-upgrade-entry" id="og-upgrade-entry" style="display:none;"></div>
             </div>
         </div>
     </div>
 </div>
-<?php endif; // $og_goods 兑换弹窗 ?>
+<?php endif; // $og_any_goods 兑换弹窗 ?>
 
-<?php if ($og_goods): ?>
+<?php if ($og_any_goods): ?>
 <script>
-// ===== 离线游戏兑换 =====
+// ===== 离线游戏兑换（双套餐：全套 / 任选3款促销包；价格全部来自 point_goods 配置） =====
 var ogLoggedin = <?php echo $og_logged_in ? 'true' : 'false'; ?>;
-var ogPostkey = '<?php echo addslashes($og_postkey); ?>';
+var ogPostkey = <?php echo json_encode($og_postkey); ?>;
 var ogBalance = <?php echo $og_balance; ?>;
-var ogPrice = <?php echo intval($og_price); ?>;
-var ogHasOrder = <?php echo $og_has_order ? 'true' : 'false'; ?>;
-var ogMyLicense = <?php echo json_encode($og_license_code, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
-var ogDownloadUrl = <?php echo json_encode($og_download_url, JSON_HEX_TAG); ?>;
-var ogBtnText = <?php echo json_encode('📦 确认兑换（' . intval($og_price) . '积分）', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>;
-var ogOrderExpire = <?php echo json_encode($og_order_expire); ?>;
-var ogOrderSchool = <?php echo json_encode($og_order_school); ?>;
-var ogOrderRoom = <?php echo json_encode($og_order_room); ?>;
+var ogCatalog = <?php echo json_encode($og_catalog, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE); ?>;
+
+// 套餐配置（仅上架的套餐存在）；orders 为当前用户各套餐的有效订单
+var ogPkgs = {
+    full: <?php echo $og_full ? json_encode($og_full, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) : 'null'; ?>,
+    pick: <?php echo $og_pick ? json_encode($og_pick, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) : 'null'; ?>
+};
+var ogOrders = {
+    full: <?php
+        $__f = $og_order_map['offline_game'];
+        echo $__f ? json_encode(array(
+            'license' => $__f['license_code'],
+            'school' => $__f['school_name'],
+            'room' => $__f['room_name'],
+            'expire' => $__f['expire_date'],
+            'download_url' => $og_full ? $og_full['download_url'] : '',
+        ), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) : 'null'; ?>,
+    pick: <?php
+        $__p = $og_order_map['offline_game_pick3'];
+        echo $__p ? json_encode(array(
+            'license' => $__p['license_code'],
+            'school' => $__p['school_name'],
+            'room' => $__p['room_name'],
+            'expire' => $__p['expire_date'],
+            'games' => $og_pick_games_ids,
+            'games_text' => $og_pick_games_text,
+            'download_url' => $og_pick ? $og_pick['download_url'] : '',
+        ), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) : 'null'; ?>
+};
+
+// 当前选中套餐：促销包优先（无促销包时只能是全套）
+var ogSelectedPkg = ogPkgs.pick ? 'pick' : 'full';
+// 促销包已选游戏 id（最多3个）
+var ogSelectedGames = [];
 
 // 弹窗顶部标题/副标题（兑换表单态）
 function ogShowForm() {
@@ -1829,6 +2097,11 @@ function ogShowForm() {
     document.getElementById('og-result-section').classList.remove('show');
     document.getElementById('og-school').value = '';
     document.getElementById('og-room').value = '';
+    document.getElementById('og-license-switch').style.display = 'none';
+    document.getElementById('og-upgrade-entry').style.display = 'none';
+    ogSelectedGames = [];
+    ogRenderGameGrid();
+    ogSelectPkg(ogSelectedPkg);
 }
 
 // 结果视图：复用兑换成功结果区（新兑换 / 我的授权码 共用）
@@ -1841,19 +2114,136 @@ function ogShowResult(title, subtitle, licenseCode, downloadUrl) {
     document.getElementById('og-result-section').classList.add('show');
 }
 
-// "我的授权码"视图：展示已有授权码与下载链接
-function ogShowMyLicense() {
-    ogShowResult('🔑 我的授权码',
-        ogOrderSchool + ' · ' + ogOrderRoom + ' · 有效期至 ' + ogOrderExpire,
-        ogMyLicense, ogDownloadUrl);
+// 升级全套入口：仅持有促销包授权、全套在售且未购全套时显示
+function ogRenderUpgradeEntry(which) {
+    var box = document.getElementById('og-upgrade-entry');
+    if (!box) return;
+    if (which === 'pick' && ogPkgs.full && !ogOrders.full) {
+        var price = ogPkgs.full.price;
+        box.innerHTML =
+            '<div class="og-upgrade-text">' +
+              '<div class="og-upgrade-title">🚀 升级全套，解锁全部17款</div>' +
+              '<div class="og-upgrade-desc">当前授权仅含3款，升级后可离线运行全部游戏</div>' +
+            '</div>' +
+            '<button type="button" class="og-upgrade-btn" onclick="ogUpgradeToFull()">升级全套 ' + price + ' 积分</button>';
+        box.style.display = '';
+    } else {
+        box.style.display = 'none';
+        box.innerHTML = '';
+    }
+}
+
+// 点击"升级全套"：切回表单态并自动选中全套套餐卡
+function ogUpgradeToFull() {
+    ogShowForm();
+    ogSelectPkg('full');
+}
+
+// 渲染"我的授权码"的双授权切换条（同时持有时才显示）
+function ogRenderLicenseSwitch(which) {
+    var sw = document.getElementById('og-license-switch');
+    if (ogOrders.full && ogOrders.pick) {
+        sw.style.display = '';
+        sw.innerHTML =
+            '<button type="button" class="og-switch-btn' + (which === 'full' ? ' active' : '') + '" onclick="ogShowMyLicense(\'full\')">📦 全套授权</button>' +
+            '<button type="button" class="og-switch-btn' + (which === 'pick' ? ' active' : '') + '" onclick="ogShowMyLicense(\'pick\')">🎉 任选3款授权</button>';
+    } else {
+        sw.style.display = 'none';
+        sw.innerHTML = '';
+    }
+}
+
+// "我的授权码"视图：which 指定展示哪个套餐的授权
+function ogShowMyLicense(which) {
+    if (!which) which = ogOrders.full ? 'full' : 'pick';
+    var order = ogOrders[which];
+    if (!order) order = ogOrders[which === 'full' ? 'pick' : 'full'];
+    var title = which === 'pick' ? '🔑 我的授权码（任选3款）' : '🔑 我的授权码（全套17款）';
+    var subtitle = order.school + ' · ' + order.room + ' · 有效期至 ' + order.expire
+                 + (which === 'pick' && order.games_text ? ' · 已选：' + order.games_text : '');
+    ogRenderLicenseSwitch(which);
+    ogShowResult(title, subtitle, order.license, order.download_url);
+    ogRenderUpgradeEntry(which);
+}
+
+// 渲染任选3款的游戏网格（按分类分组）
+function ogRenderGameGrid() {
+    var groups = [
+        {cat: 'lower',   label: '🎒 低年级专区（1-3年级）'},
+        {cat: 'upper',   label: '📚 高年级专区（4-6年级）'},
+        {cat: 'typing',  label: '⌨️ 打字练习'},
+        {cat: 'other',   label: '🎯 其他'}
+    ];
+    var html = '';
+    groups.forEach(function(g) {
+        html += '<div class="og-game-group-label">' + g.label + '</div><div class="og-game-group">';
+        Object.keys(ogCatalog).forEach(function(id) {
+            var item = ogCatalog[id];
+            if (item.cat !== g.cat) return;
+            var selected = ogSelectedGames.indexOf(id) >= 0;
+            var disabled = !selected && ogSelectedGames.length >= 3;
+            html += '<div class="og-game-item' + (selected ? ' selected' : '') + (disabled ? ' disabled' : '') + '"'
+                 + ' data-game="' + id + '" onclick="ogToggleGame(\'' + id + '\')">'
+                 + '<span class="og-game-item-emoji">' + item.emoji + '</span>'
+                 + '<span class="og-game-item-name">' + item.name + '</span>'
+                 + '<span class="og-game-item-check">✓</span></div>';
+        });
+        html += '</div>';
+    });
+    document.getElementById('og-game-grid').innerHTML = html;
+    document.getElementById('og-pick-count').textContent = ogSelectedGames.length;
+}
+
+function ogToggleGame(id) {
+    var idx = ogSelectedGames.indexOf(id);
+    if (idx >= 0) {
+        ogSelectedGames.splice(idx, 1);
+    } else {
+        if (ogSelectedGames.length >= 3) return;
+        ogSelectedGames.push(id);
+    }
+    ogRenderGameGrid();
+    ogRefreshFee();
+}
+
+// 套餐切换：更新卡片高亮、游戏网格显隐、价格/副标题/按钮/积分不足提示
+function ogSelectPkg(which) {
+    if (!ogPkgs[which]) return;
+    ogSelectedPkg = which;
+    var pkg = ogPkgs[which];
+
+    document.querySelectorAll('.og-pkg-card').forEach(function(card) {
+        card.classList.toggle('selected', card.getAttribute('data-pkg') === which);
+    });
+    document.getElementById('og-game-picker').style.display = (which === 'pick') ? '' : 'none';
+
+    document.getElementById('og-modal-subtitle').textContent =
+        pkg.price + '积分兑换 · ' + pkg.validity_text + '有效期';
+    document.getElementById('og-feature-tags').innerHTML = (which === 'pick')
+        ? '<span class="og-tag og-tag-amber">🎉 任选3款</span><span class="og-tag og-tag-green">📶 无需联网</span><span class="og-tag og-tag-blue">🔒 授权管理</span>'
+        : '<span class="og-tag og-tag-blue">🎮 17款游戏</span><span class="og-tag og-tag-green">📶 无需联网</span><span class="og-tag og-tag-amber">🔒 授权管理</span>';
+
+    ogRefreshFee();
+}
+
+// 按当前套餐/选择刷新费用、积分不足态与提交按钮
+function ogRefreshFee() {
+    var pkg = ogPkgs[ogSelectedPkg];
+    var ready = ogSelectedPkg !== 'pick' || ogSelectedGames.length === 3;
+    document.getElementById('og-fee-price').textContent = pkg.price;
+    document.getElementById('og-warn').style.display = (ogBalance < pkg.price) ? '' : 'none';
+    var btn = document.getElementById('og-submit-btn');
+    var label = (ogSelectedPkg === 'pick' ? '🎉 任选3款 · ' : '📦 全套17款 · ') + '确认兑换（' + pkg.price + '积分）';
+    btn.textContent = label;
+    btn.disabled = (ogBalance < pkg.price) || !ready;
 }
 
 function ogOpenModal() {
     document.getElementById('og-modal-mask').classList.add('show');
     // 锁定背景滚动
     document.body.style.overflow = 'hidden';
-    if (ogHasOrder) {
-        ogShowMyLicense();
+    if (ogOrders.full || ogOrders.pick) {
+        ogShowMyLicense(ogOrders.full ? 'full' : 'pick');
     } else {
         ogShowForm();
     }
@@ -1878,21 +2268,28 @@ document.addEventListener('keydown', function(e) {
 });
 
 function ogSubmit() {
+    var pkg = ogPkgs[ogSelectedPkg];
     var school = document.getElementById('og-school').value.trim();
     var room = document.getElementById('og-room').value.trim();
 
     if (!school) { alert('请输入学校名称'); return; }
     if (!room) { alert('请输入机房名称'); return; }
+    if (ogSelectedPkg === 'pick' && ogSelectedGames.length !== 3) {
+        alert('请任选恰好3款游戏'); return;
+    }
 
     var btn = document.getElementById('og-submit-btn');
     btn.disabled = true;
     btn.textContent = '正在处理...';
 
     var formData = new FormData();
-    formData.append('product_key', 'offline_game');
+    formData.append('product_key', pkg.key);
     formData.append('school_name', school);
     formData.append('room_name', room);
     formData.append('postkey', ogPostkey);
+    if (ogSelectedPkg === 'pick') {
+        ogSelectedGames.forEach(function(id) { formData.append('games[]', id); });
+    }
 
     fetch('point_goods_redeem.php', {
         method: 'POST',
@@ -1901,33 +2298,46 @@ function ogSubmit() {
     .then(function(res) { return res.json(); })
     .then(function(data) {
         if (data.code === 0) {
-            // 成功：更新本地状态，弹窗切换为结果视图
-            ogHasOrder = true;
-            ogMyLicense = data.data.license_code;
-            ogDownloadUrl = data.data.download_url;
-            ogOrderExpire = data.data.expire_date;
-            ogOrderSchool = data.data.school_name;
-            ogOrderRoom = data.data.room_name;
-
-            ogShowResult('兑换成功', '请复制授权码并下载安装包',
+            // 成功：写入对应套餐订单状态，弹窗切换为结果视图
+            var which = (data.data.product_key === 'offline_game_pick3') ? 'pick' : 'full';
+            ogOrders[which] = {
+                license: data.data.license_code,
+                school: data.data.school_name,
+                room: data.data.room_name,
+                expire: data.data.expire_date,
+                games: (which === 'pick') ? ogSelectedGames.slice() : [],
+                games_text: (which === 'pick') ? ogSelectedGames.map(function(id){ return ogCatalog[id].name; }).join('、') : '',
+                download_url: data.data.download_url
+            };
+            ogRenderLicenseSwitch(which);
+            ogShowResult(
+                which === 'pick' ? '兑换成功（任选3款）' : '兑换成功',
+                '请复制授权码并下载安装包' + (which === 'pick' ? '（已选：' + ogOrders[which].games_text + '）' : ''),
                 data.data.license_code, data.data.download_url);
+            ogRenderUpgradeEntry(which);
 
-            // 更新横幅按钮为"我的授权码"
+            // 更新横幅价格区为已授权状态（按实际持有订单显示）
             var bannerAction = document.querySelector('.og-banner-top-action');
             if (bannerAction) {
-                bannerAction.innerHTML = '<div class="og-banner-top-price"><span class="og-banner-top-price-num">✓</span><span class="og-banner-top-price-unit">已兑换</span></div><button class="og-banner-top-btn og-banner-top-btn-success" onclick="ogOpenModal()">🔑 我的授权码</button>';
+                var btnHtml = '';
+                if (ogOrders.pick) {
+                    btnHtml += '<div class="og-banner-pkg og-banner-pkg-pick"><span class="og-banner-pkg-badge">✓ 任选3款已授权</span></div>';
+                }
+                if (ogOrders.full) {
+                    btnHtml += '<div class="og-banner-pkg"><span class="og-banner-pkg-badge">✓ 全套17款已授权</span></div>';
+                }
+                bannerAction.innerHTML = '<div class="og-banner-top-price">' + btnHtml + '</div>'
+                    + '<button class="og-banner-top-btn og-banner-top-btn-success" onclick="ogOpenModal()">🔑 我的授权码</button>';
             }
         } else {
             alert(data.msg);
-            btn.disabled = false;
-            btn.textContent = ogBtnText;
+            ogRefreshFee();
         }
     })
     .catch(function(err) {
         console.error('ogSubmit error:', err);
         alert('网络错误，请稍后重试');
-        btn.disabled = false;
-        btn.textContent = ogBtnText;
+        ogRefreshFee();
     });
 }
 

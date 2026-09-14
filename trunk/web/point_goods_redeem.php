@@ -82,6 +82,29 @@ if (!empty($route['need_school_room'])) {
     }
 }
 
+// 促销包 offline_game_pick3（任选3款）：校验 games 入参。
+// 白名单以 point_offline_game_catalog() 为准；非法/重复 id 丢弃后必须恰好剩 3 个。
+// 全套商品 offline_game 不接收 games（即使前端误传也忽略）。
+$og_pick_games = array();
+if ($product_key === 'offline_game_pick3') {
+    $raw_games = isset($_POST['games']) ? $_POST['games'] : array();
+    if (!is_array($raw_games)) {
+        $raw_games = explode(',', strval($raw_games));
+    }
+    $catalog = point_offline_game_catalog();
+    foreach ($raw_games as $g) {
+        $g = trim(strval($g));
+        if ($g !== '' && isset($catalog[$g]) && !in_array($g, $og_pick_games, true)) {
+            $og_pick_games[] = $g;
+        }
+    }
+    if (count($og_pick_games) !== 3) {
+        echo json_encode(['code' => -1, 'msg' => '请从游戏列表中任选恰好3款游戏']);
+        exit();
+    }
+    sort($og_pick_games); // 与签发端约定：签名按排序后列表拼接，顺序无关
+}
+
 // 价格/有效期取自商品配置（订单写价格快照，以下单时价格为准）
 $point_amount = intval($goods['price']);
 $expire_days = intval($goods['validity_days']);
@@ -135,13 +158,24 @@ try {
         exit();
     }
 
+    // 扣积分（促销包在备注中列出所选游戏，便于积分流水/飞书通知核对）
+    $remark = '积分商品兑换：' . $goods['title'] . '（' . mb_substr($school_name, 0, 30) . '-' . mb_substr($room_name, 0, 30);
+    if ($product_key === 'offline_game_pick3') {
+        $pick_names = array();
+        foreach ($og_pick_games as $gid) {
+            $pick_names[] = $catalog[$gid]['name'];
+        }
+        $remark .= '，任选3款：' . implode('、', $pick_names);
+    }
+    $remark .= '）';
+
     // 扣积分
     $apply = point_apply_change(
         $user_id,
         -$point_amount,
         POINT_LOG_TYPE_GOODS,
         $order_no,
-        '积分商品兑换：' . $goods['title'] . '（' . mb_substr($school_name, 0, 30) . '-' . mb_substr($room_name, 0, 30) . '）'
+        $remark
     );
 
     if (!$apply['success']) {
@@ -151,9 +185,12 @@ try {
     }
 
     // 履约：按商品类型路由（当前实现 license 类 = 离线游戏授权码）
+    // offline_game（全套）与 offline_game_pick3（任选3款）共用同一签发脚本，
+    // 促销包额外传 --games，授权码 JSON 携带游戏白名单
     $license_code = '';
     switch ($product_key) {
         case 'offline_game':
+        case 'offline_game_pick3':
             // 调用Python生成授权码（RSA-PSS签名）
             $script_path = __DIR__ . '/offline-games/admin/generate_license.py';
             if (!file_exists($script_path)) {
@@ -174,6 +211,11 @@ try {
             $safe_school = escapeshellarg($school_name);
             $safe_room = escapeshellarg($room_name);
             $safe_expire = escapeshellarg($expire_date);
+            // 促销包追加 --games（id 已在事务前完成白名单校验与排序）
+            $games_cli = '';
+            if ($product_key === 'offline_game_pick3') {
+                $games_cli = ' --games ' . escapeshellarg(implode(',', $og_pick_games));
+            }
             // tempnam 会先创建 og_XXXXXX 空文件，python 再写出 og_XXXXXX.dat，两个文件都要清理。
             // 清理必须用 register_shutdown_function：PHP 的 exit() 不执行 finally 块，
             // 而 shutdown 回调在正常结束/exit/致命错误所有路径都会运行，不留孤儿文件
@@ -192,6 +234,7 @@ try {
                  . " --school {$safe_school}"
                  . " --room {$safe_room}"
                  . " --expire {$safe_expire}"
+                 . $games_cli
                  . " --output " . escapeshellarg($output_file)
                  . " 2>&1";
 
@@ -204,6 +247,7 @@ try {
                      . " --school {$safe_school}"
                      . " --room {$safe_room}"
                      . " --expire {$safe_expire}"
+                     . $games_cli
                      . " --output " . escapeshellarg($output_file)
                      . " 2>&1";
                 exec($cmd, $output, $return_code);

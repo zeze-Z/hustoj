@@ -4,6 +4,75 @@
  */
 
 var Auth = (function() {
+    // 游戏 id → 中文名映射：id 必须与 games/{id}.html、签发端白名单
+    // （admin/generate_license.py 的 GAME_WHITELIST、网站 my_func.inc.php 的 point_offline_game_catalog()）一致
+    var OG_GAME_NAMES = {
+        puzzle_game: '拼图游戏',
+        clock_reading: '时钟认读',
+        math_game: '数学闯关',
+        color_match: '颜色匹配',
+        guess_number: '猜数字',
+        memory_game: '卡片配对',
+        sequence_memory: '序列记忆',
+        snake: '贪吃蛇',
+        bead_game: '拼豆游戏',
+        number_puzzle: '数字华容道',
+        idiom_chain: '成语接龙',
+        minesweeper: '扫雷',
+        keyboard_game: '打字游戏',
+        balloon_typing: '气球打字',
+        frog_typing: '青蛙过河',
+        coding_game: '编程启蒙',
+        ai_drawing_game: 'AI猜猜画'
+    };
+
+    /**
+     * 取授权范围：null/[]/['*']/非数组 = 全套；否则为允许的游戏 id 数组（排序去重）。
+     * 数组中含未知 id 时返回 null（调用方据此判授权无效）。
+     */
+    function licenseScope(license) {
+        if (!license || !Array.isArray(license.games) || license.games.length === 0) {
+            return { games: null, bad: false };
+        }
+        if (license.games.length === 1 && license.games[0] === '*') {
+            return { games: null, bad: false };
+        }
+        var ids = [];
+        for (var i = 0; i < license.games.length; i++) {
+            var gid = license.games[i];
+            if (typeof gid !== 'string' || !OG_GAME_NAMES.hasOwnProperty(gid)) {
+                return { games: null, bad: true };
+            }
+            if (ids.indexOf(gid) < 0) ids.push(gid);
+        }
+        ids.sort();
+        return { games: ids, bad: false };
+    }
+
+    /** 授权范围中文名（全套返回 null） */
+    function scopeGameNames(license) {
+        var scope = licenseScope(license);
+        if (scope.bad || !scope.games) return null;
+        return scope.games.map(function(id) { return OG_GAME_NAMES[id]; });
+    }
+
+    /** 判定某游戏是否在授权范围内（无 games 白名单 = 全套放行） */
+    function isGameAllowed(license, gameId) {
+        var scope = licenseScope(license);
+        if (scope.bad) return false;
+        if (!scope.games) return true;
+        return scope.games.indexOf(gameId) >= 0;
+    }
+
+    /** 从当前页面 URL 推导游戏 id（仅 games/{id}.html，activate.html 除外） */
+    function currentGameFromUrl() {
+        var m = window.location.pathname.match(/\/games\/([a-z0-9_]+)\.html$/i);
+        if (m && m[1] !== 'activate' && OG_GAME_NAMES.hasOwnProperty(m[1])) {
+            return m[1];
+        }
+        return null;
+    }
+
     // RSA公钥（PEM格式，用于验证license签名）
     // 私钥由管理员持有，用于生成license
     var PUBLIC_KEY_PEM = `-----BEGIN PUBLIC KEY-----
@@ -227,15 +296,26 @@ pQIDAQAB
             return { valid: false, message: '授权已过期，请联系管理员续费' };
         }
 
-        // 3. 验证RSA签名
+        // 3. 解析授权游戏范围（促销包携带 games 白名单；无 games = 全套，兼容旧授权码）
+        var scope = licenseScope(license);
+        if (scope.bad) {
+            return { valid: false, message: '授权游戏列表无效，请联系管理员' };
+        }
+
+        // 4. 验证RSA签名
+        // 全套（旧格式）：school|room|expire
+        // 促销包：school|room|expire|id1,id2,id3（排序后拼接，与签发端一致）
         var signData = license.school + '|' + license.room + '|' + license.expire;
+        if (scope.games) {
+            signData += '|' + scope.games.join(',');
+        }
         var signatureValid = await verifySignature(signData, license.signature);
 
         if (!signatureValid) {
             return { valid: false, message: '授权文件签名无效，授权码可能被篡改' };
         }
 
-        return { valid: true, message: '授权验证通过' };
+        return { valid: true, message: '授权验证通过', games: scope.games };
     }
 
     /**
@@ -243,17 +323,36 @@ pQIDAQAB
      * 读取顺序：① localStorage（已激活机器的主路径，Chrome/Edge file:// 下 fetch/XHR 全被禁）
      *          ② window.OG_LICENSE_DATA（license.js 随包授权，页面经 <script src> 注入，学生机双击 index.html 零操作进入）
      *          ③ license.dat 文件兜底（Firefox 等允许 file:// 读取的场景，多级相对路径）
-     * @returns {Promise} 验证结果
+     * @param {string} [expectedGame] 需要校验的游戏 id；不传时自动从当前 games/{id}.html 页面 URL 推导
+     * @returns {Promise} 验证结果（games=null 表示全套；否则为允许的 id 数组；越权时 valid=false 且 outOfScope=true）
      */
-    async function checkAuth() {
+    async function checkAuth(expectedGame) {
         var message = '未找到授权，请先激活';
+
+        // 验签通过后的统一出口：附加授权范围，并对游戏页做越权拦截（游戏页直接打开本地 html 也拦住）
+        function pass(lic, msg, games) {
+            var result = { valid: true, message: msg, license: lic, games: games, outOfScope: false };
+            var gameId = expectedGame || currentGameFromUrl();
+            if (gameId && games && games.indexOf(gameId) < 0) {
+                var names = games.map(function(id) { return OG_GAME_NAMES[id]; }).join('、');
+                return {
+                    valid: false,
+                    outOfScope: true,
+                    games: games,
+                    license: lic,
+                    message: '该游戏不在授权范围内。当前授权（任选3款）仅含：' + names +
+                             '。如需全部17款游戏，请前往 https://aioj.top/more.php 兑换全套授权。'
+                };
+            }
+            return result;
+        }
 
         // 1. 主路径：localStorage
         var stored = loadLicenseFromStorage();
         if (stored) {
             var storedResult = await validateLicense(stored);
             if (storedResult.valid) {
-                return { valid: true, message: storedResult.message, license: stored };
+                return pass(stored, storedResult.message, storedResult.games);
             }
             // localStorage 命中但无效（过期/签名错），继续尝试后续通道，并把无效原因带给调用方
             message = storedResult.message;
@@ -266,7 +365,7 @@ pQIDAQAB
         if (typeof window.OG_LICENSE_DATA !== 'undefined' && window.OG_LICENSE_DATA) {
             var packedResult = await validateLicense(window.OG_LICENSE_DATA);
             if (packedResult.valid) {
-                return { valid: true, message: packedResult.message, license: window.OG_LICENSE_DATA };
+                return pass(window.OG_LICENSE_DATA, packedResult.message, packedResult.games);
             }
             // license.js 无效（被篡改/过期），携带原因继续走 license.dat 兜底
             message = packedResult.message;
@@ -279,14 +378,14 @@ pQIDAQAB
             if (fileResult.valid) {
                 // 文件验证通过后同步写入 localStorage，后续页面加载直接命中主路径
                 persistLicense(license);
-                return { valid: true, message: fileResult.message, license: license };
+                return pass(license, fileResult.message, fileResult.games);
             }
             message = fileResult.message;
         } catch (e) {
             // 所有路径读取失败（如 Chrome file:// 禁止 fetch/XHR），走未授权提示
         }
 
-        return { valid: false, message: message, license: null };
+        return { valid: false, message: message, license: null, games: null, outOfScope: false };
     }
 
     /**
@@ -297,6 +396,11 @@ pQIDAQAB
 
         var infoHtml = '© ' + license.school + ' - ' + license.room +
                        ' | 授权至 ' + license.expire;
+        // 促销包授权在公示栏标注已授权游戏（全套不额外展示）
+        var names = scopeGameNames(license);
+        if (names) {
+            infoHtml += ' | 任选3款：' + names.join('、');
+        }
 
         // 创建或更新公示元素
         var $footer = $('#auth-footer');
@@ -323,7 +427,11 @@ pQIDAQAB
         validateLicense: validateLicense,
         checkAuth: checkAuth,
         displayAuthInfo: displayAuthInfo,
-        persistLicense: persistLicense
+        persistLicense: persistLicense,
+        isGameAllowed: isGameAllowed,
+        scopeGameNames: scopeGameNames,
+        gameDisplayName: function(id) { return OG_GAME_NAMES[id] || id; },
+        currentGameFromUrl: currentGameFromUrl
     };
 })();
 
@@ -342,6 +450,22 @@ $(document).ready(function() {
                     Auth.displayAuthInfo(result.license);
                 }
             }
+        });
+        return;
+    }
+
+    // 游戏页：授权有效但当前游戏不在促销包范围内时，改写各页统一的 #no-auth-overlay 文案
+    // （各游戏页自身的内联脚本负责显示遮罩/隐藏内容；此处仅把"未激活"文案换成"越权"文案）
+    var gameId = Auth.currentGameFromUrl();
+    if (gameId) {
+        Auth.checkAuth(gameId).then(function(result) {
+            if (result.valid || !result.outOfScope) return;
+            var $overlay = $('#no-auth-overlay');
+            if ($overlay.length === 0) return;
+            $overlay.find('h2').first().text('该游戏不在授权范围内');
+            $overlay.find('p').first().text(result.message);
+            var $btn = $overlay.find('a').first();
+            $btn.attr('href', 'https://aioj.top/more.php').attr('target', '_blank').text('前往兑换全套授权');
         });
     }
 });

@@ -348,6 +348,47 @@
                 $('#auth-room').text(result.license.room);
                 $('#auth-status').show();
             }
+
+            // 促销包（任选3款）授权：仅保留授权范围内的游戏卡片
+            if (result.games && result.games.length) {
+                $('.game-card').each(function() {
+                    var m = ($(this).attr('href') || '').match(/games\/([a-z0-9_]+)\.html/i);
+                    if (m && result.games.indexOf(m[1]) < 0) {
+                        $(this).remove();
+                    }
+                });
+
+                // 隐藏已无卡片的分区及其顶部 Tab
+                $('.section').each(function() {
+                    var sec = $(this);
+                    if (sec.find('.game-card').length === 0) {
+                        var key = (sec.attr('id') || '').replace('section-', '');
+                        sec.removeClass('active').hide();
+                        $('.tab[data-section="' + key + '"]').hide();
+                    }
+                });
+
+                // 默认分区可能被隐藏：激活第一个仍有卡片的分区
+                if ($('.section.active:visible').length === 0) {
+                    var $first = $('.section:visible').first();
+                    if ($first.length) {
+                        var firstKey = $first.attr('id').replace('section-', '');
+                        $('.tab').removeClass('active');
+                        $first.addClass('active');
+                        $('.tab[data-section="' + firstKey + '"]').addClass('active');
+                    }
+                }
+
+                // 顶部升级引导条
+                $('.container').prepend(
+                    '<div style="max-width:840px;margin:0 auto 20px;padding:12px 18px;border-radius:12px;'
+                    + 'background:linear-gradient(135deg,#fff7ed,#fef3c7);border:1px solid #fcd34d;'
+                    + 'color:#92400e;font-size:0.92rem;text-align:center;line-height:1.6;">'
+                    + '🎉 你的「任选3款」促销包已激活，其余14款游戏可随时升级全套解锁。'
+                    + '<a href="https://aioj.top/more.php" target="_blank" rel="noopener noreferrer" '
+                    + 'style="color:#ea580c;font-weight:700;text-decoration:none;white-space:nowrap;">前往升级全套17款 →</a></div>'
+                );
+            }
         });
 
         // Tab点击事件
