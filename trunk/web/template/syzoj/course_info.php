@@ -163,8 +163,26 @@
     </div>
   </div>
 
+  <?php if (!empty($view_just_bought) && !empty($view_share_url)): ?>
+  <!-- 购买成功·分享赚回引导条：just_bought 由 course_get.php 成功跳转携带 -->
+  <div class="ui segment" style="border-radius:12px;margin-top:15px;padding:14px 18px;background:linear-gradient(135deg,#f0fff4 0%,#f8f9ff 100%);border:1px solid #52c41a30;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <i class="check circle icon" style="font-size:1.6em;color:#52c41a;flex-shrink:0;"></i>
+      <div style="flex:1;min-width:200px;">
+        <div style="font-weight:600;color:#333;font-size:1.05em;">购买成功！现在可以查看/下载课程资源</div>
+        <div style="color:#666;font-size:0.88em;margin-top:3px;">
+          <i class="share alternate icon" style="color:#667eea;"></i>
+          分享给好友，购买后您可得实付积分 <strong style="color:#667eea;">20%</strong> 返佣
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;">
+        <input type="hidden" class="course-share-url-input" value="<?php echo htmlentities($view_share_url, ENT_QUOTES, 'UTF-8'); ?>">
+        <button type="button" class="ui small primary button" onclick="copyCourseShareUrl(this)"><i class="copy icon"></i>复制分享链接</button>
+      </div>
+    </div>
+  </div>
+  <?php endif; ?>
 
-  <!-- 课程资源准备：判断是否存在资源 -->
   <?php
     $has_courseware = !empty($view_courseware_url) || !empty($view_course['courseware_link']);
     $has_lesson_plan = !empty($view_lesson_plan_url) || !empty($view_course['lesson_plan_link']);
@@ -511,6 +529,21 @@
   </div>
   <?php endif; ?>
 
+  <!-- 次级运营区：分享课程（方案B，低优先级位置，视觉降级） -->
+  <?php if (!empty($view_share_url)): ?>
+  <div class="ui segment" style="border-radius:12px;margin-top:15px;padding:12px 16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);border:1px solid #eaeaea;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div style="font-size:0.9em;color:#888;">
+        <i class="share alternate icon" style="color:#667eea;"></i> 分享课程 · 好友购买后得 20% 积分返佣
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <input type="hidden" class="course-share-url-input" value="<?php echo htmlentities($view_share_url, ENT_QUOTES, 'UTF-8'); ?>">
+        <button type="button" class="ui tiny basic primary button" onclick="copyCourseShareUrl(this)"><i class="copy icon"></i>复制链接</button>
+      </div>
+    </div>
+  </div>
+  <?php endif; ?>
+
   <!-- 创作者入驻引导（置于 .padding 容器内，与其他卡片左右对齐） -->
   <div class="ui segment" style="border-radius: 12px; margin-top: 20px; padding: 10px !important; background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border: 1px solid #667eea30;">
     <div style="text-align: center;">
@@ -532,6 +565,37 @@
 
 
 <script>
+// 复制分享链接：从点击按钮向上找最近的 .course-share-url-input 读取链接值
+// 每个分享块（引导条/次级卡）各自带一个 hidden input，互不依赖
+function copyCourseShareUrl(btn) {
+    var input = btn ? btn.parentNode.querySelector('.course-share-url-input') : null;
+    if (!input) return;
+    var text = input.value;
+    if (navigator.clipboard && window.isSecureContext) {
+        // HTTPS 环境：用现代 Clipboard API
+        navigator.clipboard.writeText(text).then(function () { alert('分享链接已复制'); }).catch(function () { fallbackCopy(text); });
+    } else {
+        // HTTP 或非安全上下文：用临时 textarea + execCommand（不依赖原 input 可见性）
+        fallbackCopy(text);
+    }
+}
+// 兼容复制：临时 textarea 即使原 input 是 hidden 也能复制成功
+function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    // 设为可视但移出屏幕（display:none 或不可聚焦会导致 execCommand 失败）
+    ta.style.position = 'fixed';
+    ta.style.top = '-9999px';
+    ta.style.left = '-9999px';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    alert(ok ? '分享链接已复制' : '复制失败，请手动选中链接复制');
+}
 function showLoginPrompt() {
     // 与「注册」按钮一致，直接跳转登录页（不再弹确认框）
     // 登录成功后回到当前课件详情页继续购买

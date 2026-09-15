@@ -42,7 +42,9 @@ if ($is_upgrade && $license_type != 2) {
 function set_success_and_redirect($course_id, $success_msg) {
     global $success_message, $redirect_url;
     $success_message = $success_msg;
-    $redirect_url = 'course_info.php?id=' . $course_id;
+    // 带 just_bought=1 标记，详情页据此展示"购买成功·分享赚回"引导条
+    // （成功页只有3秒倒计时，用户不停留，故把窗口接到详情页）
+    $redirect_url = 'course_info.php?id=' . $course_id . '&just_bought=1';
 }
 
 // ---------------------------------------------------------------
@@ -99,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         }
                     } else {
                         // 积分支付：服务端再次重算价格 / 校验余额 / 扣减积分 / 登记订单
-                        $pay = point_pay_for_course($user_id, $course_id, $license_type, $is_upgrade ? true : false);
+                        $pay = point_pay_for_course($user_id, $course_id, $license_type, $is_upgrade ? true : false, point_course_share_referrer());
                         if ($pay['success']) {
                             set_success_and_redirect($course_id, '积分支付成功，已为您开通权限');
                         } else {

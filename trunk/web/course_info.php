@@ -15,6 +15,13 @@ require_once('./include/setlang.php');
 // 获取课程ID
 $course_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
+// 购买成功跳回标记：仅 course_get.php 成功跳转携带，用于触发"分享赚回"引导条
+// 纯展示参数，不落库；与 sp 归因参数互不影响
+$just_bought = isset($_GET['just_bought']) ? intval($_GET['just_bought']) : 0;
+
+// 处理课程分享归因：验证 sp 后写入 7 天 cookie；无 sp 时沿用已有 cookie。
+$course_share_referrer = point_course_share_referrer();
+
 if ($course_id <= 0) {
     echo "<script>alert('课程ID无效'); history.back();</script>";
     exit();
@@ -51,6 +58,17 @@ $is_free = ($preview_price == 0 && $source_price == 0);
 
 // 获取用户权限（使用统一公共函数）
 $user_id = isset($_SESSION[$OJ_NAME . '_' . 'user_id']) ? $_SESSION[$OJ_NAME . '_' . 'user_id'] : 0;
+$view_share_code = '';
+$view_share_url = '';
+if ($user_id !== 0 && $user_id !== '') {
+    $view_share_code = point_course_share_param($user_id);
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
+    if ($host !== '' && $view_share_code !== '') {
+        $view_share_url = $scheme . '://' . $host . '/course_info.php?id=' . intval($course_id)
+            . '&sp=' . rawurlencode($view_share_code);
+    }
+}
 $permission = get_user_course_permission($user_id, $course_id);
 
 // 管理员豁免（自动拥有全部权限）统一在 get_user_course_permission() 中处理
@@ -99,6 +117,7 @@ $view_is_free = $is_free;
 $view_has_source_resource = $permission['has_source_resource'];
 $view_is_full_preview_free = $permission['is_full_preview_free'];
 $view_is_source_free = $permission['is_source_free'];
+$view_just_bought = $just_bought;
 $page_title = "$MSG_COURSE: " . htmlspecialchars($course['title'], ENT_QUOTES, 'UTF-8') . " - $OJ_NAME";
 
 require("template/" . $OJ_TEMPLATE . "/course_info.php");

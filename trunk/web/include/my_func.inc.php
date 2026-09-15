@@ -1678,41 +1678,57 @@ function point_redeem_card($user_id, $card_no, $card_secret, $ip) {
  * 课程分享码签名与 7 天归因 cookie。
  * 签名只覆盖分享者 ID，避免客户端伪造返佣归属。
  */
-function point_course_share_signature($referrer_id) {
-    global $OJ_NAME;
+function point_course_share_signature($referrer_id, $issued_at) {
+    global $OJ_COURSE_SHARE_SECRET;
     $referrer_id = trim((string)$referrer_id);
-    if ($referrer_id === '') return '';
-    return hash_hmac('sha256', $referrer_id, 'course-share:' . (string)$OJ_NAME);
+    $issued_at = intval($issued_at);
+    // 仅从私密配置或进程环境读取，绝不提供可预测的默认密钥。
+    $secret = isset($OJ_COURSE_SHARE_SECRET) ? trim((string)$OJ_COURSE_SHARE_SECRET) : '';
+    if ($secret === '') {
+        $secret = getenv('OJ_COURSE_SHARE_SECRET');
+        $secret = $secret === false ? '' : trim((string)$secret);
+    }
+    if ($referrer_id === '' || $issued_at <= 0 || $secret === '') return '';
+    return hash_hmac('sha256', $referrer_id . '|' . $issued_at, $secret);
 }
 
-function point_course_share_verify($referrer_id, $signature) {
-    $expected = point_course_share_signature($referrer_id);
+function point_course_share_verify($referrer_id, $issued_at, $signature) {
+    $issued_at = intval($issued_at);
+    if ($issued_at <= 0 || $issued_at > time() || time() - $issued_at > 7 * 86400) return false;
+    $expected = point_course_share_signature($referrer_id, $issued_at);
     return $expected !== '' && hash_equals($expected, trim((string)$signature));
 }
 
 /** 从已验证的分享参数建立 7 天 cookie，并返回当前归因者。 */
 function point_course_share_referrer() {
     $sp = isset($_GET['sp']) ? trim((string)$_GET['sp']) : '';
-    // sp 格式：referrer_id.signature（分享链接唯一对外参数）。
-    $parts = explode('.', $sp, 2);
-    if (count($parts) === 2 && point_course_share_verify($parts[0], $parts[1])) {
+    // sp 格式：referrer_id.issued_at.signature（签名覆盖 ID|issued_at）。
+    $parts = explode('.', $sp, 3);
+    if (count($parts) === 3 && point_course_share_verify($parts[0], $parts[1], $parts[2])) {
         if (!headers_sent()) {
-            setcookie('course_referrer_id', $parts[0], [
+            setcookie('course_referrer_id', $parts[0] . '.' . $parts[1] . '.' . $parts[2], [
                 'expires' => time() + 7 * 86400,
                 'path' => '/', 'httponly' => true, 'samesite' => 'Lax',
             ]);
         }
         return $parts[0];
     }
-    $cookie_referrer = isset($_COOKIE['course_referrer_id']) ? trim((string)$_COOKIE['course_referrer_id']) : '';
-    return $cookie_referrer !== '' ? $cookie_referrer : null;
+    $cookie_sp = isset($_COOKIE['course_referrer_id']) ? trim((string)$_COOKIE['course_referrer_id']) : '';
+    $cookie_parts = explode('.', $cookie_sp, 3);
+    if (count($cookie_parts) === 3 && point_course_share_verify($cookie_parts[0], $cookie_parts[1], $cookie_parts[2])) {
+        return $cookie_parts[0];
+    }
+    return null;
 }
 
 /** 生成分享链接参数 sp。 */
 function point_course_share_param($referrer_id) {
     $referrer_id = trim((string)$referrer_id);
     if ($referrer_id === '') return '';
-    return $referrer_id . '.' . point_course_share_signature($referrer_id);
+    $issued_at = time();
+    $signature = point_course_share_signature($referrer_id, $issued_at);
+    if ($signature === '') return '';
+    return $referrer_id . '.' . $issued_at . '.' . $signature;
 }
 
 function point_pay_course_share_reward($order_no, $referrer_id, $recharged_used) {
@@ -1720,23 +1736,26 @@ function point_pay_course_share_reward($order_no, $referrer_id, $recharged_used)
     $referrer_id = trim((string)$referrer_id);
     $recharged_used = max(0, intval($recharged_used));
     $reward = intval(floor($recharged_used * 0.20));
-    if ($order_no === '' || $referrer_id === '' || $reward <= 0) return 0;
+    if ($order_no === '' || $referrer_id === '') return 0;
     try {
         point_tx_begin();
         $rows = pdo_query("SELECT user_id FROM `users` WHERE user_id = ? AND defunct = 'N' FOR UPDATE", $referrer_id);
         if (empty($rows)) {
-            pdo_query("UPDATE `course_order` SET share_reward = 0 WHERE order_no = ? AND share_reward IS NULL", $order_no);
             point_tx_commit();
             return 0;
         }
-        $claimed = pdo_query("UPDATE `course_order` SET share_reward = 0 WHERE order_no = ? AND referrer_id = ? AND share_reward IS NULL", $order_no, $referrer_id);
-        if (intval($claimed) !== 1) {
+        $order_rows = pdo_query("SELECT share_reward FROM `course_order` WHERE order_no = ? AND referrer_id = ? FOR UPDATE", $order_no, $referrer_id);
+        if (empty($order_rows) || $order_rows[0]['share_reward'] !== null) {
+            point_tx_commit();
+            return 0;
+        }
+        if ($reward <= 0) {
+            pdo_query("UPDATE `course_order` SET share_reward = 0 WHERE order_no = ? AND referrer_id = ?", $order_no, $referrer_id);
             point_tx_commit();
             return 0;
         }
         $apply = point_apply_change($referrer_id, $reward, POINT_LOG_TYPE_SHARE_REWARD, $order_no, '课程分享返佣');
         if (!$apply['success']) {
-            pdo_query("UPDATE `course_order` SET share_reward = 0 WHERE order_no = ?", $order_no);
             point_tx_commit();
             return 0;
         }
@@ -1768,7 +1787,7 @@ function point_pay_for_course($user_id, $course_id, $license_type, $is_upgrade =
     } else {
         $referrer_id = trim((string)$referrer_id);
     }
-    if ($referrer_id === '' || $referrer_id === $user_id) {
+    if ($referrer_id === '' || $referrer_id === $user_id || point_course_share_signature($referrer_id, time()) === '') {
         $referrer_id = null;
     }
 

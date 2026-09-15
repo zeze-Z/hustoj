@@ -1,6 +1,6 @@
 # OJ 功能发布步骤
 
-## 当前版本：V2.9（2026-09-09）
+## 当前版本：V2.10（2026-09-14）
 
 ---
 
@@ -28,6 +28,7 @@
 | V2.7 | 2026-09-02 | 教师推广积分奖励（bind_teacher_id + teacher_promo_stat 结算表） |
 | V2.8 | 2026-09-05 | 离线游戏积分兑换订单表 offline_game_order |
 | V2.9 | 2026-09-09 | 积分商品通用化（point_goods 商品表 + offline_game_order 重命名为 point_goods_order） |
+| V2.10 | 2026-09-14 | 课件分享返佣（users 双钱包 point_recharged + course_order 分享归因字段） |
 
 ---
 
@@ -112,6 +113,12 @@ mysql -u root -p jol < db/V2.8_20260905_offline_game_order.sql
 #     存量离线游戏积分流水 type 4→6
 #     ⚠️ 必须与代码同窗口部署（新代码查询新表名，SQL 先行窗口内旧兑换入口短暂失效）
 mysql -u root -p jol < db/V2.9_20260909_point_goods.sql
+
+# 19. 课件分享返佣（V2.10）
+#     users 加 point_recharged（充值积分余额，双钱包拆分；存量余额一律视为赠送积分，保持默认 0）；
+#     course_order 加 referrer_id / share_reward 分享归因字段
+#     ⚠️ 必须在 PHP-FPM 进程环境配置高熵密钥 OJ_COURSE_SHARE_SECRET；未配置时分享功能自动禁用，不得使用公开值替代
+mysql -u root -p jol < db/V2.10_20260914_course_share_reward.sql
 ```
 
 **验证：**
@@ -237,6 +244,15 @@ SELECT product_key, price, original_price, validity_days, status FROM jol.point_
 -- 预期：1 行 offline_game / 99 / 199 / 365 / 1
 -- 存量订单回填核对（生产应无订单）
 SELECT COUNT(*) FROM jol.point_goods_order WHERE product_key <> 'offline_game';
+-- 预期：0
+
+-- 课件分享返佣（V2.10）
+DESCRIBE jol.users point_recharged;    -- int, NOT NULL, Default: 0, Comment: 充值积分余额
+DESCRIBE jol.course_order referrer_id; -- varchar(48), NULL, Comment: 分享者 user_id
+DESCRIBE jol.course_order share_reward; -- int, NULL, Comment: 分享返佣积分（NULL=未发放）
+SHOW INDEX FROM jol.course_order WHERE Key_name='idx_referrer';
+-- 存量余额视为赠送：迁移后所有用户 point_recharged 应为 0（充值卡兑换后才累计）
+SELECT COUNT(*) FROM jol.users WHERE point_recharged <> 0;
 -- 预期：0
 ```
 

@@ -128,6 +128,9 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 }
 
 .tab-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
     padding: 12px 24px;
     cursor: pointer;
     color: #666;
@@ -138,6 +141,30 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     white-space: nowrap;
     user-select: none;
     margin-bottom: -2px;
+}
+
+.online-free-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border: 1px solid #a7f3d0;
+    border-radius: 999px;
+    background: #ecfdf5;
+    color: #047857;
+    font-size: 0.68rem;
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: 0;
+}
+
+.online-free-tag::first-letter {
+    color: #10b981;
+}
+
+.tab-item:hover .online-free-tag,
+.tab-item.active .online-free-tag {
+    background: #d1fae5;
+    border-color: #6ee7b7;
 }
 
 .tab-item:hover {
@@ -1316,6 +1343,11 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
         flex-shrink: 0;
     }
 
+    .online-free-tag {
+        padding: 2px 6px;
+        font-size: 0.6rem;
+    }
+
     .sub-tabs {
         justify-content: flex-start;
         flex-wrap: nowrap;
@@ -1335,9 +1367,9 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 <div class="more-page">
     <!-- 一级 Tab 导航 -->
     <div class="tabs">
-        <div class="tab-item active" data-tab="games" onclick="switchTab('games')">🎮 小游戏</div>
-        <div class="tab-item" data-tab="ai" onclick="switchTab('ai')">🤖 AI</div>
-        <div class="tab-item" data-tab="coding" onclick="switchTab('coding')">💻 编程</div>
+        <div class="tab-item active" data-tab="games" onclick="switchTab('games')"><span>🎮 小游戏</span><span class="online-free-tag">● 在线免费用</span></div>
+        <div class="tab-item" data-tab="ai" onclick="switchTab('ai')"><span>🤖 AI</span><span class="online-free-tag">● 在线免费用</span></div>
+        <div class="tab-item" data-tab="coding" onclick="switchTab('coding')"><span>💻 编程</span><span class="online-free-tag">● 在线免费用</span></div>
         <div class="tab-item" data-tab="teacher" onclick="switchTab('teacher')">👨‍🏫 教师服务</div>
     </div>
 
