@@ -62,7 +62,8 @@ include("template/$OJ_TEMPLATE/header.php");
             <span style="display: inline-block; border-bottom: 3px solid #667eea; padding-bottom: 8px;">探索平台功能</span>
         </h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
-            <!-- 课件中心 -->
+            <?php if (is_teacher_or_admin()): ?>
+            <!-- 课件中心（教师/管理员可见） -->
             <a href="course.php" style="text-decoration: none; color: inherit;">
                 <div style="background: #fff; border-radius: 16px; padding: 32px 24px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: all 0.3s ease; cursor: pointer; border: 1px solid #f0f0f0;" onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 40px rgba(102,126,234,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)'">
                     <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
@@ -70,6 +71,7 @@ include("template/$OJ_TEMPLATE/header.php");
                     <div style="font-size: 14px; color: #888; line-height: 1.6;">海量精品课件<br>即点即学</div>
                 </div>
             </a>
+            <?php endif; ?>
             <!-- 积分中心 -->
             <a href="point_index.php" style="text-decoration: none; color: inherit;">
                 <div style="background: #fff; border-radius: 16px; padding: 32px 24px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transition: all 0.3s ease; cursor: pointer; border: 1px solid #f0f0f0;" onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 12px 40px rgba(245,166,35,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)'">

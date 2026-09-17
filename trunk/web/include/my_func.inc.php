@@ -2050,3 +2050,46 @@ function bind_students_to_teacher($teacher_id, $user_ids) {
     return $affected;
 }
 
+/**
+ * 判断当前登录用户是否为"教师或管理员"。
+ * 满足以下任一条件即返回 true：
+ *  - 数据库 users.role = 'teacher'（privilege 表不一定有 rightstr='teacher' 记录，以 users.role 为准）
+ *  - session 具备 administrator / password_setter / user_adder / problem_editor / contest_creator 任一权限
+ * 判断口径与 template/syzoj/header.php L669 管理员入口一致，并额外纳入 DB 侧教师身份。
+ * 用于学生侧隐藏教师专属功能（如课件中心、我的订单等入口）。
+ * 结果在单次请求内静态缓存，避免重复查表。
+ * @return bool
+ */
+function is_teacher_or_admin() {
+    static $cache = null;
+    if ($cache !== null) return $cache;
+
+    global $OJ_NAME;
+
+    // 1. session 任一管理权限（与 header.php L669 口径一致）
+    if (isset($_SESSION[$OJ_NAME.'_'.'administrator'])
+     || isset($_SESSION[$OJ_NAME.'_'.'password_setter'])
+     || isset($_SESSION[$OJ_NAME.'_'.'user_adder'])
+     || isset($_SESSION[$OJ_NAME.'_'.'problem_editor'])
+     || isset($_SESSION[$OJ_NAME.'_'.'contest_creator'])) {
+        $cache = true;
+        return true;
+    }
+
+    // 2. DB 侧教师身份（与 course_my.php L74-L77 一致：查 users.role）
+    if (isset($_SESSION[$OJ_NAME.'_'.'user_id'])) {
+        $uid = $_SESSION[$OJ_NAME.'_'.'user_id'];
+        $rows = pdo_query(
+            "SELECT `role` FROM `users` WHERE `user_id` = ? AND `defunct` = 'N' LIMIT 1",
+            $uid
+        );
+        if (!empty($rows) && isset($rows[0]['role']) && $rows[0]['role'] === 'teacher') {
+            $cache = true;
+            return true;
+        }
+    }
+
+    $cache = false;
+    return false;
+}
+

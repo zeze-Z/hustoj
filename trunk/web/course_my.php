@@ -9,11 +9,18 @@ require_once('./include/const.inc.php');
 require_once('./include/cache_start.php');
 require_once('./include/setlang.php');
 require_once("./include/set_get_key.php");
+require_once("./include/my_func.inc.php");
 
 // 检查登录状态
 if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
     header("location:loginpage.php");
     exit();
+}
+
+// 教师专属功能：学生访问直接跳回首页
+if (!is_teacher_or_admin()) {
+    header('Location: index.php');
+    exit;
 }
 
 $user_id = $_SESSION[$OJ_NAME . '_' . 'user_id'];

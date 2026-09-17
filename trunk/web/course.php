@@ -11,6 +11,12 @@ require_once('./include/setlang.php');
 require_once("./include/set_get_key.php");
 require_once('./include/my_func.inc.php');
 
+// 教师专属功能：学生/游客访问直接跳回首页
+if (!is_teacher_or_admin()) {
+    header('Location: index.php');
+    exit;
+}
+
 $page_title = "$MSG_COURSE_LIST - $OJ_NAME";
 
 // 获取学科列表（只显示启用的）

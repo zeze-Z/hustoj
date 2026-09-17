@@ -17,6 +17,12 @@ if (!isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
     exit();
 }
 
+// 教师专属功能：学生访问直接跳回首页
+if (!is_teacher_or_admin()) {
+    header('Location: index.php');
+    exit;
+}
+
 $user_id = $_SESSION[$OJ_NAME.'_'.'user_id'];
 $course_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $license_type = isset($_GET['type']) ? intval($_GET['type']) : 1; // 默认完整预览版

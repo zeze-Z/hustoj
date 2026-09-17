@@ -12,6 +12,12 @@ $OJ_SKIP_PAGE_CACHE = true;
 require_once('./include/cache_start.php');
 require_once('./include/setlang.php');
 
+// 教师专属功能：学生/游客访问直接跳回首页
+if (!is_teacher_or_admin()) {
+    header('Location: index.php');
+    exit;
+}
+
 // 获取课程ID
 $course_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
