@@ -365,7 +365,7 @@ document.addEventListener('keydown', function(e) {
                                      style="margin-right: 8px; margin-top: 3px; flex-shrink: 0;">
                               <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px; align-items: start;">
                                   <strong style="grid-column: 1;"><?php echo htmlentities($opt_label, ENT_QUOTES, 'UTF-8') ?>.</strong>
-                                  <div style="grid-column: 2; white-space: pre-wrap;"><?php echo htmlentities($opt['content'], ENT_QUOTES, 'UTF-8') ?></div>
+                                  <div style="grid-column: 2; white-space: pre-wrap;"><?php echo htmlentities(html_entity_decode($opt['content'], ENT_QUOTES, 'UTF-8'), ENT_QUOTES, 'UTF-8') ?></div>
                               </div>
                           </div>
                       </label>
