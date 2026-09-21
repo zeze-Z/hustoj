@@ -461,6 +461,12 @@ function bbcode_to_html($input) : string
 {
   global $OJ_DIV_FILTER;
   if(isset($OJ_DIV_FILTER)&&$OJ_DIV_FILTER) $input=filterDIV($input);
-  return BBCode::bbcode_to_html(RemoveXSS($input));    //RemoveXSS // people want to use js in news
+  // 顺序：html_entity_decode -> RemoveXSS -> BBCode::bbcode_to_html
+  // 题目描述等内容可能已经存为 HTML 实体（如 &lt;），先用 html_entity_decode 还原为原始字符，
+  // 否则 BBCode 的 encode 步骤会把 & 再次转义为 &amp;，导致浏览器看到字面的 &lt; 而非 <。
+  // 必须在 RemoveXSS 之前 decode：RemoveXSS 只识别原始字符的 script/onerror 等危险关键字，
+  // 先 decode 才能让 RemoveXSS 识别那些以实体形式存储的恶意 payload；残余的 <>& 由
+  // BBCode::bbcode_to_html 的 encode 步骤兜底转义为 HTML 实体，三层防护确保不会执行 XSS。
+  return BBCode::bbcode_to_html(RemoveXSS(html_entity_decode($input, ENT_QUOTES, 'UTF-8')));    //RemoveXSS // people want to use js in news
 }
 
