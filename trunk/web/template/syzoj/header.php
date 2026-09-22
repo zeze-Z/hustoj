@@ -1,5 +1,6 @@
 <?php
         require_once(dirname(__FILE__)."/../../include/memcache.php");
+        require_once(dirname(__FILE__)."/../../include/my_func.inc.php");
         function checkmail(){  // check if has mail
           global $OJ_NAME;
           $sql="select count(1) cnt FROM `mail` WHERE new_mail=1 AND `to_user`=?";
@@ -590,8 +591,10 @@
 <?php if(isset($OJ_RECENT_CONTEST)&&$OJ_RECENT_CONTEST){    ?>
             <a class="item <?php if ($url=="recent-contest.php") echo "active";?>" href="<?php echo $path_fix?>recent-contest.php" style="font-weight: 500;"><?php echo $MSG_RECENT_CONTEST?></a>
 <?php } ?>
-            <!-- 课件功能：对所有用户开放 -->
+            <?php if (!isset($_SESSION[$OJ_NAME.'_'.'user_id']) || is_teacher_or_admin()): ?>
+            <!-- 课件功能：游客、教师和管理员可见；学生登录后隐藏 -->
             <a class="item <?php if ($url=="course.php") echo "active";?>" href="<?php echo $path_fix?>course.php" style="font-weight: 500;">课件</a>
+            <?php endif; ?>
             <?php if (isset($OJ_BBS)&& $OJ_BBS){ ?>
                 <a class='item' href="discuss.php" style="font-weight: 500;"><?php echo $MSG_BBS?></a>
             <?php } ?>
@@ -657,7 +660,7 @@
                         ?>
                         <i class="dropdown icon"></i>
                         <div class="menu">
-                                <?php if (function_exists('is_teacher_or_admin') && is_teacher_or_admin()): ?>
+                                <?php if (is_teacher_or_admin()): ?>
                                 <a class="item" href="course_my.php"><i class="shopping bag icon"></i>我的订单</a>
                                 <?php endif; ?>
                                 <a class="item" href="point_index.php"><i class="dollar sign icon"></i>我的积分</a>

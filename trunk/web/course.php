@@ -11,8 +11,8 @@ require_once('./include/setlang.php');
 require_once("./include/set_get_key.php");
 require_once('./include/my_func.inc.php');
 
-// 教师专属功能：学生/游客访问直接跳回首页
-if (!is_teacher_or_admin()) {
+// 学生登录后无权访问课件中心，游客和教师/管理员可查看
+if (isset($_SESSION[$OJ_NAME . '_' . 'user_id']) && !is_teacher_or_admin()) {
     header('Location: index.php');
     exit;
 }
