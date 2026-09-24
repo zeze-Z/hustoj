@@ -16,7 +16,24 @@ if (isset($_POST['do'])) {
 
     $title = trim($_POST['title']);
     $subject_id = intval($_POST['subject_id']);
-    $tags = trim($_POST['tags']);
+    $tags = trim((string)($_POST['tags'] ?? ''));
+    $series_name = trim((string)($_POST['series'] ?? ''));
+    if ($series_name !== '' && (strpos($series_name, ',') !== false || preg_match('/[\\r\\n]/', $series_name))) {
+        echo "<script>alert('所属系列名称不能包含逗号或换行'); history.go(-1);</script>";
+        exit();
+    }
+    $tag_tokens = array();
+    foreach (explode(',', $tags) as $tag) {
+        $tag = trim($tag);
+        if ($tag !== '' && strncmp($tag, '系列课程:', strlen('系列课程:')) !== 0) $tag_tokens[] = $tag;
+    }
+    if ($series_name !== '') $tag_tokens[] = '系列课程:' . $series_name;
+    $tags = implode(', ', $tag_tokens);
+    // tags 列为 utf8mb4 varchar(255)，上限是 255 个字符；中文按字符计数，不能用 strlen 误判
+    if (mb_strlen($tags, 'UTF-8') > 255) {
+        echo "<script>alert('标签总长度不能超过255个字符（中文按1个字符计）'); history.go(-1);</script>";
+        exit();
+    }
     $lesson_count = intval($_POST['lesson_count']);
     $description = trim($_POST['description']);
     // 价格以积分为单位（1积分=1元），仅接受非负整数，拒绝小数
@@ -173,6 +190,23 @@ if (isset($_POST['do'])) {
 $sql = "SELECT * FROM `course_subject` WHERE `status` = 1 ORDER BY `sort_order` ASC, `id` ASC";
 $subject_list = pdo_query($sql);
 
+// 已有系列名称（供“所属系列”输入提示，选择已有或直接输入新系列）
+$series_options = array();
+$series_rows = pdo_query("SELECT `tags` FROM `course` WHERE `tags` LIKE ?", '%系列课程:%');
+if (is_array($series_rows)) {
+    foreach ($series_rows as $series_row) {
+        foreach (explode(',', (string)($series_row['tags'] ?? '')) as $series_tag) {
+            $series_tag = trim($series_tag);
+            if (strncmp($series_tag, '系列课程:', strlen('系列课程:')) === 0) {
+                $series_option_name = trim(substr($series_tag, strlen('系列课程:')));
+                if ($series_option_name !== '') $series_options[$series_option_name] = true;
+            }
+        }
+    }
+}
+$series_options = array_keys($series_options);
+sort($series_options);
+
 // 复制：从已有课件预填表单（title 加"（副本）"后缀，status 默认保留避免误上架）
 $copy_row = null;
 $copy_title = '';
@@ -202,6 +236,16 @@ if (isset($_GET['copy_from'])) {
         <?php require_once("../include/set_post_key.php"); ?>
 
         <div class="form-group">
+            <label class="col-sm-2 control-label">AI 课程 JSON</label>
+            <div class="col-sm-6">
+                <textarea id="course-json-input" class="form-control" rows="8" placeholder='粘贴 {"schema_version":"course-import-v1","course":{...}}'></textarea>
+                <button type="button" id="course-json-fill" class="btn btn-info" style="margin-top:8px">解析并填充表单</button>
+                <span id="course-json-message" style="margin-left:8px"></span>
+                <p class="help-block">只会填充课程字段，不会自动提交；状态和封面仍需管理员确认。</p>
+            </div>
+        </div>
+
+        <div class="form-group">
             <label class="col-sm-2 control-label"><?php echo $MSG_COURSE_TITLE ?> <span class="text-danger">*</span></label>
             <div class="col-sm-6">
                 <input type="text" name="title" class="form-control" value="<?php echo $copy_title ?>" placeholder="<?php echo $MSG_COURSE_TITLE ?>" maxlength="255" required>
@@ -226,6 +270,26 @@ if (isset($_GET['copy_from'])) {
             <label class="col-sm-2 control-label"><?php echo $MSG_TAGS ?></label>
             <div class="col-sm-6">
                 <input type="text" name="tags" class="form-control" value="<?php echo $copy_row ? htmlentities($copy_row['tags'] ?? '', ENT_QUOTES, 'UTF-8') : '' ?>" placeholder="Tag1, Tag2, Tag3" maxlength="255">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label">所属系列</label>
+            <div class="col-sm-6">
+                <input type="text" name="series" class="form-control" list="course-series-options" value="<?php
+                    $copy_series = '';
+                    if ($copy_row) foreach (explode(',', $copy_row['tags'] ?? '') as $copy_tag) {
+                        $copy_tag = trim($copy_tag);
+                        if (strncmp($copy_tag, '系列课程:', strlen('系列课程:')) === 0) { $copy_series = trim(substr($copy_tag, strlen('系列课程:'))); break; }
+                    }
+                    echo htmlentities($copy_series, ENT_QUOTES, 'UTF-8');
+                ?>" placeholder="可选，例如：Python入门系列" maxlength="200">
+                <small class="text-muted">可选；不能包含逗号或换行</small>
+                <datalist id="course-series-options">
+                    <?php foreach ($series_options as $series_option): ?>
+                    <option value="<?php echo htmlentities($series_option, ENT_QUOTES, 'UTF-8'); ?>">
+                    <?php endforeach; ?>
+                </datalist>
             </div>
         </div>
 
@@ -346,5 +410,75 @@ if (isset($_GET['copy_from'])) {
         </div>
     </form>
 </div>
+
+<script>
+(function () {
+    var input = document.getElementById('course-json-input');
+    var button = document.getElementById('course-json-fill');
+    var message = document.getElementById('course-json-message');
+    var fields = [
+        'title', 'subject_id', 'tags', 'lesson_count', 'description',
+        'preview_price', 'source_price', 'series',
+        'courseware_preview_url', 'lesson_plan_preview_url',
+        'courseware_full_preview_url', 'lesson_plan_full_preview_url',
+        'courseware_link', 'lesson_plan_link', 'link_expire_date'
+    ];
+
+    function showMessage(text, ok) {
+        message.textContent = text;
+        message.style.color = ok ? '#3c763d' : '#a94442';
+    }
+
+    button.addEventListener('click', function () {
+        var data;
+        try {
+            data = JSON.parse(input.value);
+        } catch (error) {
+            showMessage('JSON 格式错误：' + error.message, false);
+            return;
+        }
+
+        var course = data && data.course;
+        if (!course || typeof course !== 'object' || Array.isArray(course)) {
+            showMessage('缺少有效的 course 对象', false);
+            return;
+        }
+        if (!course.title || !course.subject_id) {
+            showMessage('title 和 subject_id 不能为空', false);
+            return;
+        }
+
+        var subjectElement = document.querySelector('[name="subject_id"]');
+        var subjectId = String(course.subject_id);
+        var subjectOption = subjectElement && Array.prototype.find.call(subjectElement.options, function (item) {
+            return item.value === subjectId;
+        });
+        if (!subjectOption) {
+            showMessage('subject_id 不在当前启用学科列表中', false);
+            return;
+        }
+
+        var filled = 0;
+        fields.forEach(function (name) {
+            if (!Object.prototype.hasOwnProperty.call(course, name)) {
+                return;
+            }
+            var element = document.querySelector('[name="' + name + '"]');
+            if (!element) {
+                return;
+            }
+            element.value = course[name] == null ? '' : String(course[name]);
+            element.dispatchEvent(new Event('change', { bubbles: true }));
+            filled++;
+        });
+
+        var reservedStatus = document.querySelector('[name="status"][value="0"]');
+        if (reservedStatus) {
+            reservedStatus.checked = true;
+        }
+        showMessage('已填充 ' + filled + ' 个字段，请检查后提交', true);
+    });
+}());
+</script>
 
 <?php require("admin-footer.php"); ?>

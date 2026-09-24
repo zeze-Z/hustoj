@@ -1,0 +1,137 @@
+/* 顶部菜单栏手绘节日皮肤（中秋+国庆）：仅背景与装饰，不改字体及其他 UI 样式。 */
+#page-header.syzoj-holiday-header {
+    --holiday-sky: #67a0d5;
+    --holiday-sky-deep: #5b90cd;
+    --holiday-sky-light: #78b0d9;
+    --holiday-moon: #fff8dd;
+    --holiday-gold: #f4cd75;
+    --holiday-red: #e2726d;
+    background: linear-gradient(100deg, var(--holiday-sky-deep) 0%, var(--holiday-sky) 52%, var(--holiday-sky-light) 100%);
+    border-bottom: 1px solid rgba(255, 248, 221, 0.6);
+}
+
+/* 装饰层置于菜单文字之下，不拦截任何交互。 */
+#page-header.syzoj-holiday-header .holiday-header-art {
+    position: absolute;
+    z-index: 0;
+    top: 0;
+    left: 0;
+    width: min(430px, 38vw);
+    height: 60px;
+    opacity: 0.78;
+    pointer-events: none;
+}
+
+#page-header.syzoj-holiday-header #menu {
+    position: relative;
+    z-index: 1;
+}
+
+#page-header.syzoj-holiday-header .holiday-header-art svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* 月亮：奶白月牙 + 淡金轮廓与内侧弧线细节 */
+#page-header.syzoj-holiday-header .holiday-header-art .holiday-moon {
+    fill: var(--holiday-moon);
+    stroke: var(--holiday-gold);
+    stroke-width: 1.3;
+}
+
+#page-header.syzoj-holiday-header .holiday-header-art .holiday-moon-detail {
+    fill: none;
+    stroke: #eccd8d;
+    stroke-linecap: round;
+    stroke-width: 1.1;
+    opacity: 0.8;
+}
+
+/* 星星：圆角五角形 + 金色描边 */
+#page-header.syzoj-holiday-header .holiday-header-art .holiday-star {
+    fill: var(--holiday-moon);
+    stroke: var(--holiday-gold);
+    stroke-linejoin: round;
+    stroke-width: 0.8;
+}
+
+/* 云朵：奶白填充加圆润描边，配内侧弧线 */
+#page-header.syzoj-holiday-header .holiday-header-art .holiday-cloud-fill {
+    fill: var(--holiday-moon);
+    opacity: 0.55;
+}
+
+#page-header.syzoj-holiday-header .holiday-header-art .holiday-cloud {
+    fill: none;
+    stroke: var(--holiday-moon);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}
+
+#page-header.syzoj-holiday-header .holiday-header-art .holiday-cloud-detail {
+    fill: none;
+    stroke: #e6f2fb;
+    stroke-linecap: round;
+    stroke-width: 1.1;
+    opacity: 0.85;
+}
+
+/* 玉兔：圆润剪影 */
+#page-header.syzoj-holiday-header .holiday-header-art .holiday-rabbit-body {
+    fill: var(--holiday-moon);
+    stroke: var(--holiday-gold);
+    stroke-width: 1.1;
+}
+
+#page-header.syzoj-holiday-header .holiday-header-art .holiday-rabbit-line {
+    fill: var(--holiday-moon);
+    stroke: var(--holiday-gold);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.1;
+}
+
+#page-header.syzoj-holiday-header .holiday-header-art .holiday-rabbit-eye {
+    fill: #6c5842;
+}
+
+/* 国庆旗帜与灯笼 */
+#page-header.syzoj-holiday-header .holiday-header-art .holiday-flag {
+    fill: var(--holiday-red);
+    stroke: var(--holiday-gold);
+    stroke-linejoin: round;
+    stroke-width: 1;
+}
+
+#page-header.syzoj-holiday-header .holiday-header-art .holiday-lantern {
+    fill: var(--holiday-red);
+    stroke: var(--holiday-gold);
+    stroke-linejoin: round;
+    stroke-width: 1;
+}
+
+#page-header.syzoj-holiday-header .holiday-header-art .holiday-line {
+    fill: none;
+    stroke: var(--holiday-gold);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.3;
+}
+
+/* 窄屏缩小装饰，避免挤压菜单。 */
+@media (max-width: 991px) {
+    #page-header.syzoj-holiday-header .holiday-header-art {
+        left: 0;
+        width: 300px;
+        opacity: 0.5;
+    }
+}
+
+@media (max-width: 600px) {
+    #page-header.syzoj-holiday-header .holiday-header-art {
+        width: 200px;
+        opacity: 0.32;
+    }
+}

@@ -28,7 +28,24 @@ if (isset($_POST['do'])) {
 
     $title = trim($_POST['title']);
     $subject_id = intval($_POST['subject_id']);
-    $tags = trim($_POST['tags']);
+    $tags = trim((string)($_POST['tags'] ?? ''));
+    $series_name = trim((string)($_POST['series'] ?? ''));
+    if ($series_name !== '' && (strpos($series_name, ',') !== false || preg_match('/[\\r\\n]/', $series_name))) {
+        echo "<script>alert('所属系列名称不能包含逗号或换行'); history.go(-1);</script>";
+        exit();
+    }
+    $tag_tokens = array();
+    foreach (explode(',', $tags) as $tag) {
+        $tag = trim($tag);
+        if ($tag !== '' && strncmp($tag, '系列课程:', strlen('系列课程:')) !== 0) $tag_tokens[] = $tag;
+    }
+    if ($series_name !== '') $tag_tokens[] = '系列课程:' . $series_name;
+    $tags = implode(', ', $tag_tokens);
+    // tags 列为 utf8mb4 varchar(255)，上限是 255 个字符；中文按字符计数，不能用 strlen 误判
+    if (mb_strlen($tags, 'UTF-8') > 255) {
+        echo "<script>alert('标签总长度不能超过255个字符（中文按1个字符计）'); history.go(-1);</script>";
+        exit();
+    }
     $lesson_count = intval($_POST['lesson_count']);
     $description = trim($_POST['description']);
     // 价格以积分为单位（1积分=1元），仅接受非负整数，拒绝小数
@@ -179,6 +196,23 @@ if (isset($_POST['do'])) {
 // 获取学科列表
 $sql = "SELECT * FROM `course_subject` WHERE `status` = 1 ORDER BY `sort_order` ASC, `id` ASC";
 $subject_list = pdo_query($sql);
+
+// 已有系列名称（供所属系列输入提示）
+$series_options = array();
+$series_rows = pdo_query("SELECT `tags` FROM `course` WHERE `tags` LIKE ?", '%系列课程:%');
+if (is_array($series_rows)) {
+    foreach ($series_rows as $series_row) {
+        foreach (explode(',', (string)($series_row['tags'] ?? '')) as $series_tag) {
+            $series_tag = trim($series_tag);
+            if (strncmp($series_tag, '系列课程:', strlen('系列课程:')) === 0) {
+                $series_option_name = trim(substr($series_tag, strlen('系列课程:')));
+                if ($series_option_name !== '') $series_options[$series_option_name] = true;
+            }
+        }
+    }
+}
+$series_options = array_keys($series_options);
+sort($series_options);
 ?>
 
 <title><?php echo $view_title ?></title>
@@ -221,6 +255,26 @@ $subject_list = pdo_query($sql);
             <label class="col-sm-2 control-label"><?php echo $MSG_TAGS ?></label>
             <div class="col-sm-6">
                 <input type="text" name="tags" class="form-control" value="<?php echo htmlentities($row['tags'], ENT_QUOTES, 'UTF-8') ?>" placeholder="Tag1, Tag2, Tag3" maxlength="255">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-2 control-label">所属系列</label>
+            <div class="col-sm-6">
+                <input type="text" name="series" class="form-control" list="course-series-options" value="<?php
+                    $current_series = '';
+                    foreach (explode(',', $row['tags'] ?? '') as $edit_tag) {
+                        $edit_tag = trim($edit_tag);
+                        if (strncmp($edit_tag, '系列课程:', strlen('系列课程:')) === 0) { $current_series = trim(substr($edit_tag, strlen('系列课程:'))); break; }
+                    }
+                    echo htmlentities($current_series, ENT_QUOTES, 'UTF-8');
+                ?>" placeholder="可选，例如：Python入门系列" maxlength="200">
+                <small class="text-muted">可选；留空即移出系列，不能包含逗号或换行</small>
+                <datalist id="course-series-options">
+                    <?php foreach ($series_options as $series_option): ?>
+                    <option value="<?php echo htmlentities($series_option, ENT_QUOTES, 'UTF-8'); ?>">
+                    <?php endforeach; ?>
+                </datalist>
             </div>
         </div>
 

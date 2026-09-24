@@ -561,7 +561,31 @@
 ?>
    
 <body id="MainBg-C" style="position: relative; margin-top: 60px; height: calc(100% - 60px); overflow-y: overlay;">
-    <div id="page-header" class="ui fixed borderless menu" style="position: fixed; height: 60px; z-index:99999; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+    <div id="page-header" class="ui fixed borderless menu syzoj-holiday-header" style="position: fixed; height: 60px; z-index:99999; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+        <div class="holiday-header-art" aria-hidden="true">
+            <svg viewBox="0 0 390 60" role="presentation" focusable="false">
+                <g transform="translate(-210 0)">
+                <circle class="holiday-moon" cx="306" cy="22" r="15"></circle>
+                <circle cx="313" cy="17" r="15" fill="#79b3d4"></circle>
+                <path class="holiday-moon-detail" d="M298 14c3-2 5-2 7-1M296 24c3-2 6-2 8 0M301 30c2-1 4-1 6 0"></path>
+                <path class="holiday-moon-detail" d="M308 18c2-1 4-1 6 0"></path>
+                <path class="holiday-rabbit-body" d="M281 39c-5-5-4-11 1-14 4-2 9 0 11 4 3-2 8-1 10 2 3 4 1 9-3 11-5 2-14 1-19-3z"></path>
+                <path class="holiday-rabbit-line" d="M284 27c-2-7-1-12 1-15 3 3 4 7 3 12M290 25c1-7 4-10 7-12 1 5 0 9-3 13"></path>
+                <circle class="holiday-rabbit-eye" cx="291" cy="33" r="1"></circle>
+                <path class="holiday-rabbit-line" d="M298 42c4 2 8 2 11 0"></path>
+                <path class="holiday-star" d="M265 7l1.4 3.8 3.6 1.3-3.6 1.3-1.4 3.8-1.4-3.8-3.6-1.3 3.6-1.3z"></path>
+                <path class="holiday-star" d="M345 7l1.1 3 2.9 1-2.9 1.1-1.1 3-1.1-3-2.9-1.1 2.9-1z"></path>
+                <path class="holiday-star" d="M365 27l1.2 3.2 3.1 1.1-3.1 1.1-1.2 3.2-1.1-3.2-3.1-1.1 3.1-1.1z"></path>
+                <path class="holiday-cloud" d="M218 43c8-7 17-7 25-1 7-8 19-8 27 0 9-5 21-2 27 5 10-4 20-1 26 5"></path>
+                <path class="holiday-cloud-detail" d="M223 47c8 2 16 2 23 0M276 48c8 2 16 2 24 0"></path>
+                <path class="holiday-cloud" d="M322 53c8-5 16-5 23 0 8-4 16-3 22 2"></path>
+                <path class="holiday-flag" d="M366 51V27l20 5-20 6 20 5-20 6z"></path>
+                <path class="holiday-line" d="M366 26v30M363 55c2 2 5 2 7 0"></path>
+                <path class="holiday-line" d="M246 14v9"></path>
+                <path class="holiday-lantern" d="M239 23c-5 2-6 9 0 12 6-3 5-10 0-12z"></path>
+                </g>
+            </svg>
+        </div>
         <div id="menu" class="ui stackable mobile ui container computer" style="margin-left:auto;margin-right:auto; max-width: 1200px;">
             <a class="header item" href="/" style="font-size: 1.3em; font-weight: 600; color: #fff !important; padding: 0 20px;">
                 <?php echo $domain==$DOMAIN?$OJ_NAME:ucwords($OJ_NAME)."'s OJ"?>

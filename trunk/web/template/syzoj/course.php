@@ -52,11 +52,41 @@
   <style>
     /* 响应式列数：宽屏 5 列、中屏 4 列、手机 3 列 */
     .course-grid > .column { width: 20% !important; }
+    .series-card:focus { outline: 3px solid #667eea; outline-offset: 5px; }
+    .series-card { overflow: visible !important; isolation: isolate; margin: 0 12px 16px 0; background: #fff; border: 2px solid #8f83df !important; border-radius: 18px !important; height: calc(100% - 16px) !important; }
+    .series-card .image { border-radius: 16px 16px 0 0; overflow: hidden; }
+    .series-card::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 3; border: 2px solid #8f83df; border-radius: 18px; box-sizing: border-box; }
+    .series-card .series-offset { pointer-events: none; position: absolute; display: block; box-sizing: border-box; overflow: hidden; border-radius: 18px !important; clip-path: inset(0 round 18px); z-index: 0; border: 2px solid; transition: transform .28s ease, box-shadow .28s ease; }
+    .series-card .series-offset-back { inset: 16px -14px -16px 14px; background: #c8bdf0; border-color: #a99ada; transform: rotate(3deg); box-shadow: none; filter: drop-shadow(0 10px 8px rgba(63, 48, 137, 0.22)); }
+    .series-card .series-offset-middle { inset: 8px -7px -9px 7px; background: #ded7fa; border-color: #c0b5eb; transform: rotate(1.6deg); box-shadow: none; filter: drop-shadow(0 7px 7px rgba(63, 48, 137, 0.18)); }
+    .series-card .series-offset-front { inset: 0; background: #f8f7ff; border-color: transparent; transform: rotate(0); box-shadow: 0 5px 14px rgba(63, 48, 137, 0.16); }
+    .series-card > *:not(.series-offset) { position: relative; z-index: 1; }
+    .series-card .series-copy { padding: 12px 14px 10px; }
+    .series-card .series-subject { margin-bottom: 5px; }
+    .series-card .series-title { margin: 0 0 8px; font-size: 1.08em; line-height: 1.3; }
+    .series-card .series-tags { margin: 0 0 10px; }
+    .series-card .series-meta { color: #5d568a; font-size: .84em; }
+    .series-card .series-stat { display: block; width: fit-content; margin-top: 5px; padding: 3px 8px; border-radius: 8px; background: #ede9ff; }
+    .series-card .series-action { padding: 8px 14px 10px; border-top: 1px solid #e3def8; text-align: left; }
+    .series-card .series-action .button { margin: 0; }
+    .series-card .series-badge { position: absolute; top: 10px; left: 10px; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ffcf4a 0%, #ff8a3d 52%, #f0528d 100%); color: #3b215f; font-size: .84em; font-weight: 800; letter-spacing: .03em; padding: 6px 9px; border: 2px solid rgba(255,255,255,.9); border-radius: 10px 14px 14px 10px; box-shadow: 0 4px 12px rgba(112, 43, 112, .38); text-shadow: 0 1px 0 rgba(255,255,255,.35); z-index: 1; }
+    .series-card .series-badge .stacked.icon { display: none; }
+    .series-card:hover .series-badge, .series-card:focus-within .series-badge { box-shadow: 0 5px 15px rgba(112, 43, 112, .48); }
+    .series-card:hover .series-offset-back { transform: translate(3px, 3px) rotate(3deg); filter: drop-shadow(0 13px 10px rgba(63, 48, 137, 0.25)); }
+    .series-card:hover .series-offset-middle { transform: translate(2px, 2px) rotate(1.6deg); filter: drop-shadow(0 9px 9px rgba(63, 48, 137, 0.21)); }
+    @media (prefers-reduced-motion: reduce) {
+      .series-card .series-offset { transition: none; }
+      .series-card:hover .series-offset-back,
+      .series-card:hover .series-offset-middle { transform: none; }
+    }
     @media (max-width: 1199px) {
       .course-grid > .column { width: 25% !important; }
     }
     @media (max-width: 767px) {
       .course-grid > .column { width: 33.3333% !important; }
+      .series-card .series-offset-back { inset: 9px -8px -10px 8px; }
+      .series-card .series-offset-middle { inset: 5px -4px -5px 4px; }
+      .series-card { margin-right: 6px; height: calc(100% - 10px) !important; }
     }
   </style>
   <?php if (empty($view_courses)): ?>
@@ -67,6 +97,77 @@
   <?php else: ?>
     <div class="ui five column grid course-grid" style="margin-bottom: 20px;">
       <?php foreach ($view_courses as $course):
+        if (!empty($course['is_series'])):
+          $series_query = array('tag' => '系列课程:' . $course['series_name']);
+          if ($view_current_subject > 0) $series_query['subject'] = $view_current_subject;
+          $series_link = 'course.php?' . http_build_query($series_query);
+      ?>
+        <div class="column">
+          <div class="ui card series-card" tabindex="0" role="link" onclick="if (event.target.tagName !== 'A') window.location.href='<?php echo htmlspecialchars($series_link, ENT_QUOTES, 'UTF-8'); ?>';" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.location.href='<?php echo htmlspecialchars($series_link, ENT_QUOTES, 'UTF-8'); ?>'; }" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 16px rgba(102,126,234,0.25)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(102,126,234,0.18)';" style="position: relative; height: 100%; box-shadow: 0 2px 8px rgba(102,126,234,0.18); transition: all 0.3s; border-radius: 12px; border: 1px solid #667eea40;">
+            <span class="series-offset series-offset-back" aria-hidden="true"></span>
+            <span class="series-offset series-offset-middle" aria-hidden="true"></span>
+            <span class="series-offset series-offset-front" aria-hidden="true"></span>
+            <div class="image" style="position: relative; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 140px; display: flex; align-items: center; justify-content: center;">
+              <span class="series-badge">
+                <i class="stacked icon"></i>系列课程
+              </span>
+              <i class="book icon" style="font-size: 4em; color: rgba(255,255,255,0.9);"></i>
+              <?php if (!empty($course['cover_url'])): ?>
+              <img src="<?php echo htmlspecialchars($course['cover_url'], ENT_QUOTES, 'UTF-8'); ?>"
+                   alt="<?php echo htmlspecialchars($course['series_name'], ENT_QUOTES, 'UTF-8'); ?>"
+                   loading="lazy" decoding="async"
+                   style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;"
+                   onerror="this.style.display='none'">
+              <?php endif; ?>
+            </div>
+
+            <div class="content series-copy">
+              <div class="series-subject">
+                <span class="ui tiny label" style="background: #667eea15; color: #667eea; border: 1px solid #667eea30;">
+                  <?php echo htmlspecialchars($course['subject_name'], ENT_QUOTES, 'UTF-8'); ?>
+                </span>
+              </div>
+
+              <a href="<?php echo htmlspecialchars($series_link, ENT_QUOTES, 'UTF-8'); ?>"
+                 class="header series-title"
+                 style="color: #333; display: block;">
+                <?php echo htmlspecialchars($course['series_name'], ENT_QUOTES, 'UTF-8'); ?>
+              </a>
+
+              <?php
+                $series_first_tags = array();
+                if (!empty($course['tags'])) {
+                    foreach (explode(',', $course['tags']) as $series_tag) {
+                        $series_tag = trim($series_tag);
+                        if ($series_tag === '' || strpos($series_tag, '系列课程:') === 0) continue;
+                        $series_first_tags[] = $series_tag;
+                    }
+                }
+              ?>
+              <?php if (!empty($series_first_tags)): ?>
+              <div class="series-tags" aria-label="系列第一课标签">
+                <?php foreach (array_slice($series_first_tags, 0, 4) as $series_tag): ?>
+                <span class="ui tiny label" style="background: #f0f0f0; color: #666; font-size: 0.75em; margin-right: 4px;">
+                  <?php echo htmlspecialchars($series_tag, ENT_QUOTES, 'UTF-8'); ?>
+                </span>
+                <?php endforeach; ?>
+              </div>
+              <?php endif; ?>
+
+              <div class="series-meta">
+                <span class="series-stat"><i class="book icon"></i><?php echo intval($course['series_course_count']); ?> 门课程</span>
+                <span class="series-stat"><i class="clock icon"></i><?php echo intval($course['series_lesson_count']); ?> 课时</span>
+              </div>
+            </div>
+
+            <div class="extra content series-action">
+              <a href="<?php echo htmlspecialchars($series_link, ENT_QUOTES, 'UTF-8'); ?>" class="ui small primary button">
+                <i class="list icon"></i>查看系列课程
+              </a>
+            </div>
+          </div>
+        </div>
+      <?php else:
         $is_purchased = isset($view_purchased[$course['id']]);
         $preview_price = floatval($course['preview_price']);
         $source_price = floatval($course['source_price']);
@@ -118,7 +219,7 @@
                 <div style="margin-bottom: 10px;">
                   <?php foreach ($tags as $tag):
                     $tag = trim($tag);
-                    if (empty($tag)) continue;
+                    if (empty($tag) || strpos($tag, '系列课程:') === 0) continue;
                   ?>
                     <a href="course.php<?php echo $view_current_subject > 0 ? '?subject=' . $view_current_subject . '&' : '?'; ?>tag=<?php echo urlencode($tag); ?>"
                        class="ui tiny label"
@@ -184,7 +285,7 @@
             </div>
           </div>
         </div>
-      <?php endforeach; ?>
+      <?php endif; endforeach; ?>
     </div>
   <?php endif; ?>
 
@@ -246,7 +347,11 @@
         <?php endif; ?>
       </div>
       <div style="margin-top: 8px; color: #999; font-size: 0.85em;">
-        共 <?php echo $view_total_courses; ?> 个课件，第 <?php echo $view_page; ?>/<?php echo $view_total_pages; ?> 页
+        <?php if (!empty($view_aggregate)): ?>
+          共 <?php echo $view_total_courses; ?> 个课程卡片（系列已聚合），第 <?php echo $view_page; ?>/<?php echo $view_total_pages; ?> 页
+        <?php else: ?>
+          共 <?php echo $view_total_courses; ?> 个课件，第 <?php echo $view_page; ?>/<?php echo $view_total_pages; ?> 页
+        <?php endif; ?>
       </div>
     </div>
   <?php endif; ?>

@@ -312,7 +312,7 @@
       <!-- 欢迎提示 -->
       <div class="welcome-tip">
         <span class="tip-icon">🎁</span>
-        <div class="tip-text">注册即送 <strong>20 积分</strong>，开启您的编程教学之旅。</div>
+        <div class="tip-text">注册后登录送 <strong>20 积分</strong>，开启您的编程教学之旅。</div>
       </div>
 
       <!-- 错误提示 -->
