@@ -66,7 +66,6 @@ opacity: 0.9;
 }
 .panel-default{
    padding: 5px;
-   background-image: url(../../image/background.jpg);
    border: 1px solid #eee;
    margin-top:50px;
 }
