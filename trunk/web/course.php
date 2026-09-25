@@ -66,9 +66,16 @@ $series_filter = (strncmp($tag_filter, $series_prefix, strlen($series_prefix)) =
     : '';
 $aggregate = ($tag_filter === '' && $search_keyword === '');
 
-// 查询启用的学科
+// 查询启用的学科（失败时降级为空列表，避免学科筛选区异常导致整页白屏）
 $subjects_sql = "SELECT id, name FROM course_subject WHERE status = 1 ORDER BY sort_order ASC, id ASC";
-$subjects = pdo_query($subjects_sql);
+try {
+    $subjects = pdo_query($subjects_sql);
+    if (!is_array($subjects)) {
+        $subjects = array();
+    }
+} catch (Exception $e) {
+    $subjects = array();
+}
 
 // 构建课程查询条件（标签 token 精确过滤在 PHP 侧完成）
 $where_conditions = array("c.status = 1");

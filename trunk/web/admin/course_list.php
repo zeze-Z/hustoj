@@ -14,16 +14,42 @@ if (!isset($_SESSION[$OJ_NAME.'_'.'administrator'])) {
 <center><h3><?php echo $MSG_COURSE . "-" . $MSG_LIST ?></h3></center>
 
 <?php
+// 筛选条件（基础字段：标题/学科/状态）
+$kw = (isset($_GET['kw']) && is_string($_GET['kw'])) ? trim($_GET['kw']) : '';
+$subject_id = (isset($_GET['subject_id']) && $_GET['subject_id'] !== '') ? intval($_GET['subject_id']) : 0;
+$status_f = (isset($_GET['status']) && $_GET['status'] !== '') ? intval($_GET['status']) : -1;
+if ($status_f !== 0 && $status_f !== 1) $status_f = -1;
+
+$where = ' WHERE 1=1';
+$params = array();
+if ($kw !== '') {
+    $where .= ' AND c.`title` LIKE ?';
+    $params[] = '%' . addcslashes($kw, '%_') . '%';
+}
+if ($subject_id > 0) {
+    $where .= ' AND c.`subject_id` = ?';
+    $params[] = $subject_id;
+}
+if ($status_f >= 0) {
+    $where .= ' AND c.`status` = ?';
+    $params[] = $status_f;
+}
+$filter_active = ($kw !== '' || $subject_id > 0 || $status_f >= 0);
+
 // 查询总数
-$sql = "SELECT COUNT(*) AS ids FROM `course`";
+$sql = "SELECT COUNT(*) AS ids FROM `course` c" . $where;
 try {
-    $result = pdo_query($sql);
-    $row = $result[0];
+    $result = pdo_query($sql, $params);
+    $row = (is_array($result) && isset($result[0])) ? $result[0] : array('ids' => 0);
     $ids = intval($row['ids']);
 } catch (Exception $e) {
     echo "<script>alert('数据库查询失败: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "'); history.go(-1);</script>";
     exit(1);
 }
+
+// 学科下拉选项
+$subject_rows = pdo_query("SELECT `id`, `name` FROM `course_subject` ORDER BY `sort_order` ASC, `id` ASC");
+if (!is_array($subject_rows)) $subject_rows = array();
 
 $idsperpage = 25;
 $pages = intval(ceil($ids / $idsperpage));
@@ -33,6 +59,8 @@ if (isset($_GET['page'])) {
 } else {
     $page = 1;
 }
+if ($page < 1) $page = 1;
+if ($page > max($pages, 1)) $page = max($pages, 1);
 
 $pagesperframe = 5;
 $frame = intval(ceil($page / $pagesperframe));
@@ -44,11 +72,12 @@ $sid = ($page - 1) * $idsperpage;
 // 查询课程列表（关联学科表）
 $sql = "SELECT c.*, s.name as subject_name
         FROM `course` c
-        LEFT JOIN `course_subject` s ON c.subject_id = s.id
+        LEFT JOIN `course_subject` s ON c.subject_id = s.id" . $where . "
         ORDER BY c.sort_order ASC, c.id DESC
         LIMIT $sid, $idsperpage";
 try {
-    $result = pdo_query($sql);
+    $result = pdo_query($sql, $params);
+    if (!is_array($result)) $result = array();
 } catch (Exception $e) {
     echo "<script>alert('数据库查询失败: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "'); history.go(-1);</script>";
     exit(1);
@@ -56,11 +85,37 @@ try {
 ?>
 
 <div class="padding">
+    <div style="margin-bottom:10px;">
+        <form method="GET" action="course_list.php" class="form-inline">
+            <?php echo $MSG_COURSE_TITLE ?>：<input type="text" name="kw" value="<?php echo htmlentities($kw, ENT_QUOTES, 'UTF-8') ?>" placeholder="标题关键词" style="width:180px;">
+            <?php echo $MSG_COURSE_SUBJECT ?>：
+            <select name="subject_id">
+                <option value="">全部</option>
+                <?php foreach ($subject_rows as $srow) { ?>
+                <option value="<?php echo intval($srow['id']) ?>" <?php if ($subject_id == intval($srow['id'])) echo 'selected'; ?>>
+                    <?php echo htmlentities($srow['name'], ENT_QUOTES, 'UTF-8') ?>
+                </option>
+                <?php } ?>
+            </select>
+            <?php echo $MSG_STATUS ?>：
+            <select name="status">
+                <option value="">全部</option>
+                <option value="1" <?php if ($status_f === 1) echo 'selected'; ?>><?php echo $MSG_AVAILABLE ?></option>
+                <option value="0" <?php if ($status_f === 0) echo 'selected'; ?>><?php echo $MSG_RESERVED ?></option>
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm"><?php echo $MSG_SEARCH ?></button>
+            <a class="btn btn-default btn-sm" href="course_list.php">重置</a>
+            <span style="margin-left:15px;color:#999;">共 <?php echo $ids; ?> 条</span>
+        </form>
+        <?php if ($filter_active) { ?>
+        <div style="color:#999;font-size:12px;margin-top:4px;">筛选结果中已停用拖动排序</div>
+        <?php } ?>
+    </div>
     <center>
         <style>
-            .course-drag-handle { cursor: move; color: #337ab7; }
+            .course-drag-handle { <?php if (!$filter_active) echo 'cursor: move; '; ?>color: #337ab7; }
             .course-dragging { opacity: 0.5; }
-            #course-sort-body tr { cursor: move; }
+            <?php if (!$filter_active) { ?>#course-sort-body tr { cursor: move; }<?php } ?>
         </style>
         <table width="100%" border="1" style="text-align:center;">
             <thead>
@@ -80,8 +135,8 @@ try {
                 <?php
                 foreach ($result as $row) {
                 ?>
-                <tr style='height:22px;' course_id='<?php echo $row['id'] ?>' data-course-id="<?php echo intval($row['id']) ?>" draggable="true">
-                    <td class="course-drag-handle">拖动</td>
+                <tr style='height:22px;' course_id='<?php echo $row['id'] ?>' data-course-id="<?php echo intval($row['id']) ?>" <?php if (!$filter_active) echo 'draggable="true"'; ?>>
+                    <td class="course-drag-handle"><?php echo $filter_active ? '—' : '拖动' ?></td>
                     <td><?php echo $row['id'] ?></td>
                     <td><?php echo htmlentities($row['title'], ENT_QUOTES, 'UTF-8') ?></td>
                     <td><?php echo htmlentities($row['subject_name'], ENT_QUOTES, 'UTF-8') ?></td>
@@ -112,22 +167,25 @@ try {
 </div>
 
 <?php
-// 分页
+// 分页（透传筛选参数；空结果不出分页条，避免 page=0 杂讯链接）
+if ($pages > 0) {
+$filter_qs = 'kw=' . urlencode($kw) . '&subject_id=' . ($subject_id > 0 ? strval($subject_id) : '') . '&status=' . ($status_f >= 0 ? strval($status_f) : '');
 echo "<div style='display:inline;'>";
 echo "<nav class='center'>";
 echo "<ul class='pagination pagination-sm'>";
-echo "<li class='page-item'><a href='course_list.php?page=" . (strval(1)) . "'>&lt;&lt;</a></li>";
-echo "<li class='page-item'><a href='course_list.php?page=" . ($page == 1 ? strval(1) : strval($page - 1)) . "'>&lt;</a></li>";
+echo "<li class='page-item'><a href='course_list.php?$filter_qs&page=" . (strval(1)) . "'>&lt;&lt;</a></li>";
+echo "<li class='page-item'><a href='course_list.php?$filter_qs&page=" . ($page == 1 ? strval(1) : strval($page - 1)) . "'>&lt;</a></li>";
 
 for ($i = $spage; $i <= $epage; $i++) {
-    echo "<li class='" . ($page == $i ? "active " : "") . "page-item'><a title='go to page' href='course_list.php?page=$i'>$i</a></li>";
+    echo "<li class='" . ($page == $i ? "active " : "") . "page-item'><a title='go to page' href='course_list.php?$filter_qs&page=$i'>$i</a></li>";
 }
 
-echo "<li class='page-item'><a href='course_list.php?page=" . ($page == $pages ? strval($page) : strval($page + 1)) . "'>&gt;</a></li>";
-echo "<li class='page-item'><a href='course_list.php?page=" . (strval($pages)) . "'>&gt;&gt;</a></li>";
+echo "<li class='page-item'><a href='course_list.php?$filter_qs&page=" . ($page == $pages ? strval($page) : strval($page + 1)) . "'>&gt;</a></li>";
+echo "<li class='page-item'><a href='course_list.php?$filter_qs&page=" . (strval($pages)) . "'>&gt;&gt;</a></li>";
 echo "</ul>";
 echo "</nav>";
 echo "</div>";
+}
 ?>
 
 <?php require_once("../include/set_post_key.php"); ?>
@@ -174,7 +232,9 @@ function saveCourseOrder() {
     });
 }
 
+<?php if (!$filter_active) { ?>
 $('#course-sort-body tr').on('dragstart', function(e) {
+    if (!this.draggable) return;
     draggedRow = this;
     orderChanged = false;
     $(this).addClass('course-dragging');
@@ -203,6 +263,7 @@ $('#course-sort-body tr').on('dragend', function() {
         saveCourseOrder();
     }
 });
+<?php } ?>
 </script>
 
 <?php require("admin-footer.php"); ?>
