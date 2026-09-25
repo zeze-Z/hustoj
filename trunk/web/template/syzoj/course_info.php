@@ -1,61 +1,21 @@
 <?php $show_title="$MSG_COURSE - $OJ_NAME"; ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 <style>
-/* Course studio: a playful paper-and-sticker language, scoped to this page only. */
-.course-studio-page {
-  --studio-ink: #24304a;
-  --studio-muted: #6f7890;
-  --studio-paper: #fffdf8;
-  --studio-lilac: #7567f7;
-  --studio-mint: #3bbd9a;
-  --studio-coral: #ff806d;
-  --studio-yellow: #ffd86b;
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 22px 18px 42px !important;
-  color: var(--studio-ink);
-  background: radial-gradient(circle at 8% 3%, #fff0b8 0 8%, transparent 23%), radial-gradient(circle at 95% 16%, #e7ddff 0 7%, transparent 22%);
-}
-.course-studio-page::before { content: "✦ 课程小宇宙"; display: block; margin: 0 0 12px 4px; color: var(--studio-lilac); font-size: .78rem; font-weight: 700; letter-spacing: .08em; }
-.course-studio-page > .ui.segment { position: relative; overflow: hidden; border: 2px solid #242f49 !important; border-radius: 22px !important; background: var(--studio-paper) !important; box-shadow: 6px 7px 0 #242f49 !important; }
-.course-studio-page > .ui.segment::after { content: ""; position: absolute; width: 90px; height: 22px; top: -10px; right: 44px; transform: rotate(4deg); background: rgba(255,216,107,.76); }
-.course-studio-page > .ui.segment:first-of-type { background: linear-gradient(135deg, #fffdf8 0%, #f5f1ff 100%) !important; }
-.course-studio-page .course-cover { min-height: 230px !important; border: 2px solid #242f49; border-radius: 18px !important; background: linear-gradient(145deg, var(--studio-coral), var(--studio-lilac)) !important; box-shadow: 4px 4px 0 #242f49 !important; transform: rotate(-1deg); }
-.course-studio-page .course-cover::after { content: "✦"; position: absolute; right: 18px; top: 12px; color: var(--studio-yellow); font-size: 2rem; }
-.course-studio-page .course-cover .book.icon { font-size: 4.5em !important; filter: drop-shadow(3px 3px 0 rgba(36,47,73,.35)); }
-.course-studio-page h1.ui.header { color: var(--studio-ink) !important; font-size: clamp(1.7rem, 3vw, 2.55rem) !important; letter-spacing: -.035em; }
-.course-studio-page h3.ui.header { color: var(--studio-ink) !important; font-weight: 800; }
-.course-studio-page .ui.label { border-radius: 999px !important; font-weight: 700; }
-.course-studio-page .course-actions { align-items: stretch !important; }
-.course-studio-page .course-actions .ui.button,
-.course-studio-page .ui.button { border-radius: 12px !important; border: 2px solid #242f49 !important; box-shadow: 2px 3px 0 #242f49 !important; font-weight: 700 !important; transition: transform .16s ease, box-shadow .16s ease !important; }
-.course-studio-page .ui.button:hover { transform: translate(-1px, -2px); box-shadow: 4px 5px 0 #242f49 !important; }
-.course-studio-page .ui.button:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #242f49 !important; }
-.course-studio-page .course-content-grid > .column { display: flex; flex-direction: column; }
-.course-studio-page .course-content-grid > .column > .ui.card { flex: 1 1 0; width: 100%; min-width: 0; box-sizing: border-box; display: flex; flex-direction: column; border: 2px solid #242f49 !important; border-radius: 16px !important; box-shadow: 3px 4px 0 #242f49 !important; overflow: hidden; }
-.course-studio-page .course-content-grid > .column > .ui.card > .content { flex: 1 1 auto; }
-.course-studio-page .ui.card .extra.content { border-top: 2px dashed rgba(36,47,73,.2) !important; }
-.course-studio-page .ui.card .header { color: var(--studio-ink) !important; }
-.course-studio-page .ui.card:nth-child(odd) { transform: rotate(-.35deg); }
-.course-studio-page .ui.card:nth-child(even) { transform: rotate(.35deg); }
-.course-studio-page .ui.card .ui.mini.label { border: 0 !important; box-shadow: none !important; }
-.course-studio-page .ui.segment[style*="background: linear-gradient"] { border-color: var(--studio-lilac) !important; background: #f2efff !important; }
-.course-studio-page .ui.segment[style*="background: linear-gradient"] strong { color: var(--studio-lilac) !important; }
-.course-studio-page .course-share-url-input { max-width: 1px; }
+/* 以下样式仅作用于课件详情页（.course-info-page 作用域），避免覆盖 Semantic UI 全局类 */
+.course-info-page .course-cover { min-height: 220px; }
+.course-info-page .course-actions { display: flex; flex-direction: column; justify-content: center; align-items: flex-end; }
+/* 课程内容卡片：两列 flex 纵向，卡片 flex:1 实现版本卡与资源卡行对行等高对齐 */
+.course-content-grid > .column { display: flex; flex-direction: column; }
+.course-content-grid > .column > .ui.card { flex: 1 1 0; width: 100%; min-width: 0; box-sizing: border-box; display: flex; flex-direction: column; }
+.course-content-grid > .column > .ui.card > .content { flex: 1 1 auto; }
 @media (max-width: 767px) {
-  .course-studio-page { padding: 14px 10px 30px !important; }
-  .course-studio-page::before { margin-left: 2px; }
-  .course-studio-page .course-cover { min-height: 165px !important; margin-bottom: 10px; }
-  .course-studio-page .course-actions { align-items: stretch !important; }
-  .course-studio-page .course-actions .ui.button { width: 100%; }
-  .course-studio-page .ui.segment { padding: 14px 12px !important; }
-  .course-studio-page .ui.grid > .column { padding: 8px !important; }
-  .course-studio-page .course-content-grid > .column > .ui.card { transform: none; }
-  .course-studio-page .ui.card .extra.content { padding: 10px !important; }
+  /* stackable 栅格在 <768px 竖排：封面降高，操作按钮通栏 */
+  .course-info-page .course-cover { min-height: 170px; }
+  .course-info-page .course-actions { align-items: stretch; }
+  .course-info-page .course-actions .ui.button { width: 100%; }
 }
-@media (prefers-reduced-motion: reduce) { .course-studio-page .ui.button { transition: none !important; } }
 </style>
-<div class="padding course-info-page course-studio-page">
+<div class="padding course-info-page">
 
   <!-- 返回按钮 -->
   <div style="margin-bottom: 15px;">

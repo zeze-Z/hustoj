@@ -33,15 +33,6 @@
         if(empty($url) || $url=='.' || $url=='/' || $path=='/') {
             $url='index.php';
         }
-        $learning_arcade_pages = [
-            'ai_drawing_game.php', 'balloon_typing.php', 'bead_game.php',
-            'clock_reading.php', 'coding_game.php', 'color_match.php',
-            'frog_typing.php', 'guess_number.php', 'idiom_chain.php',
-            'keyboard_game.php', 'math_game.php', 'memory_game.php',
-            'minesweeper.php', 'number_puzzle.php', 'puzzle_game.php',
-            'sequence_memory.php', 'snake.php'
-        ];
-        $learning_arcade_class = in_array($url, $learning_arcade_pages, true) ? 'learning-arcade-page' : '';
         $dir=basename(getcwd());
         if($dir=="discuss3") $path_fix="../";
         else $path_fix="";
@@ -276,7 +267,7 @@
 <head>
     <meta charset="utf-8">
     <meta content="IE=edge" http-equiv="X-UA-Compatible">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5">
     <title><?php echo $show_title ?></title>
     <?php include(dirname(__FILE__)."/css.php");?>
         <style>
@@ -568,8 +559,8 @@
 <?php
         if(!isset($_GET['spa'])){
 ?>
-
-<body id="MainBg-C" class="<?php echo $learning_arcade_class; ?>" style="position: relative; margin-top: 60px; height: calc(100% - 60px); overflow-y: overlay;">
+   
+<body id="MainBg-C" style="position: relative; margin-top: 60px; height: calc(100% - 60px); overflow-y: overlay;">
     <div id="page-header" class="ui fixed borderless menu syzoj-holiday-header" style="position: fixed; height: 60px; z-index:99999; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
         <div class="holiday-header-art" aria-hidden="true">
             <svg viewBox="0 0 390 60" role="presentation" focusable="false">

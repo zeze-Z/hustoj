@@ -1,58 +1,6 @@
 <?php $show_title="$MSG_COURSE - $OJ_NAME"; ?>
 <?php include("template/$OJ_TEMPLATE/header.php");?>
-<style>
-/* Course checkout: the same little paper planet as the course detail page. */
-.course-checkout-page {
-  --checkout-ink: #24304a;
-  --checkout-lilac: #7567f7;
-  --checkout-mint: #3bbd9a;
-  --checkout-coral: #ff806d;
-  --checkout-yellow: #ffd86b;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 22px 18px 44px !important;
-  color: var(--checkout-ink);
-  background: radial-gradient(circle at 7% 4%, #fff0b8 0 8%, transparent 23%), radial-gradient(circle at 96% 18%, #e7ddff 0 7%, transparent 22%);
-}
-.course-checkout-page::before { content: "✦ 领取你的学习补给"; display: block; margin: 0 0 12px 4px; color: var(--checkout-lilac); font-size: .78rem; font-weight: 700; letter-spacing: .08em; }
-.course-checkout-page > .ui.segment { position: relative; overflow: hidden; border: 2px solid var(--checkout-ink) !important; border-radius: 22px !important; background: #fffdf8 !important; box-shadow: 6px 7px 0 var(--checkout-ink) !important; }
-.course-checkout-page > .ui.segment::after { content: ""; position: absolute; width: 88px; height: 22px; top: -10px; right: 48px; transform: rotate(4deg); background: rgba(255,216,107,.76); }
-.course-checkout-page .ui.message { border: 2px solid var(--checkout-ink) !important; border-radius: 16px !important; box-shadow: 3px 4px 0 var(--checkout-ink); }
-.course-checkout-page .ui.message.error { background: #fff0ed !important; }
-.course-checkout-page .ui.message.success { background: #eafaf4 !important; }
-.course-checkout-page .ui.header { color: var(--checkout-ink) !important; font-weight: 800; }
-.course-checkout-page .ui.header > .icon { color: var(--checkout-coral); }
-.course-checkout-page .ui.label { border-radius: 999px !important; font-weight: 700; }
-.course-checkout-page .ui.button { border-radius: 12px !important; border: 2px solid var(--checkout-ink) !important; box-shadow: 2px 3px 0 var(--checkout-ink) !important; font-weight: 700 !important; transition: transform .16s ease, box-shadow .16s ease !important; }
-.course-checkout-page .ui.button:hover { transform: translate(-1px, -2px); box-shadow: 4px 5px 0 var(--checkout-ink) !important; }
-.course-checkout-page .ui.button:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--checkout-ink) !important; }
-.course-checkout-page .ui.button:disabled { box-shadow: none !important; transform: none; opacity: .55; }
-.course-checkout-page .checkout-summary { margin-bottom: 25px; padding: 16px 18px !important; border: 2px dashed rgba(36,48,74,.3); border-radius: 16px !important; background: #f5f1ff !important; }
-.course-checkout-page .checkout-summary > div { gap: 12px; }
-.course-checkout-page .checkout-summary .ui.label { border: 0 !important; box-shadow: none !important; }
-.course-checkout-page .balance-panel { padding: 16px !important; border: 2px solid #f0c65a !important; border-radius: 16px !important; background: #fff8dd !important; }
-.course-checkout-page .balance-panel strong { color: #d45542; }
-.course-checkout-page .upgrade-breakdown { border: 2px dashed #f0c65a !important; border-radius: 12px !important; }
-.course-checkout-page .checkout-submit { min-height: 54px; font-size: 1.05rem !important; }
-.course-checkout-page .ui.positive.button { background-color: var(--checkout-mint) !important; color: #fff !important; }
-.course-checkout-page .ui.primary.button { background-color: var(--checkout-lilac) !important; color: #fff !important; }
-.course-checkout-page :focus-visible { outline: 3px solid var(--checkout-coral); outline-offset: 3px; }
-@media (max-width: 600px) {
-  .course-checkout-page { padding: 14px 10px 30px !important; }
-  .course-checkout-page::before { margin-left: 2px; }
-  .course-checkout-page > .ui.segment { padding: 16px 12px !important; }
-  .course-checkout-page .ui.header { font-size: 1.35rem !important; }
-  .course-checkout-page .checkout-summary > div { align-items: flex-start !important; flex-direction: column; }
-  .course-checkout-page .checkout-summary > div > div:last-child { align-self: stretch; text-align: left !important; }
-  .course-checkout-page .balance-panel > div { display: block !important; }
-  .course-checkout-page .balance-panel > div > div { margin-bottom: 7px; }
-  .course-checkout-page form .ui.button { white-space: normal; line-height: 1.45; }
-  .course-checkout-page .success.message > div[style*="display: flex"] { flex-direction: column; }
-  .course-checkout-page .success.message > div[style*="display: flex"] .ui.button { width: 100% !important; }
-}
-@media (prefers-reduced-motion: reduce) { .course-checkout-page .ui.button { transition: none !important; } }
-</style>
-<div class="padding course-checkout-page">
+<div class="padding">
 
   <!-- 返回按钮 -->
   <div style="margin-bottom: 15px;">
@@ -131,7 +79,7 @@
       </h2>
 
       <!-- 课程信息 -->
-      <div class="checkout-summary" style="margin-bottom: 25px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
+      <div style="margin-bottom: 25px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div>
             <span style="color: #666;"><i class="clock icon"></i> <?php echo $MSG_LESSON_COUNT; ?>: <?php echo intval($view_course['lesson_count']); ?></span>
@@ -170,9 +118,9 @@
 
       <!-- 积分余额信息（仅付费时显示） -->
       <?php if ($view_is_paid): ?>
-        <div class="balance-panel" style="margin-bottom: 20px; padding: 15px; background: #fff7e6; border-radius: 8px; border:1px solid #ffe1a8;">
+        <div style="margin-bottom: 20px; padding: 15px; background: #fff7e6; border-radius: 8px; border:1px solid #ffe1a8;">
           <?php if ($view_is_upgrade): ?>
-            <div class="upgrade-breakdown" style="margin-bottom: 12px; padding: 10px 12px; background: #fff; border-radius: 6px; border: 1px solid #ffe1a8;">
+            <div style="margin-bottom: 12px; padding: 10px 12px; background: #fff; border-radius: 6px; border: 1px solid #ffe1a8;">
               <div style="font-weight: 600; color: #92400e; margin-bottom: 8px;">
                 <i class="info circle icon"></i> 升级抵扣明细
               </div>
@@ -210,7 +158,7 @@
 
         <?php if (!$view_is_paid): ?>
           <!-- 免费课程：显示确认获取按钮 -->
-          <button type="submit" class="ui large green button checkout-submit" style="width: 100%;">
+          <button type="submit" class="ui large green button" style="width: 100%;">
             <i class="gift icon"></i>
             <?php if ($view_is_upgrade): ?>
               确认免费升级到原文件版
@@ -220,7 +168,7 @@
           </button>
         <?php else: ?>
           <!-- 积分支付：确认消耗按钮 -->
-          <button type="submit" class="ui large primary button checkout-submit" style="width: 100%;" <?php if (!$view_enough_balance): ?>disabled<?php endif; ?>>
+          <button type="submit" class="ui large primary button" style="width: 100%;" <?php if (!$view_enough_balance): ?>disabled<?php endif; ?>>
             <i class="<?php echo $view_is_upgrade ? 'arrow up' : 'shopping cart'; ?> icon"></i>
             <?php if ($view_is_upgrade): ?>
               确认补差价 <?php echo intval($view_required_points); ?> 积分升级到原文件版

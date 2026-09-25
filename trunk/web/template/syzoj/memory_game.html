@@ -712,10 +712,7 @@
             const availH = window.innerHeight - contPadTop - contPadBot - nonGridH - totalGaps - 4; // 4px安全边距
             const gridGap = parseFloat(getComputedStyle(memoryGridEl).gap) || 10;
             const cardH = Math.floor((availH - gridGap * (rows - 1)) / rows);
-            // Use the grid's content width, not the outer container width. The latter
-            // includes the container padding and makes the 4x4 layout overflow on mobile.
-            const gridWidth = memoryGridEl.clientWidth;
-            const cardW = Math.floor((gridWidth - gridGap * (cols - 1)) / cols);
+            const cardW = Math.floor((containerEl.clientWidth - gridGap * (cols - 1)) / cols);
             const maxSize = rows === 2 ? 120 : (cols === 4 ? 100 : 90);
             const cardSize = Math.max(36, Math.min(cardH, cardW, maxSize));
             memoryGridEl.style.setProperty('--card-size', cardSize + 'px');
@@ -937,8 +934,4 @@
         initGame();
     </script>
 </div>
-
-<style data-learning-arcade="true">
-body{background:#fff8ef;color:#3f2b1d}.mg-bg-decor{background:radial-gradient(circle at 1px 1px,rgba(234,88,12,.1) 1px,transparent 0) 0 0/22px 22px,linear-gradient(135deg,#fff7ed,#fef3c7 52%,#ecfeff)}.game-container{border-top:5px solid #f97316}</style>
-
 <?php include("template/$OJ_TEMPLATE/footer.php");?>
