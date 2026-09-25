@@ -96,6 +96,12 @@ if(function_exists('system')){
         <div id="panel" style="width:98%;height:180px" onclick='update()'>loading data ... </div>
         <script type="text/javascript">
                 function update(){
+                        // Flot cannot calculate a plot when the admin frame is still hidden or collapsed.
+                        // The next interval will retry after the frame has been laid out.
+                        let $panel = $("#panel");
+                        if ($panel.width() <= 0 || $panel.height() <= 0) {
+                                return;
+                        }
                         $.getJSON("<?php echo basename(__FILE__)?>?json",function(result){
                                 let cpu=result[0];
                                 let mem=result[1];
