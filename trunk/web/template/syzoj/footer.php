@@ -1,5 +1,6 @@
 </div>
 </div>
+<?php if(empty($hide_chrome)){ // 传播型 H5（$hide_chrome）跳过站点脚本与页脚主体，输出末尾极简署名行 ?>
 <script src="<?php echo $OJ_CDN_URL.$path_fix."template/$OJ_TEMPLATE"?>/css/semantic.min.js"></script>
 <script src="<?php echo $OJ_CDN_URL.$path_fix."template/$OJ_TEMPLATE"?>/css/Chart.min.js"></script>
     <style>
@@ -70,6 +71,12 @@
         }
     }
 </script>
+<?php } else { ?>
+    <!-- 极简壳署名行：保留备案展示与回流入口，不带客服/推广文案 -->
+    <div style="margin: 18px 0 12px; text-align: center; line-height: 1.5; font-size: 0.78rem; color: #9a9488; font-family: 'PingFang SC','Microsoft YaHei',sans-serif;">
+        <span>© <?php echo htmlentities($OJ_NAME, ENT_QUOTES, 'UTF-8');?></span><?php if (!empty($OJ_BEIAN)) { ?><span> · </span><a href="https://beian.miit.gov.cn/" style="color: inherit; text-decoration: none;" target="_blank" rel="noreferrer noopener"><?php echo htmlentities($OJ_BEIAN, ENT_QUOTES, 'UTF-8');?></a><?php } ?><span> · </span><a href="<?php echo $path_fix?>index.php" style="color: inherit; text-decoration: underline;">返回首页</a>
+    </div>
+<?php } ?>
 <?php if (isset($_SESSION[$OJ_NAME.'_user_id'])){ ?>
         <iframe id="sk" src="session.php" height=0px width=0px ></iframe>
         <script>

@@ -318,6 +318,22 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     line-height: 1.5;
 }
 
+/* 新功能角标（教师趣味测评入口卡） */
+.card-new-badge {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: #FF7B54;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1.5px solid #2B4C6F;
+    box-shadow: 2px 2px 0 rgba(43, 76, 111, 0.6);
+    transform: rotate(6deg);
+}
+
 /* ===== 小游戏 Tab 布局 ===== */
 /* 必须用 .tab-panel.active#panel-games 提升 specificity，
    否则 #panel-games 的 display:flex 会覆盖 .tab-panel { display:none }，
@@ -1868,6 +1884,31 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     <div class="section">
         <h2 class="section-title">👨‍🏫 教师服务 <span class="auth-tag tag-public">无需登录</span></h2>
         <div class="cards-grid">
+            <a href="career_test.php" class="card" style="position: relative;">
+                <span class="card-new-badge">NEW</span>
+                <div class="card-icon" style="background: linear-gradient(135deg, #C8402F, #E0A92E);">
+                    <svg viewBox="0 0 64 64">
+                        <rect x="12" y="14" width="40" height="36" rx="5" fill="none" stroke="#fff" stroke-width="4"/>
+                        <line x1="20" y1="26" x2="44" y2="26" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="20" y1="36" x2="36" y2="36" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+                        <circle cx="46" cy="46" r="10" fill="#fff"/>
+                        <text x="46" y="51" font-family="Arial, sans-serif" font-size="15" font-weight="700" text-anchor="middle" fill="#C8402F">?</text>
+                    </svg>
+                </div>
+                <div class="card-title">测一测，你该不该考编？</div>
+                <div class="card-desc">8 道题亮出你的职业底牌——编制真香党还是跳槽预备役？</div>
+            </a>
+            <a href="teacher_style_test.php" class="card" style="position: relative;">
+                <span class="card-new-badge">NEW</span>
+                <div class="card-icon" style="background: linear-gradient(135deg, #FF7B54, #FFC93C);">
+                    <svg viewBox="0 0 64 64">
+                        <path d="M32 6 l5.4 8.8 10.2 -2.6 -2.6 10.2 8.8 5.4 -8.8 5.4 2.6 10.2 -10.2 -2.6 -5.4 8.8 -5.4 -8.8 -10.2 2.6 2.6 -10.2 -8.8 -5.4 8.8 -5.4 -2.6 -10.2 10.2 2.6 Z" fill="#fff"/>
+                        <text x="32" y="40" font-family="Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#FF7B54">?</text>
+                    </svg>
+                </div>
+                <div class="card-title">测一测你是哪位教育家</div>
+                <div class="card-desc">8 道题，揭晓你教学灵魂背后的伟人——已有 7821 位老师测过</div>
+            </a>
             <a href="teacher_guide.php" class="card">
                 <div class="card-icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
                     <svg viewBox="0 0 64 64">

@@ -90,6 +90,8 @@
             'news.php',             // 动态列表
             'viewnews.php',         // 动态详情
             'timetable.php',        // 课程表生成（游客可用，登录后导出高清版）
+            'teacher_style_test.php', // 教师教学人格测试（游客可玩，传播优先）
+            'career_test.php',      // 考编决策测试（游客可玩，传播优先）
         ];
 
         // 游客模式访问限制
@@ -569,7 +571,8 @@
         if(!isset($_GET['spa'])){
 ?>
 
-<body id="MainBg-C" class="<?php echo $learning_arcade_class; ?>" style="position: relative; margin-top: 60px; height: calc(100% - 60px); overflow-y: overlay;">
+<body id="MainBg-C" class="<?php echo $learning_arcade_class; ?>" style="position: relative; margin-top: <?php echo empty($hide_chrome) ? '60px' : '0'; ?>; height: <?php echo empty($hide_chrome) ? 'calc(100% - 60px)' : '100%'; ?>; overflow-y: overlay;">
+<?php if(empty($hide_chrome)){ // 传播型 H5（模板置 $hide_chrome）隐藏顶部导航与联系弹窗，仅保留 head 骨架 + 限流反爬 ?>
     <div id="page-header" class="ui fixed borderless menu syzoj-holiday-header" style="position: fixed; height: 60px; z-index:99999; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
         <div class="holiday-header-art" aria-hidden="true">
             <svg viewBox="0 0 390 60" role="presentation" focusable="false">
@@ -861,6 +864,7 @@ if(isset($_SESSION[$OJ_NAME.'_'.'balloon'])){
         </div>
     </div>
 
+<?php } // end hide_chrome：导航 + 联系弹窗 ?>
     <div style="margin-top: 0px; ">
-        <div id="main" class="ui main container">
+        <div id="main" class="<?php echo empty($hide_chrome) ? 'ui main container' : ''; ?>">
 <?php } ?>
