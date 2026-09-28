@@ -297,16 +297,7 @@
         return [text.slice(0, mid), text.slice(mid)];
     }
 
-    function roundRect(ctx, x, y, w, h, r) {
-        r = Math.min(r, w / 2, h / 2);
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.arcTo(x + w, y, x + w, y + h, r);
-        ctx.arcTo(x + w, y + h, x, y + h, r);
-        ctx.arcTo(x, y + h, x, y, r);
-        ctx.arcTo(x, y, x + w, y, r);
-        ctx.closePath();
-    }
+    // roundRect / makeQrCanvas 由 js/qr_helper.js 全局提供（qrcode.min.js 之后加载）
 
     // 底部居中分享角标：白底圆角卡片（文案 + 二维码）嵌在模板图内部，
     // canvas 保持模板原始比例，导出图保存/转发不会被裁掉二维码
@@ -314,7 +305,7 @@
         // 横屏二维码缩小 60%（×0.4），竖屏缩小 10%（×0.9）；对最终尺寸整体缩放，避免 px 下限抵消缩小
         var qrScale = W >= H ? 0.4 : 0.9;
         var qrSize = Math.round(Math.max(qrMinPx, Math.round(Math.min(W, H) * 0.11)) * qrScale); // 下限保证游客压缩档可扫
-        var qr = makeQrCanvas(shareUrl(), qrSize); // 按最终显示尺寸生成，避免缩放模糊
+        var qr = makeQrCanvas(shareUrl(), qrSize, '#2f2413'); // 按最终显示尺寸生成，避免缩放模糊
         var pad = Math.max(4, Math.round(qrSize * 0.09));
         var gap = Math.max(4, Math.round(qrSize * 0.12));
         var fontSize = Math.max(9, Math.floor(qrSize * 0.26));
@@ -357,19 +348,6 @@
             ctx.textBaseline = 'middle';
             ctx.fillText(text, x0 + pad, y0 + cardH / 2 + 1);
         }
-    }
-
-    function makeQrCanvas(text, size) {
-        try {
-            if (typeof QRCode === 'undefined') return null; // qrcode.min.js 未加载时跳过二维码
-            var holder = document.createElement('div');
-            new QRCode(holder, {
-                text: text, width: size, height: size,
-                colorDark: '#2f2413', colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.M
-            });
-            return holder.querySelector('canvas');
-        } catch (e) { return null; }
     }
 
     /**

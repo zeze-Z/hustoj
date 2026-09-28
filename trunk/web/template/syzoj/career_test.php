@@ -470,6 +470,7 @@ window.CTS = {
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script src="template/<?php echo $OJ_TEMPLATE?>/game_confetti.js"></script>
 <script src="template/<?php echo $OJ_TEMPLATE?>/js/qrcode.min.js"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/js/qr_helper.js"></script>
 <script src="template/<?php echo $OJ_TEMPLATE?>/js/career_test_data.js"></script>
 <script>
 (function () {
@@ -793,39 +794,7 @@ window.CTS = {
     }
 
     /* ---------------- 分享卡片（Canvas 750×1334） ---------------- */
-    function roundRect(g, x, y, w, h, r) {
-        g.beginPath();
-        g.moveTo(x + r, y);
-        g.arcTo(x + w, y, x + w, y + h, r);
-        g.arcTo(x + w, y + h, x, y + h, r);
-        g.arcTo(x, y + h, x, y, r);
-        g.arcTo(x, y, x + w, y, r);
-        g.closePath();
-    }
-
-    function wrapLines(g, text, maxW) {
-        var lines = [], line = '';
-        for (var i = 0; i < text.length; i++) {
-            var t = line + text[i];
-            if (g.measureText(t).width > maxW && line) { lines.push(line); line = text[i]; }
-            else line = t;
-        }
-        if (line) lines.push(line);
-        return lines;
-    }
-
-    function makeQrCanvas(text, size) {
-        try {
-            if (typeof QRCode === 'undefined') return null; // qrcode.min.js 缺失时静默跳过
-            var holder = document.createElement('div');
-            new QRCode(holder, {
-                text: text, width: size, height: size,
-                colorDark: '#28282A', colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.M
-            });
-            return holder.querySelector('canvas');
-        } catch (e) { return null; }
-    }
+    // roundRect / wrapLines / makeQrCanvas 由 js/qr_helper.js 全局提供
 
     function drawShareCard(res, url) {
         var W = 750, H = 1334;
@@ -944,7 +913,7 @@ window.CTS = {
         hook.forEach(function (ln) { g.fillText(ln, cx, hy); hy += 44; });
 
         // 底部二维码
-        var qr = makeQrCanvas(url, 142);
+        var qr = makeQrCanvas(url, 142, '#28282A');
         var qx = padL, qy2 = 1096;
         if (qr) {
             g.imageSmoothingEnabled = false;

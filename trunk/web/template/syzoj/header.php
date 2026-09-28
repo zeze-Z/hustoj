@@ -92,6 +92,12 @@
             'timetable.php',        // 课程表生成（游客可用，登录后导出高清版）
             'teacher_style_test.php', // 教师教学人格测试（游客可玩，传播优先）
             'career_test.php',      // 考编决策测试（游客可玩，传播优先）
+            'homework_mood_test.php', // 陪读精神状态测试（游客可玩，传播优先）
+            'job_change_test.php',  // 跳槽决策测试（游客可玩，传播优先）
+            'teacher_battery_test.php', // 教师电量测试（游客可玩，传播优先）
+            'tiger_parent_test.php', // 鸡娃决策测试（游客可玩，传播优先）
+            'know_child_test.php',  // 懂孩子测试（游客可玩，传播优先）
+            'teacher_mood_calendar.php', // 教师解压日历（游客可玩，传播优先）
         ];
 
         // 游客模式访问限制

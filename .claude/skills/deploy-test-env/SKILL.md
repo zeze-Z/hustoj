@@ -57,6 +57,7 @@ allowed-tools: Bash(bash deploy_test_env.sh:*), Bash(multipass:*), Bash(git stat
   ```
   admin 表单 POST（登录、postkey 提取、上传）不受此规则影响，无需 UA。页面 GET 用外部 IP（`hostname -I` 或 `multipass list`）与 127.0.0.1 均可，关键是 UA。
 - 测试图在虚机 /tmp 用 `php8.1 -r` 生成（GD 可用），生成后**先打印实际字节数再断言**（踩过：以为 >2MB 实际 1.69MB 导致假 FAIL）
+- **并发部署会串写远端文件**：多 coder/多会话同时跑 `deploy_test_env.sh` 时，早期版本共用 `/tmp/_deploy_` 临时名，交叉覆盖导致 A 文件内容被部署到 B 路径（2026-09-28 实测事故，md5 对账发现）。脚本已改临时名为 `/tmp/_deploy_$$_${base}`；若手动兜底部署也要用唯一临时名。批量并行交付后建议做一次本地/远端 md5 全量对账（`md5sum` vs `sudo md5sum`）。
 
 ## 脚本不可用时手动兜底
 

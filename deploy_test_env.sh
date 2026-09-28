@@ -40,9 +40,10 @@ for f in "$@"; do
   echo ">> 部署 $rel"
   dir=$(dirname "$p"); base=$(basename "$p")
   localsize=$(wc -c < "$p" | tr -d '[:space:]')
-  ( cd "$dir" && multipass transfer "$base" "$VM:/tmp/_deploy_" ) \
+  # 临时名带 PID+文件名：并发部署/多 coder 同时跑时共用 /tmp/_deploy_ 会交叉串写（2026-09-28 实测事故）
+  ( cd "$dir" && multipass transfer "$base" "$VM:/tmp/_deploy_$$_${base}" ) \
     && multipass exec "$VM" -- sudo -S mkdir -p "$(dirname "$WEBROOT/$rel")" <<< "$SUDOPW" \
-    && multipass exec "$VM" -- sudo -S mv /tmp/_deploy_ "$WEBROOT/$rel" <<< "$SUDOPW" \
+    && multipass exec "$VM" -- sudo -S mv "/tmp/_deploy_$$_${base}" "$WEBROOT/$rel" <<< "$SUDOPW" \
     && multipass exec "$VM" -- sudo -S chown www-data:www-data "$WEBROOT/$rel" <<< "$SUDOPW" \
     || { echo "!! 上传失败: $f"; fail=1; continue; }
   # 校验远端字节数(防 multipass transfer 0 字节坑); 文件属主 www-data, 校验也须 sudo

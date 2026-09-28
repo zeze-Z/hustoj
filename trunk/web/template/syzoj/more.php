@@ -1387,6 +1387,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
         <div class="tab-item" data-tab="ai" onclick="switchTab('ai')"><span>🤖 AI</span><span class="online-free-tag">● 在线免费用</span></div>
         <div class="tab-item" data-tab="coding" onclick="switchTab('coding')"><span>💻 编程</span><span class="online-free-tag">● 在线免费用</span></div>
         <div class="tab-item" data-tab="teacher" onclick="switchTab('teacher')">👨‍🏫 教师服务</div>
+        <div class="tab-item" data-tab="quiz" onclick="switchTab('quiz')">🧠 测评</div>
     </div>
 
     <!-- ============ 小游戏 Tab ============ -->
@@ -1884,31 +1885,6 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     <div class="section">
         <h2 class="section-title">👨‍🏫 教师服务 <span class="auth-tag tag-public">无需登录</span></h2>
         <div class="cards-grid">
-            <a href="career_test.php" class="card" style="position: relative;">
-                <span class="card-new-badge">NEW</span>
-                <div class="card-icon" style="background: linear-gradient(135deg, #C8402F, #E0A92E);">
-                    <svg viewBox="0 0 64 64">
-                        <rect x="12" y="14" width="40" height="36" rx="5" fill="none" stroke="#fff" stroke-width="4"/>
-                        <line x1="20" y1="26" x2="44" y2="26" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
-                        <line x1="20" y1="36" x2="36" y2="36" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
-                        <circle cx="46" cy="46" r="10" fill="#fff"/>
-                        <text x="46" y="51" font-family="Arial, sans-serif" font-size="15" font-weight="700" text-anchor="middle" fill="#C8402F">?</text>
-                    </svg>
-                </div>
-                <div class="card-title">测一测，你该不该考编？</div>
-                <div class="card-desc">8 道题亮出你的职业底牌——编制真香党还是跳槽预备役？</div>
-            </a>
-            <a href="teacher_style_test.php" class="card" style="position: relative;">
-                <span class="card-new-badge">NEW</span>
-                <div class="card-icon" style="background: linear-gradient(135deg, #FF7B54, #FFC93C);">
-                    <svg viewBox="0 0 64 64">
-                        <path d="M32 6 l5.4 8.8 10.2 -2.6 -2.6 10.2 8.8 5.4 -8.8 5.4 2.6 10.2 -10.2 -2.6 -5.4 8.8 -5.4 -8.8 -10.2 2.6 2.6 -10.2 -8.8 -5.4 8.8 -5.4 -2.6 -10.2 10.2 2.6 Z" fill="#fff"/>
-                        <text x="32" y="40" font-family="Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#FF7B54">?</text>
-                    </svg>
-                </div>
-                <div class="card-title">测一测你是哪位教育家</div>
-                <div class="card-desc">8 道题，揭晓你教学灵魂背后的伟人——已有 7821 位老师测过</div>
-            </a>
             <a href="teacher_guide.php" class="card">
                 <div class="card-icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
                     <svg viewBox="0 0 64 64">
@@ -1939,9 +1915,148 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                 <div class="card-title">课程表生成器</div>
                 <div class="card-desc">挑选主题模板，一键生成可打印课程表；登录后免费导出高清版，可 1 积分去除二维码</div>
             </a>
+            <a href="teacher_mood_calendar.php" class="card" style="position: relative;">
+                <span class="card-new-badge">NEW</span>
+                <div class="card-icon" style="background: linear-gradient(135deg, #FFB25E, #E4573D);">
+                    <svg viewBox="0 0 64 64">
+                        <rect x="8" y="14" width="48" height="42" rx="6" fill="none" stroke="#fff" stroke-width="4"/>
+                        <line x1="8" y1="26" x2="56" y2="26" stroke="#fff" stroke-width="4"/>
+                        <line x1="20" y1="9" x2="20" y2="20" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="44" y1="9" x2="44" y2="20" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+                        <circle cx="22" cy="38" r="3.4" fill="#fff"/>
+                        <circle cx="32" cy="38" r="3.4" fill="#fff"/>
+                        <circle cx="42" cy="38" r="3.4" fill="#fff"/>
+                        <circle cx="22" cy="48" r="3.4" fill="#fff"/>
+                        <path d="M36 46 l5 5 9 -10" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="card-title">教师解压日历</div>
+                <div class="card-desc">节前狂欢、收假忧郁、周一丧……日历看穿你的今日心情，一键生成解压分享卡</div>
+            </a>
         </div>
     </div>
     </div><!-- /panel-teacher -->
+
+    <div class="tab-panel" id="panel-quiz">
+    <!-- 趣味测评系列（游客可玩，传播优先） -->
+    <div class="section">
+        <h2 class="section-title">🧠 趣味测评 <span class="auth-tag tag-public">无需登录</span></h2>
+        <div class="cards-grid">
+            <a href="homework_mood_test.php" class="card" style="position: relative;">
+                <span class="card-new-badge">NEW</span>
+                <div class="card-icon" style="background: linear-gradient(135deg, #F6B24B, #D9503F);">
+                    <svg viewBox="0 0 64 64">
+                        <path d="M14 12 h30 a8 8 0 0 1 8 8 v18 a8 8 0 0 1 -8 8 H30 l-10 10 v-10 h-6 a8 8 0 0 1 -8 -8 V20 a8 8 0 0 1 8 -8 z" fill="none" stroke="#fff" stroke-width="4.5" stroke-linejoin="round"/>
+                        <line x1="44" y1="52" x2="56" y2="52" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>
+                        <line x1="48" y1="58" x2="56" y2="58" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>
+                        <line x1="24" y1="26" x2="38" y2="26" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="24" y1="35" x2="33" y2="35" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="card-title">8 道题，鉴定你的陪读精神状态</div>
+                <div class="card-desc">每晚 19:00–21:00，你家客厅上演的是温情片还是动作片？</div>
+            </a>
+            <a href="job_change_test.php" class="card" style="position: relative;">
+                <span class="card-new-badge">NEW</span>
+                <div class="card-icon" style="background: linear-gradient(135deg, #1B4B8F, #C8402F);">
+                    <svg viewBox="0 0 64 64">
+                        <path d="M8 20 h48 v24 h-48 z" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
+                        <line x1="42" y1="20" x2="42" y2="44" stroke="#fff" stroke-width="3.5" stroke-dasharray="4 4"/>
+                        <path d="M14 32 l12 -6 v4 h12 v4 h-12 v4 z" fill="#fff"/>
+                        <circle cx="50" cy="32" r="2.5" fill="#fff"/>
+                    </svg>
+                </div>
+                <div class="card-title">测一测，你该不该跳槽？</div>
+                <div class="card-desc">刷招聘软件到凌晨的你，缺的不是机会，是一个说得出口的答案</div>
+            </a>
+            <a href="teacher_battery_test.php" class="card" style="position: relative;">
+                <span class="card-new-badge">NEW</span>
+                <div class="card-icon" style="background: linear-gradient(135deg, #4CAF50, #FFC107);">
+                    <svg viewBox="0 0 64 64">
+                        <rect x="8" y="20" width="42" height="26" rx="6" fill="none" stroke="#fff" stroke-width="4"/>
+                        <rect x="52" y="27" width="6" height="12" rx="2" fill="#fff"/>
+                        <rect x="14" y="26" width="8" height="14" rx="2" fill="#fff"/>
+                        <rect x="25" y="26" width="8" height="14" rx="2" fill="#fff"/>
+                        <path d="M40 23 l-8 13 h6 l-3 11 10 -14 h-6 Z" fill="#fff"/>
+                    </svg>
+                </div>
+                <div class="card-title">你的教师电量还剩几格？</div>
+                <div class="card-desc">8 道题测测你的教坛续命指数——满血卷王还是假期续命党？</div>
+            </a>
+            <a href="tiger_parent_test.php" class="card" style="position: relative;">
+                <span class="card-new-badge">NEW</span>
+                <div class="card-icon" style="background: linear-gradient(135deg, #2F4F3E, #5B8A6F);">
+                    <svg viewBox="0 0 64 64">
+                        <rect x="14" y="8" width="36" height="48" rx="6" fill="none" stroke="#fff" stroke-width="4"/>
+                        <rect x="21" y="15" width="22" height="10" rx="2" fill="none" stroke="#fff" stroke-width="3"/>
+                        <circle cx="24" cy="36" r="3.2" fill="#fff"/>
+                        <circle cx="32" cy="36" r="3.2" fill="#fff"/>
+                        <circle cx="40" cy="36" r="3.2" fill="#fff"/>
+                        <circle cx="24" cy="45" r="3.2" fill="#fff"/>
+                        <circle cx="32" cy="45" r="3.2" fill="#fff"/>
+                        <path d="M39 42 l6 6 M45 42 l-6 6" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="card-title">测一测，你家到底该不该鸡娃？</div>
+                <div class="card-desc">8 道题，算算你家的鸡娃性价比——全面鸡娃还是静待花开？</div>
+            </a>
+            <a href="know_child_test.php" class="card" style="position: relative;">
+                <span class="card-new-badge">NEW</span>
+                <div class="card-icon" style="background: linear-gradient(135deg, #8A5A3B, #F2C6C2);">
+                    <svg viewBox="0 0 64 64">
+                        <rect x="12" y="10" width="40" height="44" rx="4" fill="none" stroke="#fff" stroke-width="4"/>
+                        <rect x="19" y="17" width="26" height="24" rx="2" fill="none" stroke="#fff" stroke-width="3.5"/>
+                        <circle cx="32" cy="29" r="6" fill="none" stroke="#fff" stroke-width="3.5"/>
+                        <path d="M20 54 L32 44 L44 54" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="card-title">测一测，你真的懂你家孩子吗？</div>
+                <div class="card-desc">朝夕相处 ≠ 真的了解，8 道生活小题测出你们的默契余额</div>
+            </a>
+            <a href="teacher_style_test.php" class="card">
+                <div class="card-icon" style="background: linear-gradient(135deg, #FF7B54, #FFC93C);">
+                    <svg viewBox="0 0 64 64">
+                        <path d="M32 6 l5.4 8.8 10.2 -2.6 -2.6 10.2 8.8 5.4 -8.8 5.4 2.6 10.2 -10.2 -2.6 -5.4 8.8 -5.4 -8.8 -10.2 2.6 2.6 -10.2 -8.8 -5.4 8.8 -5.4 -2.6 -10.2 10.2 2.6 Z" fill="#fff"/>
+                        <text x="32" y="40" font-family="Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#FF7B54">?</text>
+                    </svg>
+                </div>
+                <div class="card-title">测一测你是哪位教育家</div>
+                <div class="card-desc">8 道题，揭晓你教学灵魂背后的伟人——已有 7821 位老师测过</div>
+            </a>
+            <a href="career_test.php" class="card">
+                <div class="card-icon" style="background: linear-gradient(135deg, #C8402F, #E0A92E);">
+                    <svg viewBox="0 0 64 64">
+                        <rect x="12" y="14" width="40" height="36" rx="5" fill="none" stroke="#fff" stroke-width="4"/>
+                        <line x1="20" y1="26" x2="44" y2="26" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="20" y1="36" x2="36" y2="36" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+                        <circle cx="46" cy="46" r="10" fill="#fff"/>
+                        <text x="46" y="51" font-family="Arial, sans-serif" font-size="15" font-weight="700" text-anchor="middle" fill="#C8402F">?</text>
+                    </svg>
+                </div>
+                <div class="card-title">测一测，你该不该考编？</div>
+                <div class="card-desc">8 道题亮出你的职业底牌——编制真香党还是跳槽预备役？</div>
+            </a>
+            <a href="teacher_mood_calendar.php" class="card" style="position: relative;">
+                <span class="card-new-badge">NEW</span>
+                <div class="card-icon" style="background: linear-gradient(135deg, #FFB25E, #E4573D);">
+                    <svg viewBox="0 0 64 64">
+                        <rect x="8" y="14" width="48" height="42" rx="6" fill="none" stroke="#fff" stroke-width="4"/>
+                        <line x1="8" y1="26" x2="56" y2="26" stroke="#fff" stroke-width="4"/>
+                        <line x1="20" y1="9" x2="20" y2="20" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+                        <line x1="44" y1="9" x2="44" y2="20" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+                        <circle cx="22" cy="38" r="3.4" fill="#fff"/>
+                        <circle cx="32" cy="38" r="3.4" fill="#fff"/>
+                        <circle cx="42" cy="38" r="3.4" fill="#fff"/>
+                        <circle cx="22" cy="48" r="3.4" fill="#fff"/>
+                        <path d="M36 46 l5 5 9 -10" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="card-title">教师解压日历</div>
+                <div class="card-desc">节前狂欢、收假忧郁、周一丧……日历看穿你的今日心情，一键生成解压分享卡</div>
+            </a>
+        </div>
+    </div>
+    </div><!-- /panel-quiz -->
 </div>
 
 <?php if ($og_goods): ?>
@@ -2491,7 +2606,7 @@ function switchSubTab(subName) {
 
 // 页面加载时根据 URL hash 定位 Tab，默认小游戏
 (function() {
-    var validTabs = ['games', 'ai', 'coding', 'teacher'];
+    var validTabs = ['games', 'ai', 'coding', 'teacher', 'quiz'];
     var hash = (window.location.hash || '').replace('#', '');
     var initTab = validTabs.indexOf(hash) >= 0 ? hash : 'games';
     switchTab(initTab);
