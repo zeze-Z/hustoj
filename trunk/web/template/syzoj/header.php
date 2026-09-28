@@ -608,7 +608,9 @@
             <a class="header item" href="/" style="font-size: 1.3em; font-weight: 600; color: #fff !important; padding: 0 20px;">
                 <?php echo $domain==$DOMAIN?$OJ_NAME:ucwords($OJ_NAME)."'s OJ"?>
             </a>
-            
+
+            <div class="nav-collapse" id="topnav-collapse">
+
             <?php
             if(isset($OJ_AI_HTML)&&$OJ_AI_HTML && !isset($OJ_ON_SITE_CONTEST_ID) ) echo $OJ_AI_HTML;
             else echo '<a class="desktop-only item" href="index.php" style="font-weight: 500;">'.$MSG_HOME.'</a>';
@@ -691,15 +693,15 @@
             </div>
             <?php } ?>
             <?php } ?>
+            </div><!-- /#topnav-collapse -->
 
             <div class="right menu">
                 <?php if(isset($_SESSION[$OJ_NAME.'_'.'user_id'])) { ?>
                     <div class="ui simple dropdown item">
-                        <?php echo $_SESSION[$OJ_NAME.'_'.'user_id'];
-                              if(!empty($_SESSION[$OJ_NAME.'_nick'])) echo "(".$_SESSION[$OJ_NAME.'_nick'].")";
-                              if(!empty($_SESSION[$OJ_NAME.'_group_name'])) echo "[".$_SESSION[$OJ_NAME.'_group_name']."]";
-
-                        ?>
+                        <span class="nav-user-label"><?php echo $_SESSION[$OJ_NAME.'_'.'user_id'];
+                              if(!empty($_SESSION[$OJ_NAME.'_nick'])) echo "<span class='nav-extra'>(".$_SESSION[$OJ_NAME.'_nick'].")</span>";
+                              if(!empty($_SESSION[$OJ_NAME.'_group_name'])) echo "<span class='nav-extra'>[".$_SESSION[$OJ_NAME.'_group_name']."]</span>";
+                        ?></span>
                         <i class="dropdown icon"></i>
                         <div class="menu">
                                 <?php if (is_teacher_or_admin()): ?>
@@ -761,8 +763,85 @@ if(isset($_SESSION[$OJ_NAME.'_'.'balloon'])){
                 </div>
                 <?php } ?>
             </div>
+            <button type="button" id="topnav-toggle" class="topnav-toggle" aria-expanded="false" aria-controls="topnav-collapse" aria-label="打开菜单">
+                <span class="topnav-toggle-bar"></span>
+                <span class="topnav-toggle-bar"></span>
+                <span class="topnav-toggle-bar"></span>
+            </button>
         </div>
     </div>
+
+    <script>
+        // 窄屏顶部导航：汉堡开合抽屉 + 下拉就地展开（仅 ≤1200px 生效）
+        (function () {
+            var toggle = document.getElementById('topnav-toggle');
+            var collapse = document.getElementById('topnav-collapse');
+            if (!toggle || !collapse) return;
+            var mqMobile = window.matchMedia('(max-width: 1200px)');
+
+            function closeSubMenus() {
+                var openSubs = document.querySelectorAll('#page-header .topnav-sub-open');
+                for (var i = 0; i < openSubs.length; i++) openSubs[i].classList.remove('topnav-sub-open');
+            }
+
+            function setOpen(open) {
+                collapse.classList.toggle('topnav-open', open);
+                toggle.classList.toggle('topnav-open', open);
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                toggle.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+                document.body.classList.toggle('topnav-open', open);
+                if (!open) closeSubMenus();
+            }
+
+            toggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                setOpen(!collapse.classList.contains('topnav-open'));
+            });
+
+            // 抽屉外点击收起
+            document.addEventListener('click', function (e) {
+                if (!collapse.classList.contains('topnav-open')) return;
+                if (!collapse.contains(e.target) && !toggle.contains(e.target)) setOpen(false);
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') setOpen(false);
+            });
+
+            window.addEventListener('resize', function () {
+                if (!mqMobile.matches) setOpen(false);
+            });
+
+            // 移动端点击「学习资料」「用户」下拉标题就地展开/收起（菜单内链接不算标题点击）
+            document.addEventListener('click', function (e) {
+                if (!mqMobile.matches) return;
+                var t = e.target, inMenu = false;
+                while (t && t !== document.body) {
+                    if (t.classList && t.classList.contains('menu')) { inMenu = true; break; }
+                    if (t.classList && t.classList.contains('item') && t.classList.contains('dropdown')) {
+                        if (!inMenu) {
+                            e.preventDefault();
+                            t.classList.toggle('topnav-sub-open');
+                        }
+                        return;
+                    }
+                    t = t.parentElement;
+                }
+            }, true);
+
+            // 抽屉内点击真实链接后收起
+            collapse.addEventListener('click', function (e) {
+                var t = e.target;
+                while (t && t !== collapse) {
+                    if (t.tagName === 'A' && t.getAttribute('href')) {
+                        setOpen(false);
+                        return;
+                    }
+                    t = t.parentElement;
+                }
+            });
+        })();
+    </script>
 
     <!-- 联系我们弹窗 -->
     <style>

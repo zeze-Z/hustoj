@@ -24,6 +24,7 @@
 <link href="<?php echo $OJ_CDN_URL.$path_fix."template/$OJ_TEMPLATE"?>/css/latin.css" rel="stylesheet">
 <link href="<?php echo $OJ_CDN_URL.$path_fix."template/$OJ_TEMPLATE"?>/css/Exo.css?v=0.1" rel="stylesheet">
 <link href="<?php echo $OJ_CDN_URL.$path_fix."template/$OJ_TEMPLATE"?>/css/holiday-header.css?v=1" rel="stylesheet">
+<link href="<?php echo $OJ_CDN_URL.$path_fix."template/$OJ_TEMPLATE"?>/css/topnav.css?v=1" rel="stylesheet">
 <link href="<?php echo $OJ_CDN_URL.$path_fix."template/$OJ_TEMPLATE"?>/css/learning-arcade.css?v=1" rel="stylesheet">
 
 <?php if (file_exists(dirname(__FILE__)."/css/$OJ_CSS")){ ?>

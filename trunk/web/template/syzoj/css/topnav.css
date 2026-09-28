@@ -1,0 +1,253 @@
+/* ============================================================
+   顶部导航响应式布局（syzoj 专用）
+   桌面(≥1201px)：单行菜单，与原布局一致；用户名超长省略
+   移动(≤1200px)：品牌 + 账号区 + 汉堡按钮；菜单收进「天空垂幔」抽屉
+   核心保证：右侧账号区（登录/注册、用户下拉）在任何屏宽下不被裁切
+   视觉延续节日手绘天空皮肤（holiday-header.css），只做布局与抽屉
+   ============================================================ */
+
+/* ---------- 通用 ---------- */
+#page-header #menu {
+    flex-wrap: nowrap;
+}
+
+/* 桌面：display:contents 让菜单项直接成为 #menu 的 flex 子项，
+   不制造滚动/裁切容器，悬停下拉不受影响 */
+#page-header .nav-collapse {
+    display: contents;
+}
+
+#page-header .right.menu {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    flex-shrink: 0;
+}
+
+/* 用户名过长时省略，保证不撑破窄屏 */
+#page-header .nav-user-label {
+    display: inline-block;
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+#page-header .topnav-toggle {
+    display: none;
+}
+
+/* 中等桌面宽度收紧菜单项内边距，避免单行溢出 */
+@media (min-width: 1201px) and (max-width: 1360px) {
+    #page-header .nav-collapse > .item {
+        padding: 0 10px !important;
+    }
+}
+
+/* ---------- 窄屏：汉堡 + 天空垂幔抽屉 ---------- */
+@media (max-width: 1200px) {
+
+    /* 汉堡按钮：44px 触控区，奶白描线，展开后收成 × */
+    #page-header .topnav-toggle {
+        display: inline-flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+        width: 44px;
+        height: 44px;
+        margin: 0 4px 0 2px;
+        padding: 0;
+        flex: 0 0 auto;
+        align-self: center;
+        background: rgba(255, 248, 221, 0.12);
+        border: 1px solid rgba(255, 248, 221, 0.35);
+        border-radius: 10px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    #page-header .topnav-toggle:hover {
+        background: rgba(255, 248, 221, 0.22);
+    }
+
+    #page-header .topnav-toggle:focus-visible {
+        outline: 2px solid var(--holiday-gold, #f4cd75);
+        outline-offset: 2px;
+    }
+
+    #page-header .topnav-toggle .topnav-toggle-bar {
+        display: block;
+        width: 20px;
+        height: 2px;
+        border-radius: 2px;
+        background: var(--holiday-moon, #fff8dd);
+        transition: transform 0.22s ease, opacity 0.22s ease;
+    }
+
+    #page-header .topnav-toggle.topnav-open .topnav-toggle-bar:nth-child(1) {
+        transform: translateY(6px) rotate(45deg);
+    }
+
+    #page-header .topnav-toggle.topnav-open .topnav-toggle-bar:nth-child(2) {
+        opacity: 0;
+    }
+
+    #page-header .topnav-toggle.topnav-open .topnav-toggle-bar:nth-child(3) {
+        transform: translateY(-6px) rotate(-45deg);
+    }
+
+    /* 右侧账号区：紧凑、永不收缩（fix 右侧溢出不展示） */
+    #page-header .right.menu .ui.simple.dropdown.item {
+        max-width: 42vw;
+        padding: 0 10px !important;
+    }
+
+    #page-header .nav-user-label {
+        max-width: 42vw;
+    }
+
+    #page-header .right.menu .ui.button {
+        padding: 7px 12px !important;
+        font-size: 13px !important;
+    }
+
+    #page-header .nav-extra {
+        display: none !important;
+    }
+
+    /* 抽屉：从顶栏下方垂落的天空色布幔 */
+    #page-header .nav-collapse {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2px 10px;
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        padding: 10px 12px 16px;
+        max-height: calc(100vh - 60px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        background: linear-gradient(165deg, rgba(74, 126, 183, 0.97) 0%, rgba(91, 144, 205, 0.97) 100%);
+        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid rgba(255, 248, 221, 0.45);
+        box-shadow: 0 18px 36px rgba(16, 48, 92, 0.38);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(-10px);
+        transition: opacity 0.22s ease, transform 0.22s ease, visibility 0s linear 0.22s;
+    }
+
+    #page-header .nav-collapse.topnav-open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateY(0);
+        transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+
+    /* 抽屉内菜单项：两列触控行，桌面的短下划线标记延续到抽屉 */
+    #page-header .nav-collapse > .item {
+        display: flex;
+        align-items: center;
+        min-height: 48px;
+        padding: 10px 12px !important;
+        line-height: 1.25 !important;
+        border-radius: 10px;
+        color: #fff !important;
+        border-bottom: 1px solid rgba(255, 248, 221, 0.18);
+    }
+
+    #page-header .nav-collapse > .item:hover,
+    #page-header .nav-collapse > .item.active {
+        background: rgba(255, 248, 221, 0.12);
+        opacity: 1 !important;
+    }
+
+    #page-header .nav-collapse > .item:hover::after,
+    #page-header .nav-collapse > .item.active::after {
+        background: var(--holiday-moon, #fff8dd);
+    }
+
+    /* 抽屉里补回桌面端隐藏的文字标签 */
+    #page-header .nav-collapse .desktop-only {
+        display: inline !important;
+    }
+
+    #page-header .nav-collapse > .item.desktop-only {
+        display: flex !important;
+    }
+
+    /* 学习资料下拉：抽屉内改为就地展开，不悬浮定位（避免贴右缘裁切） */
+    #page-header .nav-collapse > .ui.simple.dropdown.item {
+        grid-column: 1 / -1;
+        flex-wrap: wrap;
+    }
+
+    #page-header .nav-collapse .ui.simple.dropdown > .menu {
+        display: none !important;
+        position: static !important;
+        top: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        min-width: 0 !important;
+        margin: 8px 0 4px !important;
+        overflow: visible !important;
+        opacity: 1 !important;
+        background: rgba(255, 248, 221, 0.12) !important;
+        border: 1px solid rgba(255, 248, 221, 0.25) !important;
+        border-radius: 10px !important;
+        box-shadow: none !important;
+    }
+
+    #page-header .nav-collapse .ui.simple.dropdown.topnav-sub-open > .menu {
+        display: block !important;
+    }
+
+    #page-header .nav-collapse .ui.simple.dropdown .menu .item {
+        line-height: 44px !important;
+        padding: 0 16px !important;
+        color: var(--holiday-moon, #fff8dd) !important;
+    }
+
+    #page-header .nav-collapse .ui.simple.dropdown .menu .item:hover {
+        background: rgba(255, 248, 221, 0.14) !important;
+        color: #fff !important;
+    }
+
+    /* 用户下拉菜单：点击展开（.topnav-sub-open 由 JS 维护），右对齐防裁切 */
+    #page-header .right.menu .ui.simple.dropdown.topnav-sub-open > .menu {
+        top: 100% !important;
+        overflow: visible !important;
+        width: auto !important;
+        height: auto !important;
+        opacity: 1 !important;
+    }
+
+    /* 触摸端关掉 hover 卡住的 simple 下拉，只认点击展开 */
+    #page-header .right.menu .ui.simple.dropdown:not(.topnav-sub-open):hover > .menu {
+        top: -9999px !important;
+        overflow: hidden !important;
+        width: 0 !important;
+        height: 0 !important;
+        opacity: 0 !important;
+    }
+}
+
+/* 抽屉展开时冻结背景滚动 */
+body.topnav-open {
+    overflow: hidden !important;
+}
+
+/* 尊重减少动效偏好 */
+@media (prefers-reduced-motion: reduce) {
+    #page-header .nav-collapse,
+    #page-header .nav-collapse.topnav-open,
+    #page-header .topnav-toggle .topnav-toggle-bar {
+        transition: none !important;
+    }
+}

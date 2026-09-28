@@ -899,8 +899,8 @@ window.TMC = {
             osc.frequency.setValueAtTime(220 + Math.random() * 40, t);
             osc.frequency.exponentialRampToValueAtTime(620 + Math.random() * 60, t + .07);
             var g = popAudio.createGain();
-            g.gain.setValueAtTime(.3, t);
-            g.gain.exponentialRampToValueAtTime(.001, t + .1);
+            g.gain.setValueAtTime(3, t);            // 音量 ×10
+            g.gain.exponentialRampToValueAtTime(.01, t + .1);
             osc.connect(g); g.connect(popAudio.destination);
             osc.start(t); osc.stop(t + .11);
             // 短噪声点缀
@@ -911,7 +911,7 @@ window.TMC = {
             var src = popAudio.createBufferSource(); src.buffer = buf;
             var f = popAudio.createBiquadFilter(); f.type = 'bandpass';
             f.frequency.value = 900; f.Q.value = 1.2;
-            var ng = popAudio.createGain(); ng.gain.value = .18;
+            var ng = popAudio.createGain(); ng.gain.value = 1;
             src.connect(f); f.connect(ng); ng.connect(popAudio.destination);
             src.start(t); src.stop(t + .05);
         } catch (err) { /* 静默降级 */ }

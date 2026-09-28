@@ -56,21 +56,21 @@
 1. **规划（主会话完成）**
    - 大需求（多文件 / DB 变更 / 权限、支付等安全面）先走 EnterPlanMode，产出 `.claude/plans/{任务}.md`：目标 / 根因 / 方案与取舍 / 改动清单 file:line / 是否需 SQL 归档 / 验证步骤 / 验收标准，获批后实施
    - 小需求（单文件、无 DB 变更）主会话直接实现
-2. **编码（coder 子代理，glm-5.3-flash）**
+2. **编码（coder 子代理，mimo-v2.6-flash）**
    - 触发条件：方案已明确。输入 = plan 文件路径 + 验收标准
    - 遇方案歧义立即停止回报主会话，不自行拍板
    - 输出 = file:line 摘要 + 自测命令与结果，不带回整段文件内容
-3. **验收（reviewer 子代理，glm-5.3）——与步骤4并行派发**
+3. **验收（reviewer 子代理，mimo-v2.6-pro）——与步骤4并行派发**
    - 输入 = `git diff HEAD` + 未跟踪新文件清单（`git status --porcelain` 的 ?? 条目，**git diff 看不到未跟踪文件**）+ plan 文件；只验收不修改
-   - 输出 = 按严重度排序的问题清单 + `BLOCKING` / `NON-BLOCKING` 结论
+   - 输出 = 结论先行（第一段给 `BLOCKING` / `NON-BLOCKING` / 通过）+ 按严重度排序的问题清单；prompt 须清单化：只审给定文件、禁自行扩展验证手段（reviewer 无 Bash，只读 Read/Grep/Glob，存疑项标「待实测」交 tester）
    - `BLOCKING` → 主会话打回 coder 修复后复验；`NON-BLOCKING` → 放行并记入跟进
-   - 分级：仅文案/样式/模板展示层且单文件、无 SQL/权限逻辑的改动，不派 reviewer，主会话按 reviewer.md 清单自查
+   - 分级：文案/样式/模板展示层改动（无论单双文件，无 SQL/权限逻辑）一律不派 reviewer，主会话按 reviewer.md 清单自查 + tester 实测兜底；仅安全面（权限/支付/上传/CSRF）、DB 变更、多文件业务逻辑、coder 代笔批量改动才派 reviewer
 4. **端到端验证——与步骤3并行派发，按场景选路径**
    - **浏览器 UI 流 → tester 子代理（glm-5.3-flash）**：需要 browser-use 交互操作（登录点击、表单填写、截图断言）的场景；prompt 保持精简（场景清单 + 账号 + 入口 URL + 一两条实测坑提示），不塞 curl 配方等无关信息（信息过载会让 flash 模型陷入重试循环，2026-09-11 两次卡死实测）
    - 浏览器断言图片类元素注意 lazy-load 假阴性：`loading="lazy"` 的图（如课件封面）瞬时滚动后立即截图会误判未显示，须等真实加载（`naturalWidth > 0`）再断言（2026-09-11 实测）
    - **后端 curl/脚本场景 → 主会话直接跑**：登录态 POST、上传/拒绝、DB 断言等按 deploy-test-env skill 的"curl 模拟配方"执行，脚本输出收敛为 PASS/FAIL 结论行；不要为此派 tester（主会话已具备全部信息与配方，中转无增益）
    - tester 输出 = 通过（逐条验证点）/ 失败（复现步骤 + 现象 + file:line 定位建议）
-   - **卡死保险丝**：后台 tester 运行 10 分钟输出文件仍 0 字节 = 卡死，立即 TaskStop 由主会话接管（实测两次卡死各浪费 20+ 分钟）
+   - **卡死保险丝（适用于一切子代理：tester/reviewer/coder）**：派发后超 10 分钟输出文件仍 0 字节 = 卡死，立即 TaskStop 由主会话接管；卡死无法根除，损失上限锁死 10 分钟（实测 tester 两次各浪费 20+ 分钟、reviewer 一次 21 分钟）
    - reviewer 本地只读、tester 虚机部署互不依赖：coder 完成后同一消息双派发，墙钟减半
 
 ### 省 token 原则
