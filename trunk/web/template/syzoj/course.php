@@ -5,7 +5,7 @@
   <!-- 搜索框和学科 Tab -->
   <div style="margin-bottom: 20px;">
     <!-- 搜索框 -->
-    <div style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+    <div class="course-search-row" style="margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
       <form action="course.php" method="get" class="ui form" style="margin: 0; width: 400px; max-width: 100%; flex-shrink: 0;">
         <?php if ($view_current_subject > 0): ?>
         <input type="hidden" name="subject" value="<?php echo $view_current_subject; ?>">
@@ -22,16 +22,18 @@
       <?php endif; ?>
     </div>
 
-    <div class="ui top attached tabular menu" style="border-radius: 12px 12px 0 0;">
-      <a class="item <?php echo $view_current_subject == 0 ? 'active' : ''; ?>" href="course.php">
-        <?php echo $MSG_ALL; ?>
-      </a>
-      <?php foreach ($view_subjects as $subject): ?>
-        <a class="item <?php echo $view_current_subject == $subject['id'] ? 'active' : ''; ?>"
-           href="course.php?subject=<?php echo $subject['id']; ?>">
-          <?php echo htmlspecialchars($subject['name'], ENT_QUOTES, 'UTF-8'); ?>
+    <div class="subject-tabs-scroll">
+      <div class="ui top attached tabular menu subject-tabs" style="border-radius: 12px 12px 0 0;">
+        <a class="item <?php echo $view_current_subject == 0 ? 'active' : ''; ?>" href="course.php">
+          <?php echo $MSG_ALL; ?>
         </a>
-      <?php endforeach; ?>
+        <?php foreach ($view_subjects as $subject): ?>
+          <a class="item <?php echo $view_current_subject == $subject['id'] ? 'active' : ''; ?>"
+             href="course.php?subject=<?php echo $subject['id']; ?>">
+            <?php echo htmlspecialchars($subject['name'], ENT_QUOTES, 'UTF-8'); ?>
+          </a>
+        <?php endforeach; ?>
+      </div>
     </div>
   </div>
 
@@ -50,7 +52,21 @@
 
   <!-- 课程卡片列表 -->
   <style>
-    /* 响应式列数：宽屏 5 列、中屏 4 列、手机 3 列 */
+    /* 搜索框行：窄屏下整行布局 + 输入框可收缩，避免右侧被裁切 */
+    .course-search-row .ui.action.input > input { min-width: 0; width: 0%; flex: 1 1 auto; }
+    @media (max-width: 767px) {
+      .course-search-row { flex-direction: column; align-items: stretch; }
+      .course-search-row form { width: 100% !important; }
+      .course-search-row > .ui.positive.button { width: 100%; text-align: center; }
+    }
+    /* 学科 Tab：窄屏单行横向滑动，避免右侧被裁切 */
+    .subject-tabs-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .subject-tabs-scroll .subject-tabs { flex-wrap: nowrap; min-width: min-content; }
+    .subject-tabs-scroll .subject-tabs > .item { flex-shrink: 0; white-space: nowrap; }
+    @media (max-width: 767px) {
+      .subject-tabs-scroll .subject-tabs > .item { padding: .78571429em .7em; }
+    }
+    /* 响应式列数：宽屏 5 列、中屏 4 列、手机 2 列、超窄屏 1 列 */
     .course-grid > .column { width: 20% !important; }
     .series-card:focus { outline: 3px solid #667eea; outline-offset: 5px; }
     .series-card { overflow: visible !important; isolation: isolate; margin: 0 12px 16px 0; background: #fff; border: 2px solid #8f83df !important; border-radius: 18px !important; height: calc(100% - 16px) !important; }
@@ -83,10 +99,13 @@
       .course-grid > .column { width: 25% !important; }
     }
     @media (max-width: 767px) {
-      .course-grid > .column { width: 33.3333% !important; }
+      .course-grid > .column { width: 50% !important; }
       .series-card .series-offset-back { inset: 9px -8px -10px 8px; }
       .series-card .series-offset-middle { inset: 5px -4px -5px 4px; }
       .series-card { margin-right: 6px; height: calc(100% - 10px) !important; }
+    }
+    @media (max-width: 420px) {
+      .course-grid > .column { width: 100% !important; }
     }
   </style>
   <?php if (empty($view_courses)): ?>
