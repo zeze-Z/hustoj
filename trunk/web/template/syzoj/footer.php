@@ -41,6 +41,38 @@
     </div>
     </div>
 <script>
+    // 同步复制（true=成功）。必须在点击手势内同步调用：
+    // 放进 writeText().catch() 异步回调里手势已过期，移动端 execCommand 必失败。
+    // iOS/iPadOS：readonly 防弹键盘 + Range 选区 + setSelectionRange 才能选中临时 textarea。
+    function ojSyncCopy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', 'readonly');
+        ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;padding:0;border:0;opacity:0;font-size:16px;';
+        document.body.appendChild(ta);
+        var ok = false;
+        try {
+            var isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            if (isIOS) {
+                var range = document.createRange();
+                range.selectNodeContents(ta);
+                var sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            } else {
+                ta.focus();
+                ta.select();
+            }
+            ta.setSelectionRange(0, text.length);
+            ok = document.execCommand('copy');
+        } catch (err) {
+            ok = false;
+        }
+        try { if (window.getSelection) { window.getSelection().removeAllRanges(); } } catch (e) {}
+        document.body.removeChild(ta);
+        return ok;
+    }
     // 点击复制客服QQ号（公共方法，全站复用；QQ号取被点击元素自身文本）
     function copyCustomerQQ(el) {
         var qq = el.textContent.trim();
@@ -50,24 +82,17 @@
             setTimeout(function () { el.textContent = original; }, delay);
         };
         var done = function () { restore('已复制 ✓', 1500); };
-        var fail = function () { restore('复制失败，请手动选择', 2000); };
-        var fallback = function (text) {
-            var ta = document.createElement('textarea');
-            ta.value = text;
-            ta.style.position = 'fixed';
-            ta.style.opacity = '0';
-            document.body.appendChild(ta);
-            ta.focus();
-            ta.select();
-            var ok = false;
-            try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
-            document.body.removeChild(ta);
-            if (ok) { done(); } else { fail(); }
-        };
-        if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
-            navigator.clipboard.writeText(qq).then(done).catch(function () { fallback(qq); });
+        var fail = function () { restore('复制失败，请长按号码复制', 2500); };
+        // 1) 同步 execCommand 优先（手势未过期，移动端唯一可靠路径）
+        if (ojSyncCopy(qq)) {
+            done();
+            return;
+        }
+        // 2) Clipboard API 作为最后一搏（异步可能被拒，但别无他法）
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(qq).then(done).catch(function () { fail(); });
         } else {
-            fallback(qq);
+            fail();
         }
     }
 </script>

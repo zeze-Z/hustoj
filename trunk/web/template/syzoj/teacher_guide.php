@@ -325,22 +325,19 @@ function copyGuideQQ(e) {
     if (e) e.preventDefault();
     var qq = "<?php echo $guide_qq_h;?>";
     var done = function () { alert("客服QQ已复制：" + qq); };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(qq).then(done).catch(function () { guideFallbackCopy(qq, done); });
-    } else {
-        guideFallbackCopy(qq, done);
+    var fail = function () { alert("复制失败，请长按QQ号手动复制：" + qq); };
+    // 1) 同步 execCommand 优先（用户手势未过期，移动端唯一可靠路径）
+    // ojSyncCopy 定义在 footer.php，页面渲染时已包含，公共方法全站复用
+    if (typeof ojSyncCopy === 'function' && ojSyncCopy(qq)) {
+        done();
+        return;
     }
-}
-function guideFallbackCopy(text, done) {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand('copy'); } catch (err) {}
-    document.body.removeChild(ta);
-    done();
+    // 2) Clipboard API 作为最后一搏
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(qq).then(done).catch(fail);
+    } else {
+        fail();
+    }
 }
 </script>
 

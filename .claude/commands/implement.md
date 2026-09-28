@@ -15,7 +15,7 @@ argument-hint: 需求描述，如"修复存量用户登录跳 welcome"
    - 小需求：主会话直接实现，用 `php -l` 自测
 3. **编码**：方案明确后派 coder 子代理，输入 = plan 文件路径 + 验收标准；要求回传 file:line 摘要 + 自测命令与结果
 4. **验收与验证（并行）**：coder 完成后同一消息并行派发（reviewer 本地只读、tester 虚机部署，互不依赖）：
-   - **reviewer 子代理**，输入 = `git diff HEAD` + 未跟踪新文件清单（`git status --porcelain` 的 ?? 条目——**git diff 看不到未跟踪文件，必须显式列入**）+ plan 文件；输出按严重度排序的问题清单 + BLOCKING / NON-BLOCKING 结论
+   - **reviewer 子代理**，输入 = `git diff HEAD` + 未跟踪新文件清单（`git status --porcelain` 的 ?? 条目——**git diff 看不到未跟踪文件，必须显式列入**）+ plan 文件 + **可判定断言清单**（不要给"是否等价"开放式比对题）；输出按严重度排序的问题清单 + BLOCKING / NON-BLOCKING 结论
    - 改动涉及页面/流程/DB 行为时加派 **tester 子代理**做端到端验证（即 `/test` 流程）
    - 分级：仅文案/样式/模板展示层且单文件、无 SQL/权限逻辑 → 不派 reviewer，主会话按 reviewer.md 审查清单自查
 5. **收尾**：BLOCKING / 测试失败 → 打回 coder 修复后复验；NON-BLOCKING / 通过 → 汇总放行，发布走 `/release`

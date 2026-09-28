@@ -47,42 +47,18 @@
 - 游客白名单统一配置在`template/syzoj/header.php`，仅允许访问首页、题目列表、新闻等只读页面
 - 非白名单页面自动跳转到登录页，登录后返回原页面
 
-## 多代理工作流（Anthropic 推荐配置）
+## 多代理工作流
 
-主会话 = 编排者 + 规划者 + 最终决策者（大模型）。**规划在主线完成，不派子代理**；子代理只做"窄而专"的执行与验收，交接靠结构化结论控制 token 开销。
+主会话 = 编排者 + 规划者 + 决策者，**规划不外派**；子代理只做窄执行/验收，只回传 file:line 级结论。操作细则在 `/implement` `/review` `/test` `/release` 与 `.claude/agents/*.md`，用到再展开。
 
-### 标准流水线：主会话规划 → coder 编码 → reviewer 验收 → tester 验证
-
-1. **规划（主会话完成）**
-   - 大需求（多文件 / DB 变更 / 权限、支付等安全面）先走 EnterPlanMode，产出 `.claude/plans/{任务}.md`：目标 / 根因 / 方案与取舍 / 改动清单 file:line / 是否需 SQL 归档 / 验证步骤 / 验收标准，获批后实施
-   - 小需求（单文件、无 DB 变更）主会话直接实现
-2. **编码（coder 子代理，mimo-v2.6-flash）**
-   - 触发条件：方案已明确。输入 = plan 文件路径 + 验收标准
-   - 遇方案歧义立即停止回报主会话，不自行拍板
-   - 输出 = file:line 摘要 + 自测命令与结果，不带回整段文件内容
-3. **验收（reviewer 子代理，mimo-v2.6-pro）——与步骤4并行派发**
-   - 输入 = `git diff HEAD` + 未跟踪新文件清单（`git status --porcelain` 的 ?? 条目，**git diff 看不到未跟踪文件**）+ plan 文件；只验收不修改
-   - 输出 = 结论先行（第一段给 `BLOCKING` / `NON-BLOCKING` / 通过）+ 按严重度排序的问题清单；prompt 须清单化**且每条可判定**（"第 N 行的 X 调用是否仍在且已转义"），禁止开放式比对题（"逻辑是否等价/是否正确"——无收敛点，reviewer 会一直"再看一眼"直到超时）；只审给定文件、禁自行扩展验证手段（reviewer 无 Bash，只读 Read/Grep/Glob，存疑项标「待实测」交 tester）；**阅读量配额 ≤1000 行**，超出让 reviewer 用 Grep 定点核对（`grep -cF` 对比新旧 token 计数）而非通读全文
-   - `BLOCKING` → 主会话打回 coder 修复后复验；`NON-BLOCKING` → 放行并记入跟进
-   - 分级：文案/样式/模板展示层改动（无论单双文件，无 SQL/权限逻辑）一律不派 reviewer，主会话按 reviewer.md 清单自查 + tester 实测兜底；仅安全面（权限/支付/上传/CSRF）、DB 变更、多文件业务逻辑、coder 代笔批量改动才派 reviewer
-4. **端到端验证——与步骤3并行派发，按场景选路径**
-   - **浏览器 UI 流 → tester 子代理（glm-5.3-flash）**：需要 browser-use 交互操作（登录点击、表单填写、截图断言）的场景；prompt 保持精简（场景清单 + 账号 + 入口 URL + 一两条实测坑提示），不塞 curl 配方等无关信息（信息过载会让 flash 模型陷入重试循环，2026-09-11 两次卡死实测）
-   - 浏览器断言图片类元素注意 lazy-load 假阴性：`loading="lazy"` 的图（如课件封面）瞬时滚动后立即截图会误判未显示，须等真实加载（`naturalWidth > 0`）再断言（2026-09-11 实测）
-   - **后端 curl/脚本场景 → 主会话直接跑**：登录态 POST、上传/拒绝、DB 断言等按 deploy-test-env skill 的"curl 模拟配方"执行，脚本输出收敛为 PASS/FAIL 结论行；不要为此派 tester（主会话已具备全部信息与配方，中转无增益）
-   - tester 输出 = 通过（逐条验证点）/ 失败（复现步骤 + 现象 + file:line 定位建议）
-   - **卡死保险丝（适用于一切子代理：tester/reviewer/coder）**：派发后超 10 分钟输出文件仍 0 字节 = 未交付，立即 TaskStop 由主会话接管。注意语义：**子代理输出只在结束时落盘，中途恒为 0 字节**，所以这条是「SLA 超时判」不是「存活探测」——分不清卡死与正常长跑，但 10 分钟交付 SLA 本身有效，超时即接管。卡死无法根除，损失上限锁死 10 分钟（实测 tester 两次各浪费 20+ 分钟、reviewer 两次 21 分钟 / 10.5 分钟）
-   - **reviewer 卡死真因（2026-09-28 两次实测）**：不是模型慢、也不是工具越界，而是**任务形态无收敛点**（开放式等价性比对）+ 阅读量超预算（实测塞了 3827 行）。给可判定断言 + 限行数才是解；裁掉 Bash 只是消除放大器。**子代理运行期间不要改被审文件**——它拿到的是派发时快照，改完结论即失效，只能重派或主会话接管
-   - reviewer 本地只读、tester 虚机部署互不依赖：coder 完成后同一消息双派发，墙钟减半
-
-### 省 token 原则
-
-- 子代理只回传结论（file:line 级摘要），禁止整文件 dump 回主会话
-- 只读探索优先 Grep/Glob，避免全量 Read
-- 小改动（单行修复、样式微调）跳过 coder/reviewer，主会话直接改并用 `php -l` 自测
-- 浏览器操作、截图等大输出交互派 tester 子代理执行；后端 curl 验证主会话按 skill 配方直接跑（输出收敛为结论行，成本低于派 tester 的 prompt + 等待 + 卡死重试）
-- 一个需求一个会话：完成即 `/clear`，别把上一个需求的上下文带进下一个（主会话上下文是最大的 recurring token 开销）
-- 规划期的宽搜索（找全部用例、跨文件排查）派 Explore 子代理只回收结论，决策与方案留主线
-- 委派前先判断：这个子代理能否拿到主会话没有的信息？拿不到就不派
+- 小需求（单文件、无 DB/权限变更）主会话直接改 + `php -l` 自测；大需求先 EnterPlanMode 出 `.claude/plans/{任务}.md`（目标/根因/方案取舍/改动清单 file:line/是否需 SQL 归档/验证步骤/验收标准）
+- **派 reviewer 仅限**：安全面（权限/支付/上传/CSRF）、DB 变更、多文件业务逻辑、coder 代笔批量改动。文案/样式/模板展示层改动一律不派，主会话按 `reviewer.md` 清单自查
+- **验证路径二选一**：浏览器 UI 流派 tester；后端 curl / 登录态 POST / DB 断言由主会话按 deploy-test-env skill 配方直接跑（不派 tester）
+- coder 完成后 reviewer + tester 同一消息并行派发（互不依赖）；委派前先问「这个子代理能否拿到主会话没有的信息？」，拿不到就不派
+- reviewer 输入必须含未跟踪新文件（`git status --porcelain` 的 ?? 条目，**git diff 看不到**）+ **可判定断言**（"第 N 行的 X 是否仍在且已转义"），禁开放式「是否等价/是否正确」比对题（无收敛点会拖到超时）；阅读配额 ≤1000 行
+- tester prompt 只给场景/账号/入口 URL/一两条坑，塞无关信息会让 flash 模型陷入重试循环
+- **卡死保险丝（双层）**：三个子代理 frontmatter 已配 `maxTurns`（reviewer 40 / coder 80 / tester 80），触顶自动 `error_max_turns` 终止返回；再叠人工兜底——派发记时刻，超 10 分钟即 TaskStop 由主会话接管（子代理输出只在结束时落盘、中途恒 0 字节，故这是 SLA 超时判，不是存活探测）；**子代理运行期间不要改被审文件**（它拿的是派发时快照，改完结论即失效）
+- 省 token：子代理禁整文件 dump 回主会话，只读探索优先 Grep/Glob，规划期宽搜索派 Explore，一个需求一个会话完成即 `/clear`
 
 ## 测试环境
 
@@ -90,4 +66,3 @@
 - 虚机执行命令格式：`multipass exec web-2204 -- sudo -S [shell命令] <<< "judge"`
 - 测试账号：教师用户zezhang/zezhang123，学生用户test/test123，管理员admin/admin123
 - 文件部署/缓存清理/`php -l`自测/VM 内 curl 模拟登录与表单验证：按 `.claude/skills/deploy-test-env/SKILL.md` 执行（引擎 = 仓库根`deploy_test_env.sh`；模板/页面内容改动须`-f`重启php8.1-fpm清APCu缓存；虚机 IP 动态须`multipass list`查；页面级 GET 须带浏览器 UA，curl 默认 UA 会被 nginx 反爬 403；复杂脚本本地写文件+base64 传输，禁止内联 multipass exec）
-
