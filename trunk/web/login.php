@@ -195,14 +195,8 @@ if ($login) {
     $streak_result = grant_login_streak_reward($login);
 
     echo "<script language='javascript'>\n";
-    // 获取 redirect 参数，优先使用 POST，其次 GET
-    $redirect = isset($_POST['redirect']) ? $_POST['redirect'] : (isset($_GET['redirect']) ? $_GET['redirect'] : '');
-    if ($redirect) {
-        // 验证 redirect 参数，防止开放重定向（允许查询参数 ?=;&）
-        if (strpos($redirect, '://') !== false || !preg_match('/^[\/a-zA-Z0-9._?=&-]+$/', $redirect)) {
-            $redirect = '';
-        }
-    }
+    // 获取 redirect 参数，优先使用 POST，其次 GET；统一清洗（防开放重定向 + 过滤 session.php 等工具端点）
+    $redirect = sanitize_login_redirect(isset($_POST['redirect']) ? $_POST['redirect'] : (isset($_GET['redirect']) ? $_GET['redirect'] : ''));
 
     // 若本日发放了连续登录奖励，先经 welcome 弹窗展示礼花效果，再由弹窗跳到目标页
     if (!empty($streak_result['granted'])) {

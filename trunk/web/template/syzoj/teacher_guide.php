@@ -326,15 +326,9 @@ function copyGuideQQ(e) {
     var qq = "<?php echo $guide_qq_h;?>";
     var done = function () { alert("客服QQ已复制：" + qq); };
     var fail = function () { alert("复制失败，请长按QQ号手动复制：" + qq); };
-    // 1) 同步 execCommand 优先（用户手势未过期，移动端唯一可靠路径）
-    // ojSyncCopy 定义在 footer.php，页面渲染时已包含，公共方法全站复用
-    if (typeof ojSyncCopy === 'function' && ojSyncCopy(qq)) {
-        done();
-        return;
-    }
-    // 2) Clipboard API 作为最后一搏
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(qq).then(done).catch(fail);
+    // ojCopyText 定义在 footer.php（Clipboard API 优先 + 同步 execCommand 兜底），全站复用
+    if (typeof ojCopyText === 'function') {
+        ojCopyText(qq, done, fail);
     } else {
         fail();
     }

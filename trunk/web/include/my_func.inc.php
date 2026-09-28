@@ -2093,3 +2093,34 @@ function is_teacher_or_admin() {
     return false;
 }
 
+/**
+ * 登录后回跳目标（redirect 参数）清洗，loginpage.php / login.php / welcome.php / header.php 共用。
+ * - 只允许站内相对路径（含查询串），禁止外域（防开放重定向）
+ * - 拒绝工具型端点（session.php 保活 iframe 等非用户页面）：
+ *   自动登出（include/init.php IP 变化踢出）常发生在保活请求上，
+ *   error.php→header.php 会把 redirect 记成 session.php，登录后落在空白保活页。
+ * 返回 '' 表示不回跳，由调用方决定默认落点（index.php / admin）。
+ * @param mixed $redirect 原始 redirect 参数
+ * @return string 清洗后的相对路径，非法返回 ''
+ */
+function sanitize_login_redirect($redirect) {
+    if (!is_string($redirect)) return '';
+    $redirect = trim($redirect);
+    if ($redirect === '') return '';
+    // 禁止外域（http:// https:// 等带协议的绝对地址）
+    if (strpos($redirect, '://') !== false) return '';
+    // 禁止协议相对地址 //host/path（否则过得了下面的正则，构成开放重定向）
+    if (strpos($redirect, '//') === 0) return '';
+    if (!preg_match('/^[\/a-zA-Z0-9._?=&-]+$/', $redirect)) return '';
+    // 工具型端点黑名单：非用户页面，不应作为回跳目标
+    static $blocked_bases = array(
+        'session.php', 'remote.php', 'vcode.php', 'lip.php',
+        'login.php', 'loginpage.php', 'logout.php', 'register.php',
+        'csrf.php', 'check_post_key.php', 'set_post_key.php',
+    );
+    $path = parse_url($redirect, PHP_URL_PATH);
+    if ($path === null || $path === false) return '';
+    if (in_array(strtolower(basename($path)), $blocked_bases, true)) return '';
+    return $redirect;
+}
+

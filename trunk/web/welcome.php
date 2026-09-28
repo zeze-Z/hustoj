@@ -29,11 +29,8 @@ if ($status === 'activated') {
     $modal_points = isset($_GET['points']) ? max(1, intval($_GET['points'])) : 2;
     $modal_title  = '连续登录奖励';
     $modal_btn    = '继续';
-    // 关闭后跳转到 redirect（校验防开放重定向）或首页
-    $sr = isset($_GET['redirect']) ? trim($_GET['redirect']) : '';
-    if ($sr !== '' && (strpos($sr, '://') !== false || !preg_match('#^[\/a-zA-Z0-9._?=&-]+$#', $sr))) {
-        $sr = '';
-    }
+    // 关闭后跳转到 redirect（sanitize_login_redirect：防开放重定向 + 过滤工具端点）或首页
+    $sr = sanitize_login_redirect(isset($_GET['redirect']) ? $_GET['redirect'] : '');
     $streak_target = $sr !== '' ? $sr : 'index.php';
     $modal_onclose_js = "window.top.location.href='" . htmlspecialchars($streak_target, ENT_QUOTES, 'UTF-8') . "';";
 }

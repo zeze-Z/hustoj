@@ -619,22 +619,16 @@ function copyCourseShareUrl(btn) {
         fallbackCopy(text);
     }
 }
-// 兼容复制：临时 textarea 即使原 input 是 hidden 也能复制成功
+// 兼容复制：ojSyncCopy（footer.php 公共方法）用 <span>+Range 选区并校验选区，
+// 移动端不会出现「提示成功实际没复制」；原 input 是 hidden 也不影响
 function fallbackCopy(text) {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    // 设为可视但移出屏幕（display:none 或不可聚焦会导致 execCommand 失败）
-    ta.style.position = 'fixed';
-    ta.style.top = '-9999px';
-    ta.style.left = '-9999px';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    var ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
-    document.body.removeChild(ta);
-    alert(ok ? '分享链接已复制' : '复制失败，请手动选中链接复制');
+    var done = function () { alert('分享链接已复制'); };
+    var fail = function () { alert('复制失败，请手动选中链接复制'); };
+    if (typeof ojSyncCopy === 'function' && ojSyncCopy(text)) {
+        done();
+    } else {
+        fail();
+    }
 }
 function showLoginPrompt() {
     // 与「注册」按钮一致，直接跳转登录页（不再弹确认框）

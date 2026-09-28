@@ -8,16 +8,11 @@ require_once('./include/bbcode.php');
 
 require_once("./include/db_info.inc.php");
 require_once("./include/setlang.php");
+require_once("./include/my_func.inc.php");
 $view_title = "LOGIN";
 
-// 验证 redirect 参数，防止开放重定向
-$redirect = isset($_GET['redirect']) ? $_GET['redirect'] : '';
-if ($redirect) {
-    // 只允许相对路径或绝对路径（含查询参数），禁止外部域名
-    if (strpos($redirect, '://') !== false || !preg_match('/^[\/a-zA-Z0-9._?=&-]+$/', $redirect)) {
-        $redirect = '';
-    }
-}
+// 验证 redirect 参数：防开放重定向 + 过滤 session.php 等工具端点（自动登出常由保活请求触发，redirect 会被记成 session.php）
+$redirect = sanitize_login_redirect(isset($_GET['redirect']) ? $_GET['redirect'] : '');
 
 if (isset($_SESSION[$OJ_NAME . '_' . 'user_id'])) {
     // 已登录，跳转到指定页面或首页

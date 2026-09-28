@@ -41,37 +41,54 @@
     </div>
     </div>
 <script>
-    // 同步复制（true=成功）。必须在点击手势内同步调用：
-    // 放进 writeText().catch() 异步回调里手势已过期，移动端 execCommand 必失败。
-    // iOS/iPadOS：readonly 防弹键盘 + Range 选区 + setSelectionRange 才能选中临时 textarea。
+    // 同步复制（true=成功）。必须在点击手势内同步调用（异步回调里手势过期，移动端必失败）。
+    // 用 <span> + Range 选区而非临时 textarea（copy-to-clipboard 同款方案）：
+    // - iOS 对 readonly 输入框的 setSelectionRange 是空操作，textarea 方案选不中；
+    // - opacity:0 / 1px 的不可见 textarea 在部分移动内核（X5/WebView）选不中；
+    // - -webkit-user-select 会继承祖先的 user-select:none，需显式置 text。
+    // 复制前校验选区内容：选不中直接判失败，杜绝「提示成功实际没复制」。
     function ojSyncCopy(text) {
-        var ta = document.createElement('textarea');
-        ta.value = text;
-        ta.setAttribute('readonly', 'readonly');
-        ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;padding:0;border:0;opacity:0;font-size:16px;';
-        document.body.appendChild(ta);
+        var mark = document.createElement('span');
+        mark.textContent = text;
+        // all:unset 清继承样式；fixed+clip 隐藏但保持可选中（display:none 会选不中）
+        mark.style.cssText = 'all:unset;position:fixed;top:0;left:0;clip:rect(0,0,0,0);white-space:pre;font-size:16px;-webkit-user-select:text;user-select:text;';
+        document.body.appendChild(mark);
         var ok = false;
         try {
-            var isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
-                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-            if (isIOS) {
-                var range = document.createRange();
-                range.selectNodeContents(ta);
-                var sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(range);
-            } else {
-                ta.focus();
-                ta.select();
+            var sel = window.getSelection();
+            var prev = sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
+            var range = document.createRange();
+            range.selectNodeContents(mark);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            if (sel.toString().trim() !== text) {
+                throw new Error('selection mismatch');
             }
-            ta.setSelectionRange(0, text.length);
             ok = document.execCommand('copy');
         } catch (err) {
             ok = false;
         }
-        try { if (window.getSelection) { window.getSelection().removeAllRanges(); } } catch (e) {}
-        document.body.removeChild(ta);
+        try {
+            if (window.getSelection) {
+                var s = window.getSelection();
+                s.removeAllRanges();
+                if (prev) { try { s.addRange(prev); } catch (e) {} }
+            }
+        } catch (e) {}
+        document.body.removeChild(mark);
         return ok;
+    }
+    // 复制入口（done/fail 回调），信任度排序：
+    // 1) Clipboard API 优先：resolve 才算真成功（execCommand 在部分移动端会假返回 true）；
+    // 2) 同步 execCommand 兜底：需用户手势，catch 回调里手势可能已过期，尽力而为。
+    function ojCopyText(text, done, fail) {
+        if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(done).catch(function () {
+                if (ojSyncCopy(text)) { done(); } else { fail(); }
+            });
+            return;
+        }
+        if (ojSyncCopy(text)) { done(); } else { fail(); }
     }
     // 点击复制客服QQ号（公共方法，全站复用；QQ号取被点击元素自身文本）
     function copyCustomerQQ(el) {
@@ -81,19 +98,9 @@
             el.textContent = msg;
             setTimeout(function () { el.textContent = original; }, delay);
         };
-        var done = function () { restore('已复制 ✓', 1500); };
-        var fail = function () { restore('复制失败，请长按号码复制', 2500); };
-        // 1) 同步 execCommand 优先（手势未过期，移动端唯一可靠路径）
-        if (ojSyncCopy(qq)) {
-            done();
-            return;
-        }
-        // 2) Clipboard API 作为最后一搏（异步可能被拒，但别无他法）
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(qq).then(done).catch(function () { fail(); });
-        } else {
-            fail();
-        }
+        ojCopyText(qq,
+            function () { restore('已复制 ✓', 1500); },
+            function () { restore('复制失败，请长按号码复制', 2500); });
     }
 </script>
 <?php } else { ?>

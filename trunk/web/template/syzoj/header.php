@@ -55,7 +55,9 @@
                   $url!='teacher_guide.php'&&
                   $url!='timetable.php'
                   ) && !isset($_SESSION[$OJ_NAME.'_'.'user_id'])){
-           $redirect = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'index.php';
+           // redirect 只记用户页面：保活请求（session.php 等）被踢出时记成自身会让登录后跳空白页
+           $redirect = sanitize_login_redirect(isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '');
+           if($redirect==='') $redirect = 'index.php';
            header("location:".$path_fix."loginpage.php?redirect=".urlencode($redirect));
            exit();
         }
@@ -104,15 +106,17 @@
 
         
         if(isset($OJ_GUEST) && $OJ_GUEST && !isset($_SESSION[$OJ_NAME.'_'.'user_id']) && !in_array($url, $guest_whitelist)) {
-            // 游客尝试访问非白名单页面，引导到登录页
-            $redirect = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'index.php';
+            // 游客尝试访问非白名单页面，引导到登录页（redirect 记原页，但工具端点回退首页）
+            $redirect = sanitize_login_redirect(isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '');
+            if($redirect==='') $redirect = 'index.php';
             header("location:".$path_fix."loginpage.php?redirect=".urlencode($redirect));
             exit();
         }
 
         // 游客访问竞赛详情限制：允许访问竞赛列表，但不能访问竞赛详情（带cid参数）
         if($url == 'contest.php' && isset($_GET['cid']) && isset($OJ_GUEST) && $OJ_GUEST && !isset($_SESSION[$OJ_NAME.'_'.'user_id'])) {
-            $redirect = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'contest.php';
+            $redirect = sanitize_login_redirect(isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '');
+            if($redirect==='') $redirect = 'contest.php';
             header("location:".$path_fix."loginpage.php?redirect=".urlencode($redirect));
             exit();
         }
