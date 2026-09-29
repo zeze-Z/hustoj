@@ -11,6 +11,10 @@ function try_ajax($tb,$fd,$pr){
 	if($m==$tb."_update_".$fd  && ( isset($_SESSION[$OJ_NAME.'_'.$pr]) )){
                 $data_id=$_POST[$tb.'_id'];
                 $new_value=$_POST[$fd];
+		// expiry_date NOT NULL DEFAULT '2099-01-01'：清空时回退到 DEFAULT，避免 SQL 报错或写入 0000-00-00
+		if($new_value==='' && $tb==="user" && $fd==="expiry_date"){
+			$new_value='2099-01-01';
+		}
 		if($tb=="user") $tb_name="users";
 		else $tb_name=$tb;
                 $sql="update ".$tb_name." set `".$fd."`=? where ".$tb."_id=?";

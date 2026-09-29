@@ -94,209 +94,330 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 ?>
 
 <style>
-/* 更多功能页面样式 */
+/* ===== 更多功能页 · 糖果贴纸盒风格 ===== */
+
+/* 引入站酷快乐体（圆体可爱字，已自托管） */
+@import url('fonts/zcool-kuaile.css');
+
+/* === 糖果色彩系统 === */
 .more-page {
-    padding: 20px 0 40px;
-    max-width: 1200px;
+    --candy-bg: #FFF9EC;
+    --candy-pink: #67a0d5;
+    --candy-pink-dark: #3a6da8;
+    --candy-mint: #7FD4B5;
+    --candy-mint-dark: #2E8B6F;
+    --candy-peach: #e2726d;
+    --candy-yellow: #f4cd75;
+    --candy-lavender: #B4A7E6;
+    --candy-sky: #78b0d9;
+    --candy-text: #3d4f6b;
+    --candy-text-soft: #7a8ba3;
+    --candy-border: #3d4f6b;
+    --candy-shadow: rgba(61, 79, 107, 0.15);
+    --candy-radius: 18px;
+    --candy-border-w: 2.5px;
+
+    padding: 24px 16px 48px;
+    max-width: 1240px;
     margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+    color: var(--candy-text);
+    background: var(--candy-bg);
+    background-image:
+        radial-gradient(circle at 1px 1px, rgba(103, 160, 213, 0.18) 1.5px, transparent 0),
+        radial-gradient(circle at 1px 1px, rgba(244, 205, 117, 0.16) 1.5px, transparent 0);
+    background-size: 28px 28px, 28px 28px;
+    background-position: 0 0, 14px 14px;
+    border-radius: 28px;
+    position: relative;
 }
 
+/* === 可爱页头装饰 === */
+.candy-header {
+    text-align: center;
+    margin-bottom: 28px;
+    padding: 18px 16px 6px;
+    position: relative;
+}
+.candy-title {
+    font-family: 'ZCOOL KuaiLe', -apple-system, sans-serif;
+    font-size: 2.6rem;
+    color: var(--candy-pink-dark);
+    margin: 0 0 6px;
+    letter-spacing: 1.5px;
+    text-shadow: 3px 3px 0 #fff, 6px 6px 0 rgba(103, 160, 213, 0.25);
+    position: relative;
+    display: inline-block;
+    font-weight: 400;
+}
+.candy-title::before, .candy-title::after {
+    content: '✦';
+    color: var(--candy-yellow);
+    font-size: 1.4rem;
+    margin: 0 12px;
+    vertical-align: middle;
+    animation: candy-twinkle 2s ease-in-out infinite;
+    text-shadow: none;
+}
+.candy-title::after { animation-delay: 1s; }
+@keyframes candy-twinkle {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.25); }
+}
+.candy-subtitle {
+    font-size: 1rem;
+    color: var(--candy-text-soft);
+    margin: 0;
+}
+.candy-subtitle::before { content: '🌿 '; }
+.candy-subtitle::after { content: ' 🌿'; }
+
+/* 兼容历史 class */
 .page-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #333;
-    margin-bottom: 10px;
+    font-family: 'ZCOOL KuaiLe', sans-serif;
+    font-size: 2.4rem;
+    color: var(--candy-pink-dark);
     text-align: center;
+    margin: 8px 0 4px;
+    font-weight: 400;
 }
-
 .page-subtitle {
-    font-size: 1.1rem;
-    color: #666;
+    font-size: 1rem;
+    color: var(--candy-text-soft);
     text-align: center;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
-/* 一级 Tab 导航 */
+/* === 一级 Tab（气泡胶囊） === */
 .tabs {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 6px;
-    border-bottom: 2px solid #e8e8e8;
-    margin-bottom: 30px;
-    padding: 0 10px;
+    gap: 10px;
+    border-bottom: none;
+    margin-bottom: 32px;
+    padding: 8px 10px;
 }
 
 .tab-item {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 12px 24px;
+    gap: 8px;
+    padding: 11px 22px;
     cursor: pointer;
-    color: #666;
-    font-size: 1.05rem;
-    font-weight: 500;
-    border-bottom: 3px solid transparent;
-    transition: all 0.2s ease;
+    color: var(--candy-text);
+    font-size: 1rem;
+    font-weight: 600;
+    background: #fff;
+    border: 2.5px solid var(--candy-border);
+    border-radius: 999px;
+    box-shadow: 3px 3px 0 var(--candy-shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     white-space: nowrap;
     user-select: none;
-    margin-bottom: -2px;
+    margin-bottom: 0;
+}
+
+.tab-item:hover {
+    transform: translateY(-2px) rotate(-1.5deg);
+    box-shadow: 5px 5px 0 var(--candy-shadow);
+    background: #fff5f8;
+    color: var(--candy-pink-dark);
+}
+
+.tab-item.active {
+    background: linear-gradient(135deg, var(--candy-pink) 0%, var(--candy-peach) 100%);
+    color: #fff;
+    border-color: var(--candy-pink-dark);
+    box-shadow: 3px 3px 0 var(--candy-pink-dark);
+    transform: translateY(-1px);
+    font-weight: 700;
 }
 
 .online-free-tag {
     display: inline-flex;
     align-items: center;
-    padding: 3px 8px;
-    border: 1px solid #a7f3d0;
+    padding: 2px 8px;
+    border: 1.5px solid var(--candy-mint-dark);
     border-radius: 999px;
-    background: #ecfdf5;
-    color: #047857;
-    font-size: 0.68rem;
+    background: #E8FBF3;
+    color: var(--candy-mint-dark);
+    font-size: 0.62rem;
     line-height: 1.2;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0;
 }
+.online-free-tag::first-letter { color: var(--candy-mint-dark); }
 
-.online-free-tag::first-letter {
-    color: #10b981;
+.tab-item:hover .online-free-tag {
+    background: #D4F0E4;
+    border-color: var(--candy-mint-dark);
+    color: var(--candy-mint-dark);
 }
 
-.tab-item:hover .online-free-tag,
 .tab-item.active .online-free-tag {
-    background: #d1fae5;
-    border-color: #6ee7b7;
-}
-
-.tab-item:hover {
-    color: #667eea;
-}
-
-.tab-item.active {
-    color: #667eea;
-    font-weight: 600;
-    border-bottom-color: #667eea;
+    background: rgba(255,255,255,0.3);
+    border-color: rgba(255,255,255,0.6);
+    color: #fff;
 }
 
 /* Tab 面板 */
-.tab-panel {
-    display: none;
-}
-
+.tab-panel { display: none; }
 .tab-panel.active {
     display: block;
+    animation: panel-pop 0.3s ease;
+}
+@keyframes panel-pop {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* 二级 Tab（小游戏内部分类） */
+/* === 二级 Tab（小贴纸胶囊） === */
 .sub-tabs {
     display: flex;
     justify-content: flex-start;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
     flex: 1;
     min-width: 0;
 }
 
 .sub-tab-item {
-    padding: 8px 20px;
+    padding: 8px 18px;
     cursor: pointer;
-    color: #666;
-    font-size: 0.95rem;
-    font-weight: 500;
-    border-radius: 20px;
-    background: #f3f4f6;
+    color: var(--candy-text);
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 999px;
+    background: #fff;
+    border: 2px solid var(--candy-border);
+    box-shadow: 2px 2px 0 var(--candy-shadow);
     transition: all 0.2s ease;
     white-space: nowrap;
     user-select: none;
 }
 
 .sub-tab-item:hover {
-    color: #667eea;
-    background: #ede9fe;
+    color: var(--candy-pink-dark);
+    background: #F0F6FC;
+    transform: translateY(-1px);
 }
 
 .sub-tab-item.active {
     color: #fff;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    font-weight: 600;
+    background: linear-gradient(135deg, var(--candy-lavender) 0%, var(--candy-pink) 100%);
+    border-color: #6B4E8C;
+    box-shadow: 2px 2px 0 #6B4E8C;
+    font-weight: 700;
 }
 
-.sub-panel {
-    display: none;
-}
-
+.sub-panel { display: none; }
 .sub-panel.active {
     display: block;
+    animation: panel-pop 0.3s ease;
 }
 
+/* === 分区标题 === */
 .section {
-    margin-bottom: 50px;
+    margin-bottom: 44px;
 }
 
 .section-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 25px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #667eea;
+    font-family: 'ZCOOL KuaiLe', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 400;
+    color: var(--candy-text);
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: none;
     display: flex;
     align-items: center;
     gap: 10px;
+    position: relative;
+}
+.section-title::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 7px;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 7'><path d='M0 3.5 Q 10 0 20 3.5 T 40 3.5 T 60 3.5 T 80 3.5' stroke='%2367a0d5' stroke-width='2.5' fill='none' stroke-linecap='round'/></svg>") repeat-x;
+    background-size: 80px 7px;
 }
 
 .auth-tag {
-    font-size: 0.85rem;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-weight: normal;
+    font-size: 0.78rem;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 700;
+    border: 1.5px solid;
+    font-family: -apple-system, sans-serif;
 }
 
 .tag-public {
-    background-color: #dcfce7;
-    color: #166534;
+    background: #E8FBF3;
+    color: var(--candy-mint-dark);
+    border-color: var(--candy-mint-dark);
 }
 
 .tag-private {
-    background-color: #fef3c7;
-    color: #92400e;
+    background: #FFF4E6;
+    color: #C2410C;
+    border-color: #FB923C;
 }
 
+/* === 卡片网格 === */
 .cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 25px;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 22px;
 }
 
+/* === 贴纸卡片 === */
 .card {
     background: #fff;
-    border-radius: 12px;
-    padding: 30px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-    border: 1px solid #e8e8e8;
+    border-radius: var(--candy-radius);
+    padding: 26px 22px 22px;
+    box-shadow: 4px 4px 0 var(--candy-shadow);
+    border: var(--candy-border-w) solid var(--candy-border);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
     text-decoration: none;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--candy-pink), var(--candy-yellow), var(--candy-mint), var(--candy-sky));
 }
 
 .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
-    border-color: #667eea;
+    transform: translateY(-6px) rotate(-1.2deg);
+    box-shadow: 7px 7px 0 var(--candy-shadow);
+    border-color: var(--candy-pink-dark);
     text-decoration: none;
 }
 
 .card-icon {
-    width: 60px;
-    height: 60px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
+    border: 2.5px solid var(--candy-border);
+    box-shadow: 2px 2px 0 var(--candy-shadow);
+    position: relative;
 }
 
 .card-icon svg {
@@ -306,74 +427,68 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 }
 
 .card-title {
+    font-family: 'ZCOOL KuaiLe', sans-serif;
     font-size: 1.2rem;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 10px;
+    font-weight: 400;
+    color: var(--candy-text);
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
 }
 
 .card-desc {
-    font-size: 0.95rem;
-    color: #666;
-    line-height: 1.5;
+    font-size: 0.88rem;
+    color: var(--candy-text-soft);
+    line-height: 1.6;
 }
 
-/* 新功能角标（教师趣味测评入口卡） */
+/* === NEW 角标（可爱绶带） === */
 .card-new-badge {
     position: absolute;
-    top: 10px;
-    right: 12px;
-    background: #FF7B54;
+    top: 8px;
+    right: 10px;
+    background: var(--candy-pink-dark);
     color: #fff;
-    font-size: 0.68rem;
+    font-size: 0.62rem;
     font-weight: 800;
-    padding: 3px 9px;
+    padding: 3px 10px;
     border-radius: 999px;
-    border: 1.5px solid #2B4C6F;
-    box-shadow: 2px 2px 0 rgba(43, 76, 111, 0.6);
-    transform: rotate(6deg);
+    border: 1.5px solid var(--candy-border);
+    box-shadow: 2px 2px 0 var(--candy-shadow);
+    transform: rotate(8deg);
+    z-index: 2;
+    letter-spacing: 0.5px;
 }
 
 /* ===== 小游戏 Tab 布局 ===== */
-/* 必须用 .tab-panel.active#panel-games 提升 specificity，
-   否则 #panel-games 的 display:flex 会覆盖 .tab-panel { display:none }，
-   导致 games 面板永远无法隐藏、其他 tab 看起来"打不开" */
 .tab-panel.active#panel-games {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
-
-/* 二级Tab */
 .tab-panel.active#panel-games > .og-subtabs-row {
     margin-bottom: 0;
 }
 
 /* ===== 离线游戏横幅（顶部全宽卡片） ===== */
 .og-banner-top {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 45%, #f093fb 100%);
-    border-radius: 14px;
-    padding: 14px 24px;
+    background: linear-gradient(135deg, var(--candy-pink) 0%, var(--candy-peach) 45%, var(--candy-yellow) 100%);
+    border-radius: 20px;
+    padding: 16px 24px;
     color: #fff;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 8px 28px rgba(102, 126, 234, 0.35);
+    border: 2.5px solid var(--candy-border);
+    box-shadow: 5px 5px 0 var(--candy-shadow);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
     display: flex;
     align-items: center;
     gap: 20px;
-    animation: og-banner-pulse 3s ease-in-out infinite;
-}
-
-@keyframes og-banner-pulse {
-    0%, 100% { box-shadow: 0 8px 28px rgba(102, 126, 234, 0.35); }
-    50% { box-shadow: 0 8px 36px rgba(102, 126, 234, 0.5); }
 }
 
 .og-banner-top:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 36px rgba(102, 126, 234, 0.5);
+    transform: translateY(-3px) rotate(-0.5deg);
+    box-shadow: 7px 7px 0 var(--candy-shadow);
 }
 
 .og-banner-top::before {
@@ -381,31 +496,33 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     position: absolute;
     top: -60px; right: -40px;
     width: 200px; height: 200px;
-    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 65%);
+    background: radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 65%);
     border-radius: 50%;
     pointer-events: none;
 }
 
 .og-banner-top::after {
-    content: '';
+    content: '✦';
     position: absolute;
-    bottom: -40px; left: 30%;
-    width: 150px; height: 150px;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 65%);
-    border-radius: 50%;
+    bottom: 10px; left: 14%;
+    font-size: 1.2rem;
+    color: rgba(255,255,255,0.55);
     pointer-events: none;
+    animation: candy-twinkle 2s ease-in-out infinite;
 }
 
 .og-banner-top-badge {
-    background: linear-gradient(135deg, #fbbf24, #f59e0b);
-    color: #78350f;
-    font-size: 1rem;
+    background: var(--candy-yellow);
+    color: var(--candy-text);
+    font-size: 0.9rem;
     font-weight: 800;
     padding: 3px 10px;
-    border-radius: 5px;
+    border-radius: 8px;
+    border: 1.5px solid var(--candy-border);
     letter-spacing: 0.5px;
     white-space: nowrap;
     margin-right: 6px;
+    display: inline-block;
 }
 
 @keyframes og-badge-bounce {
@@ -414,22 +531,20 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 }
 
 .og-banner-top-icon {
-    width: 50px; height: 50px;
-    min-width: 50px;
-    background: rgba(255,255,255,0.2);
-    border: 1px solid rgba(255,255,255,0.3);
+    width: 52px; height: 52px;
+    min-width: 52px;
+    background: rgba(255,255,255,0.25);
+    border: 2px solid rgba(255,255,255,0.5);
     border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
     animation: og-icon-float 3s ease-in-out infinite;
 }
 
 @keyframes og-icon-float {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+    50% { transform: translateY(-6px); }
 }
 
 .og-banner-top-icon svg {
@@ -440,9 +555,9 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 .og-banner-top-close {
     position: absolute;
     top: 6px; right: 8px;
-    width: 20px; height: 20px;
-    background: rgba(255,255,255,0.25);
-    border: 1px solid rgba(255,255,255,0.35);
+    width: 22px; height: 22px;
+    background: rgba(255,255,255,0.3);
+    border: 1.5px solid rgba(255,255,255,0.5);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -456,8 +571,8 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 }
 
 .og-banner-top-close:hover {
-    background: rgba(255,255,255,0.4);
-    transform: scale(1.1);
+    background: rgba(255,255,255,0.5);
+    transform: scale(1.15) rotate(90deg);
 }
 
 .og-banner-top-content {
@@ -468,15 +583,16 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 }
 
 .og-banner-top-title {
-    font-size: 1.15rem;
-    font-weight: 700;
+    font-family: 'ZCOOL KuaiLe', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 400;
     margin-bottom: 6px;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.15);
 }
 
 .og-banner-top-desc {
     font-size: 0.85rem;
-    opacity: 0.9;
+    opacity: 0.92;
     line-height: 1.4;
     margin-bottom: 0;
 }
@@ -498,11 +614,9 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     font-size: 0.65rem;
     padding: 2px 8px;
     border-radius: 12px;
-    background: rgba(255,255,255,0.2);
-    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.25);
+    border: 1px solid rgba(255,255,255,0.4);
     white-space: nowrap;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
 }
 
 .og-banner-top-action {
@@ -524,22 +638,22 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 .og-banner-top-price-old {
     font-size: 0.85rem;
     text-decoration: line-through;
-    opacity: 0.7;
+    opacity: 0.75;
     font-weight: 500;
 }
 
 .og-banner-top-price-num {
     font-size: 1.8rem;
     font-weight: 800;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.18);
 }
 
 .og-banner-top-price-unit {
     font-size: 0.7rem;
-    opacity: 0.85;
+    opacity: 0.9;
 }
 
-/* 双套餐价格区（促销包 + 全套，纵向堆叠右对齐） */
+/* 双套餐价格区 */
 .og-banner-top-price {
     flex-direction: column;
     align-items: flex-end;
@@ -549,19 +663,19 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     display: flex;
     align-items: center;
     gap: 5px;
-    background: rgba(255,255,255,0.16);
-    border: 1px solid rgba(255,255,255,0.28);
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.35);
     border-radius: 8px;
     padding: 3px 10px;
     white-space: nowrap;
 }
 .og-banner-pkg-pick {
-    background: linear-gradient(135deg, #fbbf24, #f97316);
-    color: #fff;
-    border: none;
-    box-shadow: 0 4px 12px rgba(249,115,22,0.35);
+    background: var(--candy-yellow);
+    color: var(--candy-text);
+    border: 1.5px solid var(--candy-border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
-.og-banner-pkg-pick .og-banner-top-price-old { color: rgba(255,255,255,0.85); }
+.og-banner-pkg-pick .og-banner-top-price-old { color: rgba(74,58,74,0.7); }
 .og-banner-pkg-badge { font-weight: 800; font-size: 0.82rem; }
 .og-banner-pkg-label { font-size: 0.72rem; opacity: 0.92; font-weight: 600; }
 .og-banner-pkg-single { background: transparent; border: none; padding: 0; }
@@ -571,28 +685,28 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     align-items: center;
     gap: 6px;
     background: #fff;
-    color: #667eea;
-    padding: 12px 24px;
-    border-radius: 12px;
+    color: var(--candy-pink-dark);
+    padding: 11px 22px;
+    border-radius: 999px;
     font-size: 0.95rem;
     font-weight: 700;
     cursor: pointer;
-    border: none;
-    transition: all 0.25s;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    border: 2px solid var(--candy-border);
+    box-shadow: 2px 2px 0 var(--candy-shadow);
     white-space: nowrap;
     text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .og-banner-top-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    transform: translateY(-2px) rotate(-1deg);
+    box-shadow: 3px 3px 0 var(--candy-shadow);
 }
 
 .og-banner-top-btn-success {
-    background: rgba(255,255,255,0.22);
+    background: var(--candy-mint);
     color: #fff;
-    border: 1px solid rgba(255,255,255,0.4);
+    border-color: var(--candy-mint-dark);
 }
 
 /* 横幅移动端适配 */
@@ -600,14 +714,10 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     .og-banner-top {
         flex-direction: column;
         text-align: center;
-        padding: 24px 20px;
-        gap: 16px;
+        padding: 22px 18px;
+        gap: 14px;
     }
-
-    .og-banner-top-tags {
-        justify-content: center;
-    }
-
+    .og-banner-top-tags { justify-content: center; }
     .og-banner-top-badge {
         position: relative;
         top: auto;
@@ -618,7 +728,6 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 }
 
 /* ===== 离线游戏兑换弹窗 ===== */
-/* 遮罩：毛玻璃 + 淡入 */
 .og-modal-mask {
     display: none;
     position: fixed !important;
@@ -628,9 +737,9 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     bottom: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
-    background: rgba(15, 23, 42, 0.45);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: rgba(74, 58, 74, 0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     z-index: 99999 !important;
     padding: 20px;
     box-sizing: border-box !important;
@@ -650,15 +759,15 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     flex-direction: column !important;
 }
 
-/* 弹窗主体：flex 居中 + 弹性弹入 */
 .og-modal {
     background: #fff;
-    border-radius: 20px;
+    border-radius: 24px;
     max-width: 480px !important;
     width: 100% !important;
     max-height: calc(100vh - 40px);
     overflow-y: auto;
-    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.35);
+    border: 3px solid var(--candy-border);
+    box-shadow: 6px 6px 0 var(--candy-shadow);
     position: relative !important;
     top: auto !important;
     left: auto !important;
@@ -674,18 +783,17 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* 关闭按钮：悬浮于渐变头部之上 */
 .og-modal-close {
     position: absolute;
     top: 14px; right: 14px;
     z-index: 5;
-    background: rgba(255, 255, 255, 0.16);
-    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.2);
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
     color: #fff;
     font-size: 18px;
     line-height: 1;
     cursor: pointer;
-    width: 32px; height: 32px;
+    width: 34px; height: 34px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -694,16 +802,15 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 }
 
 .og-modal-close:hover {
-    background: rgba(255, 255, 255, 0.32);
-    transform: rotate(90deg);
+    background: rgba(255, 255, 255, 0.35);
+    transform: rotate(90deg) scale(1.1);
 }
 
-/* 弹窗渐变头部（表单态） */
 .og-modal-header {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 20px 20px 0 0;
+    background: linear-gradient(135deg, var(--candy-pink) 0%, var(--candy-peach) 100%);
+    border-radius: 21px 21px 0 0;
     padding: 24px 28px 24px 28px;
     padding-right: 52px;
     display: flex;
@@ -718,7 +825,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     position: absolute;
     top: -60px; right: -40px;
     width: 180px; height: 180px;
-    background: radial-gradient(circle, rgba(255,255,255,0.16) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
 }
@@ -728,7 +835,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     position: absolute;
     bottom: -70px; left: -30px;
     width: 160px; height: 160px;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
 }
@@ -737,24 +844,23 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     position: relative;
     z-index: 1;
     flex-shrink: 0;
-    width: 52px; height: 52px;
-    background: rgba(255,255,255,0.2);
-    border: 1px solid rgba(255,255,255,0.35);
+    width: 54px; height: 54px;
+    background: rgba(255,255,255,0.25);
+    border: 2px solid rgba(255,255,255,0.45);
     border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
 }
 
 .og-modal-title {
     position: relative;
     z-index: 1;
     margin: 0 0 2px;
-    font-size: 1.2rem;
-    font-weight: 700;
+    font-family: 'ZCOOL KuaiLe', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 400;
     color: #fff;
 }
 
@@ -763,7 +869,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     z-index: 1;
     margin: 0;
     font-size: 0.82rem;
-    color: rgba(255,255,255,0.82);
+    color: rgba(255,255,255,0.85);
 }
 
 .og-modal-header-text {
@@ -772,7 +878,6 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     min-width: 0;
 }
 
-/* 弹窗内容区：统一水平内边距（修复原内容贴边问题） */
 .og-modal-body {
     padding: 22px 28px 28px;
 }
@@ -786,63 +891,76 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 }
 .og-pkg-card:only-child { grid-column: 1 / -1; }
 .og-pkg-card {
-    border: 2px solid #e5e7eb;
-    border-radius: 12px;
+    border: 2.5px solid #e5e7eb;
+    border-radius: 14px;
     padding: 12px 14px;
     cursor: pointer;
     transition: all 0.2s ease;
     background: #fafafa;
     user-select: none;
 }
-.og-pkg-card:hover { border-color: #c7d2fe; background: #f5f7ff; }
+.og-pkg-card:hover {
+    border-color: var(--candy-pink);
+    background: #F0F6FC;
+    transform: translateY(-1px);
+}
 .og-pkg-card.selected {
-    border-color: #667eea;
-    background: linear-gradient(135deg, #eef2ff, #f5f3ff);
-    box-shadow: 0 4px 14px rgba(102,126,234,0.18);
+    border-color: var(--candy-pink-dark);
+    background: linear-gradient(135deg, #F0F6FC, #F8FBFE);
+    box-shadow: 3px 3px 0 rgba(103,160,213,0.3);
 }
 .og-pkg-card-pick.selected {
-    border-color: #f97316;
-    background: linear-gradient(135deg, #fff7ed, #fffbeb);
-    box-shadow: 0 4px 14px rgba(249,115,22,0.2);
+    border-color: #D97706;
+    background: linear-gradient(135deg, #FFFBEB, #FFF7ED);
+    box-shadow: 3px 3px 0 rgba(217,119,6,0.3);
 }
 .og-pkg-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-.og-pkg-card-name { font-size: 0.98rem; font-weight: 700; color: #1f2937; }
+.og-pkg-card-name {
+    font-family: 'ZCOOL KuaiLe', sans-serif;
+    font-size: 1rem;
+    color: var(--candy-text);
+    font-weight: 400;
+}
 .og-pkg-card-tag {
-    font-size: 0.68rem; font-weight: 700; color: #fff;
-    background: linear-gradient(135deg, #fbbf24, #f97316);
+    font-size: 0.68rem; font-weight: 700; color: var(--candy-text);
+    background: var(--candy-yellow);
     padding: 2px 8px; border-radius: 10px;
+    border: 1px solid var(--candy-border);
 }
 .og-pkg-card-desc { font-size: 0.75rem; color: #6b7280; margin-bottom: 6px; line-height: 1.4; }
-.og-pkg-card-price { font-size: 0.85rem; color: #374151; display: flex; align-items: baseline; gap: 5px; }
-.og-pkg-card-price b { font-size: 1.35rem; color: #667eea; font-weight: 800; }
-.og-pkg-card-pick .og-pkg-card-price b { color: #ea580c; }
+.og-pkg-card-price { font-size: 0.85rem; color: var(--candy-text); display: flex; align-items: baseline; gap: 5px; }
+.og-pkg-card-price b { font-size: 1.35rem; color: var(--candy-pink-dark); font-weight: 800; }
+.og-pkg-card-pick .og-pkg-card-price b { color: #D97706; }
 .og-pkg-card-old { font-size: 0.78rem; color: #9ca3af; text-decoration: line-through; }
 .og-pkg-card-unit { font-size: 0.72rem; color: #9ca3af; }
 
 /* ===== 任选3款游戏网格 ===== */
 .og-game-picker {
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 14px;
     padding: 12px 14px;
     margin-bottom: 14px;
     background: #fcfcfd;
 }
 .og-game-picker-head {
     display: flex; justify-content: space-between; align-items: center;
-    font-size: 0.85rem; color: #374151; margin-bottom: 8px; font-weight: 600;
+    font-size: 0.85rem; color: var(--candy-text); margin-bottom: 8px; font-weight: 600;
 }
 .og-pick-count { font-weight: 500; color: #6b7280; }
-.og-pick-count b { color: #f97316; font-size: 0.95rem; }
-.og-game-group-label { font-size: 0.74rem; color: #9ca3af; margin: 8px 0 6px; font-weight: 600; }
+.og-pick-count b { color: #D97706; font-size: 0.95rem; }
+.og-game-group-label {
+    font-family: 'ZCOOL KuaiLe', sans-serif;
+    font-size: 0.78rem; color: var(--candy-text-soft); margin: 8px 0 6px; font-weight: 400;
+}
 .og-game-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 7px; }
 .og-game-item {
     position: relative;
     display: flex; flex-direction: column; align-items: center; gap: 3px;
-    border: 1.5px solid #e5e7eb; border-radius: 10px;
+    border: 2px solid #e5e7eb; border-radius: 12px;
     padding: 9px 4px 8px; cursor: pointer; background: #fff;
     transition: all 0.15s ease; user-select: none;
 }
-.og-game-item:hover { border-color: #a5b4fc; }
+.og-game-item:hover { border-color: var(--candy-pink); transform: translateY(-1px); }
 .og-game-item-emoji { font-size: 1.3rem; line-height: 1; }
 .og-game-item-name { font-size: 0.74rem; color: #4b5563; text-align: center; }
 .og-game-item-check {
@@ -851,49 +969,59 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     border-radius: 50%; font-size: 0.62rem; color: #fff; background: #d1d5db;
 }
 .og-game-item.selected {
-    border-color: #f97316; background: #fff7ed;
-    box-shadow: 0 2px 8px rgba(249,115,22,0.18);
+    border-color: #D97706; background: #FFF7ED;
+    box-shadow: 2px 2px 0 rgba(217,119,6,0.25);
 }
-.og-game-item.selected .og-game-item-name { color: #c2410c; font-weight: 700; }
-.og-game-item.selected .og-game-item-check { background: linear-gradient(135deg, #fbbf24, #f97316); }
+.og-game-item.selected .og-game-item-name { color: #C2410C; font-weight: 700; }
+.og-game-item.selected .og-game-item-check {
+    background: var(--candy-yellow); color: var(--candy-text);
+    border: 1px solid var(--candy-border);
+}
 .og-game-item.disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ===== 结果区双授权切换条 ===== */
 .og-license-switch { display: flex; gap: 8px; justify-content: center; }
 .og-switch-btn {
-    border: 1.5px solid #d1d5db; background: #fff; color: #6b7280;
-    padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+    border: 2px solid #d1d5db; background: #fff; color: #6b7280;
+    padding: 6px 16px; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
     cursor: pointer; transition: all 0.2s ease;
 }
-.og-switch-btn.active { border-color: #667eea; background: #eef2ff; color: #4f46e5; }
+.og-switch-btn.active {
+    border-color: var(--candy-pink-dark); background: #F0F6FC; color: var(--candy-pink-dark);
+    box-shadow: 2px 2px 0 rgba(103,160,213,0.3);
+}
 
-/* 升级全套入口（结果区，仅持有促销包时显示） */
+/* 升级全套入口 */
 .og-upgrade-entry {
     margin-top: 14px;
     padding: 14px 16px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #fff7ed, #fffbeb);
-    border: 1.5px solid #fed7aa;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #FFF7ED, #FFFBEB);
+    border: 2px solid #FED7AA;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
 }
 .og-upgrade-text { flex: 1; min-width: 0; }
-.og-upgrade-title { font-size: 0.88rem; font-weight: 700; color: #c2410c; margin-bottom: 2px; }
-.og-upgrade-desc { font-size: 0.74rem; color: #9a3412; line-height: 1.4; }
+.og-upgrade-title {
+    font-family: 'ZCOOL KuaiLe', sans-serif;
+    font-size: 0.92rem; color: #C2410C; margin-bottom: 2px; font-weight: 400;
+}
+.og-upgrade-desc { font-size: 0.74rem; color: #9A3412; line-height: 1.4; }
 .og-upgrade-btn {
     flex-shrink: 0;
-    background: linear-gradient(135deg, #f97316, #ea580c);
-    color: #fff; border: none;
-    padding: 8px 18px; border-radius: 20px;
+    background: linear-gradient(135deg, #F97316, #EA580C);
+    color: #fff; border: 2px solid var(--candy-border);
+    padding: 8px 18px; border-radius: 999px;
     font-size: 0.82rem; font-weight: 700;
     cursor: pointer; white-space: nowrap;
     transition: all 0.2s ease;
+    box-shadow: 2px 2px 0 var(--candy-shadow);
 }
-.og-upgrade-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(234,88,12,0.35); }
+.og-upgrade-btn:hover { transform: translateY(-1px) rotate(-1deg); box-shadow: 3px 3px 0 var(--candy-shadow); }
 
-/* 特性标签（标题下方横排） */
+/* 特性标签 */
 .og-feature-tags {
     display: flex;
     gap: 6px;
@@ -908,22 +1036,22 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     align-items: center;
     gap: 4px;
     padding: 4px 12px;
-    border-radius: 20px;
+    border-radius: 999px;
     font-size: 0.72rem;
     font-weight: 600;
     border: 1px solid transparent;
     white-space: nowrap;
 }
 
-.og-tag-blue  { background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.35); }
-.og-tag-green { background: rgba(255,255,255,0.18); color: #fff; border-color: rgba(255,255,255,0.3); }
-.og-tag-amber { background: rgba(255,255,255,0.16); color: #fff; border-color: rgba(255,255,255,0.28); }
+.og-tag-blue  { background: rgba(255,255,255,0.22); color: #fff; border-color: rgba(255,255,255,0.4); }
+.og-tag-green { background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.35); }
+.og-tag-amber { background: rgba(255,255,255,0.18); color: #fff; border-color: rgba(255,255,255,0.3); }
 
-/* 信息卡片（兑换流程 / 激活步骤） */
+/* 信息卡片 */
 .og-info-card {
-    background: linear-gradient(135deg, #f8f9ff, #f1f4ff);
-    border: 1px solid #e6eaff;
-    border-radius: 14px;
+    background: linear-gradient(135deg, #F8FBFE, #F0F6FC);
+    border: 2px solid #D6E8F5;
+    border-radius: 16px;
     padding: 16px 18px;
     margin-bottom: 20px;
 }
@@ -932,10 +1060,8 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 0.88rem;
-    font-weight: 700;
-    color: #333;
-    margin-bottom: 12px;
+    font-family: 'ZCOOL KuaiLe', sans-serif;
+    font-size: 0.95rem; font-weight: 400; color: var(--candy-text); margin-bottom: 12px;
 }
 
 .og-info-badge {
@@ -943,16 +1069,17 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 20px; height: 20px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    width: 22px; height: 22px;
+    background: linear-gradient(135deg, var(--candy-pink), var(--candy-peach));
     color: #fff;
     border-radius: 50%;
     font-size: 0.72rem;
     font-style: italic;
     font-weight: 700;
+    border: 1.5px solid var(--candy-border);
 }
 
-/* 步骤列表（带连接线） */
+/* 步骤列表 */
 .og-steps {
     display: flex;
     flex-direction: column;
@@ -972,8 +1099,8 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     left: 0;
     top: 1px;
     flex-shrink: 0;
-    width: 22px; height: 22px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    width: 24px; height: 24px;
+    background: linear-gradient(135deg, var(--candy-pink), var(--candy-peach));
     color: #fff;
     border-radius: 50%;
     display: flex;
@@ -981,22 +1108,23 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     justify-content: center;
     font-size: 0.72rem;
     font-weight: 700;
-    box-shadow: 0 2px 6px rgba(102,126,234,0.35);
+    border: 1.5px solid var(--candy-border);
+    box-shadow: 2px 2px 0 var(--candy-shadow);
 }
 
 .og-step:not(:last-child)::before {
     content: '';
     position: absolute;
-    left: 10px;
-    top: 26px;
+    left: 11px;
+    top: 28px;
     bottom: -12px;
     width: 2px;
-    background: linear-gradient(to bottom, #c7d2fe, rgba(199, 210, 254, 0.25));
+    background: linear-gradient(to bottom, var(--candy-pink), rgba(103,160,213,0.2));
 }
 
 .og-step-text {
     font-size: 0.83rem;
-    color: #555;
+    color: var(--candy-text);
     line-height: 1.6;
 }
 
@@ -1008,19 +1136,19 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 .og-form-group label {
     display: block;
     font-weight: 600;
-    color: #374151;
+    color: var(--candy-text);
     margin-bottom: 7px;
     font-size: 0.9rem;
 }
 
 .og-form-group input {
     width: 100%;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
     padding: 11px 14px;
     font-size: 0.95rem;
-    color: #1f2937;
-    background: #fafbff;
+    color: var(--candy-text);
+    background: #FFFCFA;
     transition: all 0.2s;
     box-sizing: border-box;
 }
@@ -1031,9 +1159,9 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 
 .og-form-group input:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--candy-pink);
     background: #fff;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12);
+    box-shadow: 0 0 0 4px rgba(103,160,213,0.15);
 }
 
 /* 余额 / 费用 对比条 */
@@ -1043,9 +1171,9 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     justify-content: space-around;
     padding: 14px 16px;
     background: #fff;
-    border: 1px solid #eceef5;
-    border-radius: 14px;
-    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+    border: 2px solid #eceef5;
+    border-radius: 16px;
+    box-shadow: 2px 2px 0 var(--candy-shadow);
     margin: 4px 0 16px;
 }
 
@@ -1063,7 +1191,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 .og-balance-value {
     font-size: 1.25rem;
     font-weight: 800;
-    color: #1f2937;
+    color: var(--candy-text);
 }
 
 .og-balance-value span {
@@ -1074,7 +1202,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 }
 
 .og-balance-price {
-    color: #667eea;
+    color: var(--candy-pink-dark);
 }
 
 .og-balance-divider {
@@ -1088,18 +1216,18 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: #fffbeb;
-    border: 1px solid #fde68a;
+    background: #FFF7ED;
+    border: 2px solid #FDBA74;
     border-radius: 12px;
     padding: 11px 14px;
     margin-bottom: 16px;
     font-size: 0.85rem;
-    color: #92400e;
+    color: #9A3412;
     line-height: 1.5;
 }
 
 .og-warn a {
-    color: #667eea;
+    color: var(--candy-pink-dark);
     font-weight: 600;
     text-decoration: underline;
 }
@@ -1107,22 +1235,22 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 /* 主按钮 */
 .og-submit-btn {
     width: 100%;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, var(--candy-pink), var(--candy-peach));
     color: #fff;
-    border: none;
+    border: 2.5px solid var(--candy-border);
     padding: 13px;
-    border-radius: 12px;
+    border-radius: 14px;
     font-size: 1rem;
     font-weight: 700;
     letter-spacing: 0.5px;
     cursor: pointer;
     transition: all 0.25s;
-    box-shadow: 0 6px 18px rgba(102, 126, 234, 0.35);
+    box-shadow: 3px 3px 0 var(--candy-shadow);
 }
 
 .og-submit-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(102, 126, 234, 0.45);
+    transform: translateY(-2px) rotate(-0.5deg);
+    box-shadow: 5px 5px 0 var(--candy-shadow);
 }
 
 .og-submit-btn:active:not(:disabled) {
@@ -1133,7 +1261,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     background: #cbd5e1;
     cursor: not-allowed;
     transform: none;
-    box-shadow: none;
+    box-shadow: 3px 3px 0 var(--candy-shadow);
 }
 
 /* 成功结果 */
@@ -1154,8 +1282,8 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 .og-result-header {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg, #34d399 0%, #16a34a 100%);
-    border-radius: 20px 20px 0 0;
+    background: linear-gradient(135deg, var(--candy-mint) 0%, var(--candy-mint-dark) 100%);
+    border-radius: 21px 21px 0 0;
     padding: 30px 28px 26px;
     text-align: center;
     color: #fff;
@@ -1164,16 +1292,14 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 .og-result-icon {
     position: relative;
     z-index: 1;
-    width: 60px; height: 60px;
-    background: rgba(255,255,255,0.2);
-    border: 1.5px solid rgba(255,255,255,0.4);
+    width: 62px; height: 62px;
+    background: rgba(255,255,255,0.25);
+    border: 2px solid rgba(255,255,255,0.5);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 12px;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
     animation: og-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
 }
 
@@ -1196,8 +1322,9 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
     position: relative;
     z-index: 1;
     margin: 0 0 4px;
-    font-size: 1.25rem;
-    font-weight: 700;
+    font-family: 'ZCOOL KuaiLe', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 400;
     color: #fff;
 }
 
@@ -1211,35 +1338,33 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 
 /* 授权码 */
 .og-license-label {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: #374151;
-    margin-bottom: 8px;
+    font-family: 'ZCOOL KuaiLe', sans-serif;
+    font-size: 0.85rem; font-weight: 400; color: var(--candy-text); margin-bottom: 8px;
 }
 
 .og-license-box {
     font-family: Consolas, Monaco, 'Courier New', monospace;
     font-size: 0.8rem;
     word-break: break-all;
-    color: #333;
+    color: var(--candy-text);
     line-height: 1.6;
-    background: #f8f9fc;
-    border: 1.5px dashed #c7d2fe;
+    background: #F8FBFE;
+    border: 2px dashed var(--candy-pink);
     border-radius: 12px;
     padding: 12px 14px;
     max-height: 110px;
     overflow-y: auto;
 }
 
-/* 复制按钮（次级按钮） */
+/* 复制按钮 */
 .og-copy-btn {
     display: block;
     width: 100%;
-    background: #eef2ff;
-    color: #4f46e5;
-    border: 1px solid #e0e7ff;
+    background: #F0F6FC;
+    color: var(--candy-pink-dark);
+    border: 2px solid var(--candy-pink);
     padding: 10px;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
@@ -1248,37 +1373,39 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 }
 
 .og-copy-btn:hover {
-    background: #e0e7ff;
+    background: #D6E8F5;
+    transform: translateY(-1px);
 }
 
 .og-copy-btn.og-copied {
-    background: #ecfdf5;
-    color: #059669;
-    border-color: #a7f3d0;
+    background: #E8FBF3;
+    color: var(--candy-mint-dark);
+    border-color: var(--candy-mint);
 }
 
-/* 下载按钮（主按钮） */
+/* 下载按钮 */
 .og-download-link {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    background: linear-gradient(135deg, #22c55e, #16a34a);
+    background: linear-gradient(135deg, var(--candy-mint), var(--candy-mint-dark));
     color: #fff;
     padding: 13px;
-    border-radius: 12px;
+    border-radius: 14px;
+    border: 2.5px solid var(--candy-border);
     font-size: 0.95rem;
     font-weight: 700;
     text-decoration: none;
     text-align: center;
     margin: 4px 0 16px;
     transition: all 0.25s;
-    box-shadow: 0 6px 18px rgba(34, 197, 94, 0.3);
+    box-shadow: 3px 3px 0 var(--candy-shadow);
 }
 
 .og-download-link:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(34, 197, 94, 0.42);
+    transform: translateY(-2px) rotate(-0.5deg);
+    box-shadow: 5px 5px 0 var(--candy-shadow);
     text-decoration: none;
     color: #fff;
 }
@@ -1309,7 +1436,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 
 .og-info-card-compact .og-step-text {
     font-size: 0.8rem;
-    color: #666;
+    color: var(--candy-text-soft);
 }
 
 /* 弹窗移动端适配 */
@@ -1323,7 +1450,6 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
         padding: 26px 20px 22px;
     }
 
-    /* 窄屏套餐卡纵向排列；游戏网格每行3个 */
     .og-pkg-picker { grid-template-columns: 1fr; }
     .og-game-group { grid-template-columns: repeat(3, 1fr); }
     .og-game-item-emoji { font-size: 1.15rem; }
@@ -1332,55 +1458,102 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 
 @media (max-width: 768px) {
     .more-page {
-        padding: 20px 15px;
+        padding: 16px 12px 36px;
+        border-radius: 18px;
     }
 
-    .page-title {
+    .candy-title {
         font-size: 2rem;
+    }
+    .candy-title::before, .candy-title::after {
+        margin: 0 6px;
     }
 
     .cards-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
     }
 
+    .card {
+        padding: 22px 16px 18px;
+    }
+
+    /* 一级 Tab：移动端换行排列，全部可见无需横向滚动 */
     .tabs {
-        justify-content: flex-start;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        gap: 4px;
-        padding-bottom: 2px;
+        justify-content: center;
+        flex-wrap: wrap;
+        overflow-x: visible;
+        gap: 8px;
+        padding: 6px 4px;
     }
 
     .tab-item {
-        padding: 10px 16px;
-        font-size: 0.95rem;
+        padding: 8px 14px;
+        font-size: 0.88rem;
         flex-shrink: 0;
     }
 
+    /* 移动端将"在线免费用"文字标签收成一颗小绿点，节省 tab 宽度 */
     .online-free-tag {
-        padding: 2px 6px;
-        font-size: 0.6rem;
+        font-size: 0;
+        padding: 0;
+        width: 7px;
+        height: 7px;
+        min-width: 7px;
+        border-radius: 50%;
+        background: var(--candy-mint);
+        border: none;
+        overflow: hidden;
+        display: inline-block;
+        margin-left: 3px;
+        line-height: 0;
     }
 
+    /* 二级 Tab（低/高年级/打字）：3列等宽网格，全部可见无需滚动 */
     .sub-tabs {
-        justify-content: flex-start;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        overflow-x: visible;
         flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        gap: 4px;
     }
 
     .sub-tab-item {
-        padding: 7px 16px;
-        font-size: 0.88rem;
+        padding: 9px 6px;
+        font-size: 0.78rem;
         flex-shrink: 0;
+        text-align: center;
+        line-height: 1.3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+    }
+
+    .section-title {
+        font-size: 1.35rem;
+    }
+}
+
+/* 超窄屏（≤380px）：二级 Tab 文字进一步收紧 */
+@media (max-width: 380px) {
+    .sub-tab-item {
+        font-size: 0.72rem;
+        padding: 8px 4px;
+    }
+    .tab-item {
+        padding: 7px 11px;
+        font-size: 0.82rem;
     }
 }
 </style>
 
 <div class="more-page">
+    <!-- 可爱页头装饰 -->
+    <div class="candy-header">
+        <h1 class="candy-title">玩转学习乐园</h1>
+        <p class="candy-subtitle">小游戏、AI、编程、趣味测评，总有一款适合你</p>
+    </div>
     <!-- 一级 Tab 导航 -->
     <div class="tabs">
         <div class="tab-item active" data-tab="games" onclick="switchTab('games')"><span>🎮 小游戏</span><span class="online-free-tag">● 在线免费用</span></div>

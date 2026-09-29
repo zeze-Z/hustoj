@@ -115,6 +115,7 @@ try {
         <style>
             .course-drag-handle { <?php if (!$filter_active) echo 'cursor: move; '; ?>color: #337ab7; }
             .course-dragging { opacity: 0.5; }
+            #course-sort-body tr:hover td { background-color: #f5f5f5; }
             <?php if (!$filter_active) { ?>#course-sort-body tr { cursor: move; }<?php } ?>
         </style>
         <table width="100%" border="1" style="text-align:center;">
