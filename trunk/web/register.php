@@ -23,8 +23,9 @@ if (!in_array($role, ['teacher', 'student'])) {
     $role = 'student';
 }
 
-// 处理学校：优先使用下拉选择的学校ID
-$school_id = isset($_POST['school_id']) ? intval($_POST['school_id']) : 0;
+// 处理学校：优先使用下拉选择的学校ID；未选学校时用 NULL（与 schema DEFAULT NULL 一致，
+// 避免 getSchoolSQLFilter 里 IS NULL 分支匹配不到 school_id=0 的用户）
+$school_id = !empty($_POST['school_id']) ? intval($_POST['school_id']) : null;
 $school = "";
 if ($school_id > 0) {
     // 根据school_id获取学校名称

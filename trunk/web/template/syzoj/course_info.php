@@ -205,7 +205,7 @@
 
   <?php if (!empty($view_just_bought) && !empty($view_share_url)): ?>
   <!-- 购买成功·分享赚回引导条：just_bought 由 course_get.php 成功跳转携带 -->
-  <div class="ui segment" style="border-radius:12px;margin-top:15px;padding:14px 18px;background:linear-gradient(135deg,#f0fff4 0%,#f8f9ff 100%);border:1px solid #52c41a30;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+  <div class="ui segment course-share-block" style="border-radius:12px;margin-top:15px;padding:14px 18px;background:linear-gradient(135deg,#f0fff4 0%,#f8f9ff 100%);border:1px solid #52c41a30;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
       <i class="check circle icon" style="font-size:1.6em;color:#52c41a;flex-shrink:0;"></i>
       <div style="flex:1;min-width:200px;">
@@ -220,6 +220,8 @@
         <button type="button" class="ui small primary button" onclick="copyCourseShareUrl(this)"><i class="copy icon"></i>复制分享链接</button>
       </div>
     </div>
+    <!-- 可见可长按选择的分享链接：自动复制失败时可手动长按全选复制 -->
+    <div style="margin-top:8px;font-size:0.8em;color:#8a8a8a;word-break:break-all;-webkit-user-select:text;user-select:text;">分享链接（长按可全选复制）：<span onclick="copyCourseShareUrl(this)" title="点击复制" style="cursor:pointer;text-decoration:underline dotted #999;-webkit-user-select:text;user-select:text;"><?php echo htmlentities($view_share_url, ENT_QUOTES, 'UTF-8');?></span></div>
   </div>
   <?php endif; ?>
 
@@ -571,7 +573,7 @@
 
   <!-- 次级运营区：分享课程（方案B，低优先级位置，视觉降级） -->
   <?php if (!empty($view_share_url)): ?>
-  <div class="ui segment" style="border-radius:12px;margin-top:15px;padding:12px 16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);border:1px solid #eaeaea;">
+  <div class="ui segment course-share-block" style="border-radius:12px;margin-top:15px;padding:12px 16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);border:1px solid #eaeaea;">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
       <div style="font-size:0.9em;color:#888;">
         <i class="share alternate icon" style="color:#667eea;"></i> 分享课程 · 好友购买后得 20% 积分返佣
@@ -581,6 +583,8 @@
         <button type="button" class="ui tiny basic primary button" onclick="copyCourseShareUrl(this)"><i class="copy icon"></i>复制链接</button>
       </div>
     </div>
+    <!-- 可见可长按选择的分享链接：自动复制失败时可手动长按全选复制 -->
+    <div style="margin-top:8px;font-size:0.78em;color:#999;word-break:break-all;-webkit-user-select:text;user-select:text;">分享链接（长按可全选复制）：<span onclick="copyCourseShareUrl(this)" title="点击复制" style="cursor:pointer;text-decoration:underline dotted #bbb;-webkit-user-select:text;user-select:text;"><?php echo htmlentities($view_share_url, ENT_QUOTES, 'UTF-8');?></span></div>
   </div>
   <?php endif; ?>
 
@@ -595,7 +599,7 @@
       </div>
       <div style="font-size: 1em;">
         <i class="qq icon" style="color: #12b7f5;"></i>
-        咨询客服QQ：<strong onclick="copyCustomerQQ(this)" title="点击复制QQ号" style="color: #12b7f5; cursor: pointer; text-decoration: underline dotted #12b7f5; text-underline-offset: 3px;"><?php echo htmlentities($OJ_CUSTOMER_QQ, ENT_QUOTES, 'UTF-8');?></strong>
+        咨询客服QQ：<strong onclick="copyCustomerQQ(this)" title="点击复制QQ号，长按可手动选择复制" style="color: #12b7f5; cursor: pointer; text-decoration: underline dotted #12b7f5; text-underline-offset: 3px; -webkit-user-select: text; user-select: text;"><?php echo htmlentities($OJ_CUSTOMER_QQ, ENT_QUOTES, 'UTF-8');?></strong>
       </div>
     </div>
   </div>
@@ -605,26 +609,25 @@
 
 
 <script>
-// 复制分享链接：从点击按钮向上找最近的 .course-share-url-input 读取链接值
+// 复制分享链接：从被点元素向上找最近的 .course-share-block 块内的 hidden input 读取链接值
 // 每个分享块（引导条/次级卡）各自带一个 hidden input，互不依赖
 function copyCourseShareUrl(btn) {
-    var input = btn ? btn.parentNode.querySelector('.course-share-url-input') : null;
+    if (!btn) return;
+    var block = btn.closest ? btn.closest('.course-share-block') : null;
+    var input = block
+        ? block.querySelector('.course-share-url-input')
+        : btn.parentNode.querySelector('.course-share-url-input');
     if (!input) return;
     var text = input.value;
-    if (navigator.clipboard && window.isSecureContext) {
-        // HTTPS 环境：用现代 Clipboard API
-        navigator.clipboard.writeText(text).then(function () { alert('分享链接已复制'); }).catch(function () { fallbackCopy(text); });
-    } else {
-        // HTTP 或非安全上下文：用临时 textarea + execCommand（不依赖原 input 可见性）
-        fallbackCopy(text);
-    }
-}
-// 兼容复制：ojSyncCopy（footer.php 公共方法）用 <span>+Range 选区并校验选区，
-// 移动端不会出现「提示成功实际没复制」；原 input 是 hidden 也不影响
-function fallbackCopy(text) {
     var done = function () { alert('分享链接已复制'); };
-    var fail = function () { alert('复制失败，请手动选中链接复制'); };
-    if (typeof ojSyncCopy === 'function' && ojSyncCopy(text)) {
+    var fail = function () {
+        // 终极兜底：prompt 输入框内长按可全选/复制（移动端系统级支持）
+        window.prompt('自动复制未成功，请长按下方内容选择「复制」：', text);
+    };
+    // ojCopyText 定义在 footer.php（同步 execCommand 优先 + Clipboard API 兜底），全站复用
+    if (typeof ojCopyText === 'function') {
+        ojCopyText(text, done, fail);
+    } else if (typeof ojSyncCopy === 'function' && ojSyncCopy(text)) {
         done();
     } else {
         fail();

@@ -325,8 +325,11 @@ function copyGuideQQ(e) {
     if (e) e.preventDefault();
     var qq = "<?php echo $guide_qq_h;?>";
     var done = function () { alert("客服QQ已复制：" + qq); };
-    var fail = function () { alert("复制失败，请长按QQ号手动复制：" + qq); };
-    // ojCopyText 定义在 footer.php（Clipboard API 优先 + 同步 execCommand 兜底），全站复用
+    var fail = function () {
+        // 终极兜底：prompt 输入框内长按可全选/复制（移动端系统级支持）
+        window.prompt("自动复制未成功，请长按下方内容选择「复制」：", qq);
+    };
+    // ojCopyText 定义在 footer.php（同步 execCommand 优先 + Clipboard API 兜底），全站复用
     if (typeof ojCopyText === 'function') {
         ojCopyText(qq, done, fail);
     } else {

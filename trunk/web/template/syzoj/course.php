@@ -747,6 +747,9 @@ a.cw-tag:hover { color: hsl(var(--cw-hue, 208) 62% 26%); background: hsl(var(--c
   font-weight: 800;
   text-decoration: underline dotted var(--cw-sky);
   text-underline-offset: 3px;
+  /* 允许长按手动选择复制（防止继承 user-select:none 被阻断） */
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* ---------- 返回顶部 ---------- */

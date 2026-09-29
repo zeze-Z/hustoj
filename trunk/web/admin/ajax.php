@@ -7,7 +7,7 @@ if(!(isset($_SESSION[$OJ_NAME.'_administrator'])||isset($_SESSION[$OJ_NAME.'_pro
 }
 function try_ajax($tb,$fd,$pr){
 	global $OJ_NAME,$_SESSION,$_POST;
-	$m=$_POST["m"];	
+	$m=$_POST["m"];
 	if($m==$tb."_update_".$fd  && ( isset($_SESSION[$OJ_NAME.'_'.$pr]) )){
                 $data_id=$_POST[$tb.'_id'];
                 $new_value=$_POST[$fd];
@@ -15,6 +15,10 @@ function try_ajax($tb,$fd,$pr){
 		else $tb_name=$tb;
                 $sql="update ".$tb_name." set `".$fd."`=? where ".$tb."_id=?";
                 echo pdo_query($sql,$new_value,$data_id);
+                // school 字段清空时同步 school_id=NULL，保证学校模式过滤生效（删除已设置的学校）
+                if($tb=="user" && $fd==="school" && $new_value===""){
+                        pdo_query("update {$tb_name} set school_id=NULL where ".$tb."_id=?",$data_id);
+                }
         }
 }
 function uniqueSource($str) {
@@ -96,14 +100,15 @@ if($_SERVER['REQUEST_METHOD']=="POST"){
 	 */
 	// try_ajax("user","nick","administrator");
 	try_ajax("user","expiry_date","administrator");
-	// try_ajax("user","school","administrator"); // 已废弃，改用下面的 user_update_school_schoolid
+	try_ajax("user","school","administrator"); // school 文本清空时 try_ajax 内会同步 school_id=NULL
 	try_ajax("user","group_name","administrator");
-	
+	try_ajax("user","role","administrator");
+
 	// 用户学校更新（同时更新 school_id 和 school）
 	if($m=="user_update_school_schoolid" && isset($_SESSION[$OJ_NAME.'_administrator'])){
 		$user_id=$_POST['user_id'];
 		$school_id=intval($_POST['school_id']);
-		
+
 		// 引入学校函数库
 		if (file_exists('../include/school.php')) {
 			require_once('../include/school.php');

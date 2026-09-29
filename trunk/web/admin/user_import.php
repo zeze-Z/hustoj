@@ -114,11 +114,12 @@ function import_user($filename, $target_school_id, $target_school_name, $target_
             $plain_pwd = empty($password) ? default_password($user_id) : $password;
             $password = pwGen($plain_pwd);
             // 学校：学校模式下统一归属所选目标学校，保证 school_id 与展示名一致
+            // 未启用学校模式时用 NULL，与 users.school_id DEFAULT NULL 一致
             if ($OJ_SCHOOL_MODE) {
                 $school = $target_school_name;
                 $school_id = intval($target_school_id);
             } else {
-                $school_id = 0;
+                $school_id = null;
             }
             // 有效期：留空默认平台规则；纯数字按"天数偏移"处理；非法值回退默认
             if (empty($expiry_date)) {

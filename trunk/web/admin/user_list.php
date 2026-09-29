@@ -92,7 +92,7 @@ if(isset($_GET['keyword']) && $_GET['keyword']!=""){
         echo "<td><a href='../userinfo.php?user=".htmlentities(urlencode($row['user_id']))."'>".$row['user_id']."</a></td>";
         if($row['nick']=="") $row['nick']="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
         echo "<td><span fd='nick' user_id='".$row['user_id']."'>".$row['nick']."</span></td>";
-        echo "<td>".htmlentities($row['role'],ENT_QUOTES,'UTF-8')."</td>";
+        echo "<td><span fd='role' user_id='".$row['user_id']."'>".htmlentities($row['role'],ENT_QUOTES,'UTF-8')."</span></td>";
         echo "<td><a href='user_list.php?keyword=".htmlentities(urlencode($row['ip']))."' >".$row['ip']."</td>";
         if($row['email']=="") $row['email']="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
         echo "<td><span fd='email' user_id='".$row['user_id']."'>".$row['email']."</span></td>";
@@ -149,110 +149,54 @@ if(!(isset($_GET['keyword']) && $_GET['keyword']!=""))
 </div>
 <script>
 function admin_mod(){
-        $("span[fd=group_name]").each(function(){
-                let sp=$(this);
-                let user_id=$(this).attr('user_id');
-                $(this).dblclick(function(){
-                        let group_name=sp.text();
-                        sp.html("<form onsubmit='return false;'><input type=hidden name='m' value='user_update_group_name'><input type='hidden' name='user_id' value='"+user_id+"'><input type='text' name='group_name' value='"+group_name+"' selected='true' class='input-large' size=20 ></form>");
-                        let ipt=sp.find("input[name=group_name]");
-                        ipt.focus();
-                        ipt[0].select();
-                        sp.find("input").change(function(){
-                                let newgroup_name=sp.find("input[name=group_name]").val();
-                                $.post("ajax.php",sp.find("form").serialize()).done(function(){
-                                        console.log("new group_name"+newgroup_name);
-                                        sp.html(newgroup_name);
-                                });
+    // 字段编辑配置：fd 名 -> 控件配置
+    // 新增可编辑字段只需在此声明，并在 ajax.php 配套调用 try_ajax("user", fd, "administrator")
+    const FIELD_CFG = {
+        nick:        {type:'text',  size:2,  cls:'input-mini'},
+        email:       {type:'text',  size:20, cls:'input-large'},
+        school:      {type:'text',  size:20, cls:'input-large'}, // 清空文本时 try_ajax 内同步 school_id=NULL
+        group_name:  {type:'text',  size:20, cls:'input-large'},
+        expiry_date: {type:'date',  size:2,  cls:'input-mini'},
+        role:        {type:'select', options:['teacher','student']}
+    };
 
-                        });
+    $("span[fd]").each(function(){
+        let sp=$(this);
+        let user_id=sp.attr('user_id');
+        let fd=sp.attr('fd');
+        let cfg=FIELD_CFG[fd];
+        if(!cfg) return; // 未配置的字段不支持内联编辑
+
+        sp.dblclick(function(){
+            let cur=sp.text().trim();
+            let html="<form onsubmit='return false;'>"
+                + "<input type=hidden name='m' value='user_update_"+fd+"'>"
+                + "<input type='hidden' name='user_id' value='"+user_id+"'>";
+            if(cfg.type==='select'){
+                let list=cfg.options.slice();
+                if(cur && list.indexOf(cur)<0) list.unshift(cur); // 当前值不在选项内则保留，避免显示丢失
+                let opts='';
+                for(let i=0;i<list.length;i++){
+                    opts+="<option value='"+list[i]+"' "+(list[i]===cur?"selected":"")+">"+list[i]+"</option>";
+                }
+                html+="<select name='"+fd+"' class='"+cfg.cls+"'>"+opts+"</select>";
+            } else {
+                html+="<input type='"+cfg.type+"' name='"+fd+"' value='"+cur+"' class='"+cfg.cls+"' size="+cfg.size+" >";
+            }
+            html+="</form>";
+            sp.html(html);
+            let el=sp.find("[name='"+fd+"']");
+            el.focus();
+            if(el[0] && typeof el[0].select==='function') el[0].select();
+            el.change(function(){
+                let v=sp.find("[name='"+fd+"']").val();
+                $.post("ajax.php",sp.find("form").serialize()).done(function(){
+                    console.log("new "+fd+":"+v);
+                    sp.html(v===''?'&nbsp;':v);
                 });
+            });
         });
-        $("span[fd=school]").each(function(){
-                let sp=$(this);
-                let user_id=$(this).attr('user_id');
-                $(this).dblclick(function(){
-                        let school=sp.text();
-                        sp.html("<form onsubmit='return false;'><input type=hidden name='m' value='user_update_school'><input type='hidden' name='user_id' value='"+user_id+"'><input type='text' name='school' value='"+school+"' selected='true' class='input-large' size=20 ></form>");
-                        let ipt=sp.find("input[name=school]");
-                        ipt.focus();
-                        ipt[0].select();
-                        sp.find("input").change(function(){
-                                let newschool=sp.find("input[name=school]").val();
-                                $.post("ajax.php",sp.find("form").serialize()).done(function(){
-                                        console.log("new school"+newschool);
-                                        sp.html(newschool);
-                                });
-
-                        });
-                });
-        });
-
-        $("span[fd=email]").each(function(){
-                let sp=$(this);
-                let user_id=$(this).attr('user_id');
-                $(this).dblclick(function(){
-                        let email=sp.text();
-                        sp.html("<form onsubmit='return false;'><input type=hidden name='m' value='user_update_email'><input type='hidden' name='user_id' value='"+user_id+"'><input type='text' name='email' value='"+email+"' selected='true' class='input-large' size=20 ></form>");
-                        let ipt=sp.find("input[name=email]");
-                        ipt.focus();
-                        ipt[0].select();
-                        sp.find("input").change(function(){
-                                let newemail=sp.find("input[name=email]").val();
-                                $.post("ajax.php",sp.find("form").serialize()).done(function(){
-                                        console.log("new email:"+newemail);
-                                        sp.html(newemail);
-                                });
-
-                        });
-                });
-        });
-
-        $("span[fd=nick]").each(function(){
-                let sp=$(this);
-                let user_id=$(this).attr('user_id');
-                $(this).dblclick(function(){
-                        let nick=sp.text();
-                        console.log("user_id:"+user_id+"  nick:"+nick);
-                        sp.html("<form onsubmit='return false;'><input type=hidden name='m' value='user_update_nick'><input type='hidden' name='user_id' value='"+user_id+"'><input type='text' name='nick' value='"+nick+"' selected='true' class='input-mini' size=2 ></form>");
-                        let ipt=sp.find("input[name=nick]");
-                        ipt.focus();
-                        ipt[0].select();
-                        sp.find("input").change(function(){
-                                let newnick=sp.find("input[name=nick]").val();
-                                $.post("ajax.php",sp.find("form").serialize()).done(function(){
-                                        console.log("new nick:"+newnick);
-                                        sp.html(newnick);
-                                });
-
-                        });
-                });
-
-
-        });
-        $("span[fd=expiry_date]").each(function(){
-                let sp=$(this);
-                let user_id=$(this).attr('user_id');
-                $(this).dblclick(function(){
-                        let expiry_date=sp.text();
-                        console.log("user_id:"+user_id+"  expiry_date:"+expiry_date);
-                        sp.html("<form onsubmit='return false;'><input type=hidden name='m' value='user_update_expiry_date'><input type='hidden' name='user_id' value='"+user_id+"'><input type='date' name='expiry_date' value='"+expiry_date+"' selected='true' class='input-mini' size=2 ></form>");
-                        let ipt=sp.find("input[name=expiry_date]");
-                        ipt.focus();
-                        ipt[0].select();
-                        sp.find("input").change(function(){
-                                let newexpiry_date=sp.find("input[name=expiry_date]").val();
-                                $.post("ajax.php",sp.find("form").serialize()).done(function(){
-                                        console.log("new expiry_date:"+newexpiry_date);
-                                        sp.html(newexpiry_date);
-                                });
-
-                        });
-                });
-
-
-        });
-
+    });
 }
 $(document).ready(function(){
         admin_mod();
