@@ -1,0 +1,950 @@
+<?php $show_title="天平方程 - $OJ_NAME"; ?>
+<?php include("template/$OJ_TEMPLATE/header.php");?>
+
+<script src="template/<?php echo $OJ_TEMPLATE?>/js/anime.min.js?v=4.5.0"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/js/rough.min.js?v=4.6.6"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/game_sketch.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/game_confetti.js"></script>
+
+<div class="padding">
+<style>
+/* ===== 天平方程 · 水果摊的秘密：bs- 前缀，纯前端无后端 ===== */
+@import url('template/<?php echo $OJ_TEMPLATE?>/fonts/zcool-kuaile.css?v=1');
+*{margin:0;padding:0;box-sizing:border-box}
+/* 覆盖 syzoj 模板 .padding 的白玻璃，保证满版暖米场景背景不被模板白底挡住 */
+.padding{background:transparent!important;box-shadow:none!important;border-radius:0!important;overflow:visible!important;padding:0!important;color:inherit!important;transition:none!important}
+.padding::before,.padding::after{display:none!important}
+:root{
+  --bs-red:#E85D4A;--bs-red-d:#C4432F;--bs-cream:#FFF8F0;--bs-paper:#FBF0DC;
+  --bs-wood:#B5835A;--bs-wood-d:#8C5B35;--bs-ink:#5C4A2F;
+  --bs-purple:#9575CD;--bs-purple-d:#7E57C2;
+  --bs-gold:#E8B84B;--bs-gold-d:#C9922E;--bs-green:#58B36B;--bs-green-d:#3E9C56;
+  --bs-line:#E7D6B4;--bs-glass:rgba(255,255,255,.78);
+  --bs-font:'ZCOOL KuaiLe',"PingFang SC","Microsoft YaHei",sans-serif;
+}
+html,body{overflow-x:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--bs-ink);background:#FDF6E9}
+button,input{font:inherit;-webkit-tap-highlight-color:transparent}
+
+/* 背景装饰层：暖米点纹 + 浮动光斑 */
+.bs-bg-decor{position:fixed;inset:0;z-index:-1;overflow:hidden;
+  background:
+    radial-gradient(circle at 1px 1px,rgba(232,93,74,.08) 1px,transparent 0) 0 0/22px 22px,
+    linear-gradient(150deg,#FDF3DD 0%,#FBF0DC 52%,#F6E6C6 100%)}
+.bs-bg-decor::before,.bs-bg-decor::after{content:"";position:absolute;border-radius:50%;filter:blur(70px);opacity:.5;animation:bs-float-blob 8s ease-in-out infinite}
+.bs-bg-decor::before{width:300px;height:300px;left:-60px;top:-40px;background:rgba(232,184,75,.45)}
+.bs-bg-decor::after{width:340px;height:340px;right:-80px;top:28%;background:rgba(232,93,74,.28);animation-delay:-3.5s}
+@keyframes bs-float-blob{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(18px,-22px) scale(1.06)}}
+
+.bs-wrap{position:relative;z-index:1;width:100%;min-height:100vh;min-height:100dvh;display:flex;align-items:flex-start;justify-content:center;
+  padding:max(.55rem,env(safe-area-inset-top)) max(.55rem,env(safe-area-inset-right)) max(.7rem,env(safe-area-inset-bottom)) max(.55rem,env(safe-area-inset-left))}
+/* 玻璃拟态主卡（UI chrome 保持光洁，手绘只给玩法元素） */
+.bs-card{width:min(100%,860px);display:flex;flex-direction:column;align-items:center;gap:clamp(.35rem,1.2vw,.7rem);
+  background:rgba(255,255,255,.62);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  border:1px solid rgba(255,255,255,.72);border-radius:clamp(18px,3vw,28px);
+  padding:clamp(.85rem,2.4vw,1.35rem) clamp(.75rem,2.6vw,1.5rem) clamp(.9rem,2.6vw,1.4rem);
+  box-shadow:0 22px 55px rgba(140,91,53,.20),0 0 0 1px rgba(232,184,75,.12);
+  text-align:center;position:relative;overflow:hidden;max-height:100dvh;overflow-y:auto}
+/* 顶部彩虹条 */
+.bs-card::before{content:"";position:absolute;top:0;left:0;right:0;height:6px;z-index:3;
+  background:linear-gradient(90deg,var(--bs-red),var(--bs-gold),var(--bs-green),var(--bs-purple),var(--bs-red));background-size:300% 100%;animation:bs-grad-shift 6s linear infinite}
+@keyframes bs-grad-shift{to{background-position:300% 0}}
+
+/* 标题：渐变文字（两个 !important 都要加，防 MDC 全局样式压黑） */
+.bs-title{display:flex;align-items:center;justify-content:center;gap:.55rem;font-family:var(--bs-font);font-size:clamp(1.35rem,5vw,2.05rem);line-height:1.2;letter-spacing:.05em;font-weight:800}
+.bs-title-text{background:linear-gradient(135deg,var(--bs-red) 0%,var(--bs-gold) 48%,var(--bs-purple) 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent!important;color:transparent!important;
+  filter:drop-shadow(0 2px 8px rgba(232,93,74,.22))}
+.bs-title-text::after{content:"";display:block;width:58px;height:4px;margin:7px auto 0;border-radius:2px;background:linear-gradient(90deg,var(--bs-red),var(--bs-gold))}
+/* 标题手绘小天平图标；emoji 仅作无 rough.js 降级（盒尺寸用 clamp，勿用 em） */
+.bs-title-icon{position:relative;width:clamp(38px,8vw,50px);height:clamp(38px,8vw,50px);flex:0 0 auto;font-size:clamp(1.35rem,3.8vw,1.85rem);line-height:1;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 8px rgba(140,91,53,.3))}
+.bs-title-icon svg.gs-draw{position:absolute;inset:0;overflow:visible}
+.gs-sketch .bs-title-icon{font-size:0}
+.bs-sub{color:#A98C5F;font-size:clamp(.72rem,2.4vw,.88rem);line-height:1.55;margin:.15rem 0 .15rem}
+.bs-sub b{color:var(--bs-red)}
+
+/* 统计栏：grid + 顶部彩色边 + emoji + 渐变数字 */
+.bs-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(5px,1.4vw,9px);width:100%;flex-shrink:0}
+.bs-st{min-width:0;padding:clamp(.42rem,1.4vh,.62rem) .25rem .42rem;text-align:center;
+  background:linear-gradient(160deg,#ffffff,rgba(251,240,220,.85));border:1px solid var(--bs-line);border-top:3px solid var(--bs-wood);border-radius:clamp(11px,2vw,15px);
+  box-shadow:0 2px 10px rgba(140,91,53,.08);transition:transform .25s ease,box-shadow .25s ease}
+.bs-st:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(140,91,53,.14)}
+.bs-st:nth-child(1){border-top-color:var(--bs-red)}
+.bs-st:nth-child(2){border-top-color:var(--bs-gold)}
+.bs-st:nth-child(3){border-top-color:var(--bs-green)}
+.bs-st:nth-child(4){border-top-color:var(--bs-purple)}
+.bs-st-ico{display:block;font-size:clamp(.92rem,2.7vw,1.12rem);line-height:1;margin-bottom:.12rem;filter:drop-shadow(0 1px 2px rgba(140,91,53,.25))}
+.bs-st-lab{display:block;overflow:hidden;color:#A98C5F;font-size:.6rem;letter-spacing:.06em;white-space:nowrap;text-overflow:ellipsis}
+.bs-st-val{display:block;margin-top:.12rem;font-family:var(--bs-font);font-size:clamp(.82rem,2.3vw,1.02rem);font-weight:800;white-space:nowrap;line-height:1.15;letter-spacing:.03em}
+.bs-st:nth-child(1) .bs-st-val{background:linear-gradient(135deg,var(--bs-red),var(--bs-red-d));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent!important;color:transparent!important}
+.bs-st:nth-child(2) .bs-st-val{background:linear-gradient(135deg,#E0A93E,var(--bs-gold-d));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent!important;color:transparent!important}
+.bs-st:nth-child(3) .bs-st-val{background:linear-gradient(135deg,#6BC47E,var(--bs-green-d));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent!important;color:transparent!important}
+.bs-st:nth-child(4) .bs-st-val{background:linear-gradient(135deg,var(--bs-purple),var(--bs-purple-d));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent!important;color:transparent!important}
+.bs-st.st-bounce{animation:bs-pop .42s cubic-bezier(.34,1.56,.64,1)}
+@keyframes bs-pop{0%,100%{transform:scale(1)}50%{transform:scale(1.16)}}
+
+/* 红白条纹遮阳篷（水果摊华盖，纯装饰） */
+.bs-awning{position:relative;width:min(100%,470px);height:clamp(46px,9vw,62px);overflow:hidden;border-radius:13px 13px 0 0;
+  background:repeating-linear-gradient(90deg,var(--bs-red) 0 30px,var(--bs-cream) 30px 60px);box-shadow:0 6px 14px rgba(140,91,53,.18)}
+.bs-awning::before{content:"";position:absolute;top:0;left:0;right:0;height:7px;background:rgba(0,0,0,.12)}
+.bs-awning::after{content:"";position:absolute;left:0;right:0;bottom:-12px;height:12px;
+  background:radial-gradient(circle at 50% 0,var(--bs-cream) 8px,var(--bs-red) 9px) 0 0/30px 12px repeat-x;filter:drop-shadow(0 2px 2px rgba(0,0,0,.14))}
+.bs-awning-tag{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);padding:.16rem .85rem;border-radius:999px;
+  background:rgba(92,74,47,.55);color:#FFF8F0;font-family:var(--bs-font);font-size:clamp(.66rem,2.1vw,.82rem);letter-spacing:.12em;white-space:nowrap;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);box-shadow:0 2px 8px rgba(0,0,0,.18)}
+
+/* 木质天平（玩法核心：sketch 模式下由 rough.js 手绘接管） */
+.bs-stage{position:relative;width:min(100%,460px);touch-action:none;user-select:none;-webkit-user-select:none;transform:scale(var(--bs-s,1));transform-origin:top center}
+.bs-scale{position:relative;height:clamp(250px,52vw,330px);margin:0 auto}
+.bs-base{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:clamp(150px,44vw,210px);height:clamp(20px,5vw,30px);background:linear-gradient(#C08A58,#8C5B35);border-radius:10px;box-shadow:0 4px 8px rgba(90,60,30,.28)}
+.bs-pole{position:absolute;top:34px;left:50%;transform:translateX(-50%);width:clamp(26px,7vw,34px);height:clamp(120px,26vw,170px);background:linear-gradient(90deg,#A86E3C,#D09A63 40%,#A86E3C);border-radius:8px;box-shadow:inset -3px 0 3px rgba(0,0,0,.08)}
+.bs-pole::after{content:"";position:absolute;top:-9px;left:50%;transform:translateX(-50%);width:16px;height:18px;background:#6B4526;border-radius:50%;box-shadow:0 3px 5px rgba(0,0,0,.25)}
+/* 摆动总成：围绕支点旋转（anime 弹簧回振；降级走 CSS transition） */
+.bs-rocker{position:absolute;top:16px;left:50%;margin-left:calc(210px * -1);width:420px;height:clamp(200px,44vw,268px);transform:rotate(0deg);transform-origin:50% 0;transition:transform .5s cubic-bezier(.34,1.3,.64,1)}
+.bs-beam{position:absolute;top:6px;left:26px;right:26px;height:clamp(14px,3.4vw,18px);background:linear-gradient(#D09A63,#9A6433);border-radius:10px;box-shadow:0 3px 6px rgba(90,60,30,.22)}
+.bs-beam::before{content:"";position:absolute;top:50%;left:-9px;right:-9px;height:3px;background:rgba(255,255,255,.35);transform:translateY(-50%)}
+.bs-ropeL,.bs-ropeR{position:absolute;top:22px;width:4px;height:clamp(62px,15vw,92px);background:#6B4526;box-shadow:inset -1px 0 1px rgba(0,0,0,.25);transform-origin:top}
+.bs-ropeL{left:34px}.bs-ropeR{right:34px}
+.bs-pan{position:absolute;top:clamp(78px,17vw,110px);width:clamp(128px,33vw,158px);height:clamp(96px,22vw,120px)}
+.bs-panL{left:14px}.bs-panR{right:14px}
+.bs-pan-body{position:absolute;left:2px;right:2px;bottom:0;height:clamp(26px,6vw,36px);background:radial-gradient(ellipse at 50% 0,#D09A63,#8C5B35 70%);border-radius:0 0 50% 50%/0 0 100% 100%;box-shadow:inset 0 6px 8px rgba(0,0,0,.14),0 4px 7px rgba(90,60,30,.22)}
+.bs-pan-rope{position:absolute;top:0;left:50%;transform:translateX(-50%);width:3px;height:clamp(30px,7vw,42px);background:#6B4526;box-shadow:inset -1px 0 1px rgba(0,0,0,.2)}
+.bs-load{position:absolute;top:2px;left:6%;width:88%;height:clamp(70px,16vw,86px);display:flex;flex-wrap:wrap;justify-content:center;align-content:flex-end;gap:1px}
+.bs-fruit,.bs-box{width:clamp(40px,10vw,54px);height:clamp(40px,10vw,54px);display:flex;align-items:center;justify-content:center;transition:transform .18s;flex:none;position:relative}
+.bs-box{width:clamp(44px,11vw,58px)}
+.bs-fruit>svg,.bs-box>svg{width:100%;height:100%;display:block;overflow:visible}
+.bs-fruit.drag{cursor:grab;touch-action:none}
+.bs-fruit.dragging{position:fixed;z-index:50;transform:scale(1.12);cursor:grabbing;pointer-events:none;filter:drop-shadow(0 10px 12px rgba(70,45,20,.35))}
+.bs-fruit.drag:active{transform:scale(1.1)}
+.bs-happy .bs-fruit,.bs-happy .bs-box{animation:bs-happy .55s ease infinite}
+.bs-happy .bs-fruit:nth-child(odd){animation-delay:.15s}
+@keyframes bs-happy{0%,100%{transform:translateY(0)}45%{transform:translateY(-7px) rotate(3deg)}55%{transform:translateY(-5px) rotate(-3deg)}}
+/* 配平波纹 */
+.bs-ripple{position:absolute;top:5px;left:50%;width:0;height:0;pointer-events:none}
+.bs-ring{position:absolute;left:-26px;top:-26px;width:52px;height:52px;border:4px solid var(--bs-gold);border-radius:50%;opacity:0}
+.bs-wave .bs-ring{animation:bs-ring .9s ease-out infinite}
+.bs-wave .bs-ring:nth-child(2){animation-delay:.28s}
+.bs-wave .bs-ring:nth-child(3){animation-delay:.56s}
+@keyframes bs-ring{0%{transform:scale(.3);opacity:.9}100%{transform:scale(3.4);opacity:0}}
+
+/* ===== sketch 模式（rough.js 手绘玩法元素，隐藏 CSS 平面版）===== */
+.gs-sketch .bs-base,.gs-sketch .bs-pole,.gs-sketch .bs-beam,
+.gs-sketch .bs-ropeL,.gs-sketch .bs-ropeR,.gs-sketch .bs-pan-body,.gs-sketch .bs-pan-rope{
+  background:none!important;box-shadow:none!important;border-radius:0!important}
+.gs-sketch .bs-pole::after{display:none}
+.gs-sketch .bs-beam::before{display:none}
+.bs-scale svg.gs-draw{position:absolute;inset:0;pointer-events:none;overflow:visible}
+/* rough fill 路径已打 gs-fill：状态变色只覆盖 fill，不碰 stroke */
+.gs-sketch .bs-box .gs-fill{fill:var(--bs-purple)}
+.gs-sketch .bs-pan-body svg.gs-draw{overflow:visible}
+
+/* 摊位水果托盘（手绘边框） */
+.bs-stall{position:relative;width:min(100%,470px);min-height:clamp(64px,15vw,88px);
+  background:linear-gradient(#F3DFB6,#ECD2A6);border:3px solid #D8B878;border-radius:14px;
+  padding:clamp(.35rem,.8vw,.55rem);box-shadow:inset 0 4px 10px rgba(160,120,60,.18)}
+.gs-sketch .bs-stall{border-color:transparent;background:rgba(243,223,182,.55);box-shadow:none}
+.bs-stall .gs-frame{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:visible}
+.bs-stall-load{position:relative;z-index:1;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:2px;width:100%;min-height:48px}
+.bs-stall-label{position:absolute;z-index:2;top:-11px;left:12px;background:var(--bs-red);color:#fff;font-size:.62rem;padding:.14rem .55rem;border-radius:999px;font-family:var(--bs-font);letter-spacing:.06em;box-shadow:0 2px 4px rgba(0,0,0,.15)}
+.bs-stall-empty{width:100%;padding:.45rem .6rem;color:#B89B74;font-size:clamp(.68rem,2.2vw,.82rem);text-align:center;line-height:1.5;font-weight:700}
+/* 水果重量图例：孩子称水果前先知道“几斤几两” */
+.bs-legend{width:100%;display:flex;align-items:center;justify-content:center;gap:clamp(.45rem,2vw,.9rem);flex-wrap:wrap;
+  font-size:clamp(.68rem,2.2vw,.82rem);color:#A98C5F;font-weight:700;line-height:1.2;
+  background:rgba(255,255,255,.55);border:1px dashed var(--bs-line);border-radius:999px;padding:.22rem .55rem}
+.bs-legend i{font-style:normal;opacity:.75;margin-right:.12em}
+.bs-legend b{color:var(--bs-red);font-family:var(--bs-font);font-size:1.05em;margin-left:.12em}
+
+/* 反馈 + 提示（弹性弹入 + 彩色背景） */
+.bs-feedback{width:100%;min-height:2.15em;display:flex;align-items:center;justify-content:center;padding:.4rem .85rem;border-radius:12px;
+  font-size:clamp(.76rem,2.4vw,.92rem);font-weight:700;color:var(--bs-wood-d);
+  background:rgba(255,255,255,.62);border:1px solid var(--bs-line);transition:background .25s ease,color .25s ease,box-shadow .25s ease}
+.bs-feedback.good{color:#fff;background:linear-gradient(135deg,#6BC47E,var(--bs-green-d));border-color:transparent;box-shadow:0 4px 16px rgba(88,179,107,.35)}
+.bs-feedback.err{color:#fff;background:linear-gradient(135deg,#F0705C,var(--bs-red-d));border-color:transparent;box-shadow:0 4px 16px rgba(232,93,74,.32)}
+.bs-feedback.warn{color:#fff;background:linear-gradient(135deg,#F0B84E,var(--bs-gold-d));border-color:transparent;box-shadow:0 4px 16px rgba(232,184,75,.35)}
+.bs-hint{width:100%;text-align:center;font-size:clamp(.72rem,2.2vw,.9rem);color:var(--bs-ink);background:rgba(255,255,255,.72);border:1px solid var(--bs-line);border-radius:11px;padding:.36rem .8rem;line-height:1.55}
+.bs-hint b{color:var(--bs-red)}
+
+/* 按钮：药丸 + 主实心渐变 + 次级描边白底 + 波纹 */
+.bs-btn{position:relative;overflow:hidden;min-height:44px;padding:.58rem 1.15rem;border-radius:999px;border:1px solid transparent;cursor:pointer;
+  font-size:clamp(.8rem,2.5vw,.94rem);font-weight:800;font-family:var(--bs-font);letter-spacing:.04em;color:#fff;
+  background:linear-gradient(135deg,#D09A63,var(--bs-wood-d));box-shadow:0 5px 14px rgba(140,91,53,.28);
+  transition:transform .18s,box-shadow .18s,opacity .18s}
+.bs-btn:hover{transform:translateY(-2px);box-shadow:0 9px 20px rgba(140,91,53,.32)}
+.bs-btn:active{transform:translateY(0) scale(.97)}
+.bs-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.bs-btn:focus-visible{outline:3px solid rgba(232,184,75,.55);outline-offset:2px}
+.bs-btn.gold{background:linear-gradient(135deg,#F2C765,#E8A933);color:#5C3A00;box-shadow:0 7px 18px rgba(232,184,75,.4)}
+.bs-btn.green{background:linear-gradient(135deg,#6BC47E,var(--bs-green-d));box-shadow:0 7px 18px rgba(88,179,107,.35)}
+.bs-btn.purple{background:linear-gradient(135deg,#A98BD8,var(--bs-purple-d));box-shadow:0 7px 18px rgba(149,117,205,.35)}
+.bs-btn.ghost{background:#fff;color:var(--bs-wood-d);border:2px solid var(--bs-line);box-shadow:0 4px 12px rgba(140,91,53,.1)}
+.bs-ripple-dot{position:absolute;border-radius:50%;background:rgba(255,255,255,.5);transform:scale(0);animation:bs-ripple-anim .6s ease-out forwards;pointer-events:none}
+@keyframes bs-ripple-anim{to{transform:scale(4);opacity:0}}
+.bs-ctrl{display:flex;gap:.55rem;justify-content:center;flex-wrap:wrap;width:100%}
+.bs-ctrl .bs-hid,.bs-hid{display:none!important}
+.bs-ans{display:flex;gap:.55rem;justify-content:center;width:100%;flex-wrap:wrap}
+.bs-ans .bs-btn{min-width:100px}
+.bs-ans .bs-correct{animation:bs-pulse .55s ease}
+@keyframes bs-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.bs-stage.bs-shake{animation:bs-shake .42s cubic-bezier(.36,.07,.19,.97)}
+@keyframes bs-shake{10%,90%{transform:scale(var(--bs-s,1)) translateX(-2px)}20%,80%{transform:scale(var(--bs-s,1)) translateX(4px)}30%,50%,70%{transform:scale(var(--bs-s,1)) translateX(-6px)}40%,60%{transform:scale(var(--bs-s,1)) translateX(6px)}}
+
+/* 神秘盒填数字面板 */
+.bs-xpanel{position:fixed;z-index:90;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(70,45,20,.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:1rem}
+.bs-xpanel.bs-hid{display:none}
+.bs-xcard{position:relative;width:min(92%,360px);background:linear-gradient(165deg,#FFFDF8,var(--bs-paper));border:1px solid rgba(255,255,255,.75);border-radius:20px;padding:1.05rem 1.15rem 1rem;text-align:center;box-shadow:0 22px 55px rgba(70,45,20,.32);overflow:hidden}
+.bs-xcard::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--bs-purple),var(--bs-gold),var(--bs-red))}
+.bs-xcard .gs-frame{position:absolute;inset:0;pointer-events:none;overflow:visible}
+.bs-xcard h3{font-family:var(--bs-font);color:var(--bs-purple-d);font-size:clamp(1.02rem,3.4vw,1.22rem);margin-bottom:.35rem;position:relative;z-index:1;
+  background:linear-gradient(135deg,var(--bs-purple),var(--bs-purple-d));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent!important;color:transparent!important}
+/* 悬浮礼物盒主视觉：占住弹窗视觉重心，不留空旷感 */
+.bs-xhero{position:relative;z-index:1;width:clamp(58px,15vw,72px);height:clamp(58px,15vw,72px);margin:0 auto .25rem;
+  font-size:clamp(2.35rem,8vw,3.05rem);line-height:1;display:flex;align-items:center;justify-content:center;
+  filter:drop-shadow(0 8px 16px rgba(149,117,205,.42));animation:bs-xfloat 2.6s ease-in-out infinite}
+@keyframes bs-xfloat{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(4deg)}}
+.bs-xsub{position:relative;z-index:1;font-size:clamp(.76rem,2.5vw,.9rem);color:#A98C5F;font-weight:700;line-height:1.5;margin-bottom:.55rem}
+.bs-equation{position:relative;z-index:1;font-family:var(--bs-font);background:rgba(149,117,205,.14);border:1px solid rgba(149,117,205,.28);border-radius:12px;padding:.52rem .48rem;margin-bottom:.55rem;display:flex;align-items:center;justify-content:center;gap:.4rem;font-size:1.12rem}
+.bs-eqbox{display:inline-flex;width:38px;height:38px;background:linear-gradient(135deg,#A98BD8,var(--bs-purple-d));color:#fff;border-radius:10px;align-items:center;justify-content:center;font-weight:800;box-shadow:0 3px 8px rgba(149,117,205,.35)}
+.bs-xcard .bs-xrow{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:.65rem;font-family:var(--bs-font);font-size:1.35rem;color:var(--bs-ink);margin-bottom:.55rem}
+.bs-xcard input{width:min(118px,34vw);height:52px;text-align:center;font-size:1.55rem;font-weight:800;color:var(--bs-ink);border:2px solid #CFA9F1;border-radius:12px;background:#fff;transition:box-shadow .2s,border-color .2s}
+.bs-xcard input:focus{outline:none;border-color:var(--bs-purple);box-shadow:0 0 0 4px rgba(149,117,205,.25)}
+.bs-xcard input.bs-flash{animation:bs-inflash .8s ease}
+@keyframes bs-inflash{0%,100%{box-shadow:0 0 0 0 rgba(232,93,74,0)}25%,60%{box-shadow:0 0 0 5px rgba(232,93,74,.35);border-color:var(--bs-red)}}
+.bs-xok{position:relative;z-index:1;width:100%;margin-bottom:.55rem}
+/* 重量速查小抄：既填实弹窗，也是解题脚手架 */
+.bs-xhint{position:relative;z-index:1;width:100%;display:flex;align-items:center;justify-content:center;gap:clamp(.5rem,2.5vw,.85rem);flex-wrap:wrap;
+  background:rgba(149,117,205,.1);border:1px dashed rgba(149,117,205,.35);border-radius:12px;padding:.42rem .55rem;
+  font-size:clamp(.72rem,2.3vw,.84rem);color:#7E57C2;font-weight:700;line-height:1.3}
+.bs-xhint b{color:var(--bs-red-d);margin-left:.12em}
+.bs-xerr{position:relative;z-index:1;min-height:1.25em;color:var(--bs-red);font-size:.82rem;margin-top:.45rem;font-weight:700}
+
+/* 结算弹窗 */
+.bs-modal{position:fixed;z-index:100;inset:0;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(92,74,47,.58);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.bs-modal.bs-hid{display:none}
+.bs-victory{position:relative;width:min(94%,380px);background:linear-gradient(165deg,#FFFDF8,var(--bs-paper));border:1px solid rgba(255,255,255,.8);border-radius:24px;padding:1.55rem 1.25rem 1.35rem;text-align:center;box-shadow:0 28px 70px rgba(70,45,20,.35),0 0 0 1px rgba(232,184,75,.2);overflow:hidden}
+.bs-victory.bs-pop-in{animation:bs-pop-in .42s cubic-bezier(.34,1.56,.64,1)}
+@keyframes bs-pop-in{from{opacity:0;transform:translateY(18px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}
+.bs-victory::before{content:"";position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg,var(--bs-red),var(--bs-gold),var(--bs-green),var(--bs-purple),var(--bs-red));background-size:300% 100%;animation:bs-grad-shift 6s linear infinite}
+/* 弹窗顶部手绘奖章（emoji 降级） */
+.bs-vmedal{position:relative;width:clamp(52px,13vw,68px);height:clamp(52px,13vw,68px);margin:.25rem auto .35rem;font-size:clamp(2rem,7vw,2.6rem);line-height:1;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 4px 12px rgba(232,184,75,.45))}
+.bs-vmedal svg.gs-draw{position:absolute;inset:0;overflow:visible}
+.gs-sketch .bs-vmedal{font-size:0}
+.bs-victory h2{font-family:var(--bs-font);font-size:clamp(1.32rem,5vw,1.75rem);margin:.35rem 0 .35rem;font-weight:800;
+  background:linear-gradient(135deg,var(--bs-red),var(--bs-gold) 52%,var(--bs-purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent!important;color:transparent!important}
+.bs-victory .bs-vx{font-family:var(--bs-font);color:var(--bs-purple-d);font-size:1.05rem;margin-bottom:.75rem;min-height:1.3em}
+.bs-vstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;margin-bottom:1rem}
+.bs-vstats .bs-st{background:linear-gradient(160deg,#fff,rgba(251,240,220,.9))}
+.bs-vbtns{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap}
+.bs-vbtns .bs-btn{min-width:132px}
+
+@media(max-width:520px){
+  .bs-card{gap:.32rem;padding:clamp(.7rem,2vw,1rem) clamp(.55rem,2.2vw,.9rem)}
+  .bs-title{gap:.4rem}
+}
+@media(max-width:420px){
+  .bs-stats{gap:.3rem}
+  .bs-st{padding:.36rem .12rem .34rem}
+  .bs-st-lab{font-size:.54rem}
+  .bs-st-val{font-size:.78rem}
+  .bs-st-ico{font-size:.82rem}
+  .bs-ans .bs-btn{min-width:88px;padding:.52rem .75rem}
+  .bs-btn{padding:.52rem .85rem}
+}
+@media(max-width:360px){
+  .bs-awning-tag{letter-spacing:.04em}
+}
+/* 桌面端一屏：统一 game-layout 左右分栏——左栏 UI chrome，右栏玩法核心（篷+天平+货架） */
+@media(min-width:769px){
+  .bs-card{display:grid;grid-template-columns:minmax(240px,290px) minmax(0,1fr);
+    grid-template-areas:
+      "title  awning"
+      "sub    stage"
+      "stats  stage"
+      "feed   stage"
+      "hint   stage"
+      "ans    stall"
+      "ctrl   stall"
+      "legend stall";
+    column-gap:clamp(1rem,2.2vw,1.75rem);row-gap:clamp(.35rem,1.1vh,.65rem);
+    align-items:start;justify-items:stretch}
+  .bs-title{grid-area:title}
+  .bs-sub{grid-area:sub}
+  .bs-stats{grid-area:stats;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bs-awning{grid-area:awning;justify-self:center;width:min(100%,470px)}
+  .bs-stage{grid-area:stage;justify-self:center;width:min(100%,460px)}
+  .bs-feedback{grid-area:feed}
+  .bs-hint{grid-area:hint}
+  .bs-ans{grid-area:ans}
+  .bs-ans .bs-btn{min-width:0;flex:1 1 0;padding:.52rem .45rem}
+  .bs-ctrl{grid-area:ctrl}
+  .bs-legend{grid-area:legend}
+  .bs-stall{grid-area:stall;justify-self:center;width:min(100%,470px)}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+
+<div class="bs-bg-decor"></div>
+
+<div class="bs-wrap">
+  <div class="bs-card" id="bsCard">
+    <!-- 标题 -->
+    <div class="bs-title">
+      <span class="bs-title-icon" id="bsTitleIcon" aria-hidden="true">⚖️</span>
+      <span class="bs-title-text">天平方程</span>
+    </div>
+    <div class="bs-sub"><b>水果摊的秘密</b> · 天平下藏着等式，一起把它称出来吧</div>
+
+    <!-- 统计栏 -->
+    <div class="bs-stats">
+      <div class="bs-st"><span class="bs-st-ico">🎮</span><b class="bs-st-lab">关卡</b><span class="bs-st-val" id="bsLev">1 / 9</span></div>
+      <div class="bs-st"><span class="bs-st-ico">🔁</span><b class="bs-st-lab">尝试</b><span class="bs-st-val" id="bsTry">0</span></div>
+      <div class="bs-st"><span class="bs-st-ico">⏱️</span><b class="bs-st-lab">用时</b><span class="bs-st-val" id="bsTime">00:00</span></div>
+      <div class="bs-st"><span class="bs-st-ico">🏆</span><b class="bs-st-lab">本关最佳</b><span class="bs-st-val" id="bsBest">--</span></div>
+    </div>
+
+    <!-- 遮阳篷（水果摊华盖） -->
+    <div class="bs-awning"><div class="bs-awning-tag">🍎 水果摊 · 称一称 🍊</div></div>
+    <!-- 天平 -->
+    <div class="bs-stage" id="bsStage">
+      <div class="bs-scale" id="bsScale">
+        <div class="bs-base"></div>
+        <div class="bs-pole"></div>
+        <div class="bs-rocker" id="bsRocker">
+          <div class="bs-beam"></div>
+          <div class="bs-ropeL"></div><div class="bs-ropeR"></div>
+          <div class="bs-pan bs-panL" data-id="L" id="panL">
+            <div class="bs-pan-rope"></div><div class="bs-load"></div><div class="bs-pan-body"></div>
+          </div>
+          <div class="bs-pan bs-panR" data-id="R" id="panR">
+            <div class="bs-pan-rope"></div><div class="bs-load"></div><div class="bs-pan-body"></div>
+          </div>
+          <div class="bs-ripple" id="bsRipple">
+            <div class="bs-ring"></div><div class="bs-ring"></div><div class="bs-ring"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 反馈 / 提示 -->
+    <div class="bs-feedback" id="bsFeed"></div>
+    <div class="bs-hint" id="bsHint"></div>
+    <!-- 操作按钮 -->
+    <div class="bs-ans bs-hid" id="bsAnsA"></div>
+    <div class="bs-ctrl" id="bsCtrl"></div>
+    <!-- 重量图例 -->
+    <div class="bs-legend"><i>⚖️ 每个水果的重量</i><span>🍎 <b>1</b></span><span>🍊 <b>2</b></span><span>🍋 <b>3</b></span><span>🍉 <b>5</b></span></div>
+    <!-- 摊位 -->
+    <div class="bs-stall" data-id="stall">
+      <div class="bs-stall-label" id="bsStallLab">🧺 水果货架 · 拖上去配平</div>
+      <div class="bs-stall-load" data-id="stall" id="bsStallLoad"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /padding -->
+
+<!-- 神秘盒填数 -->
+<div class="bs-xpanel bs-hid" id="bsXpanel">
+  <div class="bs-xcard" id="bsXcard">
+    <h3>神秘盒里藏着 x</h3>
+    <div class="bs-xhero" aria-hidden="true">🎁</div>
+    <div class="bs-xsub">天平已经平衡啦，算出 x 就能打开它！</div>
+    <div class="bs-equation" id="bsEq"></div>
+    <div class="bs-xrow">x = <input id="bsXin" inputmode="numeric" type="number" min="1" max="9"></div>
+    <button class="bs-btn gold bs-xok" id="bsXok">🔓 打开神秘盒</button>
+    <div class="bs-xhint"><span>🍎 <b>1</b></span><span>🍊 <b>2</b></span><span>🍋 <b>3</b></span><span>🍉 <b>5</b></span></div>
+    <div class="bs-xerr" id="bsXerr"></div>
+  </div>
+</div>
+
+<!-- 结算 -->
+<div class="bs-modal bs-hid" id="bsModal">
+  <div class="bs-victory" id="bsVictory">
+    <div class="bs-vmedal" id="bsVMedal">🎉</div>
+    <h2 id="bsVt">配平成功！</h2>
+    <div class="bs-vx" id="bsVx"></div>
+    <div class="bs-vstats">
+      <div class="bs-st"><span class="bs-st-ico">🎮</span><b class="bs-st-lab">关卡</b><span class="bs-st-val" id="bsVsLev">第 1 关</span></div>
+      <div class="bs-st"><span class="bs-st-ico">🔁</span><b class="bs-st-lab">尝试</b><span class="bs-st-val" id="bsVsTry">0</span></div>
+      <div class="bs-st"><span class="bs-st-ico">⏱️</span><b class="bs-st-lab">用时</b><span class="bs-st-val" id="bsVsTime">00:00</span></div>
+    </div>
+    <div class="bs-vbtns">
+      <button class="bs-btn ghost" id="bsAgain">🔄 重新开始本关</button>
+      <button class="bs-btn gold bs-hid" id="bsNext">下一关 →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ====== 数据 ====== */
+var F={a:{w:1,n:'苹果'},o:{w:2,n:'橘子'},l:{w:3,n:'柠檬'},w:{w:5,n:'西瓜'}};
+var LV=[
+ {g:'A',hint:'眼睛看看天平，哪边<b>压得更低</b>呀？',L:['w'],R:['a'],box:0,ans:'left',stall:['a','o','l','w']},
+ {g:'A',hint:'天平又歪啦，猜猜<b>哪边更重？</b>',L:['a','l'],R:['w','a'],box:0,ans:'right',stall:['o','a','w','l']},
+ {g:'A',hint:'仔细看两边，会不会<b>一样重？</b>',L:['o','o'],R:['l','a'],box:0,ans:'eq',stall:['a','a','o','l']},
+ {g:'B',hint:'🎁神秘盒 x + 1个苹果。把水果<b>拖到右边</b>配平！',L:['a'],R:[],box:2,stall:['o','o','a','a']},
+ {g:'B',hint:'🎁神秘盒 x + 1个橘子。把水果<b>拖到右边</b>配平！',L:['o'],R:[],box:3,stall:['w','w','l','a']},
+ {g:'B',hint:'🎁神秘盒 x + 1个柠檬。把水果<b>拖到右边</b>配平！',L:['l'],R:[],box:1,stall:['a','a','a','o','o','l']},
+ {g:'C',hint:'两边都有1个苹果。<b>两边同时拿走1个苹果</b>，天平仍会平衡！',L:['a'],R:['a','a','a'],box:2,take:{code:'a',n:'1个苹果'},stall:['o','l','w']},
+ {g:'C',hint:'两边都有1个橘子。<b>两边同时拿走1个橘子</b>，看神秘盒会是多少？',L:['o'],R:['o','l'],box:3,take:{code:'o',n:'1个橘子'},stall:['a','l','w']},
+ {g:'C',hint:'左边神秘盒+橘子，右边橘子+柠檬。<b>自己把两边相同的橘子都拿回货架</b>，再配平！',L:['o'],R:['o','l'],box:3,self:true,stall:[]}
+];
+/* ====== DOM ====== */
+function $(id){return document.getElementById(id)}
+var rocker=$('bsRocker'),panL=$('panL'),panR=$('panR'),stallLoad=$('bsStallLoad'),ripple=$('bsRipple');
+
+/* anime.js v4 自托管：缺失时全部效果自动降级到 CSS */
+var A=window.anime||null;
+function reduced(){try{return window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}}
+function canAnimate(){return !!A && !reduced();}
+
+/* ====== SVG 水果（降级平面版；sketch 模式走 drawFruit 手绘） ====== */
+function svgFruit(c){
+ var E='#5c2626',B='#f6a3a3',sm='<path d="M-3 3 q3 3 6 0" stroke="#5c2626" fill="none" stroke-width="1.4" stroke-linecap="round"/>';
+ function face(ey){
+   return '<circle cx="'+(22-ey)+'" cy="27" r="1.7" fill="'+E+'"/><circle cx="'+(22+ey)+'" cy="27" r="1.7" fill="'+E+'"/>'+
+          '<ellipse cx="'+(16-ey)+'" cy="30" rx="2.4" ry="1.5" fill="'+B+'" opacity=".75"/><ellipse cx="'+(28-ey)+'" cy="30" rx="2.4" ry="1.5" fill="'+B+'" opacity=".75"/>'+sm;
+ }
+ var b='';
+ if(c==='a') b='<circle cx="22" cy="26" r="15" fill="#E85D4A"/><rect x="17" y="13" width="10" height="9" fill="#3C2A18" rx="2"/><ellipse cx="30" cy="12" rx="6" ry="3.4" fill="#6FB25B" transform="rotate(-25 30 12)"/>'+face(3.5);
+ else if(c==='o') b='<circle cx="22" cy="25" r="14" fill="#F59E0B"/><rect x="20.8" y="9" width="2.6" height="6" fill="#3C2A18"/><circle cx="24" cy="11" r="2.4" fill="#6FB25B"/>'+face(3);
+ else if(c==='l') b='<ellipse cx="22" cy="25" rx="14" ry="12" fill="#FACC15"/><circle cx="33" cy="17" r="2.6" fill="#6FB25B"/><ellipse cx="16" cy="11" rx="7" ry="2.6" fill="#6FB25B" transform="rotate(-38 16 11)"/>'+face(4);
+ else if(c==='w') b='<path d="M6 30 L38 30 Q38 10 26 19 Q32 16 28 12 L10 12 Z" fill="#3F8248"/><path d="M10 30 L12 14 h14 v6 q-8 2-8 10 h-8 z" fill="#E85D4A"/><rect x="14" y="17" width="4" height="3" fill="#5C3A10"/>'+face(5);
+ return '<svg viewBox="0 0 44 44">'+b+'</svg>';
+}
+function boxEl(v){
+ var n=(v!==null&&v!==undefined)?v:'?';
+ return '<svg viewBox="0 0 44 44"><rect x="6" y="16" width="32" height="24" rx="4" fill="#9575CD"/><rect x="6" y="16" width="32" height="8" rx="4" fill="#7E57C2"/><text x="22" y="36" text-anchor="middle" font-size="17" font-weight="bold" fill="#fff">'+n+'</text></svg>';
+}
+
+/* ====== 手绘工具（rough.js） ====== */
+function GS(){return window.GameSketch||null}
+function sketchOn(){var g=GS();return !!(g&&g.available)}
+function NS(){return 'http://www.w3.org/2000/svg'}
+function svgEl(n,attrs){var e=document.createElementNS(NS(),n);for(var k in attrs)e.setAttribute(k,attrs[k]);return e}
+function sketchInto(el,fn,seedKey){
+  var g=GS();if(!g||!el)return;
+  var old=el.querySelector(':scope > .gs-draw');if(old&&old.parentNode)old.parentNode.removeChild(old);
+  /* gs-frame 让画布绝对定位脱离文档流；否则 height:100% 落成默认 150px 把卡片撑出一大块空白 */
+  var svg=g.svgInto(el,'gs-frame');if(!svg)return;
+  fn(svg,el.offsetWidth,el.offsetHeight,g.seedFrom(seedKey||'bs'));
+}
+/* 碗形托盘路径（上沿直、下半椭圆） */
+function bowlD(x,y,w,h){
+  return 'M'+x+','+y+' L'+(x+w)+','+y+' C'+(x+w)+','+(y+h*1.55)+' '+x+','+(y+h*1.55)+' '+x+','+y+' Z';
+}
+/* 脸部（保持清晰，不手绘） */
+function fruitFace(svg,s,ey){
+  var E='#5c2626',B='#f6a3a3';
+  svg.appendChild(svgEl('circle',{cx:(22-ey)*s,cy:27*s,r:1.7*s,fill:E}));
+  svg.appendChild(svgEl('circle',{cx:(22+ey)*s,cy:27*s,r:1.7*s,fill:E}));
+  svg.appendChild(svgEl('ellipse',{cx:(16-ey)*s,cy:30*s,rx:2.4*s,ry:1.5*s,fill:B,opacity:'.75'}));
+  svg.appendChild(svgEl('ellipse',{cx:(28-ey)*s,cy:30*s,rx:2.4*s,ry:1.5*s,fill:B,opacity:'.75'}));
+  svg.appendChild(svgEl('path',{d:'M'+(19*s)+','+(33*s)+' q'+(3*s)+','+(3*s)+' '+(6*s)+',0',stroke:E,fill:'none','stroke-width':1.4*s,'stroke-linecap':'round'}));
+}
+function drawFruit(el,code){
+  var g=GS();
+  if(!sketchOn()){el.innerHTML=svgFruit(code);return;}
+  var svg=g.svgInto(el);
+  if(!svg){el.innerHTML=svgFruit(code);return;}
+  var w=el.offsetWidth||48,s=w/44,seed=g.seedFrom('fruit-'+code);
+  var st={fillStyle:'solid',strokeWidth:1.3,roughness:1.25,bowing:.7};
+  function O(extra){var o={};for(var k in st)o[k]=st[k];for(var k2 in extra)o[k2]=extra[k2];return o;}
+  if(code==='a'){
+    g.circle(svg,22*s,26*s,30*s,O({fill:'#E85D4A',stroke:'#B83220',seed:seed}));
+    g.rect(svg,17*s,13*s,10*s,9*s,O({fill:'#3C2A18',stroke:'#2A1A0E',seed:seed+1}));
+    var leaf=g.ellipse(svg,30*s,12*s,12*s,6.8*s,O({fill:'#6FB25B',stroke:'#4E8A3E',seed:seed+2}));
+    if(leaf)leaf.setAttribute('transform','rotate(-25 '+(30*s)+' '+(12*s)+')');
+    fruitFace(svg,s,3.5);
+  }else if(code==='o'){
+    g.circle(svg,22*s,25*s,28*s,O({fill:'#F59E0B',stroke:'#D97706',seed:seed}));
+    g.rect(svg,20.8*s,9*s,2.6*s,6*s,O({fill:'#3C2A18',stroke:'#2A1A0E',seed:seed+1}));
+    g.circle(svg,24*s,11*s,4.8*s,O({fill:'#6FB25B',stroke:'#4E8A3E',seed:seed+2}));
+    fruitFace(svg,s,3);
+  }else if(code==='l'){
+    g.ellipse(svg,22*s,25*s,28*s,24*s,O({fill:'#FACC15',stroke:'#EAB308',seed:seed}));
+    g.circle(svg,33*s,17*s,5.2*s,O({fill:'#6FB25B',stroke:'#4E8A3E',seed:seed+1}));
+    var lf=g.ellipse(svg,16*s,11*s,14*s,5.2*s,O({fill:'#6FB25B',stroke:'#4E8A3E',seed:seed+2}));
+    if(lf)lf.setAttribute('transform','rotate(-38 '+(16*s)+' '+(11*s)+')');
+    fruitFace(svg,s,4);
+  }else{
+    g.path(svg,'M'+(6*s)+','+(30*s)+' L'+(38*s)+','+(30*s)+' Q'+(38*s)+','+(10*s)+' '+(26*s)+','+(19*s)+' Q'+(32*s)+','+(16*s)+' '+(28*s)+','+(12*s)+' L'+(10*s)+','+(12*s)+' Z',
+      O({fill:'#3F8248',stroke:'#2C5F33',seed:seed}));
+    g.path(svg,'M'+(10*s)+','+(30*s)+' L'+(12*s)+','+(14*s)+' h'+(14*s)+' v'+(6*s)+' q'+(-8*s)+','+(2*s)+' '+(-8*s)+','+(10*s)+' h'+(-8*s)+' z',
+      O({fill:'#E85D4A',stroke:'#B83220',seed:seed+1}));
+    g.rect(svg,14*s,17*s,4*s,3*s,{fill:'#5C3A10',stroke:'#5C3A10',strokeWidth:1,roughness:1,bowing:.4,seed:seed+2});
+    fruitFace(svg,s,5);
+  }
+}
+function drawBox(el,v){
+  var n=(v!==null&&v!==undefined)?v:'?';
+  var g=GS();
+  if(!sketchOn()){el.innerHTML=boxEl(n);return;}
+  var svg=g.svgInto(el);
+  if(!svg){el.innerHTML=boxEl(n);return;}
+  var w=el.offsetWidth||52,s=Math.min(w,el.offsetHeight||52)/44,seed=g.seedFrom('box-'+n);
+  g.rect(svg,6*s,16*s,32*s,24*s,{fill:'#9575CD',fillStyle:'solid',stroke:'#7E57C2',strokeWidth:1.3,roughness:1.2,bowing:.7,seed:seed},'gs-box-body');
+  g.rect(svg,6*s,16*s,32*s,8*s,{fill:'#7E57C2',fillStyle:'solid',stroke:'#5E35B1',strokeWidth:1.2,roughness:1.15,bowing:.6,seed:seed+1},'gs-box-lid');
+  var t=svgEl('text',{x:22*s,y:36*s,'text-anchor':'middle','font-size':17*s,'font-weight':'bold',fill:'#fff','font-family':'inherit'});
+  t.textContent=n;
+  svg.appendChild(t);
+}
+/* 天平结构（静态部分）：底座/立柱/横梁/吊绳/托盘 —— 手绘接管 */
+function drawScale(){
+  var g=GS(),sketch=sketchOn();
+  document.body.classList.toggle('gs-sketch',sketch);
+  if(!sketch)return;
+  var wood={fillStyle:'solid',strokeWidth:1.4,roughness:1.3,bowing:.8};
+  function O(extra){var o={};for(var k in wood)o[k]=wood[k];for(var k2 in extra)o[k2]=extra[k2];return o;}
+  sketchInto(document.querySelector('.bs-base'),function(svg,w,h,seed){
+    g.rect(svg,2,2,Math.max(2,w-4),Math.max(2,h-4),O({fill:'#B5835A',stroke:'#8C5B35',seed:seed}));
+  },'bs-base');
+  sketchInto(document.querySelector('.bs-pole'),function(svg,w,h,seed){
+    g.rect(svg,2,h*.1,Math.max(2,w-4),Math.max(2,h*.88),O({fill:'#C08A58',stroke:'#8C5B35',seed:seed}));
+    g.circle(svg,w/2,h*.1,w*.62,O({fill:'#6B4526',stroke:'#4A2E18',strokeWidth:1.2,roughness:1.2,bowing:.6,seed:seed+1}));
+  },'bs-pole');
+  sketchInto(document.querySelector('.bs-beam'),function(svg,w,h,seed){
+    g.rect(svg,1,2,Math.max(2,w-2),Math.max(2,h-4),O({fill:'#C08A58',stroke:'#8C5B35',strokeWidth:1.3,roughness:1.2,bowing:.7,seed:seed}));
+  },'bs-beam');
+  ['bs-ropeL','bs-ropeR'].forEach(function(cls){
+    sketchInto(document.querySelector('.'+cls),function(svg,w,h,seed){
+      g.rect(svg,Math.max(1,w/2-1.5),1,3,Math.max(2,h-2),{fill:'#6B4526',fillStyle:'solid',stroke:'#4A2E18',strokeWidth:1,roughness:1.1,bowing:.5,seed:seed});
+    },cls);
+  });
+  [['L',panL],['R',panR]].forEach(function(p){
+    var pan=p[1];
+    sketchInto(pan.querySelector('.bs-pan-rope'),function(svg,w,h,seed){
+      g.line(svg,w/2,1,w/2,Math.max(2,h-1),{stroke:'#6B4526',strokeWidth:2.2,roughness:1.1,bowing:.5,seed:seed});
+    },'bs-pan-rope-'+p[0]);
+    sketchInto(pan.querySelector('.bs-pan-body'),function(svg,w,h,seed){
+      g.path(svg,bowlD(2,h*.1,Math.max(2,w-4),h*.8),O({fill:'#C08A58',stroke:'#8C5B35',strokeWidth:1.5,seed:seed}));
+    },'bs-pan-body-'+p[0]);
+  });
+}
+/* 标题小天平图标 */
+function drawTitleIcon(){
+  var el=$('bsTitleIcon');if(!el||!sketchOn())return;
+  var g=GS(),svg=g.svgInto(el);
+  if(!svg)return;
+  var w=el.offsetWidth,h=el.offsetHeight,s=Math.min(w,h)/44,seed=g.seedFrom('bs-title');
+  var st={fillStyle:'solid',strokeWidth:1.2,roughness:1.2,bowing:.6};
+  function O(extra){var o={};for(var k in st)o[k]=st[k];for(var k2 in extra)o[k2]=extra[k2];return o;}
+  g.rect(svg,10*s,33*s,24*s,5*s,O({fill:'#B5835A',stroke:'#8C5B35',seed:seed}));
+  g.rect(svg,20.4*s,13*s,3.2*s,21*s,O({fill:'#C08A58',stroke:'#8C5B35',seed:seed+1}));
+  g.rect(svg,6*s,11.5*s,32*s,3*s,O({fill:'#C08A58',stroke:'#8C5B35',seed:seed+2}));
+  g.line(svg,10*s,14.5*s,10*s,21*s,{stroke:'#8C5B35',strokeWidth:1.5,roughness:1,bowing:.4,seed:seed+3});
+  g.line(svg,34*s,14.5*s,34*s,21*s,{stroke:'#8C5B35',strokeWidth:1.5,roughness:1,bowing:.4,seed:seed+4});
+  g.path(svg,bowlD(5*s,21*s,10*s,6*s),O({fill:'#E85D4A',stroke:'#B83220',seed:seed+5}));
+  g.path(svg,bowlD(29*s,21*s,10*s,6*s),O({fill:'#E85D4A',stroke:'#B83220',seed:seed+6}));
+}
+/* 弹窗奖章：手绘金星 + 丝带 */
+function drawMedal(){
+  var el=$('bsVMedal');if(!el||!sketchOn())return;
+  var g=GS(),svg=g.svgInto(el);
+  if(!svg)return;
+  var w=el.offsetWidth,h=el.offsetHeight,s=Math.min(w,h)/44,seed=g.seedFrom('bs-medal');
+  var st={fillStyle:'solid',strokeWidth:1.3,roughness:1.25,bowing:.7};
+  function O(extra){var o={};for(var k in st)o[k]=st[k];for(var k2 in extra)o[k2]=extra[k2];return o;}
+  g.path(svg,'M'+(22*s)+','+(5*s)+' L'+(26.5*s)+','+(16*s)+' L'+(38*s)+','+(16.5*s)+' L'+(29*s)+','+(24*s)+' L'+(32*s)+','+(35.5*s)+' L'+(22*s)+','+(29*s)+' L'+(12*s)+','+(35.5*s)+' L'+(15*s)+','+(24*s)+' L'+(6*s)+','+(16.5*s)+' L'+(17.5*s)+','+(16*s)+' Z',
+    O({fill:'#E8B84B',stroke:'#C9922E',seed:seed}));
+  g.circle(svg,22*s,21*s,10*s,O({fill:'#F2C765',stroke:'#C9922E',strokeWidth:1.1,roughness:1.15,seed:seed+1}));
+}
+
+/* ====== 状态 ====== */
+var cur=0, solved=false, awaitX=false, didAns=false, attempts=0, attemptsThis=0, t0=0, tNow=0, timer=null;
+var state={L:[],R:[],stall:[]};
+function lv(){return LV[cur]}
+function sumArr(a){var s=0;for(var i=0;i<a.length;i++)s+=F[a[i]].w;return s}
+function leftSum(){var s=sumArr(state.L);if(lv().box>0)s+=lv().box;return s}
+function rightSum(){return sumArr(state.R)}
+
+function zoneDraggable(g,from){
+ if(g==='A')return false;
+ if(g==='B')return from==='stall'||from==='R';
+ if(lv().take&&!lv().self)return false;      /* C 引导 */
+ return true;                                  /* C 自主 */
+}
+
+/* ====== 渲染 ====== */
+function addFruit(zone,code,can,from){
+ var el=document.createElement('div');
+ el.className='bs-fruit'+(can?' drag':'');
+ el.dataset.code=code;
+ zone.appendChild(el);          /* 先入 DOM，offsetWidth 才可测 */
+ drawFruit(el,code);
+ if(can){
+   /* from 显式传入：.bs-load 上没有 data-id，取 zone.dataset.id 会是 undefined，
+      moveFruit 就会去货架里找水果导致盘上水果拖不动 */
+   el.addEventListener('pointerdown',function(e){dragStart(e,el,from);});
+ }else{
+   el.style.pointerEvents='none';
+ }
+}
+function render(ansTilt){
+ var g=lv().g;
+ var loadL=panL.querySelector('.bs-load'),loadR=panR.querySelector('.bs-load');
+ loadL.innerHTML='';loadR.innerHTML='';stallLoad.innerHTML='';
+ if(lv().box>0){
+   var bx=document.createElement('div');bx.className='bs-box';
+   loadL.appendChild(bx);drawBox(bx,solved?lv().box:'?');
+ }
+ var cL=zoneDraggable(g,'L'),cR=zoneDraggable(g,'R'),cS=zoneDraggable(g,'stall');
+ state.L.forEach(function(c){addFruit(loadL,c,cL,'L')});
+ state.R.forEach(function(c){addFruit(loadR,c,cR,'R')});
+ state.stall.forEach(function(c){addFruit(stallLoad,c,cS,'stall')});
+ /* 货架文案分组不同；空货架给可爱提示，不留白 */
+ var lab=$('bsStallLab');
+ if(lab){
+   lab.textContent=(g==='B')?'🧺 水果货架 · 拖到右盘配平'
+     :(g==='C'&&lv().self)?'🧺 货架 · 把相同的水果拖回来'
+     :(g==='C')?'🧺 水果摊 · 两边同时拿走'
+     :'🧺 水果摊 · 看看谁更重';
+ }
+ if(state.stall.length===0){
+   var e=document.createElement('div');e.className='bs-stall-empty';
+   e.textContent=(g==='C'&&lv().self)?'👆 把两边相同的水果拖回这里'
+     :(g==='C')?'本关用下面的按钮操作，不用拖水果~'
+     :'本关不用拖水果，看看天平猜一猜~';
+   stallLoad.appendChild(e);
+ }
+ if(state.L.length===0&&state.R.length===0&&state.stall.length===0){noFruitHint();}
+ /* 倾斜：永远反映真实轻重（A 组靠“看哪边低”作答，藏起来就没法看） */
+ applyTilt(true);
+ /* 提示操作 */
+ if(g==='C'&&lv().self&&!solved)msg('把两边的🍊都拿回货架','warn');
+ check();updateStats();
+ /* 每次渲染后重算一屏缩放：按钮行/答案行/货架提示都是动态插入，初始量不到 */
+ scaleStage();
+}
+function applyTilt(show){
+ /* 左重则左盘下沉 = counter-clockwise = 负角（CSS 正角顺时针抬左压右） */
+ var d=leftSum()-rightSum(),ang=0;
+ if(show&&!solved)ang=Math.max(-12,Math.min(12,-d*3));
+ var t='rotate('+ang+'deg)';
+ if(canAnimate()){
+   if(rocker.style.transition!=='none')rocker.style.transition='none';
+   /* 先写终值兜底：动画被跳过/中断也不会停在 0；再跑弹簧回振（过冲→回落→稳定） */
+   rocker.style.transform=t;
+   A.animate(rocker,{rotate:[ang*1.16,ang*.9,ang],ease:'out(2)',duration:720,onComplete:function(){rocker.style.transform=t;}});
+ }else{
+   rocker.style.transform=t;   /* CSS transition 兜底 */
+ }
+}
+
+/* ====== 反馈 / 动效 ====== */
+function msg(t,type){
+ var el=$('bsFeed');
+ el.textContent=t||'';
+ el.className='bs-feedback'+(type?(' '+type):'');
+ if(t&&canAnimate()){
+   A.animate(el,{opacity:[0,1],scale:[.9,1],y:[8,0],ease:'out(3)',duration:340});
+ }
+}
+function bounce(el){
+ if(!el)return;
+ if(canAnimate()){
+   A.animate(el,{scale:[1,1.22,1],ease:'out(2)',duration:420});
+   return;
+ }
+ el.classList.remove('st-bounce');void el.offsetWidth;el.classList.add('st-bounce');
+}
+function shake(){
+ var st=$('bsStage');
+ if(canAnimate()){
+   A.animate(st,{x:[0,-8,7,-5,4,0],ease:'out(2)',duration:420});
+   return;
+ }
+ st.classList.remove('bs-shake');void st.offsetWidth;st.classList.add('bs-shake');
+}
+function addRipple(e,btn){
+ var r=btn.getBoundingClientRect();
+ var d=Math.max(r.width,r.height);
+ var s=document.createElement('span');
+ s.className='bs-ripple-dot';
+ s.style.width=s.style.height=d+'px';
+ s.style.left=(e.clientX-r.left-d/2)+'px';
+ s.style.top=(e.clientY-r.top-d/2)+'px';
+ btn.appendChild(s);
+ setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s);},620);
+}
+function bindRipple(btn){
+ btn.addEventListener('click',function(e){addRipple(e,btn);});
+}
+
+/* ====== 控件 ====== */
+function buildControls(){
+ var g=lv().g,c=$('bsCtrl'),a=$('bsAnsA');
+ c.innerHTML='';a.innerHTML='';
+ var re=document.createElement('button');re.className='bs-btn ghost';re.textContent='🔄 重新开始';re.onclick=function(){load(cur);};bindRipple(re);
+ if(g==='A'){
+   a.classList.remove('bs-hid');
+   var names=[['left','⬅ 左边重'],['eq','⚖ 一样重'],['right','右边重 ➡']];
+   for(var i=0;i<3;i++){(function(ans){
+     var b=document.createElement('button');b.className='bs-btn green';b.textContent=names[i][1];b.dataset.a=ans;
+     b.onclick=function(){answerA(ans,b);};bindRipple(b);a.appendChild(b);
+   })(names[i][0]);}
+   c.appendChild(re);
+ }else{
+   a.classList.add('bs-hid');
+   if(lv().take&&!lv().self&&!solved){ var tk=makeTake();bindRipple(tk);c.appendChild(tk); }
+   c.appendChild(re);
+   if(solved){
+     var n=document.createElement('button');n.className='bs-btn gold';
+     n.textContent=(cur<8)?'下一关 →':'🎊 全部完成';
+     n.onclick=function(){nextLevel();};bindRipple(n);c.appendChild(n);
+   }
+ }
+}
+function makeTake(){var b=document.createElement('button');b.className='bs-btn purple';b.textContent='两边同时拿走 '+lv().take.n;b.onclick=function(){takeAway();};return b;}
+
+function noFruitHint(){
+ msg('🧺 货架空空的~ 点「重新开始」把水果变回来','warn');
+}
+
+/* ====== A 组作答 ====== */
+function answerA(ans,btn){
+ if(didAns)return;
+ didAns=true;
+ var real=lv().ans;
+ render(true); /* 倾斜真实结果 */
+ var good=(ans===real);
+ var btns=$('bsAnsA').querySelectorAll('.bs-btn');for(var i=0;i<btns.length;i++)btns[i].disabled=true;
+ if(good){
+   btn.classList.add('bs-correct');bounce($('bsTry'));
+   msg('✔ 答对了！眼睛真尖～','good');
+   finishLevel();
+ }else{
+   msg('✘ 再想想～答案是'+(real==='left'?'左边重':real==='right'?'右边重':'一样重'),'err');
+   attemptsThis++;
+   shake();updateStats();
+ }
+}
+
+/* ====== C 组 takeAway ====== */
+function takeAway(){
+ var code=lv().take.code;
+ var li=state.L.indexOf(code);if(li>=0)state.L.splice(li,1);
+ var ri=state.R.indexOf(code);if(ri>=0)state.R.splice(ri,1);
+ attemptsThis++;
+ render();check();
+}
+
+/* ====== B/C 配平判定 ====== */
+function check(){
+ if(solved)return;
+ var g=lv().g;
+ if(g==='B'&&leftSum()===rightSum()&&!awaitX){solveB();return;}
+ if(g==='C'&&state.L.length===0&&leftSum()===rightSum()){solveC();return;}
+}
+function solveB(){
+ solved=true;awaitX=true;
+ celebrate();bounce($('bsTry'));
+ msg('⚖ 配平成功！左盘 = 右盘，来救神秘盒吧','good');
+ showX();
+}
+function solveC(){
+ solved=true;
+ var x=lv().box;
+ render();bounce($('bsTry'));celebrate();
+ $('bsHint').innerHTML='神秘盒 x = <b>'+x+'</b> 🎉';
+ setTimeout(finishLevel,900);
+}
+function celebrate(){
+ ripple.classList.remove('bs-wave');void ripple.offsetWidth;ripple.classList.add('bs-wave');
+ panL.querySelector('.bs-load').classList.add('bs-happy');
+ panR.querySelector('.bs-load').classList.add('bs-happy');
+}
+function finishLevel(){
+ if(awaitX)return; /* B 需要先填数字 */
+ clearInterval(timer);
+ var now=Math.floor((Date.now()-t0)/1000);
+ attempts+=attemptsThis;
+ var best=bestGet();if(best===null||now<best){bestSet(now);}
+ $('bsVsLev').textContent='第 '+(cur+1)+' 关';
+ $('bsVsTry').textContent=attemptsThis;
+ $('bsVsTime').textContent=fmt(now);
+ $('bsBest').textContent=fmt(bestGet());bounce($('bsBest'));
+ $('bsVx').textContent=(lv().box>0)?('🎁 神秘盒 x = '+lv().box):'';
+ $('bsNext').textContent=(cur<8)?'下一关 →':'🎊 全部完成';
+ $('bsNext').classList.remove('bs-hid');
+ var overlay=$('bsModal'),card=$('bsVictory');
+ overlay.classList.remove('bs-hid');
+ /* 手绘奖章：弹窗显示后再画（隐藏时量不出尺寸） */
+ drawMedal();
+ if(canAnimate()){
+   A.animate(card,{opacity:[0,1],scale:[.86,1],y:[18,0],ease:'out(4)',duration:520});
+   var medal=$('bsVMedal');
+   if(medal&&sketchOn())A.animate(medal,{scale:[0,1],rotate:[-16,0],ease:'out(4)',duration:560,delay:120});
+ }else{
+   card.classList.remove('bs-pop-in');void card.offsetWidth;card.classList.add('bs-pop-in');
+ }
+ /* 弹窗与礼花同时出现（移动端偏底时从卡片中心绽开） */
+ launchConfettiFromCard();
+}
+/* 从弹窗中心绽开礼花；降级走全局 launchConfetti */
+function launchConfettiFromCard(){
+  var fired=false;
+  try{
+    if(typeof confetti==='function'){
+      var card=$('bsVictory'),r=card?card.getBoundingClientRect():null;
+      var origin=r?{x:(r.left+r.width/2)/window.innerWidth,y:(r.top+r.height*0.35)/window.innerHeight}:{y:.55};
+      confetti({particleCount:90,spread:78,startVelocity:42,origin:origin,colors:['#E85D4A','#E8B84B','#58B36B','#9575CD','#F2C765']});
+      confetti({particleCount:55,spread:110,startVelocity:36,origin:origin,scalar:.85,colors:['#E85D4A','#E8B84B','#9575CD']});
+      fired=true;
+    }
+  }catch(e){}
+  if(!fired&&window.launchConfetti){try{window.launchConfetti();}catch(e2){}}
+}
+function nextLevel(){ $('bsModal').classList.add('bs-hid'); if(cur<8)load(cur+1);else load(0); }
+$('bsAgain').addEventListener('click',function(){load(cur);});
+$('bsNext').addEventListener('click',nextLevel);
+
+/* ====== B 填数 ====== */
+function showX(){
+ $('bsEq').innerHTML='<span class="bs-eqbox">x</span> + '+F[state.L[0]].n+' = <span style="opacity:.75">?</span>';
+ $('bsXpanel').classList.remove('bs-hid');
+ $('bsXerr').textContent='';
+ /* 手绘边框：面板显示后再画 */
+ sketchInto($('bsXcard'),function(svg,w,h,seed){
+   var g=GS();
+   g.rect(svg,6,6,Math.max(2,w-12),Math.max(2,h-12),{stroke:'rgba(149,117,205,.4)',strokeWidth:2,roughness:1.5,bowing:1,seed:seed});
+ },'bs-xcard');
+ setTimeout(function(){$('bsXin').focus();},60);
+}
+$('bsXok').addEventListener('click',function(){
+ var v=parseInt($('bsXin').value,10);
+ if(v===lv().box){
+   awaitX=false;$('bsXpanel').classList.add('bs-hid');
+   state.L=[];
+   render();bounce($('bsTry'));celebrate();
+   $('bsHint').innerHTML='神秘盒 x = <b>'+lv().box+'</b> 🎉';
+   msg('答对啦！神秘盒就是 '+lv().box+' 🎉','good');
+   setTimeout(finishLevel,900);
+ }else{
+   attemptsThis++;
+   $('bsXerr').textContent='再想想，两边要相等哦～';
+   $('bsXin').value='';$('bsXin').focus();
+   /* 输入框闪红 */
+   var inp=$('bsXin');
+   inp.classList.remove('bs-flash');void inp.offsetWidth;inp.classList.add('bs-flash');
+   if(canAnimate())A.animate($('bsXcard'),{x:[0,-8,7,-5,4,0],ease:'out(2)',duration:420});
+   updateStats();
+ }
+});
+
+/* ====== 拖拽 ====== */
+var drag=null;
+function dragStart(e,el,from){
+ if(solved||el.style.pointerEvents==='none')return;
+ e.preventDefault();
+ var r=el.getBoundingClientRect();
+ drag={el:el,code:el.dataset.code,from:from,dx:e.clientX-r.left,dy:e.clientY-r.top};
+ el.classList.add('dragging');
+ /* .bs-card 的 backdrop-filter / .bs-stage 的 scale / .bs-rocker 的 rotate 都会
+    抢走 position:fixed 的包含块，left/top 按视口写会错位（水果飘到指针上方）；
+    拖起时挂到 body 下，fixed 才真正相对视口 */
+ document.body.appendChild(el);
+ el.style.left=(e.clientX-drag.dx)+'px';el.style.top=(e.clientY-drag.dy)+'px';
+ el.setPointerCapture(e.pointerId);
+ document.addEventListener('pointermove',dragMove);
+ document.addEventListener('pointerup',dragUp);
+ document.addEventListener('pointercancel',dragUp);
+}
+function dragMove(e){if(!drag)return;drag.el.style.left=(e.clientX-drag.dx)+'px';drag.el.style.top=(e.clientY-drag.dy)+'px';}
+function dragUp(e){
+ if(!drag)return;
+ var d=drag;drag=null;
+ document.removeEventListener('pointermove',dragMove);document.removeEventListener('pointerup',dragUp);document.removeEventListener('pointercancel',dragUp);
+ d.el.classList.remove('dragging');
+ d.el.style.left='';d.el.style.top='';
+ if(d.el.parentNode)d.el.parentNode.removeChild(d.el);  /* 已挂到 body，render 重建不到它 */
+ var to=(e.type==='pointercancel')?null:hitTarget(e.clientX,e.clientY),g=lv().g;
+ if(to&&to!==d.from&&zoneAllowed(g,to)){
+   moveFruit(d.code,d.from,to);
+ }
+ render(false);
+}
+function zoneAllowed(g,to){if(g==='A')return false;if(g==='B')return to==='R'||to==='stall';return true;}
+function moveFruit(code,from,to){
+ var src=from==='L'?state.L:from==='R'?state.R:state.stall;
+ var i=src.indexOf(code);if(i<0)return;src.splice(i,1);
+ if(to==='L')state.L.push(code);else if(to==='R')state.R.push(code);else state.stall.push(code);
+}
+function hitTarget(x,y){
+ var els=[panL,panR,stallLoad],best=null,bestArea=1e9;
+ for(var i=0;i<els.length;i++){
+   var r=els[i].getBoundingClientRect(),area=r.width*r.height;
+   if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom&&area<bestArea){bestArea=area;best=els[i].dataset.id;}
+ }
+ return best;
+}
+
+/* ====== 统计 & 时间 ====== */
+function fmt(s){s=Math.max(0,s);return (String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'))}
+function load(n){
+ clearInterval(timer);
+ cur=n;solved=false;awaitX=false;didAns=false;attemptsThis=0;t0=Date.now();
+ state.L=[].concat(LV[cur].L);state.R=[].concat(LV[cur].R);state.stall=(LV[cur].stall?[].concat(LV[cur].stall):[]);
+ ripple.classList.remove('bs-wave');panL.querySelector('.bs-load').classList.remove('bs-happy');panR.querySelector('.bs-load').classList.remove('bs-happy');
+ $('bsFeed').className='bs-feedback';$('bsFeed').textContent='';
+ $('bsHint').innerHTML=LV[cur].hint||'';
+ $('bsModal').classList.add('bs-hid');$('bsXpanel').classList.add('bs-hid');
+ var best=bestGet();
+ $('bsBest').textContent=best===null?'--':fmt(best);
+ $('bsLev').textContent=(cur+1)+' / '+LV.length;
+ buildControls();render(false);updateStats();
+ /* 开场就给一句“该干什么”，不让人对着空白反馈框发呆 */
+ var gg=lv().g;
+ if(gg!=='C'||!lv().self){
+   if(gg==='A')msg('👀 看看天平，哪边更低哪边就更重~');
+   else if(gg==='B')msg('👉 从货架拖水果到右盘，把天平配平~');
+   else msg('✂️ 两边同时拿走相同的水果，天平会怎样？');
+ }
+ timer=setInterval(function(){tNow=Math.floor((Date.now()-t0)/1000);$('bsTime').textContent=fmt(tNow);},500);
+}
+function updateStats(){$('bsTry').textContent=attempts+attemptsThis;bounce($('bsTry'));}
+function bestGet(){var k='bs_best_L'+(cur+1);var v=localStorage.getItem(k);return v===null?null:parseInt(v,10)}
+function bestSet(s){localStorage.setItem('bs_best_L'+(cur+1),String(s))}
+window.bsReplay=function(){$('bsModal').classList.add('bs-hid');load(cur);}
+
+/* 高度自适缩放：按舞台实际可用宽度缩放 420px 设计稿，两侧托盘不出画布 */
+function scaleStage(){
+ var stage=$('bsStage');
+ /* transform 不影响 layout，clientWidth 稳定可反复读；勿用视口宽——卡片有 padding，摆动总成是相对舞台居中的 */
+ var w=(stage&&stage.clientWidth)?stage.clientWidth:(document.documentElement.clientWidth||375);
+ var s=Math.min(1,Math.max(0.5,w/428));
+ if(stage){
+   stage.style.marginBottom='';
+   document.documentElement.style.setProperty('--bs-s',s);
+   var h=stage.offsetHeight;
+   /* 一屏自适应：桌面端宽度够（s=1）但视口高度不够时，压舞台吃掉溢出量。
+      transform 不改 layout，margin 清零后 card.scrollHeight 就是未缩放的真实内容高 */
+   var card=$('bsCard');
+   if(card&&h>0){
+     var avail=window.innerHeight-card.getBoundingClientRect().top-14;
+     var over=card.scrollHeight-avail;
+     if(over>0){
+       s=Math.max(0.42,s-over/h);
+       document.documentElement.style.setProperty('--bs-s',s);
+     }
+   }
+   /* transform-origin:top center 缩放后下方留白，用负 margin 把布局高度收回，保证一屏 */
+   if(h>0&&s<1)stage.style.marginBottom=((s-1)*h)+'px';
+ }
+}
+var resizeTimer=null;
+window.addEventListener('resize',function(){
+  scaleStage();
+  /* clamp() 盒子随视口变宽高：debounce 重画手绘层，避免 viewBox 拉伸变形 */
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(function(){drawScale();drawTitleIcon();},220);
+});
+scaleStage();
+
+/* 初始化：先入 DOM 再画（隐藏元素量不出尺寸） */
+load(0);
+drawScale();
+drawTitleIcon();
+
+})();
+</script>

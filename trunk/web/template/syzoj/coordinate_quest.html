@@ -1,0 +1,2008 @@
+<?php $show_title="坐标寻宝 - $OJ_NAME"; ?>
+<?php include("template/$OJ_TEMPLATE/header.php");?>
+
+<script src="template/<?php echo $OJ_TEMPLATE?>/js/anime.min.js?v=4.5.0"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/js/rough.min.js?v=4.6.6"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/game_sketch.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/game_confetti.js"></script>
+
+<div class="padding">
+<style>
+@import url('template/<?php echo $OJ_TEMPLATE?>/fonts/zcool-kuaile.css?v=1');
+
+/* ===== 坐标寻宝 · 小海豚航海图（cq- 前缀统一规范） ===== */
+
+/* 全局清零 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 覆盖 syzoj 模板 .padding 的白玻璃效果（white.css 会给内容区垫 rgba(255,255,255,0.55) 半透明白底），
+   否则满版牛皮纸海图背景会被模板白底挡住 */
+.padding {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  color: inherit !important;
+  transition: none !important;
+}
+.padding::before,
+.padding::after {
+  display: none !important;
+}
+
+/* ===== 海图主题配色 ===== */
+:root {
+  --cq-paper: #F0E2C4;          /* 牛皮纸底 */
+  --cq-paper-2: #F6EBD3;        /* 更亮的纸色 */
+  --cq-ink: #5C4A2F;            /* ink 深棕 */
+  --cq-ink-soft: #7a6748;       /* ink 浅棕 */
+  --cq-lat: #5B8FB5;            /* 湖蓝经纬线 */
+  --cq-lat-soft: rgba(91,143,181,.16);
+  --cq-route: #E37B60;          /* 珊瑚红航线 */
+  --cq-route-soft: rgba(227,123,96,.18);
+  --cq-dolphin: #4FA3C7;        /* 海豚青蓝 */
+  --cq-dolphin-dark: #2f7ea5;
+  --cq-gold: #E3B23C;           /* 宝箱金 */
+  --cq-gold-deep: #B8860B;
+  --cq-green: #10b981;
+  --cq-red: #ef4444;
+  --cq-glass: rgba(255,255,255,.52);
+  --cq-glass-line: rgba(255,255,255,.72);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  color: var(--cq-ink);
+  background: var(--cq-paper);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+button,
+input {
+  font: inherit;
+  touch-action: manipulation;   /* 防双击缩放 */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== 一屏容器 ===== */
+.cq-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: max(.75rem, env(safe-area-inset-top))
+           max(.75rem, env(safe-area-inset-right))
+           max(1rem,   env(safe-area-inset-bottom))
+           max(.75rem, env(safe-area-inset-left));
+}
+/* 牛皮纸噪点/斜纹 + 湖蓝经纬线铺满背景 */
+.cq-wrap::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-color: var(--cq-paper);
+  background-image:
+    repeating-linear-gradient(115deg, transparent 0 6px, rgba(92,74,47,.025) 6px 7px),
+    repeating-linear-gradient(25deg,  transparent 0 9px, rgba(92,74,47,.02)  9px 10px),
+    repeating-linear-gradient(0deg,   var(--cq-lat-soft) 0 1px, transparent 1px 52px),
+    repeating-linear-gradient(90deg,  var(--cq-lat-soft) 0 1px, transparent 1px 52px);
+  background-size: auto, auto, 52px 52px, 52px 52px;
+}
+/* 暖色光斑 + 顶部高光 */
+.cq-wrap::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(420px 320px at 12% 18%, rgba(227,123,96,.13), transparent 62%),
+    radial-gradient(460px 340px at 88% 76%, rgba(227,178,60,.12), transparent 62%),
+    radial-gradient(1200px 420px at 50% -8%, rgba(255,255,255,.34), transparent 60%);
+  animation: cq-blob 12s ease-in-out infinite;
+}
+@keyframes cq-blob {
+  0%, 100% { opacity: 1; transform: translate3d(0,0,0); }
+  50%      { opacity: .78; transform: translate3d(0,-10px,0); }
+}
+
+.cq-inner {
+  width: 100%;
+  max-width: min(1020px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(.55rem, 2vw, 1rem);
+}
+
+/* ===== 标题 ===== */
+.cq-head {
+  width: 100%;
+  text-align: center;
+}
+.cq-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  font-family: "ZCOOL KuaiLe", "站酷快乐体", "PingFang SC", sans-serif;
+  font-weight: 800;
+  line-height: 1.15;
+  font-size: clamp(1.45rem, 5.2vw, 2.3rem);
+  letter-spacing: .04em;
+  margin-bottom: .15rem;
+}
+.cq-title-text {
+  background: linear-gradient(135deg, #2f7ea5 0%, #4FA3C7 42%, #E37B60 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;          /* 两个 !important 都要加，防 MDC 全局样式压黑 */
+  filter: drop-shadow(0 2px 10px rgba(79,163,199,.28));
+}
+.cq-title-text::after {
+  content: "";
+  display: block;
+  width: clamp(52px, 14vw, 72px);
+  height: 4px;
+  margin: 7px auto 0;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--cq-dolphin), var(--cq-route), var(--cq-gold));
+}
+/* 手绘海豚图标：emoji 仅作无 rough.js 时的降级（尺寸用 clamp，勿用 em——降级 font-size:0 会清零） */
+.cq-title-icon {
+  position: relative;
+  width: clamp(40px, 9vw, 56px);
+  height: clamp(40px, 9vw, 56px);
+  flex: 0 0 auto;
+  font-size: clamp(1.55rem, 4.6vw, 2.15rem);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 3px 10px rgba(79,163,199,.4));
+}
+.cq-title-icon svg.gs-draw {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+.gs-sketch .cq-title-icon {
+  font-size: 0;
+}
+.cq-tip {
+  color: var(--cq-ink-soft);
+  font-size: clamp(.72rem, 2.4vw, .9rem);
+  line-height: 1.55;
+}
+.cq-tip b {
+  color: var(--cq-dolphin-dark);
+  font-weight: 700;
+}
+
+/* ===== 左右分栏：sidebar（统计/输入/按钮/反馈）+ main（海图） ===== */
+.cq-layout {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(.75rem, 2.2vw, 1.35rem);
+}
+.cq-sidebar {
+  width: clamp(240px, 28vw, 300px);
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(.55rem, 1.8vw, .85rem);
+}
+.cq-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+/* ===== 统计栏 ===== */
+.cq-stats {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .5rem;
+}
+.cq-stat {
+  position: relative;
+  min-width: 0;
+  background: linear-gradient(160deg, rgba(255,255,255,.72), rgba(246,235,211,.55));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.7);
+  border-top: 3px solid var(--cq-route);
+  border-radius: clamp(.7rem, 1.8vw, .95rem);
+  padding: .48rem .25rem .45rem;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(92,74,47,.1);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.cq-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 20px rgba(92,74,47,.16);
+}
+.cq-stat:nth-child(2) { border-top-color: var(--cq-lat); }
+.cq-stat:nth-child(3) { border-top-color: var(--cq-gold); }
+.cq-stat:nth-child(4) { border-top-color: var(--cq-dolphin); }
+.cq-stat-icon {
+  display: block;
+  font-size: clamp(.95rem, 2.8vw, 1.15rem);
+  line-height: 1;
+  margin-bottom: .12rem;
+  filter: drop-shadow(0 1px 2px rgba(92,74,47,.22));
+}
+.cq-stat-label {
+  display: block;
+  overflow: hidden;
+  color: var(--cq-ink-soft);
+  font-size: clamp(.58rem, 1.9vw, .68rem);
+  letter-spacing: .06em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.cq-stat-value {
+  display: block;
+  margin-top: .08rem;
+  font-weight: 800;
+  font-size: clamp(.92rem, 2.8vw, 1.12rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.15;
+}
+.cq-stat:nth-child(1) .cq-stat-value {
+  background: linear-gradient(135deg, #E37B60, #c05a42);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+.cq-stat:nth-child(2) .cq-stat-value {
+  background: linear-gradient(135deg, #5B8FB5, #2f7ea5);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+.cq-stat:nth-child(3) .cq-stat-value {
+  background: linear-gradient(135deg, #E3B23C, #B8860B);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+.cq-stat:nth-child(4) .cq-stat-value {
+  background: linear-gradient(135deg, #4FA3C7, #2f7ea5);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+/* 积分卡：金色主数字 + 纪录小字，全页最亮的一格 */
+.cq-stat.cq-stat-score {
+  border-top-color: var(--cq-gold);
+  background: linear-gradient(160deg, rgba(255,244,214,.88), rgba(255,228,170,.62));
+}
+.cq-stat.cq-stat-score .cq-stat-value {
+  background: linear-gradient(135deg, #E3B23C, #B8860B);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  font-size: clamp(1.05rem, 3.2vw, 1.3rem);
+}
+.cq-stat-sub {
+  display: block;
+  margin-top: .12rem;
+  font-size: clamp(.55rem, 1.7vw, .64rem);
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--cq-gold-deep);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 得分上浮：+N 从积分卡升起 */
+.cq-gain {
+  position: absolute;
+  right: .3rem;
+  top: .05rem;
+  z-index: 3;
+  font-weight: 900;
+  font-size: clamp(.85rem, 2.6vw, 1.05rem);
+  color: #B8860B;
+  text-shadow: 0 1px 0 rgba(255,255,255,.85);
+  pointer-events: none;
+  animation: cq-gain-float 1.05s cubic-bezier(.22,.9,.3,1) forwards;
+}
+@keyframes cq-gain-float {
+  0%   { opacity: 0; transform: translateY(6px) scale(.65); }
+  22%  { opacity: 1; transform: translateY(-2px) scale(1.14); }
+  100% { opacity: 0; transform: translateY(-24px) scale(1); }
+}
+.cq-stat.cq-bounce {
+  animation: cq-pop .42s cubic-bezier(.34, 1.56, .64, 1);
+}
+@keyframes cq-pop {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.16); }
+}
+
+/* ===== 输入区 ===== */
+.cq-controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+  background: linear-gradient(160deg, rgba(255,255,255,.62), rgba(246,235,211,.5));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.7);
+  border-radius: clamp(.85rem, 2vw, 1.1rem);
+  padding: .65rem .65rem .7rem;
+  box-shadow: 0 4px 16px rgba(92,74,47,.1);
+}
+.cq-pair {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .38rem;
+}
+.cq-pair label {
+  color: var(--cq-dolphin-dark);
+  font-weight: 800;
+  font-size: clamp(.82rem, 2.6vw, 1rem);
+}
+.cq-num {
+  width: clamp(3.1rem, 13vw, 4.3rem);
+  min-height: 44px;
+  padding: .4rem;
+  text-align: center;
+  color: var(--cq-ink);
+  background: rgba(255,255,255,.92);
+  border: 2px solid var(--cq-lat);
+  border-radius: .65rem;
+  outline: none;
+  font-size: clamp(.92rem, 3vw, 1.12rem);
+  font-weight: 700;
+  transition: border-color .18s, box-shadow .18s;
+}
+.cq-num:focus {
+  border-color: var(--cq-dolphin-dark);
+  box-shadow: 0 0 0 3px rgba(79,163,199,.25);
+}
+.cq-num.cq-flash-err {
+  animation: cq-flash-err .55s ease;
+}
+@keyframes cq-flash-err {
+  0%, 100% { box-shadow: none; }
+  35%      { border-color: var(--cq-red); box-shadow: 0 0 0 4px rgba(239,68,68,.28); }
+}
+.cq-num.cq-flash-ok {
+  animation: cq-flash-ok .55s ease;
+}
+@keyframes cq-flash-ok {
+  0%, 100% { box-shadow: none; }
+  35%      { border-color: var(--cq-green); box-shadow: 0 0 0 4px rgba(16,185,129,.3); }
+}
+.cq-sep {
+  color: var(--cq-route);
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+.cq-btns {
+  display: flex;
+  gap: .45rem;
+}
+/* 按钮：药丸 + 主实心渐变 + 次级描边白底 + 波纹 */
+.cq-btn {
+  position: relative;
+  flex: 1;
+  min-height: 46px;
+  padding: .62rem .95rem;
+  overflow: hidden;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: clamp(.82rem, 2.6vw, .96rem);
+  line-height: 1.2;
+  border: 1px solid rgba(255,255,255,.5);
+  color: #fff;
+  background: linear-gradient(135deg, var(--cq-gold), var(--cq-gold-deep));
+  box-shadow: 0 8px 22px rgba(184,134,11,.32);
+  transition: transform .18s, box-shadow .18s, filter .18s;
+}
+.cq-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow: 0 11px 26px rgba(184,134,11,.38);
+}
+.cq-btn:active {
+  transform: translateY(0);
+}
+.cq-btn.cq-secondary {
+  background: rgba(255,255,255,.92);
+  color: var(--cq-dolphin-dark);
+  border: 2px solid var(--cq-lat);
+  box-shadow: 0 5px 15px rgba(91,143,181,.16);
+}
+.cq-btn.cq-secondary:hover {
+  color: var(--cq-dolphin-dark);
+  background: #f0f7fb;
+}
+.cq-btn:focus-visible,
+.cq-num:focus-visible {
+  outline: 3px solid rgba(227,123,96,.45);
+  outline-offset: 2px;
+}
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,.5);
+  pointer-events: none;
+  transform: scale(0);
+  animation: cq-ripplebtn .5s ease-out;
+}
+@keyframes cq-ripplebtn {
+  to { opacity: 0; transform: scale(4); }
+}
+.hidden { display: none !important; }
+
+/* ===== 反馈条：彩色底 + 弹性弹入 ===== */
+.cq-msg {
+  width: 100%;
+  min-height: 2.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: .5rem .75rem;
+  border-radius: .85rem;
+  color: var(--cq-ink-soft);
+  font-size: clamp(.76rem, 2.4vw, .9rem);
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+  background: rgba(255,255,255,.55);
+  border: 1px solid rgba(255,255,255,.7);
+  box-shadow: 0 3px 12px rgba(92,74,47,.08);
+  transition: background .25s ease, color .25s ease, box-shadow .25s ease;
+}
+.cq-msg.cq-ok {
+  color: #fff;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(16,185,129,.32);
+}
+.cq-msg.cq-err {
+  color: #fff;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(239,68,68,.32);
+}
+.cq-msg.cq-warn {
+  color: #fff;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-color: transparent;
+  box-shadow: 0 6px 18px rgba(245,158,11,.32);
+}
+.cq-msg.cq-hint {
+  color: var(--cq-gold-deep);
+  background: rgba(227,178,60,.18);
+  border-color: rgba(227,178,60,.5);
+}
+
+/* ===== 藏宝线索卡 ===== */
+.cq-clue {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: .55rem;
+  padding: .62rem .8rem;
+  border-radius: .95rem;
+  background: linear-gradient(150deg, rgba(255,244,214,.92), rgba(255,228,170,.72));
+  border: 1px solid rgba(227,178,60,.5);
+  border-left: 4px solid var(--cq-gold);
+  box-shadow: 0 5px 16px rgba(184,134,11,.18);
+  color: var(--cq-gold-deep);
+  font-size: clamp(.78rem, 2.4vw, .92rem);
+  font-weight: 700;
+  line-height: 1.5;
+}
+.cq-clue-icon {
+  flex: 0 0 auto;
+  font-size: clamp(1.05rem, 3.2vw, 1.3rem);
+  line-height: 1.25;
+  filter: drop-shadow(0 2px 3px rgba(184,134,11,.3));
+}
+.cq-clue.cq-reveal {
+  background: linear-gradient(150deg, rgba(255,224,150,.98), rgba(255,196,110,.85));
+  border-color: var(--cq-gold);
+  box-shadow: 0 7px 22px rgba(227,178,60,.4);
+  animation: cq-clue-pop .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes cq-clue-pop {
+  0%   { transform: scale(.94); }
+  60%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* ===== 海图区 ===== */
+.cq-map {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: rgba(246,235,211,.5);
+  border: 2px solid rgba(139,107,58,.3);
+  border-radius: clamp(.85rem, 2vw, 1.25rem);
+  padding: clamp(.35rem, 1.4vw, .65rem);
+  box-shadow: 0 8px 26px rgba(92,74,47,.1);
+}
+/* 手绘模式：CSS 描边让位给 rough 边框 */
+.gs-sketch .cq-map {
+  border-color: transparent;
+  background: rgba(246,235,211,.35);
+}
+.cq-map .gs-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+/* 棋盘：一列 y 标签 + n 列格子；n 行格子 + 一行 x 标签 */
+.cq-board {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: var(--cq-lw) repeat(var(--cq-n), var(--cq-cell));
+  grid-template-rows: repeat(var(--cq-n), var(--cq-cell)) var(--cq-lh);
+  gap: 0;
+}
+/* 棋盘手绘坐标轴/外框覆盖层 */
+.cq-board .gs-draw.cq-gridart {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: visible;
+}
+.cq-cell {
+  position: relative;
+  min-width: 34px;
+  min-height: 34px;
+  border: 1px solid var(--cq-lat);
+  background: rgba(246,235,211,.28);
+  cursor: pointer;
+  transition: background .15s;
+}
+.cq-cell:hover {
+  background: var(--cq-route-soft);
+}
+.cq-cell.cq-good {
+  background: rgba(227,123,96,.34);
+}
+.cq-cell.cq-wrong {
+  animation: cq-wrong .5s ease;
+}
+@keyframes cq-wrong {
+  0%, 100% { box-shadow: none; }
+  35%      { background: rgba(220,60,60,.5); box-shadow: inset 0 0 0 2px #d33; }
+}
+/* 行列高亮：多次猜错后的坐标辅助线，交点即宝箱 */
+.cq-cell.cq-rowhint,
+.cq-cell.cq-colhint {
+  background: rgba(227,178,60,.2);
+  box-shadow: inset 0 0 0 1px rgba(227,178,60,.4);
+}
+.cq-cell.cq-rowhint.cq-colhint {
+  background: rgba(227,178,60,.45);
+  box-shadow: inset 0 0 0 2px var(--cq-gold), 0 0 12px rgba(227,178,60,.55);
+}
+.cq-cell .cq-chest {
+  position: absolute;
+  inset: 12%;
+  z-index: 2;
+  animation: cq-bob 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+/* 宝箱现身：只动 opacity/filter，不碰 transform（留给 cq-bob） */
+.cq-cell .cq-chest.cq-new {
+  animation: cq-chest-in .55s ease both, cq-bob 2.6s ease-in-out infinite;
+}
+@keyframes cq-chest-in {
+  0%   { opacity: 0; filter: drop-shadow(0 0 0 rgba(227,178,60,0)); }
+  55%  { opacity: 1; filter: drop-shadow(0 0 16px rgba(255,215,90,.95)); }
+  100% { opacity: 1; filter: drop-shadow(0 0 3px rgba(227,178,60,.3)); }
+}
+.cq-cell .cq-chest svg.gs-draw {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.cq-cell.cq-glow .cq-chest {
+  animation: cq-glow 1s ease-in-out infinite, cq-bob 2.6s ease-in-out infinite;
+}
+@keyframes cq-glow {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(227,178,60,.5)); }
+  50%      { filter: drop-shadow(0 0 9px rgba(255,215,90,.95)) scale(1.06); }
+}
+/* 宝石微闪（reduced-motion 由全局规则兜底） */
+.gs-chest-gem {
+  animation: cq-twinkle 2.3s ease-in-out infinite;
+}
+@keyframes cq-twinkle {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .58; }
+}
+.cq-cell.cq-found {
+  animation: cq-shot .6s ease;
+}
+@keyframes cq-shot {
+  0%   { transform: scale(1); }
+  38%  { transform: scale(.6); }
+  70%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+/* 坐标轴标签 */
+.cq-ylabel,
+.cq-xlabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cq-dolphin-dark);
+  font-weight: 800;
+  font-size: clamp(.58rem, 2vw, .78rem);
+  user-select: none;
+}
+.cq-ylabel {
+  grid-column: 1;
+  font-size: clamp(.5rem, 1.7vw, .72rem);
+}
+.cq-xlabel {
+  grid-column-start: 2;
+}
+
+/* ===== 海豚（游向宝箱） ===== */
+.cq-dolphin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  width: var(--cq-cell);
+  height: var(--cq-cell);
+  /* 负 margin 让 translate(dx,dy) 对准单元格中心 */
+  margin-left: calc(var(--cq-cell) * -0.5);
+  margin-top: calc(var(--cq-cell) * -0.5);
+  transform: translate(var(--cq-dx), var(--cq-dy));
+  pointer-events: none;
+  will-change: transform;
+}
+/* 压扁层独立于定位层，动效与 translate 互不打架 */
+.cq-dhop {
+  width: 100%;
+  height: 100%;
+}
+.cq-dhop.cq-hop {
+  animation: cq-squash .22s ease;
+}
+@keyframes cq-squash {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.16, .78); }
+  60%  { transform: scale(.9, 1.14); }
+  100% { transform: scale(1); }
+}
+.cq-dolphin svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.cq-idle {
+  animation: cq-bob 2.4s ease-in-out infinite;
+}
+@keyframes cq-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+.cq-ripple {
+  position: absolute;
+  z-index: 4;
+  width: 34px;
+  height: 34px;
+  margin-left: -17px;
+  margin-top: -17px;
+  pointer-events: none;
+  border: 3px solid var(--cq-route);
+  border-radius: 50%;
+  opacity: 0;
+}
+.cq-ripple.cq-go {
+  animation: cq-ripple .5s ease-out;
+}
+@keyframes cq-ripple {
+  0%   { opacity: .8; transform: scale(.2); }
+  100% { opacity: 0;  transform: scale(2.4); }
+}
+
+/* 游动气泡尾迹 */
+.cq-bub {
+  position: absolute;
+  z-index: 4;
+  border-radius: 50%;
+  border: 1.5px solid rgba(79,163,199,.55);
+  background: rgba(255,255,255,.5);
+  pointer-events: none;
+  opacity: 0;
+}
+.cq-bub.cq-go {
+  animation: cq-bub .9s ease-out forwards;
+}
+@keyframes cq-bub {
+  0%   { opacity: .9; transform: translate(0,0) scale(.45); }
+  100% { opacity: 0;  transform: translate(5px,-28px) scale(1.2); }
+}
+
+/* ===== 金币粒子 ===== */
+.cq-coins {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+  overflow: visible;
+}
+.cq-coin {
+  position: absolute;
+  width: clamp(9px, 3vw, 14px);
+  height: clamp(9px, 3vw, 14px);
+  /* 负 margin 居中：transform 留给飞行动画（anime.js / CSS keyframe 互不打架） */
+  margin-left: calc(clamp(9px, 3vw, 14px) / -2);
+  margin-top: calc(clamp(9px, 3vw, 14px) / -2);
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 32%, #FFE9A0, #E3B23C 60%, #B8860B);
+  box-shadow: 0 2px 4px rgba(120,80,10,.4);
+  opacity: 0;
+}
+.cq-coin.cq-go {
+  animation: cq-fly .9s ease-out forwards;
+}
+@keyframes cq-fly {
+  0%   { opacity: 1; transform: scale(.5) rotate(0); }
+  100% { opacity: 0; transform: translate(var(--cq-cx), var(--cq-cy)) scale(1.25) rotate(380deg); }
+}
+/* 无 anime.js 时的海图抖动降级 */
+.cq-map.cq-shake {
+  animation: cq-shake .42s cubic-bezier(.36, .07, .19, .97);
+}
+@keyframes cq-shake {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-6px); }
+  40%, 60% { transform: translateX(6px); }
+}
+
+/* ===== 方向气泡 ===== */
+.cq-bubble {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translate(-50%, -130%) scale(.85);
+  z-index: 20;
+  background: rgba(255,255,255,.96);
+  border: 2px solid var(--cq-route);
+  border-radius: .75rem;
+  padding: .5rem .8rem;
+  color: var(--cq-ink);
+  font-weight: 700;
+  font-size: clamp(.76rem, 2.5vw, .92rem);
+  white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(92,74,47,.2);
+  opacity: 0;
+  pointer-events: none;
+}
+.cq-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -9px;
+  left: 50%;
+  margin-left: -6px;
+  border: 6px solid transparent;
+  border-top-color: var(--cq-route);
+}
+.cq-bubble.cq-go {
+  animation: cq-bubble 1.7s ease forwards;
+}
+@keyframes cq-bubble {
+  0%   { opacity: 0; transform: translate(-50%, -120%) scale(.85); }
+  12%  { opacity: 1; transform: translate(-50%, -130%) scale(1); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -140%) scale(.95); }
+}
+
+/* ===== 罗盘 ===== */
+.cq-compass {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: clamp(42px, 11vw, 60px);
+  height: clamp(42px, 11vw, 60px);
+  opacity: .88;
+  filter: drop-shadow(0 2px 5px rgba(92,74,47,.25));
+  pointer-events: none;
+  z-index: 3;
+}
+.cq-compass svg.gs-draw {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.cq-compass .cq-needle {
+  transform-origin: 50% 50%;
+  animation: cq-swing 4s ease-in-out infinite;
+}
+@keyframes cq-swing {
+  0%, 100% { transform: rotate(-10deg); }
+  50%      { transform: rotate(12deg); }
+}
+
+/* ===== 通关弹窗 ===== */
+.cq-modal {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(58,44,24,.62);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.cq-modal.hidden { display: none !important; }
+.cq-modalbox {
+  position: relative;
+  width: min(100%, 400px);
+  padding: clamp(1.35rem, 4vw, 2.1rem);
+  overflow: hidden;
+  background: linear-gradient(165deg, #FFFDF7, #FFF1D8);
+  border: 1px solid rgba(255,255,255,.8);
+  border-radius: 1.25rem;
+  text-align: center;
+  box-shadow: 0 26px 64px rgba(0,0,0,.3), 0 0 0 1px rgba(227,178,60,.18);
+}
+/* 顶部彩虹条 */
+.cq-modalbox::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, var(--cq-gold), var(--cq-route), var(--cq-dolphin), var(--cq-gold));
+  background-size: 300% 100%;
+  animation: cq-grad-shift 6s linear infinite;
+}
+@keyframes cq-grad-shift {
+  to { background-position: 300% 0; }
+}
+.cq-modalbox.cq-vwin-in {
+  animation: cq-pop-in .42s cubic-bezier(.34, 1.56, .64, 1);
+}
+@keyframes cq-pop-in {
+  from { opacity: 0; transform: scale(.86) translateY(16px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.cq-modalbox h2 {
+  font-family: "ZCOOL KuaiLe", "站酷快乐体", sans-serif;
+  font-size: clamp(1.32rem, 4.4vw, 1.75rem);
+  font-weight: 800;
+  margin: .35rem 0 .75rem;
+  background: linear-gradient(135deg, #2f7ea5, #4FA3C7 45%, #E37B60);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+/* 弹窗手绘宝箱：emoji 仅作降级 */
+.cq-modal-art {
+  position: relative;
+  width: clamp(72px, 18vw, 96px);
+  height: clamp(62px, 15vw, 82px);
+  margin: .35rem auto .25rem;
+  font-size: clamp(2.1rem, 8vw, 3rem);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 8px 18px rgba(227,178,60,.4));
+}
+.cq-modal-art svg.gs-draw {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+.gs-sketch .cq-modal-art {
+  font-size: 0;
+}
+.cq-modalmsg {
+  color: var(--cq-ink-soft);
+  font-size: .92rem;
+  line-height: 1.65;
+  margin-bottom: 1.05rem;
+}
+.cq-modalmsg b {
+  color: var(--cq-dolphin-dark);
+}
+.cq-modalbtns {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+.cq-modalbox .cq-btn {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .cq-layout {
+    flex-direction: column;
+  }
+  .cq-sidebar {
+    width: 100%;
+  }
+  .cq-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .4rem;
+  }
+  .cq-btns {
+    width: 100%;
+  }
+}
+@media (max-width: 420px) {
+  .cq-num { min-height: 42px; }
+  .cq-stat { padding: .4rem .15rem .36rem; }
+  .cq-stat-icon { font-size: .88rem; }
+  .cq-stat-label { font-size: .55rem; }
+  .cq-stat-value { font-size: .82rem; }
+  .cq-btn { padding: .58rem .6rem; font-size: .82rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+</style>
+
+<div class="cq-wrap" id="cq-wrap">
+  <div class="cq-inner">
+    <div class="cq-head">
+      <div class="cq-title">
+        <span class="cq-title-icon" id="cqTitleIcon" aria-hidden="true">🐬</span>
+        <span class="cq-title-text">坐标寻宝</span>
+      </div>
+      <div class="cq-tip">小海豚在茫茫大海里寻宝！读线索、猜坐标 <b>(x, y)</b>：先写横着的 <b>x</b>，再写竖着的 <b>y</b>。一次猜中 <b>+150 分</b>，猜错会掉分——想清楚再出手，争当寻宝高手！</div>
+    </div>
+
+    <div class="cq-layout">
+      <aside class="cq-sidebar">
+        <div class="cq-stats" id="cq-stats">
+          <div class="cq-stat"><span class="cq-stat-icon">🗺️</span><span class="cq-stat-label">关卡</span><span class="cq-stat-value" id="cq-st-level">1</span></div>
+          <div class="cq-stat"><span class="cq-stat-icon">⏱️</span><span class="cq-stat-label" id="cq-st-time-label">用时</span><span class="cq-stat-value" id="cq-st-time">0秒</span></div>
+          <div class="cq-stat"><span class="cq-stat-icon">💎</span><span class="cq-stat-label">寻宝数</span><span class="cq-stat-value" id="cq-st-found">0/1</span></div>
+          <div class="cq-stat cq-stat-score"><span class="cq-stat-icon">⭐</span><span class="cq-stat-label">积分</span><span class="cq-stat-value" id="cq-st-score">0</span><span class="cq-stat-sub" id="cq-st-best">🏆 纪录 —</span></div>
+        </div>
+
+        <div class="cq-clue" id="cq-clue">
+          <span class="cq-clue-icon" aria-hidden="true">📜</span>
+          <span class="cq-clue-text" id="cq-clue-text">读一读藏宝图上的线索~</span>
+        </div>
+
+        <div class="cq-controls">
+          <div class="cq-pair">
+            <label for="cq-x">x</label><input class="cq-num" id="cq-x" type="number" inputmode="numeric" value="1" step="1">
+            <span class="cq-sep">,</span>
+            <label for="cq-y">y</label><input class="cq-num" id="cq-y" type="number" inputmode="numeric" value="1" step="1">
+          </div>
+          <div class="cq-btns">
+            <button class="cq-btn" id="cq-go">出发 🚀</button>
+            <button class="cq-btn cq-secondary" id="cq-restart">重新开始</button>
+          </div>
+        </div>
+
+        <div class="cq-msg" id="cq-msg"></div>
+      </aside>
+
+      <div class="cq-main">
+        <div class="cq-map" id="cq-map">
+          <div class="cq-board" id="cq-board"></div>
+          <div class="cq-compass" id="cq-compass"></div>
+          <div class="cq-bubble" id="cq-bubble"></div>
+          <div class="cq-coins" id="cq-coins"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /padding -->
+
+<div class="cq-modal hidden" id="cq-modal">
+  <div class="cq-modalbox" id="cq-modalbox">
+    <div class="cq-modal-art" id="cqModalArt">🎉</div>
+    <h2 id="cq-modal-title">找到宝箱！</h2>
+    <div class="cq-modalmsg" id="cq-modal-msg"></div>
+    <div class="cq-modalbtns">
+      <button class="cq-btn" id="cq-next">下一关 ▶</button>
+      <button class="cq-btn cq-secondary" id="cq-retry">重新开始</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ===== 库与降级 ===== */
+var A = window.anime || null;
+var GS = window.GameSketch || null;
+var sketch = !!(GS && GS.available);
+/* gs-sketch 挂 body：标题图标/弹窗在 map 外，挂内层够不着 */
+document.body.classList.toggle('gs-sketch', sketch);
+function reduced(){
+  try { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  catch(e){ return false; }
+}
+function canAnimate(){ return !!A && !reduced(); }
+
+/* ===== 通用动效 ===== */
+function bounceStat(el){
+  if(!el) return;
+  if(canAnimate()){
+    A.animate(el, {scale:[1,1.22,1], ease:'out(2)', duration:420});
+    return;
+  }
+  el.classList.remove('cq-bounce'); void el.offsetWidth; el.classList.add('cq-bounce');
+}
+function addRipple(btn,e){
+  var r = btn.getBoundingClientRect(), s = Math.max(r.width, r.height);
+  var x = (e.clientX || r.left + r.width/2) - r.left - s/2;
+  var y = (e.clientY || r.top + r.height/2) - r.top - s/2;
+  var sp = document.createElement('span');
+  sp.className = 'ripple';
+  sp.style.width = sp.style.height = s + 'px';
+  sp.style.left = x + 'px'; sp.style.top = y + 'px';
+  btn.appendChild(sp);
+  sp.addEventListener('animationend', function(){ sp.remove(); }, {once:true});
+}
+document.querySelectorAll('.cq-btn').forEach(function(b){
+  b.addEventListener('click', function(e){ addRipple(b, e); });
+});
+
+/* ===== 状态 ===== */
+var boardEl = document.getElementById('cq-board');
+var mapEl = document.getElementById('cq-map');
+var $ = function(id){ return document.getElementById(id); };
+var statLevel = $('cq-st-level'), statTime = $('cq-st-time');
+var statTimeLabel = $('cq-st-time-label');
+var statFound = $('cq-st-found'), statBest = $('cq-st-best');
+var statScore = $('cq-st-score');
+var xInp = $('cq-x'), yInp = $('cq-y'), goBtn = $('cq-go'), restartBtn = $('cq-restart');
+var bubble = $('cq-bubble'), coinsEl = $('cq-coins'), modal = $('cq-modal');
+var modalBox = $('cq-modalbox'), modalArt = $('cqModalArt');
+var modalTitle = $('cq-modal-title'), modalMsg = $('cq-modal-msg');
+var nextBtn = $('cq-next'), retryBtn = $('cq-retry'), msgEl = $('cq-msg');
+var clueEl = $('cq-clue'), clueTextEl = $('cq-clue-text');
+
+var LEVELS = [
+  {size:8, quad:1, start:{x:1,y:1}, targets:1},
+  {size:8, quad:1, start:{x:1,y:1}, targets:1},
+  {size:9, quad:4, start:{x:0,y:0}, targets:1},
+  {size:8, quad:1, start:{x:1,y:1}, targets:3, timed:60}
+];
+var levelIdx = 0, cfg, n, quad, start, px, py, tx, ty, totalFound, errCount, guessCount, finished, busy;
+var levelStart, timeLeft, timer, foundCells = [], treasureCell = null;
+/* 积分：levelScores[i]=第 i 关已入账分，levelScore=本关进行中；hintUsed=本宝箱是否靠了提示 */
+var levelScores = [0, 0, 0, 0], levelScore = 0, hintUsed = false;
+var bestScore = parseFloat(localStorage.getItem('cq_best_score')) || 0;
+var nextFreshRun = false;   /* 末关通关后的「再来一次」= 重新开局 */
+
+/* ===== 手绘艺术层（rough.js）：玩法元素手绘，UI chrome 保持光洁 ===== */
+var NS = 'http://www.w3.org/2000/svg';
+function svgEl(vbW, vbH, cls){
+  var svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', '100%');
+  svg.classList.add('gs-draw');
+  if(cls) svg.classList.add(cls);
+  return svg;
+}
+function elNS(name, attrs, parent){
+  var e = document.createElementNS(NS, name);
+  for(var k in attrs){ if(attrs.hasOwnProperty(k)) e.setAttribute(k, attrs[k]); }
+  if(parent) parent.appendChild(e);
+  return e;
+}
+
+/* 海豚（viewBox 40×40，面朝左）：尾鳍/背鳍/胸鳍/身体分层，全形收在 x2–38 y1–34 内 */
+/* 眼睛细节用原生 SVG，小尺寸下 rough 会糊 */
+function drawDolphinInto(svg, seed){
+  if(!sketch) return;
+  var S = GS;
+  /* 尾鳍：两瓣 + 中间凹口，画在身体后面 */
+  S.path(svg, 'M30 17 C33 11 37 9 37.5 13 C38 16 35 19 32 20 C35 21 38 24 37.5 28 C37 32 33 29 29.5 23 Z',
+    {fill:'#3E92B8', fillStyle:'solid', stroke:'#2f7ea5', strokeWidth:1.3, roughness:1.2, bowing:.7, seed:seed}, 'gs-d-tail');
+  /* 身体：纺锤形，吻在左、尾根在右 */
+  S.path(svg, 'M3.5 21 C4.5 12 12 7.5 20 9 C27.5 10.5 32.5 15 33.5 21 C32.5 27 25 32 17 31 C9 30 4 27 3.5 21 Z',
+    {fill:'#4FA3C7', fillStyle:'solid', stroke:'#2f7ea5', strokeWidth:1.5, roughness:1.25, bowing:.7, seed:seed+1}, 'gs-d-body');
+  /* 背鳍：海豚标志性特征 */
+  S.path(svg, 'M18 10.5 C19 4 24 2 26 5 C27 8 24 11.5 21 12.5 Z',
+    {fill:'#3E92B8', fillStyle:'solid', stroke:'#2f7ea5', strokeWidth:1.2, roughness:1.2, bowing:.6, seed:seed+2}, 'gs-d-fin');
+  /* 胸鳍 */
+  S.path(svg, 'M11.5 23.5 C8.5 28 9.5 33 13.5 31 C16 29.5 15.5 25 14 23.5 Z',
+    {fill:'#3E92B8', fillStyle:'solid', stroke:'#2f7ea5', strokeWidth:1.2, roughness:1.2, bowing:.6, seed:seed+3}, 'gs-d-fin');
+  /* 眼睛用原生 SVG：小尺寸下 rough 会糊 */
+  elNS('circle', {cx:11, cy:18, r:2.2, fill:'#22303f'}, svg);
+  elNS('circle', {cx:10.2, cy:17.2, r:.8, fill:'#fff'}, svg);
+  /* 微笑 */
+  S.path(svg, 'M4.2 23 Q8.5 25.5 12.5 23.2',
+    {stroke:'#22303f', strokeWidth:1.4, fill:'none', roughness:1.05, bowing:.45, seed:seed+4});
+  /* 吻前水流线 */
+  S.path(svg, 'M3.2 18 Q1.9 15 3.2 12',
+    {stroke:'#2f7ea5', strokeWidth:1.2, fill:'none', roughness:1, bowing:.5, seed:seed+5, opacity:.55});
+  S.path(svg, 'M3.5 15.5 Q1.9 12.5 3 9.5',
+    {stroke:'#2f7ea5', strokeWidth:1.2, fill:'none', roughness:1, bowing:.5, seed:seed+6, opacity:.55});
+}
+
+/* 宝箱（viewBox 40×36）：金箱 + 锁扣 + 宝石钻石点缀 */
+/* 箱盖组内含钻石，弹窗整体摇摆时宝石跟着盖子走 */
+function drawChestInto(svg, seed){
+  if(!sketch) return;
+  var S = GS;
+  /* 箱身：暖棕 */
+  S.path(svg, 'M6 14 L34 14 L33 33 L7 33 Z',
+    {fill:'#B8860B', fillStyle:'solid', stroke:'#8a5a05', strokeWidth:1.4, roughness:1.2, bowing:.6, seed:seed}, 'gs-chest-body');
+  /* 金色腰带 */
+  S.path(svg, 'M6.6 25 L33.4 25 L33.1 28.5 L6.9 28.5 Z',
+    {fill:'#E3B23C', fillStyle:'solid', stroke:'#caa11a', strokeWidth:1, roughness:1.15, bowing:.5, seed:seed+1});
+  /* 箱盖组：盖 + 盖顶大钻石 */
+  var lidG = elNS('g', {'class':'gs-chest-lid'}, svg);
+  S.path(lidG, 'M4 10 L20 3 L36 10 L34 14 L6 14 Z',
+    {fill:'#E3B23C', fillStyle:'solid', stroke:'#9a6d0a', strokeWidth:1.4, roughness:1.25, bowing:.7, seed:seed+2});
+  S.polygon(lidG, [[20,2.5],[25,8.5],[20,14.5],[15,8.5]],
+    {fill:'#6FD3F5', fillStyle:'solid', stroke:'#2f7ea5', strokeWidth:1.2, roughness:1.15, bowing:.55, seed:seed+3}, 'gs-chest-gem');
+  /* 钻石刻面高光 */
+  S.path(lidG, 'M20 2.5 L20 14.5 M15 8.5 L25 8.5',
+    {stroke:'rgba(255,255,255,.82)', strokeWidth:.9, fill:'none', roughness:1, bowing:.35, seed:seed+4});
+  /* 锁扣：金属金（不是木头色） */
+  S.rect(svg, 17, 12, 6, 7,
+    {fill:'#FFD860', fillStyle:'solid', stroke:'#caa11a', strokeWidth:1, roughness:1.1, bowing:.5, seed:seed+5});
+  /* 箱身两翼宝石：珊瑚 + 祖母绿 */
+  S.polygon(svg, [[11,15],[14.5,18.5],[11,22],[7.5,18.5]],
+    {fill:'#E37B60', fillStyle:'solid', stroke:'#c05a42', strokeWidth:1, roughness:1.1, bowing:.5, seed:seed+6}, 'gs-chest-gem');
+  S.polygon(svg, [[29,15],[32.5,18.5],[29,22],[25.5,18.5]],
+    {fill:'#3FCF8E', fillStyle:'solid', stroke:'#1f9e6a', strokeWidth:1, roughness:1.1, bowing:.5, seed:seed+7}, 'gs-chest-gem');
+  /* 闪星 */
+  S.path(svg, 'M32 3.2 l.85 1.9 1.9.85 -1.9.85 -.85 1.9 -.85 -1.9 -1.9 -.85 1.9 -.85 Z',
+    {fill:'#FFF3C4', fillStyle:'solid', stroke:'#E3B23C', strokeWidth:.7, roughness:1, bowing:.35, seed:seed+8});
+  /* 宝石微闪错相 */
+  var gems = svg.querySelectorAll('.gs-chest-gem');
+  for(var gi = 0; gi < gems.length; gi++){
+    gems[gi].style.animationDelay = (gi * -0.7) + 's';
+  }
+}
+
+/* 罗盘（viewBox 100×100）：外圈/内虚线圈/旋针/中心钉 */
+function drawCompassInto(svg, seed){
+  if(!sketch) return;
+  var S = GS;
+  S.circle(svg, 50, 50, 92,
+    {fill:'rgba(246,235,211,.7)', fillStyle:'solid', stroke:'#8B6035', strokeWidth:3, roughness:1.35, bowing:.8, seed:seed});
+  S.circle(svg, 50, 50, 76,
+    {stroke:'rgba(139,96,53,.45)', strokeWidth:1.6, fill:'none', strokeLineDash:[4,3], roughness:1.15, bowing:.6, seed:seed+1});
+  /* 旋针：包进 g 才能整体摇摆 */
+  var g = elNS('g', {'class':'cq-needle'}, svg);
+  S.polygon(g, [[50,14],[56,50],[50,44],[44,50]],
+    {fill:'#E37B60', fillStyle:'solid', stroke:'#c05a42', strokeWidth:1.2, roughness:1.2, bowing:.6, seed:seed+2});
+  S.polygon(g, [[50,86],[56,50],[50,56],[44,50]],
+    {fill:'#5B8FB5', fillStyle:'solid', stroke:'#3a6f94', strokeWidth:1.2, roughness:1.2, bowing:.6, seed:seed+3});
+  S.circle(svg, 50, 50, 8,
+    {fill:'#8B6035', fillStyle:'solid', stroke:'#6b4704', strokeWidth:1, roughness:1, seed:seed+4});
+}
+
+/* 罗盘刻字（rough 不擅长文字，用原生 SVG text） */
+function drawCompassLabels(svg){
+  var t = [['N',50,12,13,'#3a7aa0'], ['S',50,97,12,'#7a6748'], ['E',94,54,12,'#c06a4a'], ['W',6,54,12,'#7a6748']];
+  for(var i=0;i<t.length;i++){
+    elNS('text', {
+      x:t[i][1], y:t[i][2], 'text-anchor':'middle',
+      'font-size':t[i][3], 'font-weight':'800', fill:t[i][4]
+    }, svg).textContent = t[i][0];
+  }
+}
+function drawCompass(){
+  var host = $('cq-compass');
+  if(!host) return;
+  host.innerHTML = '';
+  var svg = svgEl(100, 100);
+  host.appendChild(svg);
+  if(sketch){
+    drawCompassInto(svg, GS.seedFrom('cq-compass'));
+  }else{
+    /* 无 rough.js 的平面降级 */
+    elNS('circle', {cx:50, cy:50, r:46, fill:'rgba(246,235,211,.65)', stroke:'#8B6035', 'stroke-width':3}, svg);
+    elNS('circle', {cx:50, cy:50, r:38, fill:'none', stroke:'rgba(139,96,53,.4)', 'stroke-width':1.6, 'stroke-dasharray':'4 3'}, svg);
+    var g = elNS('g', {'class':'cq-needle'}, svg);
+    elNS('polygon', {points:'50,14 56,50 50,44 44,50', fill:'#E37B60'}, g);
+    elNS('polygon', {points:'50,86 56,50 50,56 44,50', fill:'#5B8FB5'}, g);
+    elNS('circle', {cx:50, cy:50, r:4, fill:'#8B6035'}, svg);
+  }
+  drawCompassLabels(svg);
+}
+
+/* 标题图标：手绘海豚，emoji 仅降级 */
+function drawTitleIcon(){
+  var el = $('cqTitleIcon');
+  if(!el || !sketch) return;
+  var svg = svgEl(40, 40);
+  el.appendChild(svg);
+  drawDolphinInto(svg, GS.seedFrom('cq-title'));
+}
+
+/* 宝箱进格子（手绘/降级同入口） */
+function buildChest(host){
+  host.innerHTML = '';
+  var svg = svgEl(40, 36);
+  host.appendChild(svg);
+  if(sketch){
+    drawChestInto(svg, GS.seedFrom('cq-chest'));
+    return;
+  }
+  /* 平面降级：箱身/腰带/箱盖/钻石/锁扣/两翼宝石 */
+  elNS('path', {d:'M6 14 L34 14 L33 33 L7 33 Z', fill:'#B8860B'}, svg);
+  elNS('path', {d:'M6.6 25 L33.4 25 L33.1 28.5 L6.9 28.5 Z', fill:'#E3B23C'}, svg);
+  elNS('path', {d:'M4 10 L20 3 L36 10 L34 14 L6 14 Z', fill:'#E3B23C', stroke:'#9a6d0a'}, svg);
+  elNS('polygon', {points:'20,2.5 25,8.5 20,14.5 15,8.5', fill:'#6FD3F5', stroke:'#2f7ea5', 'stroke-width':1.2}, svg);
+  elNS('path', {d:'M20 2.5 L20 14.5 M15 8.5 L25 8.5', stroke:'rgba(255,255,255,.82)', 'stroke-width':.9, fill:'none'}, svg);
+  elNS('rect', {x:17, y:12, width:6, height:7, rx:1.6, fill:'#FFD860', stroke:'#caa11a'}, svg);
+  elNS('polygon', {points:'11,15 14.5,18.5 11,22 7.5,18.5', fill:'#E37B60'}, svg);
+  elNS('polygon', {points:'29,15 32.5,18.5 29,22 25.5,18.5', fill:'#3FCF8E'}, svg);
+}
+
+/* 海豚：定位层(.cq-dolphin) > 压扁层(.cq-dhop) > svg */
+var dolphin = document.createElement('div');
+dolphin.className = 'cq-dolphin';
+var dhop = document.createElement('div');
+dhop.className = 'cq-dhop';
+dolphin.appendChild(dhop);
+var dolphinFlip = 1;   /* 1=原图面朝西，-1=翻转面朝东 */
+function drawDolphin(){
+  dhop.innerHTML = '';
+  var svg = svgEl(40, 40);
+  svg.classList.add('cq-idle');
+  dhop.appendChild(svg);
+  if(sketch){
+    drawDolphinInto(svg, GS.seedFrom('cq-swimmer'));
+  }else{
+    elNS('path', {d:'M30 17 C33 11 37 9 37.5 13 C38 16 35 19 32 20 C35 21 38 24 37.5 28 C37 32 33 29 29.5 23 Z', fill:'#3E92B8', stroke:'#2f7ea5', 'stroke-width':1.3}, svg);
+    elNS('path', {d:'M3.5 21 C4.5 12 12 7.5 20 9 C27.5 10.5 32.5 15 33.5 21 C32.5 27 25 32 17 31 C9 30 4 27 3.5 21 Z', fill:'#4FA3C7', stroke:'#2f7ea5', 'stroke-width':1.6}, svg);
+    elNS('path', {d:'M18 10.5 C19 4 24 2 26 5 C27 8 24 11.5 21 12.5 Z', fill:'#3E92B8', stroke:'#2f7ea5', 'stroke-width':1.2}, svg);
+    elNS('path', {d:'M11.5 23.5 C8.5 28 9.5 33 13.5 31 C16 29.5 15.5 25 14 23.5 Z', fill:'#3E92B8', stroke:'#2f7ea5', 'stroke-width':1.2}, svg);
+    elNS('circle', {cx:11, cy:18, r:2.2, fill:'#22303f'}, svg);
+    elNS('circle', {cx:10.2, cy:17.2, r:.8, fill:'#fff'}, svg);
+    elNS('path', {d:'M4.2 23 Q8.5 25.5 12.5 23.2', fill:'none', stroke:'#22303f', 'stroke-width':1.4, 'stroke-linecap':'round'}, svg);
+    elNS('path', {d:'M3.2 18 Q1.9 15 3.2 12 M3.5 15.5 Q1.9 12.5 3 9.5', fill:'none', stroke:'#2f7ea5', 'stroke-width':1.2, 'stroke-linecap':'round', opacity:.55}, svg);
+  }
+}
+
+/* 棋盘手绘坐标轴 + 海图外框（需先布局量出尺寸） */
+function drawMapArt(){
+  if(!sketch) return;
+  /* 海图外框 */
+  if(mapEl.offsetWidth && mapEl.offsetHeight){
+    GS.frame(mapEl, {inset:5, color:'rgba(139,107,58,.42)', strokeWidth:2, roughness:1.5, bowing:.9, seed:GS.seedFrom('cq-mapframe')});
+  }
+  /* 坐标轴：细胞区左上角 (lw, 0) 到 (lw+n*cell, n*cell) */
+  var old = boardEl.querySelector('.cq-gridart');
+  if(old) old.parentNode.removeChild(old);
+  var lw = parseFloat(getComputedStyle(boardEl).getPropertyValue('--cq-lw')) || 20;
+  var cellPx = parseFloat(getComputedStyle(boardEl).getPropertyValue('--cq-cell')) || 30;
+  if(!cellPx || !boardEl.offsetWidth) return;
+  var x0 = lw, y0 = 0, x1 = lw + n * cellPx, y1 = n * cellPx;
+  var svg = svgEl(boardEl.offsetWidth, boardEl.offsetHeight, 'cq-gridart');
+  boardEl.appendChild(svg);
+  /* 外框 */
+  GS.rect(svg, x0, y0, x1 - x0, y1 - y0, {
+    stroke:'rgba(91,143,181,.55)', strokeWidth:1.6, fill:'none',
+    roughness:1.35, bowing:.8, seed:GS.seedFrom('cq-gridbox')
+  });
+  /* 两条坐标轴（更粗更暖，像蜡笔画的） */
+  GS.path(svg, 'M' + x0 + ',' + y1 + ' L' + x1 + ',' + y1, {
+    stroke:'#E37B60', strokeWidth:2.4, fill:'none',
+    roughness:1.25, bowing:.7, seed:GS.seedFrom('cq-axis-x')
+  });
+  GS.path(svg, 'M' + x0 + ',' + y0 + ' L' + x0 + ',' + y1, {
+    stroke:'#E37B60', strokeWidth:2.4, fill:'none',
+    roughness:1.25, bowing:.7, seed:GS.seedFrom('cq-axis-y')
+  });
+}
+
+function setDolphin(){
+  var p = cellCenter(px, py);
+  boardEl.style.setProperty('--cq-dx', p.x + 'px');
+  boardEl.style.setProperty('--cq-dy', p.y + 'px');
+  dolphin.style.transform = 'translate(' + p.x + 'px,' + p.y + 'px)' +
+    (dolphinFlip === 1 ? '' : ' scaleX(-1)');
+}
+
+/* ===== 坐标映射：数学(x,y) <-> 格子(idx) ===== */
+function xyToIdx(x, y){
+  if(quad === 4){ return (4 - y) * n + (x + 4); }   // x∈-4..4, y∈-4..4
+  return (n - y) * n + (x - 1);                      // 第一象限 x,y∈1..n
+}
+function idxToXY(idx){
+  var r = Math.floor(idx / n), c = idx % n;
+  if(quad === 4) return {x: c - 4, y: 4 - r};
+  return {x: c + 1, y: n - r};
+}
+
+/* ===== 渲染棋盘 ===== */
+function buildBoard(){
+  boardEl.style.setProperty('--cq-n', n);
+  boardEl.innerHTML = '';
+  var i, r, c, cell, yl, xl;
+  for(i = 0; i < n * n; i++){
+    r = Math.floor(i / n); c = i % n;
+    cell = document.createElement('div');
+    cell.className = 'cq-cell'; cell.dataset.idx = i;
+    cell.style.gridColumn = (c + 2); cell.style.gridRow = (r + 1);
+    cell.addEventListener('click', (function(k){ return function(){ guessFromCell(k); }; })(i));
+    boardEl.appendChild(cell);
+  }
+  // y 轴标签（左列，上→下 = y 大→小）
+  for(r = 0; r < n; r++){
+    yl = document.createElement('div');
+    yl.className = 'cq-ylabel'; yl.textContent = labelY(r);
+    yl.style.gridColumn = '1'; yl.style.gridRow = (r + 1);
+    boardEl.appendChild(yl);
+  }
+  // x 轴标签（底行，左→右 = x 小→大）
+  for(c = 0; c < n; c++){
+    xl = document.createElement('div');
+    xl.className = 'cq-xlabel'; xl.textContent = labelX(c);
+    xl.style.gridColumn = (c + 2); xl.style.gridRow = (n + 1);
+    boardEl.appendChild(xl);
+  }
+}
+function labelX(c){ return quad === 4 ? c - 4 : c + 1; }
+function labelY(r){ return quad === 4 ? 4 - r : n - r; }
+
+/* ===== 尺寸自适应 ===== */
+function layout(){
+  if(!mapEl.offsetWidth) return;
+  var lw = Math.max(18, Math.floor(mapEl.clientWidth * 0.045));
+  var vh = window.innerHeight || document.documentElement.clientHeight;
+  var pad = 16;
+  var availW = mapEl.clientWidth - lw - pad;
+  var availH = vh - mapEl.getBoundingClientRect().top - pad;
+  var cell = Math.max(12, Math.floor(Math.min(availW / n, availH / n)));
+  if(n >= 9) cell = Math.max(12, Math.min(cell, 52));
+  boardEl.style.setProperty('--cq-lw', lw + 'px');
+  boardEl.style.setProperty('--cq-lh', lw + 'px');
+  boardEl.style.setProperty('--cq-cell', cell + 'px');
+  setDolphin();
+  drawMapArt();
+}
+function layoutAll(){ requestAnimationFrame(layout); }
+window.addEventListener('resize', layoutAll);
+window.addEventListener('orientationchange', layoutAll);
+
+/* ===== 寻宝初始化 ===== */
+/* 宝箱藏起来不画在盘上——靠线索+方向提示推断坐标（点格子才不会变成看图点答案） */
+function placeTreasure(){
+  var all = [], ci;
+  for(ci = 0; ci < n * n; ci++) all.push(ci);
+  var blocked = {};
+  blocked[xyToIdx(px, py)] = 1;
+  foundCells.forEach(function(f){ blocked[f] = 1; });
+  var pool = all.filter(function(i){ return !blocked[i]; });
+  var pick = pool[Math.floor(Math.random() * pool.length)];
+  tx = idxToXY(pick).x; ty = idxToXY(pick).y;
+  treasureCell = boardEl.querySelectorAll('.cq-cell')[pick] || null;
+  hintUsed = false;
+  clearRowColHint();
+  updateClue();
+}
+
+/* 线索卡：给出一维坐标（或限时提示），另一维靠猜 */
+function colDesc(v){
+  if(v < 0) return 'y 轴左边第 ' + Math.abs(v) + ' 列';
+  if(v === 0) return 'y 轴上（列数是 0）';
+  return 'y 轴右边第 ' + v + ' 列';
+}
+function updateClue(){
+  if(!clueTextEl || !clueEl) return;
+  clueEl.classList.remove('cq-reveal');
+  if(cfg.timed){
+    clueTextEl.textContent = '60 秒内连寻 ' + cfg.targets + ' 个宝箱，方向提示帮你数格子！';
+    return;
+  }
+  if(levelIdx === 0){
+    clueTextEl.textContent = '宝箱藏在第 ' + tx + ' 列，行数自己找~';
+  }else if(levelIdx === 1){
+    clueTextEl.textContent = '宝箱藏在第 ' + ty + ' 行，列数自己找~';
+  }else{
+    /* 四象限关：用「y 轴左/右边第几列」代替负号，四年级也能听懂；行数只给方位不给数字 */
+    var yHint = (ty === 0) ? '紧挨着 x 轴' : ('在 x 轴' + (ty < 0 ? '下' : '上') + '边');
+    clueTextEl.textContent = '宝箱在' + colDesc(tx) + '、' + yHint + '，第几行自己数~';
+  }
+}
+/* 多次猜错后的安全网：高亮宝箱所在行与列，交点即答案 */
+function highlightRC(){
+  if(!treasureCell) return;
+  var cells = boardEl.querySelectorAll('.cq-cell');
+  var c = xyToIdx(tx, ty), r = Math.floor(c / n), col = c % n;
+  Array.prototype.forEach.call(cells, function(el, i){
+    if(Math.floor(i / n) === r) el.classList.add('cq-rowhint');
+    if(i % n === col) el.classList.add('cq-colhint');
+  });
+}
+function clearRowColHint(){
+  Array.prototype.forEach.call(boardEl.querySelectorAll('.cq-rowhint,.cq-colhint'), function(el){
+    el.classList.remove('cq-rowhint', 'cq-colhint');
+  });
+}
+
+/* ===== 方向提示（相对「这次猜的格子」，越猜越准） ===== */
+function dirHint(gx, gy, cxt, cyt){
+  var dx = cxt - gx, dy = cyt - gy, parts = [];
+  if(dx !== 0) parts.push('往' + (dx > 0 ? '东' : '西') + ' ' + Math.abs(dx) + ' 格');
+  if(dy !== 0) parts.push('往' + (dy > 0 ? '北' : '南') + ' ' + Math.abs(dy) + ' 格');
+  return '🧭 再' + parts.join('、') + '~';
+}
+/* 只给方向不给距离：保留学数格子的思考量 */
+function softDirHint(gx, gy, cxt, cyt){
+  var parts = [];
+  if(cxt !== gx) parts.push(cxt > gx ? '东' : '西');
+  if(cyt !== gy) parts.push(cyt > gy ? '北' : '南');
+  if(!parts.length) return '';
+  return '🧭 往' + parts.join('、') + '边找找~';
+}
+/* 热冷：离得越近越热，不泄露具体坐标 */
+function heatHint(gx, gy, cxt, cyt){
+  var d = Math.abs(cxt - gx) + Math.abs(cyt - gy);
+  if(d <= 2) return '🔥 很接近啦！';
+  if(d <= 5) return '有点接近~';
+  return '还差得远哦~';
+}
+/* 哪一维对了：练「列= x、行=y」的对应关系 */
+function axisHint(gx, gy, cxt, cyt){
+  if(gx === cxt) return '列对啦！';
+  if(gy === cyt) return '行对啦！';
+  return '列和行都再想想~';
+}
+function showBubble(txt){
+  bubble.textContent = txt;
+  bubble.classList.remove('cq-go'); void bubble.offsetWidth;
+  bubble.classList.add('cq-go');
+}
+
+/* ===== 积分 ===== */
+/* 本宝箱当前还值多少分：基础 100，每猜错 −20，一次就中 +50；靠提示保底 20 */
+function treasureScore(errs, usedHint){
+  if(usedHint) return 20;
+  var s = 100 - errs * 20;
+  if(errs === 0) s += 50;
+  return Math.max(10, s);
+}
+function currentTreasureWorth(){ return treasureScore(errCount, hintUsed); }
+/* +N 从积分卡上浮，让孩子看见「分到手」 */
+function floatGain(n){
+  if(!statScore || !statScore.parentNode) return;
+  var g = document.createElement('div');
+  g.className = 'cq-gain';
+  g.textContent = '+' + n;
+  statScore.parentNode.appendChild(g);
+  g.addEventListener('animationend', function(){ g.remove(); }, {once:true});
+}
+function totalScore(){
+  var t = levelScore, i;
+  for(i = 0; i < 4; i++) t += levelScores[i];
+  return t;
+}
+function bestText(){
+  return bestScore > 0 ? ('🏆 纪录 ' + bestScore) : '🏆 纪录 —';
+}
+/* 反馈条：彩色底 + 弹性弹入 */
+function showMsg(txt, type){
+  if(!msgEl) return;
+  msgEl.textContent = txt;
+  msgEl.className = 'cq-msg' + (type ? (' cq-' + type) : '');
+  if(canAnimate()){
+    A.animate(msgEl, {opacity:[0,1], scale:[.9,1], y:[8,0], ease:'out(3)', duration:340});
+  }
+}
+
+/* ===== 游向宝箱（弧线滑行 + 气泡尾迹 + 侧倾） ===== */
+function hopSquash(){
+  if(canAnimate()){
+    A.animate(dhop, {scaleY:[1,.78,1.14,1], scaleX:[1,1.16,.9,1], duration:220, ease:'out(2)'});
+    return;
+  }
+  dhop.classList.remove('cq-hop'); void dhop.offsetWidth; dhop.classList.add('cq-hop');
+}
+/* 格心像素坐标（boardEl 内，含左侧 y 轴标签宽） */
+function cellCenter(x, y){
+  var ci = xyToIdx(x, y), r = Math.floor(ci / n), c = ci % n;
+  var lw = parseFloat(getComputedStyle(boardEl).getPropertyValue('--cq-lw')) || 20;
+  var cs = parseFloat(getComputedStyle(boardEl).getPropertyValue('--cq-cell')) || 30;
+  return { x: lw + (c + 0.5) * cs, y: (r + 0.5) * cs };
+}
+function splashAt(x, y){
+  var rip = document.createElement('div');
+  rip.className = 'cq-ripple';
+  rip.style.left = x + 'px'; rip.style.top = y + 'px';
+  boardEl.appendChild(rip);
+  rip.classList.add('cq-go');
+  rip.addEventListener('animationend', function(){ rip.remove(); }, {once:true});
+}
+function spawnBubble(x, y){
+  if(reduced()) return;
+  var b = document.createElement('div');
+  b.className = 'cq-bub';
+  var s = 5 + Math.random() * 8;
+  b.style.width = b.style.height = s + 'px';
+  b.style.marginLeft = b.style.marginTop = (-s / 2) + 'px';
+  b.style.left = x + 'px'; b.style.top = y + 'px';
+  boardEl.appendChild(b);
+  if(canAnimate()){
+    A.animate(b, {
+      y: -(16 + Math.random() * 26),
+      x: (Math.random() - .5) * 16,
+      scale: [.45, 1.2],
+      opacity: [.9, 0],
+      ease: 'out(2)',
+      duration: 650 + Math.random() * 450,
+      onComplete: function(){ b.remove(); }
+    });
+  }else{
+    b.classList.add('cq-go');
+    b.addEventListener('animationend', function(){ b.remove(); }, {once:true});
+  }
+}
+function swimTo(gx, gy, done){
+  if(reduced()){ px = gx; py = gy; setDolphin(); done(); return; }
+  var p0 = cellCenter(px, py), p1 = cellCenter(gx, gy);
+  var vx = p1.x - p0.x, vy = p1.y - p0.y;
+  var dist = Math.sqrt(vx * vx + vy * vy) || 1;
+  var dur = Math.min(1500, Math.max(560, dist * 3.1));
+  /* 控制点垂直于行进方向外推，游出一道弧而不是直线 */
+  var bow = Math.min(52, dist * 0.22);
+  var cx = (p0.x + p1.x) / 2 - (vy / dist) * bow;
+  var cy = (p0.y + p1.y) / 2 + (vx / dist) * bow;
+  /* 侧倾：沿行进方向歪一歪，中段最明显，收尾回正 */
+  var ang = Math.atan2(vy, vx) * 180 / Math.PI;
+  var base = (vx >= 0) ? 0 : 180;
+  var rot = ang - base;
+  if(rot > 180) rot -= 360;
+  if(rot < -180) rot += 360;
+  rot = Math.max(-56, Math.min(56, rot));
+  /* 原图面朝西，往东游要翻过来 */
+  if(vx > 0) dolphinFlip = -1; else if(vx < 0) dolphinFlip = 1;
+
+  hopSquash();
+  splashAt(p0.x, p0.y);
+  var t0 = (window.performance && performance.now) ? performance.now() : Date.now();
+  var lastBub = 0;
+  function frame(now){
+    var t = Math.min(1, (now - t0) / dur);
+    var e = t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;   /* inOut(2) */
+    var u = 1 - e;
+    var x = u * u * p0.x + 2 * u * e * cx + e * e * p1.x;
+    var y = u * u * p0.y + 2 * u * e * cy + e * e * p1.y;
+    var wob = Math.sin(e * Math.PI * 2.2) * 3.2 * (1 - e);          /* 尾部轻微起伏 */
+    var tilt = rot * Math.sin(e * Math.PI);
+    dolphin.style.transform = 'translate(' + x + 'px,' + (y + wob) + 'px) rotate(' + tilt + 'deg)' +
+      (dolphinFlip === 1 ? '' : ' scaleX(-1)');
+    if(now - lastBub > 95){
+      lastBub = now;
+      spawnBubble(x + (Math.random() - .5) * 10, y + (Math.random() - .5) * 10);
+    }
+    if(t < 1){ requestAnimationFrame(frame); return; }
+    px = gx; py = gy;
+    setDolphin();
+    splashAt(p1.x, p1.y);
+    hopSquash();
+    done();
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ===== 判定 ===== */
+function guess(x, y){
+  if(busy || finished) return;
+  guessCount++;
+  if(x === tx && y === ty){
+    busy = true;                 // 锁住，游动期间不可再点
+    swimTo(tx, ty, success);     // 海豚游向宝箱格，到站后触发 success
+  }else{
+    fail(x, y);                  // 海豚不动，给方向提示
+  }
+}
+/* 点格子 = 投递一次猜测（宝箱藏着，点不到答案），坐标同步进输入框便于对齐数对 */
+function guessFromCell(idx){
+  if(busy || finished) return;
+  var g = idxToXY(idx);
+  xInp.value = g.x; yInp.value = g.y;
+  guess(g.x, g.y);
+}
+
+function flashInputs(ok){
+  var cls = ok ? 'cq-flash-ok' : 'cq-flash-err';
+  [xInp, yInp].forEach(function(el){
+    if(!el) return;
+    el.classList.remove('cq-flash-ok', 'cq-flash-err');
+    void el.offsetWidth;
+    el.classList.add(cls);
+    setTimeout(function(){ el.classList.remove(cls); }, 650);
+  });
+}
+
+function success(){
+  busy = true;
+  var c = xyToIdx(tx, ty);
+  var cellEl = boardEl.querySelectorAll('.cq-cell')[c];
+  cellEl.classList.remove('cq-glow'); cellEl.classList.add('cq-found');
+  clearRowColHint();
+  /* 宝箱此刻才现身——藏宝→挖到→开箱 */
+  var ch = document.createElement('div');
+  ch.className = 'cq-chest cq-new';
+  buildChest(ch);
+  cellEl.appendChild(ch);
+  burstCoins(cellEl);
+  flashInputs(true);
+  /* 本宝箱得分：一次就中 150，每多猜一次掉 20，靠提示只有 20 */
+  var gained = currentTreasureWorth();
+  levelScore += gained;
+  var bonusTxt = (errCount === 0 && !hintUsed) ? '（一击即中 +50）' : (hintUsed ? '（提示分）' : '');
+  showMsg('宝箱到手！+' + gained + ' 分' + bonusTxt + ' 🎉', 'ok');
+  floatGain(gained);
+  updateStats();
+  bounceStat(statScore);
+  var t = setTimeout(function(){
+    var chest = cellEl.querySelector('.cq-chest');
+    if(chest) chest.remove();
+    totalFound++;
+    foundCells.push(c);
+    updateStats();
+    bounceStat(statFound);
+    if(cfg.timed && totalFound < cfg.targets){ // 挑战关连寻
+      busy = false; errCount = 0;   // guessCount 累计到整关，供星级统计
+      showMsg('找到第 ' + totalFound + ' 个！继续寻找 ' + (totalFound + 1) + ' 号宝箱~', 'hint');
+      setTimeout(placeTreasure, 600);
+      return;
+    }
+    levelComplete();
+  }, 600);
+}
+function burstCoins(cellEl){
+  var box = cellEl.getBoundingClientRect(), mapBox = coinsEl.getBoundingClientRect();
+  var cx = box.left + box.width / 2 - mapBox.left, cy = box.top + box.height / 2 - mapBox.top;
+  var i, coin;
+  for(i = 0; i < 12; i++){
+    coin = document.createElement('div');
+    coin.className = 'cq-coin';
+    var a = (i / 12) * Math.PI * 2 + Math.random() * .4;
+    coin.style.left = cx + 'px'; coin.style.top = cy + 'px';
+    if(canAnimate()){
+      coinsEl.appendChild(coin);
+      A.animate(coin, {
+        x: Math.cos(a) * (36 + Math.random() * 34),
+        y: Math.sin(a) * (36 + Math.random() * 34) - 16,
+        scale: [.5, 1.25],
+        rotate: 380,
+        opacity: [1, 0],
+        ease: 'out(3)',
+        duration: 900,
+        delay: Math.random() * 150,
+        onComplete: (function(m){ return function(){ m.remove(); }; })(coin)
+      });
+    }else{
+      coin.style.setProperty('--cq-cx', (Math.cos(a) * (36 + Math.random() * 34)) + 'px');
+      coin.style.setProperty('--cq-cy', (Math.sin(a) * (36 + Math.random() * 34) - 16) + 'px');
+      coin.style.animationDelay = (Math.random() * .15) + 's';
+      coin.classList.add('cq-go');
+      coinsEl.appendChild(coin);
+      (function(m){ m.addEventListener('animationend', function(){ m.remove(); }, {once:true}); })(coin);
+    }
+  }
+}
+function shake(){
+  if(canAnimate()){
+    A.animate(mapEl, {x:[0,-8,7,-5,4,0], ease:'out(2)', duration:420});
+    return;
+  }
+  mapEl.classList.remove('cq-shake'); void mapEl.offsetWidth; mapEl.classList.add('cq-shake');
+}
+/* 猜错反馈分级：越到后面提示越具体，前两次必须自己数格子 */
+function fail(x, y){
+  errCount++;
+  var c = xyToIdx(x, y);
+  var cellEl = boardEl.querySelectorAll('.cq-cell')[c];
+  cellEl.classList.remove('cq-wrong'); void cellEl.offsetWidth; cellEl.classList.add('cq-wrong');
+  window.setTimeout(function(){ cellEl.classList.remove('cq-wrong'); }, 600);
+  flashInputs(false);
+
+  var ax = axisHint(x, y, tx, ty);
+  var heat = heatHint(x, y, tx, ty);
+  var soft = softDirHint(x, y, tx, ty);
+  var full = dirHint(x, y, tx, ty);
+  var txt, worth;
+  if(errCount === 1){
+    txt = '还不对哦~ ' + ax + ' ' + heat;
+    showBubble('数数看第几列第几行~');
+  }else if(errCount === 2){
+    txt = '再想想~ ' + ax + ' ' + soft + ' ' + heat;
+    showBubble(soft);
+  }else if(errCount === 3){
+    txt = soft + ' 仔细数数格子~';
+    showBubble(soft);
+  }else{
+    hintUsed = true;
+    txt = '帮你看仔细啦，' + full;
+    showBubble(full);
+    highlightRC();
+    /* 线索卡教「读行列交叉」，不再直接念出坐标——数对 (x, y) 才是本事 */
+    if(clueEl && clueTextEl){
+      clueEl.classList.add('cq-reveal');
+      clueTextEl.textContent = '发光的行和列交叉处就是宝箱，数一数是第几列、第几行！（这次只能拿提示分啦）';
+    }
+  }
+  /* 掉分提醒：乱点是有代价的 */
+  worth = currentTreasureWorth();
+  txt += '（本宝箱还值 ' + worth + ' 分）';
+  showMsg(txt, 'warn');
+  bounceStat(statScore);
+  if(errCount % 3 === 0) shake();
+}
+function elapsedSec(){ return Math.floor((Date.now() - levelStart) / 1000); }
+function updateStats(){
+  statLevel.textContent = (levelIdx + 1);
+  statFound.textContent = totalFound + '/' + cfg.targets;
+  if(cfg.timed){
+    statTimeLabel.textContent = '剩余';
+    statTime.textContent = fmtT(timeLeft);
+  }else{
+    statTimeLabel.textContent = '用时';
+    statTime.textContent = fmtT(elapsedSec());
+  }
+  if(statScore) statScore.textContent = totalScore();
+  statBest.textContent = bestText();
+}
+function fmtT(s){ return (s < 0 ? 0 : s) + '秒'; }
+
+/* ===== 礼花：从弹窗中心绽开（移动端默认 origin 偏底时用） ===== */
+function launchConfettiFromCard(){
+  if(typeof confetti !== 'function' || typeof confetti.create !== 'function') return;
+  var card = modalBox;
+  var ox = 0.5, oy = 0.5;
+  if(card){
+    var r = card.getBoundingClientRect();
+    ox = Math.min(.95, Math.max(.05, (r.left + r.width / 2) / window.innerWidth));
+    oy = Math.min(.9, Math.max(.1, (r.top + r.height / 2) / window.innerHeight));
+  }
+  var canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483647;';
+  document.body.appendChild(canvas);
+  var fire = confetti.create(canvas, {resize:true, useWorker:false});
+  var duration = 1400;
+  var end = Date.now() + duration;
+  (function frame(){
+    fire({
+      particleCount: 5,
+      spread: 62,
+      startVelocity: 32,
+      origin: {x: ox, y: oy},
+      colors: ['#E3B23C', '#E37B60', '#4FA3C7', '#5B8FB5', '#FFD860', '#7FC0DC', '#B8860B'],
+      disableForReducedMotion: true
+    });
+    if(Date.now() < end) requestAnimationFrame(frame);
+  }());
+  setTimeout(function(){
+    try { fire.reset(); } catch(e){}
+    if(canvas.parentNode) canvas.parentNode.removeChild(canvas);
+  }, duration + 2000);
+}
+
+/* ===== 关卡收尾 ===== */
+/* 星级：平均越少猜测越高星，鼓励先想清楚再出手 */
+function starsText(){
+  var avg = totalFound ? (guessCount / totalFound) : guessCount;
+  var s = avg <= 2 ? 3 : (avg <= 4 ? 2 : 1);
+  return s === 3 ? '⭐⭐⭐' : (s === 2 ? '⭐⭐' : '⭐');
+}
+function levelComplete(){
+  finished = true;
+  clearInterval(timer);
+  var el = (Date.now() - levelStart) / 1000;
+  if(cfg.timed){ el = 60 - timeLeft; }
+  var k = 'cq_best_L' + (levelIdx + 1), old = localStorage.getItem(k);
+  if(!old || parseFloat(el) < parseFloat(old)){ localStorage.setItem(k, el.toFixed(1)); }
+  /* 通关才计分：本关积分入账（重玩会覆盖本关旧分，不会叠分） */
+  var cleared = !(cfg.timed && timeLeft <= 0 && totalFound < cfg.targets);
+  if(cleared){ levelScores[levelIdx] = levelScore; }
+  levelScore = 0;
+  var total = totalScore();
+  var newRecord = false;
+  if(total > bestScore){
+    bestScore = total;
+    localStorage.setItem('cq_best_score', String(bestScore));
+    newRecord = true;
+  }
+  var scoreLine = cleared
+    ? ('⭐ 本局 <b>' + total + '</b> 分' + (newRecord ? ' · 🎉 <b>新纪录！</b>' : ''))
+    : ('⭐ 本次不计分，通关才入账哦');
+  if(!cleared){
+    modalTitle.textContent = '⏰ 时间到！';
+    modalMsg.innerHTML = scoreLine + '<br>找到 <b>' + totalFound + '</b> / ' + cfg.targets + ' 个宝箱，还差一口气。<br>再练练，能更快！';
+    nextBtn.textContent = '再试一次';
+    nextFreshRun = false;
+  }else{
+    modalTitle.textContent = '🎉 太棒了！';
+    var stars = starsText();
+    if(cfg.timed){
+      modalMsg.innerHTML = stars + '<br>' + scoreLine + '<br>在 <b>' + el.toFixed(1) + ' 秒</b>内连寻 3 个宝箱，海豚为你欢呼！';
+    }else{
+      modalMsg.innerHTML = stars + '<br>' + scoreLine + '<br>找到宝箱！猜了 <b>' + guessCount + '</b> 次，用时 <b>' + el.toFixed(1) + ' 秒</b>';
+    }
+    nextBtn.textContent = (levelIdx < 3 ? '下一关 ▶' : '再来一次 🔁');
+    nextFreshRun = (levelIdx >= 3);   /* 末关通关=重新开局 */
+  }
+  statBest.textContent = bestText();
+  updateStats();
+  bounceStat(statLevel);
+  bounceStat(statScore);
+
+  /* 弹窗与礼花同时出现：先显示弹窗（隐藏元素量不出尺寸），再礼花 */
+  modal.classList.remove('hidden');
+  drawModalArt();
+  if(canAnimate()){
+    A.animate(modalBox, {opacity:[0,1], scale:[.86,1], y:[18,0], ease:'out(4)', duration:520});
+    var art = modalArt;
+    if(art) A.animate(art, {scale:[0,1], rotate:[-8,0], ease:'out(4)', duration:560, delay:110});
+  }else{
+    modalBox.classList.remove('cq-vwin-in'); void modalBox.offsetWidth;
+    modalBox.classList.add('cq-vwin-in');
+  }
+  if(!reduced()){
+    setTimeout(function(){
+      if(window.launchConfetti){ try{ launchConfettiFromCard(); }catch(e){ try{ window.launchConfetti(); }catch(e2){} } }
+    }, 40);
+  }
+}
+/* 弹窗宝箱：overlay 显示后再画（隐藏时元素无布局，量不出尺寸） */
+function drawModalArt(){
+  if(!modalArt) return;
+  if(modalArt.dataset.drawn) return;
+  modalArt.dataset.drawn = '1';
+  if(!sketch) return;   /* 降级保留 🎉 emoji */
+  modalArt.textContent = '';
+  var svg = svgEl(40, 36);
+  modalArt.appendChild(svg);
+  drawChestInto(svg, GS.seedFrom('cq-modal-chest'));
+  if(canAnimate()){
+    /* 箱盖上金光微闪 */
+    var lid = svg.querySelector('.gs-chest-lid');
+    if(lid){
+      lid.style.transformBox = 'fill-box';
+      lid.style.transformOrigin = '50% 100%';
+      A.animate(lid, {rotate:[-2.2, 2.2, -2.2], ease:'inOut(2)', duration:1800, loop:true});
+    }
+  }
+}
+
+/* 通关第 4 关后的「再来一次」= 重新开局；时间到的「再试一次」= 重玩本关 */
+nextBtn.addEventListener('click', function(){
+  modal.classList.add('hidden');
+  if(nextFreshRun){ nextFreshRun = false; freshRun(); return; }
+  if(levelIdx < 3){ levelIdx++; startLevel(); } else redoLevel();
+});
+retryBtn.addEventListener('click', function(){
+  modal.classList.add('hidden');
+  nextFreshRun = false;
+  redoLevel();
+});
+
+/* ===== 计时（计时关=倒计时，普通关=累计用时） ===== */
+function startTimer(){
+  clearInterval(timer);
+  timer = setInterval(function(){
+    if(finished){ clearInterval(timer); return; }
+    if(cfg.timed){
+      timeLeft--;
+      if(timeLeft < 0) timeLeft = 0;
+      statTime.textContent = fmtT(timeLeft);
+      if(timeLeft <= 0){ clearInterval(timer); levelComplete(); }
+    }else{
+      statTime.textContent = fmtT(elapsedSec());
+    }
+  }, 1000);
+}
+
+/* ===== 关卡启动 ===== */
+function startLevel(){
+  cfg = LEVELS[levelIdx];
+  n = cfg.size; quad = cfg.quad; start = cfg.start;
+  px = start.x; py = start.y;
+  totalFound = 0; errCount = 0; guessCount = 0; finished = false; busy = false;
+  foundCells = []; treasureCell = null;
+  /* 重玩/新开本关：本关旧分作废，重新挣（其他关已入账的分保留） */
+  levelScores[levelIdx] = 0; levelScore = 0; hintUsed = false;
+  clearInterval(timer); levelStart = Date.now();
+  if(cfg.timed){ timeLeft = cfg.timed; }
+  buildBoard();
+  boardEl.appendChild(dolphin); // buildBoard 用 innerHTML 重建，需重新挂载海豚
+  drawDolphin();
+  if(quad === 4){ xInp.value = 0; yInp.value = 0; } else { xInp.value = 1; yInp.value = 1; }
+  placeTreasure();
+  layout();
+  updateStats();
+  startTimer();
+  if(cfg.timed){
+    showMsg('⏳ 60 秒内连寻 3 个宝箱！', 'hint');
+    showBubble('⏳ 60 秒内连寻 3 个宝箱！');
+  }else{
+    showMsg('读一读线索，猜出宝箱的坐标！', 'hint');
+    showBubble('先看线索卡~');
+  }
+}
+function redoLevel(){ levelIdx = Math.min(levelIdx, 3); startLevel(); }
+/* 重新开局：回到第 1 关，总分清零，冲新纪录 */
+function freshRun(){
+  levelScores = [0, 0, 0, 0]; levelScore = 0;
+  levelIdx = 0;
+  startLevel();
+}
+
+/* ===== 交互 ===== */
+goBtn.addEventListener('click', function(){
+  var x = parseInt(xInp.value, 10), y = parseInt(yInp.value, 10);
+  if(isNaN(x) || isNaN(y)){
+    showMsg('请输入数字呀~', 'err');
+    showBubble('请输入数字');
+    flashInputs(false);
+    return;
+  }
+  guess(x, y);
+});
+restartBtn.addEventListener('click', function(){ redoLevel(); });
+xInp.addEventListener('keydown', function(e){ if(e.key === 'Enter') goBtn.click(); });
+yInp.addEventListener('keydown', function(e){ if(e.key === 'Enter') goBtn.click(); });
+
+/* start */
+drawTitleIcon();
+drawCompass();
+startLevel();
+})();
+</script>

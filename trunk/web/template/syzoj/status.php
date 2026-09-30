@@ -3,7 +3,7 @@
 <script src="<?php echo $OJ_CDN_URL?>template/<?php echo $OJ_TEMPLATE?>/js/textFit.min.js"></script>
 <style>
 /* ===== 评测状态页 · 晴空调度台风格（与顶部菜单栏 / problemset 配色统一） ===== */
-@import url('fonts/zcool-kuaile.css');
+@import url('<?php echo $OJ_CDN_URL?>template/<?php echo $OJ_TEMPLATE?>/fonts/zcool-kuaile.css?v=1');
 
 .st-page {
     --st-sky: #67a0d5;

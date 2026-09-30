@@ -2,7 +2,7 @@
 <?php include("template/$OJ_TEMPLATE/header.php");?>
 <style>
 /* ===== 题库页 · 天空笔记本风格（与顶部菜单栏配色统一） ===== */
-@import url('fonts/zcool-kuaile.css');
+@import url('<?php echo $OJ_CDN_URL?>template/<?php echo $OJ_TEMPLATE?>/fonts/zcool-kuaile.css?v=1');
 
 .ps-page {
     --ps-sky: #67a0d5;

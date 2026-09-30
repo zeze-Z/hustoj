@@ -3,7 +3,7 @@
 
 <style>
 /* ===== 排行榜 · 糖果贴纸盒风格（与顶栏天空蓝统一） ===== */
-@import url('fonts/zcool-kuaile.css');
+@import url('<?php echo $OJ_CDN_URL?>template/<?php echo $OJ_TEMPLATE?>/fonts/zcool-kuaile.css?v=1');
 
 .ranklist-page {
     --sky: #67a0d5;

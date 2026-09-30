@@ -39,7 +39,8 @@
             'frog_typing.php', 'guess_number.php', 'idiom_chain.php',
             'keyboard_game.php', 'math_game.php', 'memory_game.php',
             'minesweeper.php', 'number_puzzle.php', 'puzzle_game.php',
-            'sequence_memory.php', 'snake.php'
+            'sequence_memory.php', 'snake.php',
+            'tangram.php', 'matchstick_math.php', 'coordinate_quest.php', 'balance_scale.php'
         ];
         $learning_arcade_class = in_array($url, $learning_arcade_pages, true) ? 'learning-arcade-page' : '';
         $dir=basename(getcwd());
@@ -84,6 +85,7 @@
             'sequence_memory.php',
             'math_game.php',
             'puzzle_game.php',      // 拼图游戏
+            'tangram.php',          // 七巧板（低年级，免登录）
             // AI体验
             'AI_experience.php',
             'ai_drawing_game.php',

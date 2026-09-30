@@ -1,0 +1,837 @@
+<?php $show_title="七巧板小工坊 - $OJ_NAME"; ?>
+<?php include("template/$OJ_TEMPLATE/header.php");?>
+
+<script src="template/<?php echo $OJ_TEMPLATE?>/js/anime.min.js?v=4.5.0"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/js/rough.min.js?v=4.6.6"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/game_sketch.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="template/<?php echo $OJ_TEMPLATE?>/game_confetti.js"></script>
+
+<div class="padding">
+<style>
+@import url('template/<?php echo $OJ_TEMPLATE?>/fonts/zcool-kuaile.css?v=1');
+/* ===== 七巧板小工坊 · tg- 前缀 · 暖木工坊主题 ===== */
+*{margin:0;padding:0;box-sizing:border-box}
+/* 覆盖 syzoj 模板 .padding 的白玻璃底，玻璃拟态交给 .tg-card */
+.padding{background:transparent!important;box-shadow:none!important;border-radius:0!important;overflow:visible!important;padding:0!important;color:inherit!important;transition:none!important}
+.padding::before,.padding::after{display:none!important}
+
+:root{
+  --tg-bg1:#EFD9B8;--tg-bg2:#E0BE93;
+  --tg-ink:#4A3728;--tg-muted:#B5835A;
+  --tg-red:#E85D4A;--tg-amber:#F2B441;--tg-green:#7CB342;--tg-blue:#4FA3C7;
+  --tg-violet:#9575CD;--tg-pink:#F49AC2;
+  --tg-line:rgba(74,55,40,.16);
+  --tg-wood:#7a5a3a;--tg-wood-soft:#a5876a;
+}
+body{min-width:320px;overflow-x:hidden;background:var(--tg-bg1);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;-webkit-tap-highlight-color:transparent}
+body.learning-arcade-page{color:var(--tg-ink)}
+button{-webkit-tap-highlight-color:transparent;font:inherit}
+
+/* ===== 背景装饰：木纹桌面（两层错落细纹 + 长纹 + 磨光高光）+ 两个浮动暖色光斑 ===== */
+.tg-bg-decor{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;
+  background:
+    repeating-linear-gradient(2deg,rgba(122,90,58,0) 0 6px,rgba(122,90,58,.055) 6px 7px,rgba(122,90,58,0) 7px 22px,rgba(122,90,58,.032) 22px 24px),
+    repeating-linear-gradient(1.2deg,rgba(122,90,58,0) 0 15px,rgba(122,90,58,.036) 15px 16px,rgba(122,90,58,0) 16px 52px,rgba(122,90,58,.02) 52px 55px),
+    repeating-linear-gradient(2.5deg,rgba(255,244,222,0) 0 34px,rgba(255,244,222,.16) 34px 36px,rgba(255,244,222,0) 36px 90px),
+    radial-gradient(ellipse 120% 85% at 18% -10%,rgba(255,246,228,.5),transparent 62%),
+    linear-gradient(165deg,#F2DCB8 0%,#E3C094 46%,#EFD9B8 100%)}
+.tg-bg-decor::before,.tg-bg-decor::after{content:"";position:absolute;border-radius:50%;filter:blur(70px);opacity:.55;animation:tg-float 9s ease-in-out infinite}
+.tg-bg-decor::before{width:clamp(220px,32vw,360px);height:clamp(220px,32vw,360px);left:-70px;top:-60px;background:rgba(232,93,74,.22)}
+.tg-bg-decor::after{width:clamp(260px,38vw,420px);height:clamp(260px,38vw,420px);right:-90px;bottom:-80px;background:rgba(242,180,65,.24);animation-delay:-4s}
+@keyframes tg-float{0%,100%{transform:translate(0,0)}50%{transform:translate(18px,-22px)}}
+
+/* ===== 布局：一屏 + 靠上（align-items:flex-start，不要 center） ===== */
+/* wrap 高度 = 视口 - 顶部导航实际占位。JS 用实测 top 覆盖 60px 这个兜底值。
+   禁止再用 min-height:100dvh：body 有 margin-top:60px，叠起来必然超出一屏 */
+.tg-wrap{position:relative;z-index:1;width:100%;height:calc(100vh - 60px);height:calc(100dvh - 60px);display:flex;align-items:flex-start;justify-content:center;padding:max(.55rem,env(safe-area-inset-top)) max(.6rem,env(safe-area-inset-right)) max(.55rem,env(safe-area-inset-bottom)) max(.6rem,env(safe-area-inset-left))}
+.tg-card{position:relative;width:min(100%,1120px);display:flex;flex-direction:column;align-items:center;gap:clamp(.35rem,1.1vh,.7rem);
+  padding:clamp(.85rem,2.2vh,1.4rem) clamp(.9rem,2.6vw,1.6rem) clamp(.85rem,2.1vh,1.35rem);
+  background:rgba(255,255,255,.88);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  border:1px solid rgba(255,255,255,.75);border-radius:clamp(18px,3vw,28px);
+  box-shadow:0 22px 55px rgba(74,55,40,.16),0 0 0 1px rgba(74,55,40,.05);
+  max-height:100%;overflow-y:auto;text-align:center}
+/* 顶部彩虹条 */
+.tg-card::before{content:"";position:absolute;top:0;left:0;right:0;height:6px;
+  background:linear-gradient(90deg,var(--tg-red),var(--tg-amber),var(--tg-green),var(--tg-blue),var(--tg-red));
+  background-size:300% 100%;animation:tg-grad 7s linear infinite}
+@keyframes tg-grad{to{background-position:300% 0}}
+
+/* ===== 分栏骨架：基线=单列堆叠（≤768px），≥769px 切左右分栏 ===== */
+.tg-layout{display:flex;flex-direction:column;align-items:stretch;gap:clamp(.55rem,1.4vh,.9rem);width:100%;min-width:0}
+.tg-side{width:100%;min-width:0;display:flex;flex-direction:column;gap:clamp(.35rem,1.1vh,.7rem)}
+.tg-main{width:100%;min-width:0;display:flex;flex-direction:column;justify-content:flex-start}
+@media(min-width:769px){
+  .tg-layout{flex-direction:row;align-items:stretch;gap:clamp(1rem,2vw,1.5rem)}
+  .tg-side{width:clamp(240px,28vw,300px);flex-shrink:0;text-align:left}
+  .tg-main{width:auto;flex:1 1 0;justify-content:center}
+  /* 侧栏里统计 2×2、按钮 2×2，比 4 列更透气；按钮略收紧防「旋转 45°」撑破 */
+  .tg-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tg-ctrls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem}
+  .tg-btn{padding:.55rem .55rem;font-size:clamp(.74rem,1.3vw,.88rem)}
+}
+
+/* ===== 标题：渐变文字（两个 !important 都要加，防 MDC 全局样式压黑） ===== */
+.tg-title{display:flex;align-items:center;justify-content:center;gap:.55rem;font-family:"ZCOOL KuaiLe","站酷快乐体","PingFang SC",sans-serif;font-size:clamp(1.45rem,5vw,2.2rem);line-height:1.2;letter-spacing:.04em}
+.tg-title-text{background:linear-gradient(135deg,var(--tg-red) 0%,var(--tg-amber) 45%,var(--tg-green) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent !important;color:transparent !important;filter:drop-shadow(0 2px 8px rgba(232,93,74,.25))}
+.tg-title-text::after{content:"";display:block;width:58px;height:4px;margin:7px auto 0;border-radius:2px;background:linear-gradient(90deg,var(--tg-red),var(--tg-amber))}
+/* 标题图标盒：尺寸用 clamp(px)，勿用 em——降级 font-size:0 会把 em 清零 */
+.tg-title-icon{position:relative;width:clamp(38px,8.5vw,52px);height:clamp(38px,8.5vw,52px);flex:0 0 auto;font-size:clamp(1.3rem,3.8vw,1.8rem);line-height:1;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 8px rgba(74,55,40,.22))}
+.tg-title-icon svg.gs-draw{position:absolute;inset:0;overflow:visible}
+.gs-sketch .tg-title-icon{font-size:0}
+.tg-sub{color:var(--tg-muted);font-size:clamp(.72rem,2.4vw,.88rem);line-height:1.55}
+.tg-lvname{display:inline-block;margin-top:.2rem;padding:.18rem .75rem;border-radius:999px;background:rgba(242,180,65,.18);border:1px solid rgba(242,180,65,.5);color:#B5712A;font-size:clamp(.68rem,2vw,.8rem);font-weight:800}
+
+/* ===== 统计栏：grid + 顶部彩边 + emoji 图标 + 渐变数字 ===== */
+.tg-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(6px,1.4vw,10px);width:100%;flex-shrink:0}
+.tg-stat{min-width:0;padding:.55rem .25rem .5rem;background:linear-gradient(160deg,#fff,rgba(250,243,227,.9));border:1px solid var(--tg-line);border-top:3px solid var(--tg-red);border-radius:clamp(12px,2vw,15px);box-shadow:0 3px 12px rgba(74,55,40,.08);transition:transform .25s ease,box-shadow .25s ease}
+.tg-stat:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(74,55,40,.14)}
+.tg-stat.sbounce{animation:tg-pop .42s cubic-bezier(.34,1.56,.64,1)}
+@keyframes tg-pop{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+.tg-stat:nth-child(1){border-top-color:var(--tg-red)}
+.tg-stat:nth-child(2){border-top-color:var(--tg-amber)}
+.tg-stat:nth-child(3){border-top-color:var(--tg-green)}
+.tg-stat:nth-child(4){border-top-color:var(--tg-blue)}
+.tg-stat-icon{display:block;font-size:clamp(.95rem,2.8vw,1.15rem);line-height:1;margin-bottom:.18rem}
+.tg-stat-label{display:block;color:var(--tg-muted);font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tg-stat-value{display:block;margin-top:.2rem;font-size:clamp(.85rem,2.4vw,1.1rem);font-weight:800;white-space:nowrap;line-height:1.1;background:linear-gradient(135deg,var(--tg-red),var(--tg-amber));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent !important;color:transparent !important}
+.tg-stat:nth-child(2) .tg-stat-value{background:linear-gradient(135deg,#F2B441,#E08A1E);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent !important;color:transparent !important}
+.tg-stat:nth-child(3) .tg-stat-value{background:linear-gradient(135deg,#8BC34A,#5A9E2F);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent !important;color:transparent !important}
+.tg-stat:nth-child(4) .tg-stat-value{background:linear-gradient(135deg,#5FBBD8,#3A87A8);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent !important;color:transparent !important}
+
+/* ===== 反馈条：彩色底 + 弹性弹入 ===== */
+.tg-msg{width:100%;min-height:2.2em;display:flex;align-items:center;justify-content:center;padding:.42rem .9rem;border-radius:12px;color:#B5712A;font-size:clamp(.78rem,2.4vw,.92rem);font-weight:700;background:rgba(242,180,65,.16);border:1px solid rgba(242,180,65,.4);transition:background .25s ease,color .25s ease,box-shadow .25s ease}
+.tg-msg.tg-ok{color:#fff;background:linear-gradient(135deg,#7CB342,#5A9E2F);border-color:transparent;box-shadow:0 4px 16px rgba(124,179,66,.32)}
+.tg-msg.tg-warn{color:#fff;background:linear-gradient(135deg,#F2B441,#E08A1E);border-color:transparent;box-shadow:0 4px 16px rgba(242,180,65,.32)}
+.tg-msg.tg-hint{color:#B5712A;background:rgba(242,180,65,.16);border-color:rgba(242,180,65,.5)}
+
+/* ===== 舞台 / 剪影棋盘 / 积木 ===== */
+.tg-stage{position:relative;width:100%;touch-action:none;user-select:none;-webkit-user-select:none}
+.tg-sil{position:relative;margin:0 auto;background:
+  repeating-linear-gradient(2deg,rgba(122,90,58,0) 0 7px,rgba(122,90,58,.035) 7px 8px,rgba(122,90,58,0) 8px 26px),
+  linear-gradient(165deg,rgba(255,252,246,.82),rgba(255,246,230,.66));
+  border-radius:16px;box-shadow:0 16px 34px rgba(74,55,40,.18),inset 0 0 0 1px rgba(122,90,58,.12),inset 0 2px 14px rgba(255,250,240,.6);overflow:visible}
+.tg-sil .gs-frame{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:visible}
+.tg-sil.wiggle{animation:tgWiggle .55s ease}
+@keyframes tgWiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-2.5deg)}50%{transform:rotate(2deg)}75%{transform:rotate(-1.5deg)}}
+/* 剪影槽位：动画只走 opacity/filter，不动 transform（inline rotate 会打架） */
+.tg-slot{position:absolute;z-index:1;pointer-events:none}
+.tg-slot svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.tg-slot.tg-pulse{animation:tgPulse .8s ease-in-out 3}
+@keyframes tgPulse{0%,100%{opacity:1;filter:drop-shadow(0 0 0 rgba(255,200,60,0))}50%{opacity:.7;filter:drop-shadow(0 0 14px rgba(255,190,80,.95))}}
+
+.tg-piece{position:absolute;left:0;top:0;z-index:2;cursor:grab;touch-action:none;pointer-events:auto;will-change:transform}
+.tg-piece svg{width:100%;height:100%;display:block;overflow:visible;filter:drop-shadow(0 3px 4px rgba(74,55,40,.22))}
+.tg-piece:active{cursor:grabbing}
+.tg-piece.dragging{z-index:20;cursor:grabbing}
+.tg-piece.dragging svg{filter:drop-shadow(0 10px 16px rgba(74,55,40,.32))}
+.tg-piece.selected{z-index:15;outline:3px solid var(--tg-amber);outline-offset:3px;border-radius:8px}
+.tg-piece.placed{pointer-events:none;outline:none;z-index:3}
+.tg-piece.flashSvg{animation:tgGlow .8s ease}
+@keyframes tgGlow{0%{filter:drop-shadow(0 0 0 rgba(124,179,66,0))}45%{filter:drop-shadow(0 0 14px rgba(124,179,66,.95))}100%{filter:drop-shadow(0 0 0 rgba(124,179,66,0))}}
+/* 落位描边变金：非 sketch 打 polygon，sketch 打 rough 的 path（fill/stroke 路径都描） */
+.tg-piece.placed svg polygon{stroke:var(--tg-amber);stroke-width:var(--tg-sw,2.5px)}
+.gs-sketch .tg-piece.placed svg path{stroke:var(--tg-amber);stroke-width:var(--tg-sw,2.5px)}
+/* 木纹线不跟落位描边走（rough 的 line 也是 path，会被上条误伤成金粗线） */
+.gs-sketch .tg-piece.placed svg .tg-grain path{stroke:var(--tg-gc,#8B5E3C);stroke-width:var(--tg-gsw,1.6px)}
+
+.tg-tray{position:absolute;left:0;width:100%;display:flex;align-items:center;justify-content:center;gap:.45rem;pointer-events:none}
+.tg-tray-label{color:var(--tg-muted);font-size:clamp(.72rem,2vw,.82rem);font-weight:800;letter-spacing:.05em;white-space:nowrap}
+
+/* ===== 按钮：药丸 + 主实心渐变 + 次级描边白底 + 波纹 ===== */
+.tg-ctrls{display:flex;flex-wrap:wrap;gap:.55rem;justify-content:center;width:100%}
+.tg-btn{position:relative;overflow:hidden;min-height:44px;min-width:44px;padding:.62rem 1.15rem;border-radius:999px;cursor:pointer;font-family:"ZCOOL KuaiLe","站酷快乐体","PingFang SC",sans-serif;font-size:clamp(.82rem,2.6vw,.98rem);border:1px solid transparent;transition:transform .18s ease,box-shadow .18s ease,opacity .2s ease;-webkit-tap-highlight-color:transparent}
+.tg-btn:hover{transform:translateY(-2px)}
+.tg-btn:active{transform:translateY(1px) scale(.98)}
+.tg-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.tg-btn-main{color:#fff;background:linear-gradient(135deg,var(--tg-red),#D1442F);box-shadow:0 8px 22px rgba(232,93,74,.38)}
+.tg-btn-rot{color:#fff;background:linear-gradient(135deg,var(--tg-amber),#E0951E);box-shadow:0 8px 22px rgba(242,180,65,.38)}
+.tg-btn-nav{color:var(--tg-ink);background:#fff;border:2px solid rgba(74,55,40,.16);box-shadow:0 4px 14px rgba(74,55,40,.1)}
+.tg-btn:focus-visible{outline:3px solid rgba(79,163,199,.55);outline-offset:2px}
+.tg-ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.5);transform:scale(0);animation:tg-ripple .6s ease-out forwards;pointer-events:none}
+@keyframes tg-ripple{to{transform:scale(4);opacity:0}}
+
+/* ===== 通关弹窗 ===== */
+.tg-victory{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(74,55,40,.55);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.tg-victory.hidden{display:none!important}
+.tg-vwin{width:min(100%,400px);padding:clamp(1.4rem,4vw,2rem) clamp(1.2rem,4vw,1.8rem);background:linear-gradient(165deg,#FFFDF6,#F7ECD4);border:1px solid rgba(255,255,255,.85);border-radius:22px;box-shadow:0 28px 70px rgba(74,55,40,.35),0 0 0 1px rgba(74,55,40,.06);text-align:center;position:relative;overflow:hidden}
+.tg-vwin.tg-vwin-in{animation:tgPop .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes tgPop{from{opacity:0;transform:scale(.85) translateY(16px)}to{opacity:1;transform:none}}
+.tg-vwin::before{content:"";position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg,var(--tg-red),var(--tg-amber),var(--tg-green),var(--tg-blue));background-size:300% 100%;animation:tg-grad 7s linear infinite}
+/* 手绘星星图标：emoji 仅作无 rough.js 降级（尺寸 clamp，勿 em） */
+.tg-vstar{position:relative;width:clamp(52px,13vw,70px);height:clamp(52px,13vw,70px);margin:.55rem auto .3rem;font-size:clamp(1.8rem,6vw,2.4rem);line-height:1;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 6px 16px rgba(242,180,65,.5))}
+.tg-vstar svg.gs-draw{position:absolute;inset:0;overflow:visible}
+.gs-sketch .tg-vstar{font-size:0}
+.tg-vwin h2{font-family:"ZCOOL KuaiLe","站酷快乐体",sans-serif;font-size:clamp(1.35rem,5.2vw,1.9rem);margin:.25rem 0 .4rem;background:linear-gradient(135deg,var(--tg-red),var(--tg-amber) 50%,var(--tg-green));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent !important;color:transparent !important}
+.tg-vwin p{color:var(--tg-muted);font-size:.9rem;line-height:1.5}
+.tg-vlist{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem;margin:.9rem 0 1.1rem}
+.tg-vlist .tg-stat:nth-child(1){border-top-color:var(--tg-green)}
+.tg-vlist .tg-stat:nth-child(2){border-top-color:var(--tg-blue)}
+.tg-vlist .tg-stat:nth-child(3){border-top-color:var(--tg-amber)}
+.tg-newbest{color:var(--tg-red);font-style:normal;font-weight:800}
+.tg-vbtn{width:100%;min-height:46px;border-radius:999px;border:none;background:linear-gradient(135deg,var(--tg-red),#D1442F);color:#fff;font-size:.95rem;font-weight:800;cursor:pointer;box-shadow:0 8px 22px rgba(232,93,74,.38);transition:transform .2s ease,box-shadow .2s ease}
+.tg-vbtn:hover{transform:translateY(-2px)}
+.tg-vbtn2{width:100%;min-height:44px;margin-top:.55rem;border-radius:999px;border:2px solid rgba(74,55,40,.18);background:#fff;color:var(--tg-ink);font-size:.9rem;font-weight:800;cursor:pointer;transition:transform .2s ease}
+.tg-vbtn2:hover{transform:translateY(-2px)}
+
+@media(max-width:480px),(max-height:560px){
+  .tg-stats{gap:.3rem}
+  .tg-stat{padding:.42rem .15rem .38rem}
+  .tg-stat-icon{font-size:.85rem}
+  .tg-stat-label{font-size:.55rem}
+  .tg-stat-value{font-size:.82rem}
+}
+@media(max-height:560px){.tg-sub{display:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+
+<div class="tg-bg-decor"></div>
+
+<div class="tg-wrap">
+  <div class="tg-card">
+    <div class="tg-title"><span class="tg-title-icon" id="tgTitleIcon" aria-hidden="true">🧩</span><span class="tg-title-text">七巧板小工坊</span></div>
+
+    <div class="tg-layout">
+      <div class="tg-side">
+        <div class="tg-sub">木质玩具桌 · 拖一拖、转一转，把 7 块板拼进虚线里<br><span class="tg-lvname" id="tgLvName">小猫</span></div>
+
+        <div class="tg-stats">
+          <div class="tg-stat"><span class="tg-stat-icon">🗺️</span><b class="tg-stat-label">关卡</b><span class="tg-stat-value" id="tgLv">1 / 8</span></div>
+          <div class="tg-stat"><span class="tg-stat-icon">👣</span><b class="tg-stat-label">步数</b><span class="tg-stat-value" id="tgMoves">0</span></div>
+          <div class="tg-stat"><span class="tg-stat-icon">⏱️</span><b class="tg-stat-label">用时</b><span class="tg-stat-value" id="tgTime">00:00</span></div>
+          <div class="tg-stat"><span class="tg-stat-icon">🏆</span><b class="tg-stat-label">最佳</b><span class="tg-stat-value" id="tgBest">--</span></div>
+        </div>
+
+        <div class="tg-msg" id="tgMsg"></div>
+
+        <div class="tg-ctrls">
+          <button class="tg-btn tg-btn-nav" id="tgPrev">‹ 上一关</button>
+          <button class="tg-btn tg-btn-rot" id="tgRot" disabled>↻ 旋转 45°</button>
+          <button class="tg-btn tg-btn-main" id="tgRestart">重新开始</button>
+          <button class="tg-btn tg-btn-nav" id="tgNext">下一关 ›</button>
+        </div>
+      </div>
+
+      <div class="tg-main">
+        <div class="tg-stage" id="tgStage">
+          <div class="tg-sil" id="tgSil"></div>
+          <div class="tg-tray"><span class="tg-tray-label">🧰 工具箱 — 点选一块，再点旋转</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /padding -->
+
+<div class="tg-victory hidden" id="tgVictory">
+  <div class="tg-vwin">
+    <div class="tg-vstar" id="tgVStar">⭐</div>
+    <h2>拼好啦！🎉</h2>
+    <p>这块小木板活过来啦～</p>
+    <div class="tg-vlist">
+      <div class="tg-stat"><span class="tg-stat-icon">⏱️</span><b class="tg-stat-label">用时</b><span class="tg-stat-value" id="tgVTime">--</span></div>
+      <div class="tg-stat"><span class="tg-stat-icon">👣</span><b class="tg-stat-label">步数</b><span class="tg-stat-value" id="tgVMoves">0</span></div>
+      <div class="tg-stat"><span class="tg-stat-icon">🏆</span><b class="tg-stat-label">最佳</b><span class="tg-stat-value" id="tgVBest">--</span></div>
+    </div>
+    <div id="tgVStat"></div>
+    <button class="tg-vbtn" id="tgAgain">下一关 ›</button>
+    <button class="tg-vbtn2" id="tgClose">再玩这一关</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* -------- 形状定义（本地坐标系，单位=格子，原点为包围盒中心） -------- */
+var SHAPES={
+  b1:[[-1,-1],[1,-1],[-1,1]],
+  b2:[[-1,-1],[1,-1],[-1,1]],
+  m:[[-0.7071,-0.7071],[0.7071,-0.7071],[-0.7071,0.7071]],
+  s1:[[-0.5,-0.5],[0.5,-0.5],[-0.5,0.5]],
+  s2:[[-0.5,-0.5],[0.5,-0.5],[-0.5,0.5]],
+  q:[[-0.7071,-0.7071],[0.7071,-0.7071],[0.7071,0.7071],[-0.7071,0.7071]],
+  p:[[-0.5,-0.7071],[0.7071,-0.7071],[0.5,0.7071],[-0.7071,0.7071]]
+};
+/* 木质积木：7 种木色（底色/纹理线），像一盒真木七巧板，靠木色+形状双重区分 */
+var WOODS={
+  b1:{base:'#E8C49A',grain:'#C09A6A'}, /* 浅枫木 */
+  b2:{base:'#C97B5A',grain:'#A85E42'}, /* 红樱桃 */
+  m:{base:'#8B5E3C',grain:'#6E482C'},  /* 深胡桃 */
+  s1:{base:'#D2A56B',grain:'#B0864E'}, /* 金橡木 */
+  s2:{base:'#A9714A',grain:'#8B5A38'}, /* 柚木 */
+  q:{base:'#E6C9A0',grain:'#C4A070'}, /* 蜜色榉木 */
+  p:{base:'#7E4A32',grain:'#633824'}  /* 紫檀 */
+};
+var PIECE_KEYS=['b1','b2','m','s1','s2','q','p'];
+
+/* -------- 关卡数据：slot={k(形状),x,y(网格中心),r(角度deg)} -------- */
+/* 4×4 网格；前3关彩色提示，后5关灰剪影 */
+var LEVELS=[
+ {name:'小猫',hint:true,slots:[
+   {k:'b1',x:1.0,y:0.9,r:-45},{k:'b2',x:3.0,y:0.9,r:45},
+   {k:'m',x:2.0,y:1.6,r:0},{k:'s1',x:1.2,y:2.4,r:45},{k:'s2',x:2.8,y:2.4,r:-45},
+   {k:'q',x:2.0,y:3.2,r:45},{k:'p',x:2.0,y:2.4,r:90}]},
+ {name:'小房子',hint:true,slots:[
+   {k:'b1',x:1.1,y:1.3,r:135},{k:'b2',x:2.9,y:1.3,r:45},
+   {k:'m',x:2.0,y:1.6,r:180},{k:'s1',x:0.9,y:2.7,r:90},{k:'s2',x:3.1,y:2.7,r:-90},
+   {k:'q',x:2.0,y:2.8,r:45},{k:'p',x:2.0,y:2.2,r:0}]},
+ {name:'小鱼',hint:true,slots:[
+   {k:'b1',x:1.0,y:2.0,r:0},{k:'b2',x:3.0,y:2.0,r:180},
+   {k:'m',x:2.0,y:2.0,r:90},{k:'s1',x:1.5,y:2.9,r:135},{k:'s2',x:2.5,y:2.9,r:45},
+   {k:'q',x:2.0,y:1.4,r:45},{k:'p',x:2.0,y:2.7,r:0}]},
+ {name:'小船',hint:false,slots:[
+   {k:'b1',x:1.0,y:2.0,r:0},{k:'b2',x:3.0,y:2.0,r:180},
+   {k:'m',x:2.0,y:2.0,r:90},{k:'s1',x:1.4,y:2.8,r:135},{k:'s2',x:2.6,y:2.8,r:45},
+   {k:'q',x:2.0,y:1.4,r:45},{k:'p',x:2.0,y:2.6,r:0}]},
+ {name:'小兔子',hint:false,slots:[
+   {k:'b1',x:1.0,y:0.9,r:-45},{k:'b2',x:3.0,y:0.9,r:45},
+   {k:'m',x:2.0,y:1.8,r:0},{k:'s1',x:1.3,y:2.6,r:45},{k:'s2',x:2.7,y:2.6,r:-45},
+   {k:'q',x:2.0,y:3.3,r:45},{k:'p',x:2.0,y:2.4,r:90}]},
+ {name:'小火箭',hint:false,slots:[
+   {k:'b1',x:1.0,y:1.0,r:-45},{k:'b2',x:3.0,y:1.0,r:45},
+   {k:'m',x:2.0,y:1.9,r:0},{k:'s1',x:1.0,y:2.8,r:0},{k:'s2',x:3.0,y:2.8,r:180},
+   {k:'q',x:2.0,y:3.3,r:45},{k:'p',x:2.0,y:3.8,r:0}]},
+ {name:'小骆驼',hint:false,slots:[
+   {k:'b1',x:1.0,y:1.2,r:135},{k:'b2',x:3.0,y:1.6,r:45},
+   {k:'m',x:2.0,y:2.2,r:90},{k:'s1',x:1.2,y:2.9,r:135},{k:'s2',x:2.8,y:2.9,r:45},
+   {k:'q',x:2.0,y:3.4,r:45},{k:'p',x:2.0,y:1.4,r:0}]},
+ {name:'小天鹅',hint:false,slots:[
+   {k:'b1',x:1.1,y:2.0,r:0},{k:'b2',x:3.0,y:1.6,r:90},
+   {k:'m',x:2.2,y:1.4,r:180},{k:'s1',x:3.3,y:2.4,r:90},{k:'s2',x:1.0,y:2.9,r:-90},
+   {k:'q',x:2.0,y:2.9,r:45},{k:'p',x:2.0,y:2.0,r:0}]}
+];
+
+/* -------- 全局状态 -------- */
+var state={lv:1,moves:0,sec:0,placed:0,selected:null,drag:null,win:false,timer:null};
+var CELL=0,GS=0,STAGE_W=0,STAGE_H=0,TRAY_Y=0,TRAY_SCALE=1,TRAY_COLS=4,TRAY_ROWS=2,pieces=[];
+var $=function(id){return document.getElementById(id);};
+var silEl=$('tgSil'),stage=$('tgStage');
+function ql(s){return Array.prototype.slice.call(document.querySelectorAll(s));}
+
+/* anime.js v4 自托管：缺失/减动效时全部效果自动降级到 CSS */
+var A=window.anime||null;
+function reduced(){try{return window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}}
+function canAnimate(){return !!A && !reduced();}
+function sketchOn(){return !!(window.GameSketch&&window.GameSketch.available);}
+
+/* 统计数字弹性跳动：优先 anime.js，降级 CSS 类 */
+function bounce(el){
+  if(!el)return;
+  if(canAnimate()){A.animate(el,{scale:[1,1.22,1],ease:'out(2)',duration:420});return;}
+  var card=el.closest?el.closest('.tg-stat'):null;
+  var t=card||el;
+  t.classList.remove('sbounce');void t.offsetWidth;t.classList.add('sbounce');
+}
+/* 反馈条：彩色底 + 弹性弹入 */
+function msg(t,type){
+  var el=$('tgMsg');if(!el)return;
+  el.textContent=t;
+  el.className='tg-msg'+(type?(' tg-'+type):'');
+  if(canAnimate())A.animate(el,{opacity:[0,1],scale:[.92,1],y:[8,0],ease:'out(3)',duration:340});
+}
+/* 按钮波纹 */
+function addRipple(e,btn){
+  var r=btn.getBoundingClientRect();
+  var d=Math.max(r.width,r.height);
+  var s=document.createElement('span');
+  s.className='tg-ripple';
+  s.style.width=s.style.height=d+'px';
+  s.style.left=(e.clientX-r.left-d/2)+'px';
+  s.style.top=(e.clientY-r.top-d/2)+'px';
+  btn.appendChild(s);
+  setTimeout(function(){s.remove();},620);
+}
+
+function polyToStr(pts){return pts.map(function(p){return p[0]+','+p[1];}).join(' ');}
+function hexA(hex,a){var n=parseInt(hex.slice(1),16);return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';}
+/* 像素化一段本地形状 → 元素内坐标（pivot=包围盒中心=element中心） */
+function localPx(pts){var out=[];for(var i=0;i<pts.length;i++)out.push([pts[i][0]*CELL+CELL,pts[i][1]*CELL+CELL]);return out;}
+
+/* 关卡槽位几何总包络（跨全部关卡、含旋转）：棋盘按真实内容开框，
+   否则 45° 大三角/平行四边稿会戳出画布边框（小猫/小火箭等 5 关都超界） */
+var GEO={span:4,ox:0,oy:0};
+(function(){
+  var minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+  for(var li=0;li<LEVELS.length;li++){
+    var sl=LEVELS[li].slots;
+    for(var si=0;si<sl.length;si++){
+      var s=sl[si],pts=SHAPES[s.k],a=s.r*Math.PI/180,c=Math.cos(a),sn=Math.sin(a);
+      for(var pi=0;pi<pts.length;pi++){
+        var x=pts[pi][0]*c-pts[pi][1]*sn+s.x,y=pts[pi][0]*sn+pts[pi][1]*c+s.y;
+        if(x<minX)minX=x;if(x>maxX)maxX=x;
+        if(y<minY)minY=y;if(y>maxY)maxY=y;
+      }
+    }
+  }
+  var pad=0.2; /* 描边/手绘歪扭/drop-shadow 的余量（格） */
+  var cw=maxX-minX+pad*2,ch=maxY-minY+pad*2;
+  GEO.span=Math.max(cw,ch);
+  GEO.ox=pad-minX+(GEO.span-cw)/2; /* 网格 x=0 → GEO.ox*CELL（内容在棋盘内居中） */
+  GEO.oy=pad-minY+(GEO.span-ch)/2;
+})();
+/* 网格坐标 → 舞台像素。槽位与积木共用这套映射，天然对齐 */
+function bx(gx){return (gx+GEO.ox)*CELL;}
+function by(gy){return (gy+GEO.oy)*CELL;}
+
+/* 降级用平面多边形 SVG */
+function plainSvg(pts,fill,ghost,elW){
+  var sw=Math.max(1,CELL*0.022);
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+elW+' '+elW+'"><polygon points="'+polyToStr(pts)+'" fill="'+fill+'" stroke="'+(ghost?'#a5876a':'#7a5a3a')+'" stroke-width="'+sw+'"'+(ghost?' stroke-dasharray="4,4"':'')+'/></svg>';
+}
+
+/* 手绘木纹：全盒积木共用同一纹路方向（像同一块木板裁下来的），clip 在形状内不外溢 */
+function woodGrain(svg,pts,grain,seed){
+  if(!sketchOn()||!svg)return;
+  var minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+  for(var i=0;i<pts.length;i++){
+    if(pts[i][0]<minX)minX=pts[i][0];if(pts[i][0]>maxX)maxX=pts[i][0];
+    if(pts[i][1]<minY)minY=pts[i][1];if(pts[i][1]>maxY)maxY=pts[i][1];
+  }
+  var NS='http://www.w3.org/2000/svg';
+  var id='tg-grain-'+seed;
+  var defs=document.createElementNS(NS,'defs');
+  var cp=document.createElementNS(NS,'clipPath');cp.setAttribute('id',id);
+  var pg=document.createElementNS(NS,'polygon');pg.setAttribute('points',polyToStr(pts));
+  cp.appendChild(pg);defs.appendChild(cp);svg.appendChild(defs);
+  var g=document.createElementNS(NS,'g');g.setAttribute('clip-path','url(#'+id+')');svg.appendChild(g);
+  var sw=Math.max(1,CELL*0.022);
+  for(var i=0;i<4;i++){
+    var y=minY+(maxY-minY)*((i+0.5)/4)+((i%2)?1:-1)*(maxY-minY)*0.05;
+    GameSketch.line(g,minX-2,y,maxX+2,y+((i%2)?2.2:-2.2),{
+      stroke:grain,strokeWidth:sw,roughness:1.7,bowing:1.3,
+      seed:GameSketch.seedFrom(seed+'g'+i)
+    },'tg-grain');
+  }
+}
+
+/* 画一块形状进 el：rough 手绘优先，无 rough.js 退平面 SVG
+   —— 必须先 appendChild 到 DOM 再调（svgInto 要量 offsetWidth） */
+function drawShape(el,pts,fill,seed,mode,grain){
+  var ghost=(mode==='ghost');
+  if(sketchOn()){
+    var svg=GameSketch.svgInto(el);
+    if(svg){
+      var opt={
+        fill:fill,fillStyle:'solid',
+        stroke:ghost?'#a5876a':'#7a5a3a',
+        strokeWidth:ghost?1.6:2,
+        roughness:1.35,bowing:0.85,
+        seed:GameSketch.seedFrom(seed)
+      };
+      if(ghost)opt.strokeLineDash=[4,4];
+      GameSketch.polygon(svg,pts,opt,ghost?'tg-ghost':'tg-shape');
+      if(!ghost&&grain)woodGrain(svg,pts,grain,seed);
+      return;
+    }
+  }
+  el.innerHTML=plainSvg(pts,fill,ghost,CELL*2);
+}
+
+/* 渲染剪影（由 7 块目标拼出）：每槽一个 div，rough polygon 手绘虚线框 */
+function renderSil(){
+  var lv=LEVELS[state.lv-1];
+  silEl.innerHTML='';
+  silEl.style.width=GS+'px';silEl.style.height=GS+'px';
+  silEl.classList.remove('wiggle');
+  document.body.classList.toggle('gs-sketch',sketchOn());
+  for(var i=0;i<lv.slots.length;i++){
+    var sl=lv.slots[i];
+    var d=document.createElement('div');
+    d.className='tg-slot';
+    d.style.width=d.style.height=(CELL*2)+'px';
+    d.style.left=(bx(sl.x)-CELL)+'px';
+    d.style.top=(by(sl.y)-CELL)+'px';
+    d.style.transform='rotate('+sl.r+'deg)';
+    silEl.appendChild(d);   /* 入 DOM 后再画，否则量不出尺寸 */
+    var fill=lv.hint?hexA(WOODS[sl.k].grain,0.4):'rgba(140,120,96,0.26)';
+    drawShape(d,localPx(SHAPES[sl.k]),fill,'sil'+sl.k,'ghost');
+  }
+  /* 手绘棋盘边框（叠加式，不占布局） */
+  if(sketchOn())GameSketch.frame(silEl,{inset:5,color:'rgba(74,55,40,.38)',strokeWidth:2,roughness:1.5,bowing:1,seed:11});
+}
+
+/* 建 7 块积木：preserve=保留已落位状态（resize 用），shuffle=托盘洗牌（开局用） */
+function buildPieces(preserve,shuffle){
+  var index={};
+  if(preserve)for(var i=0;i<pieces.length;i++)index[pieces[i].k]={rot:pieces[i].rot,placed:pieces[i].placed};
+  pieces.forEach(function(p){p.el.remove();});
+  pieces=[];
+  var lv=LEVELS[state.lv-1];
+  var keys=PIECE_KEYS.slice();
+  if(shuffle){for(var i=keys.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=keys[i];keys[i]=keys[j];keys[j]=t;}}
+  for(var i=0;i<keys.length;i++){
+    var k=keys[i],slot=null;
+    for(var s=0;s<lv.slots.length;s++)if(lv.slots[s].k===k){slot=lv.slots[s];break;}
+    var el=document.createElement('div');
+    el.className='tg-piece';
+    el.style.width=(CELL*2)+'px';el.style.height=(CELL*2)+'px';
+    el.style.setProperty('--tg-sw',Math.max(2,CELL*0.045)+'px');
+    el.style.setProperty('--tg-gc',WOODS[k].grain);
+    el.style.setProperty('--tg-gsw',Math.max(1,CELL*0.022)+'px');
+    stage.appendChild(el);   /* 入 DOM 后再画 */
+    drawShape(el,localPx(SHAPES[k]),WOODS[k].base,'pc'+k,'solid',WOODS[k].grain);
+    var was=(preserve&&index[k])?index[k]:{rot:slot.r-90,placed:false};
+    var p={k:k,el:el,rot:was.rot,cx:0,cy:0,placed:was.placed,targetX:slot.x,targetY:slot.y,targetR:slot.r,tray:!was.placed,scale:1,lifted:false};
+    if(p.placed){p.cx=bx(p.targetX);p.cy=by(p.targetY);el.classList.add('placed');el.style.pointerEvents='none';setPiecePos(p,p.cx,p.cy);}
+    pieces.push(p);
+    el.addEventListener('pointerdown',onDown);
+  }
+  layoutTray();
+}
+
+/* 托盘：2 行网格（4+3 行内居中），块按 TRAY_SCALE 缩小塞进棋盘同宽——
+   7 块原尺寸并排要 ~16 倍 CELL 宽，必然把卡片撑出横向滚动条 */
+function trayPosOf(i){
+  var cols=TRAY_COLS;
+  var row=Math.floor(i/cols),col=i%cols;
+  var rowCount=Math.min(cols,pieces.length-row*cols);
+  var pitch=STAGE_W/cols;
+  var x=pitch*(col+(cols-rowCount)/2)+pitch/2;
+  var y=TRAY_Y+22+CELL*TRAY_SCALE+row*(CELL*2*TRAY_SCALE+8);
+  return {x:x,y:y};
+}
+function layoutTray(){
+  for(var i=0;i<pieces.length;i++){
+    if(pieces[i].placed)continue;
+    pieces[i].tray=true;pieces[i].scale=TRAY_SCALE;
+    var pos=trayPosOf(i);
+    setPiecePos(pieces[i],pos.x,pos.y);
+  }
+}
+
+/* 位置/旋转/缩放应用（几何 transform 走 style，动画只作用在内层 svg，互不打架） */
+function setPiecePos(p,x,y){
+  p.cx=x;p.cy=y;
+  p.el.style.transform='translate('+(x-CELL)+'px,'+(y-CELL)+'px) rotate('+p.rot+'deg) scale('+(p.scale||1)+')';
+}
+
+/* 拖拽 */
+var curDrag=null,offX=0,offY=0;
+function onDown(e){
+  e.preventDefault();
+  var p=pieces.find(function(x){return x.el===e.currentTarget;});
+  if(state.win||!p||p.placed)return;
+  if(state.drag&&state.drag!==p)state.drag.el.classList.remove('dragging');
+  deselect();
+  select(p);
+  curDrag=p;
+  var pt=clientToStage(e);
+  offX=pt.x-p.cx;offY=pt.y-p.cy;
+  p.lifted=false;
+  p.el.classList.add('dragging');
+  state.drag=p;
+  try{p.el.setPointerCapture(e.pointerId);}catch(err){}
+}
+function onMove(e){
+  if(!state.drag)return;
+  e.preventDefault();
+  var pt=clientToStage(e);
+  var p=state.drag;
+  if(!p.lifted){p.lifted=true;p.scale=1;} /* 拖起瞬间恢复原尺寸 */
+  var nx=pt.x-offX,ny=pt.y-offY;
+  nx=Math.max(CELL,Math.min(STAGE_W-CELL,nx));
+  ny=Math.max(CELL,Math.min(STAGE_H-CELL,ny));
+  setPiecePos(p,nx,ny);
+}
+function onUp(e){
+  if(!state.drag)return;
+  var p=state.drag;
+  p.el.classList.remove('dragging');
+  state.drag=null;
+  p.lifted=false;
+  var dx=(p.cx-bx(p.targetX)),dy=(p.cy-by(p.targetY));
+  var dist=Math.sqrt(dx*dx+dy*dy);
+  var tol=CELL*0.10;
+  var dr=wrapAngle(p.targetR-p.rot);
+  if(dist<=tol&&Math.abs(dr)<=10){
+    placePiece(p);
+    return;
+  }
+  /* 落回托盘区 → 缩回托盘尺寸；停在棋盘区 → 保持原尺寸 */
+  p.tray=(p.cy>=TRAY_Y);
+  p.scale=p.tray?TRAY_SCALE:1;
+  setPiecePos(p,p.cx,p.cy);
+  if(dist<=CELL*0.6&&Math.abs(dr)<=25){
+    msg('差一点点，再挪挪~','warn');
+    if(canAnimate()){
+      var svg=p.el.querySelector('svg');
+      if(svg)A.animate(svg,{x:[0,-7,6,-4,3,0],ease:'out(2)',duration:380});
+    }
+  }
+}
+function placePiece(p){
+  p.rot=p.targetR;
+  p.scale=1;p.tray=false;
+  setPiecePos(p,bx(p.targetX),by(p.targetY));
+  p.placed=true;
+  p.el.classList.add('placed','flashSvg');
+  p.el.style.pointerEvents='none';
+  state.placed++;state.moves++;
+  updateStats();bounce($('tgMoves'));
+  deselect();refreshDisabled();
+  /* 落位弹性绽开（作用在内层 svg，不碰几何 transform） */
+  if(canAnimate()){
+    var svg=p.el.querySelector('svg');
+    if(svg)A.animate(svg,{scale:[0.82,1.07,1],ease:'out(3)',duration:430});
+  }
+  if(state.placed>=7){winLevel();}
+  else{msg('落位啦！还剩 '+(7-state.placed)+' 块~','ok');}
+}
+
+function clientToStage(e){
+  var r=stage.getBoundingClientRect();
+  return {x:e.clientX-r.left,y:e.clientY-r.top};
+}
+function wrapAngle(a){a=a%360;if(a>180)a-=360;if(a<-180)a+=360;return a;}
+
+/* 选中/旋转 */
+function select(p){
+  deselect();
+  p.el.classList.add('selected');
+  state.selected=p;
+  $('tgRot').disabled=false;
+}
+function deselect(){
+  if(state.selected)state.selected.el.classList.remove('selected');
+  state.selected=null;
+  $('tgRot').disabled=true;
+}
+function rotateSel(){
+  if(!state.selected||state.selected.placed)return;
+  var p=state.selected;
+  p.rot=(p.rot+45)%360;
+  if(!p.lifted){p.tray=(p.cy>=TRAY_Y);p.scale=p.tray?TRAY_SCALE:1;}
+  setPiecePos(p,p.cx,p.cy);
+  state.moves++;
+  updateStats();bounce($('tgMoves'));
+  if(canAnimate()){
+    var svg=p.el.querySelector('svg');
+    if(svg)A.animate(svg,{scale:[1,1.13,1],ease:'out(2)',duration:300});
+  }
+}
+
+/* 统计/计时 */
+function updateStats(){
+  $('tgMoves').textContent=state.moves;
+  $('tgTime').textContent=fmt(state.sec);
+  $('tgLv').textContent=state.lv+' / '+LEVELS.length;
+  var lv=LEVELS[state.lv-1],nm=$('tgLvName');
+  if(nm)nm.textContent=lv.name+(lv.hint?' · 彩色提示':' · 灰剪影');
+  var best=loadBest(state.lv);
+  $('tgBest').textContent=best?fmt(best):'--';
+}
+function fmt(s){if(s===null||s===undefined)return'--';var m=Math.floor(s/60),sec=s%60;return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');}
+function tick(){state.sec++;updateStats();}
+function loadBest(lv){try{var v=localStorage.getItem('tg_best_L'+lv);return v?parseInt(v,10):null;}catch(e){return null;}}
+function saveBest(lv,t){try{localStorage.setItem('tg_best_L'+lv,String(t));}catch(e){}}
+
+/* 尺寸适配：用 wrap 内容盒反推棋盘边长（全部难度档共用）。
+   关键：可用高度必须从 wrap 实测，不能用 window.innerHeight——
+   那样会漏掉 body 的 margin-top(顶部导航) 与 wrap 自身 padding，算出来必然偏大、撑出一屏。
+   分栏后竖向预算：标题永远在最上；分栏时侧栏与舞台并排（不占竖向），单列时侧栏在上（实测扣高）。 */
+function layout(preserve){
+  var wrap=document.querySelector('.tg-wrap');
+  var card=document.querySelector('.tg-card');
+  var layoutEl=document.querySelector('.tg-layout');
+  var sideEl=document.querySelector('.tg-side');
+  var titleEl=document.querySelector('.tg-title');
+  /* wrap 高度钉死为「视口 - 顶部导航实际占位」；hide_chrome 时 top=0 自动退化 */
+  if(wrap){
+    var top=Math.max(0,Math.ceil(wrap.getBoundingClientRect().top));
+    wrap.style.height='calc(100dvh - '+top+'px)';
+    wrap.style.minHeight=wrap.style.height;
+  }
+  var cs=card?getComputedStyle(card):null;
+  var padT=cs?(parseFloat(cs.paddingTop)||0):14;
+  var padB=cs?(parseFloat(cs.paddingBottom)||0):14;
+  var cardGap=cs?(parseFloat(cs.rowGap)||parseFloat(cs.gap)||0):8;
+  /* 可用高度 = wrap 内容盒(已扣 wrap padding) - card 自身 padding */
+  var availForCard;
+  if(wrap){
+    var wcs=getComputedStyle(wrap);
+    availForCard=wrap.clientHeight-(parseFloat(wcs.paddingTop)||0)-(parseFloat(wcs.paddingBottom)||0);
+  }else{
+    availForCard=window.innerHeight-60;
+  }
+  var availInner=availForCard-padT-padB;
+  var titleH=titleEl?titleEl.offsetHeight:0;
+  /* 竖向预算：先扣标题 + card 间距；单列再扣侧栏实测高（分栏时侧栏并排不占高） */
+  var stageBudget=availInner-titleH-cardGap-4;
+  var rowMode=!!(layoutEl&&getComputedStyle(layoutEl).flexDirection.indexOf('row')===0);
+  if(!rowMode&&sideEl){
+    var lcs=layoutEl?getComputedStyle(layoutEl):null;
+    var lgap=lcs?(parseFloat(lcs.rowGap)||parseFloat(lcs.gap)||0):0;
+    stageBudget-=sideEl.offsetHeight+lgap;
+  }
+  /* 可用量父容器宽（stage 会被钉成 GS 宽，不能用它自量） */
+  var hostEl=stage.parentElement;
+  var availW=Math.max(200,(hostEl?hostEl.clientWidth:document.documentElement.clientWidth)-12);
+  /* 托盘块缩放只与跨度有关（GS 在 (GS/cols)/(CELL*2.2) 里约掉）：
+     托盘高 = 22+rows*2*CELL*s+8*(rows-1) = 常量+trayK*GS → 闭式解 GS */
+  TRAY_SCALE=Math.min(0.85,GEO.span/(TRAY_COLS*2.2));
+  var trayK=TRAY_ROWS*2*TRAY_SCALE/GEO.span;
+  GS=Math.min(availW,Math.max(110,(stageBudget-36-8*(TRAY_ROWS-1))/(1+trayK)));
+  CELL=GS/GEO.span;
+  STAGE_W=GS;
+  stage.style.width=GS+'px';
+  stage.style.margin='0 auto'; /* 舞台=棋盘同宽居中，槽位/积木同一坐标系 */
+  TRAY_Y=GS+14;
+  var trayH=22+TRAY_ROWS*(CELL*2*TRAY_SCALE)+8*(TRAY_ROWS-1);
+  stage.style.height=(TRAY_Y+trayH)+'px';
+  STAGE_H=stage.clientHeight;
+  var trayEl=stage.querySelector('.tg-tray');
+  if(trayEl)trayEl.style.top=TRAY_Y+'px';
+  renderSil();
+  buildPieces(!!preserve,false);
+}
+
+/* 通关 */
+function winLevel(){
+  state.win=true;clearInterval(state.timer);
+  updateStats();
+  var lv=LEVELS[state.lv-1];
+  /* 剪影活过来：某块脉动 + 整体 wiggle（只动 opacity/filter，不碰 inline rotate） */
+  var slots=ql('.tg-slot');
+  var idx=Math.floor(Math.random()*slots.length);
+  if(!lv.hint&&slots[idx])slots[idx].classList.add('tg-pulse');
+  silEl.classList.add('wiggle');
+  var best=loadBest(state.lv);
+  var isNew=!best||state.sec<best;
+  if(isNew)saveBest(state.lv,state.sec);
+  /* 积木 stagger 绽放（动画走内层 svg） */
+  var svgs=[];
+  for(var i=0;i<pieces.length;i++){var s=pieces[i].el.querySelector('svg');if(s)svgs.push(s);}
+  if(canAnimate()&&svgs.length){
+    A.animate(svgs,{scale:[1,1.13,1],ease:'out(3)',duration:520,delay:A.stagger(70)});
+  }
+  setTimeout(function(){showVictory(isNew);},canAnimate()&&svgs.length?(svgs.length*70+260):420);
+}
+
+/* 从弹窗中心绽开礼花（移动端 origin 偏底时不走 game_confetti 的 y:.7） */
+function launchConfettiFromCard(card){
+  if(typeof confetti!=='function'||typeof confetti.create!=='function'){
+    if(window.launchConfetti){try{window.launchConfetti();}catch(e){}}
+    return;
+  }
+  var r=card.getBoundingClientRect();
+  var ox=Math.min(0.92,Math.max(0.08,(r.left+r.width/2)/window.innerWidth));
+  var oy=Math.min(0.92,Math.max(0.08,(r.top+r.height*0.32)/window.innerHeight));
+  var canvas=document.createElement('canvas');
+  canvas.style.cssText='position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483647;';
+  document.body.appendChild(canvas);
+  var fire=confetti.create(canvas,{resize:true,useWorker:false});
+  var colors=['#E85D4A','#F2B441','#7CB342','#4FA3C7','#9575CD','#F49AC2'];
+  var end=Date.now()+1500;
+  (function frame(){
+    fire({particleCount:5,spread:60,origin:{x:ox,y:oy},colors:colors,disableForReducedMotion:true});
+    if(Date.now()<end)requestAnimationFrame(frame);
+  }());
+  setTimeout(function(){try{fire.reset();}catch(e){} if(canvas.parentNode)canvas.parentNode.removeChild(canvas);},3500);
+}
+
+/* 手绘五角星（通关奖章） */
+function drawVStar(el){
+  if(!el||!sketchOn())return;
+  var svg=GameSketch.svgInto(el);
+  if(!svg)return;
+  var w=el.offsetWidth,h=el.offsetHeight,cx=w/2,cy=h/2;
+  var R=Math.min(w,h)*0.48,r=R*0.44,pts=[];
+  for(var i=0;i<10;i++){
+    var ang=-Math.PI/2+i*Math.PI/5,rad=(i%2===0)?R:r;
+    pts.push([cx+Math.cos(ang)*rad,cy+Math.sin(ang)*rad]);
+  }
+  GameSketch.polygon(svg,pts,{fill:'#F2B441',fillStyle:'solid',stroke:'#E08A1E',strokeWidth:2,roughness:1.4,bowing:0.9,seed:GameSketch.seedFrom('vstar')},'tg-vstar-g');
+}
+
+function showVictory(isNew){
+  $('tgVTime').textContent=fmt(state.sec);
+  $('tgVMoves').textContent=state.moves;
+  $('tgVBest').textContent=fmt(loadBest(state.lv));
+  $('tgVStat').innerHTML=isNew?'<div class="tg-newbest">🎊 新最佳纪录！</div>':'';
+  var overlay=$('tgVictory'),card=overlay.querySelector('.tg-vwin');
+  overlay.classList.remove('hidden');   /* 先显示，星标才量得出尺寸 */
+  var vs=$('tgVStar');
+  if(vs&&!vs.dataset.drawn&&sketchOn()){vs.dataset.drawn='1';drawVStar(vs);}
+  if(canAnimate()){
+    A.animate(card,{opacity:[0,1],scale:[.82,1],y:[18,0],ease:'out(4)',duration:520});
+    if(vs&&vs.dataset.drawn)A.animate(vs,{scale:[0,1],rotate:[-40,0],ease:'out(4)',duration:560,delay:120});
+  }else{
+    card.classList.remove('tg-vwin-in');void card.offsetWidth;card.classList.add('tg-vwin-in');
+  }
+  /* 弹窗与礼花同时出现 */
+  try{setTimeout(function(){launchConfettiFromCard(card);},60);}catch(e){}
+}
+
+/* 标题图标：手绘小房子七巧板（emoji 仅降级） */
+function drawTitleIcon(){
+  var el=$('tgTitleIcon');
+  if(!el||!sketchOn())return;
+  var svg=GameSketch.svgInto(el);
+  if(!svg)return;
+  var w=el.offsetWidth,h=el.offsetHeight,s=Math.min(w,h);
+  var cx=w/2,cy=h/2,u=s*0.40;
+  function P(pts,fill,seed){
+    GameSketch.polygon(svg,pts,{fill:fill,fillStyle:'solid',stroke:'#7a5a3a',strokeWidth:1.6,roughness:1.3,bowing:0.7,seed:GameSketch.seedFrom(seed)},'tg-ticon');
+  }
+  P([[cx,cy-u*1.18],[cx-u*1.12,cy+u*0.12],[cx+u*1.12,cy+u*0.12]],'#C97B5A','ti1');
+  P([[cx-u*0.74,cy+u*0.26],[cx+u*0.02,cy+u*0.26],[cx+u*0.02,cy+u*1.02],[cx-u*0.74,cy+u*1.02]],'#E8C49A','ti2');
+  P([[cx+u*0.18,cy+u*0.32],[cx+u*1.02,cy+u*0.32],[cx+u*0.18,cy+u*1.04]],'#8B5E3C','ti3');
+}
+
+/* 关卡切换 */
+function loadLevel(n){
+  if(n<1)n=1;if(n>LEVELS.length)n=LEVELS.length;
+  state.lv=n;state.moves=0;state.sec=0;state.placed=0;state.win=false;state.selected=null;state.drag=null;
+  if(state.timer)clearInterval(state.timer);
+  updateStats();
+  layout(false);   /* 新关卡必须重建，不能沿用上一关的 placed 状态 */
+  state.timer=setInterval(tick,1000);
+  $('tgVictory').classList.add('hidden');
+  refreshDisabled();
+  msg('拖一块到虚线框里，拼成「'+LEVELS[n-1].name+'」~','hint');
+}
+function refreshDisabled(){
+  $('tgPrev').disabled=(state.lv<=1);
+  $('tgNext').disabled=(state.lv>=LEVELS.length);
+  $('tgRot').disabled=!(state.selected&&!state.selected.placed);
+}
+
+/* 事件绑定（弹窗按钮走 document 委托，DOM 顺序变化也不会拖死整个 IIFE） */
+stage.addEventListener('pointermove',onMove);
+stage.addEventListener('pointerup',onUp);
+stage.addEventListener('pointercancel',function(){
+  if(!state.drag)return;
+  state.drag.el.classList.remove('dragging');
+  state.drag.lifted=false;
+  state.drag.tray=(state.drag.cy>=TRAY_Y);
+  state.drag.scale=state.drag.tray?TRAY_SCALE:1;
+  setPiecePos(state.drag,state.drag.cx,state.drag.cy);
+  state.drag=null;
+});
+$('tgRot').addEventListener('click',function(e){addRipple(e,$('tgRot'));rotateSel();});
+$('tgRestart').addEventListener('click',function(e){addRipple(e,$('tgRestart'));loadLevel(state.lv);});
+$('tgPrev').addEventListener('click',function(e){addRipple(e,$('tgPrev'));loadLevel(state.lv-1);});
+$('tgNext').addEventListener('click',function(e){addRipple(e,$('tgNext'));loadLevel(state.lv+1);});
+document.addEventListener('click',function(e){
+  if(!e.target||!e.target.closest)return;
+  if(e.target.closest('#tgAgain')){
+    if(state.lv>=LEVELS.length){$('tgVictory').classList.add('hidden');return;}
+    loadLevel(state.lv+1);
+  }else if(e.target.closest('#tgClose')){
+    $('tgVictory').classList.add('hidden');
+  }
+});
+var rzT=null;
+window.addEventListener('resize',function(){
+  clearTimeout(rzT);
+  rzT=setTimeout(function(){if(!state.win)layout(true);},160);
+});
+
+/* 启动 */
+document.body.classList.toggle('gs-sketch',sketchOn());
+loadLevel(1);
+drawTitleIcon();
+})();
+</script>

@@ -97,7 +97,7 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
 /* ===== 更多功能页 · 糖果贴纸盒风格 ===== */
 
 /* 引入站酷快乐体（圆体可爱字，已自托管） */
-@import url('fonts/zcool-kuaile.css');
+@import url('<?php echo $OJ_CDN_URL?>template/<?php echo $OJ_TEMPLATE?>/fonts/zcool-kuaile.css?v=1');
 
 /* === 糖果色彩系统 === */
 .more-page {
@@ -1725,6 +1725,23 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                 <div class="card-desc">翻开卡片，找出相同的图案配对（适合1-3年级）</div>
             </a>
 
+            <a href="tangram.php" class="card" style="position: relative;">
+                <span class="card-new-badge">NEW</span>
+                <div class="card-icon" style="background: linear-gradient(135deg, #F2B441, #E85D4A);">
+                    <svg viewBox="0 0 64 64">
+                        <polygon points="8,8 32,8 20,20" fill="#E85D4A"/>
+                        <polygon points="32,8 56,8 56,32 44,20" fill="#F2B441"/>
+                        <polygon points="8,8 8,32 20,20" fill="#7CB342"/>
+                        <polygon points="20,20 44,20 32,32 20,32" fill="#4FA3C7" transform="rotate(45 32 26)"/>
+                        <polygon points="44,20 56,32 44,44 32,32" fill="#9575CD"/>
+                        <polygon points="8,32 20,32 32,44 20,56" fill="#F49AC2"/>
+                        <polygon points="32,32 56,32 56,56 32,56" fill="#B5835A"/>
+                    </svg>
+                </div>
+                <div class="card-title">七巧板小工坊</div>
+                <div class="card-desc">拖动旋转七块板拼出动物剪影，玩转图形与空间（适合1-3年级）</div>
+            </a>
+
             <a href="sequence_memory.php" class="card">
                 <div class="card-icon" style="background: linear-gradient(135deg, #a855f7, #ec4899);">
                     <svg viewBox="0 0 64 64">
@@ -1834,6 +1851,68 @@ if (isset($_SESSION[$OJ_NAME.'_'.'postkey'])) {
                 </div>
                 <div class="card-title">扫雷</div>
                 <div class="card-desc">经典扫雷，找出所有隐藏的地雷（适合4-6年级）</div>
+            </a>
+
+            <a href="matchstick_math.php" class="card" style="position: relative;">
+                <span class="card-new-badge">NEW</span>
+                <div class="card-icon" style="background: linear-gradient(135deg, #1E2A52, #121A38);">
+                    <svg viewBox="0 0 64 64">
+                        <line x1="14" y1="14" x2="14" y2="30" stroke="#D9A05B" stroke-width="3.5" stroke-linecap="round"/>
+                        <circle cx="14" cy="13" r="3" fill="#FFB347"/>
+                        <line x1="32" y1="14" x2="32" y2="34" stroke="#D9A05B" stroke-width="3.5" stroke-linecap="round"/>
+                        <circle cx="32" cy="13" r="3" fill="#FFB347"/>
+                        <line x1="50" y1="14" x2="50" y2="30" stroke="#D9A05B" stroke-width="3.5" stroke-linecap="round"/>
+                        <circle cx="50" cy="13" r="3" fill="#FFB347"/>
+                        <line x1="14" y1="38" x2="14" y2="54" stroke="#D9A05B" stroke-width="3.5" stroke-linecap="round"/>
+                        <circle cx="14" cy="37" r="3" fill="#E34A33"/>
+                        <line x1="32" y1="38" x2="32" y2="54" stroke="#D9A05B" stroke-width="3.5" stroke-linecap="round"/>
+                        <circle cx="32" cy="37" r="3" fill="#E34A33"/>
+                        <line x1="50" y1="38" x2="50" y2="54" stroke="#D9A05B" stroke-width="3.5" stroke-linecap="round"/>
+                        <circle cx="50" cy="37" r="3" fill="#E34A33"/>
+                    </svg>
+                </div>
+                <div class="card-title">火柴棒算式</div>
+                <div class="card-desc">移动一根火柴让等式成立，逆向思维玩转数学（适合3-6年级）</div>
+            </a>
+
+            <a href="coordinate_quest.php" class="card" style="position: relative;">
+                <span class="card-new-badge">NEW</span>
+                <div class="card-icon" style="background: linear-gradient(135deg, #5B8FB5, #E37B60);">
+                    <svg viewBox="0 0 64 64">
+                        <rect x="8" y="8" width="48" height="48" fill="#F0E2C4" rx="3"/>
+                        <path d="M10 32 h44 M32 10 v44" stroke="#5B8FB5" stroke-width="1.2" stroke-dasharray="3 3"/>
+                        <path d="M32 32 L48 18" stroke="#E37B60" stroke-width="2" stroke-dasharray="3 2" fill="none"/>
+                        <path d="M20 48 a10 6 0 1 0 20 0 a10 6 0 1 0 -20 0" fill="#4FA3C7"/>
+                        <circle cx="22" cy="46" r="1.5" fill="#fff"/>
+                        <path d="M28 50 q2 1 4 0" stroke="#fff" stroke-width="1" fill="none"/>
+                        <rect x="44" y="14" width="8" height="6" fill="#D4A437" rx="1"/>
+                        <rect x="45" y="10" width="6" height="4" fill="#E37B60" rx="1"/>
+                    </svg>
+                </div>
+                <div class="card-title">坐标寻宝</div>
+                <div class="card-desc">输入坐标指挥小海豚寻宝，学会直角坐标系（适合4-6年级）</div>
+            </a>
+
+            <a href="balance_scale.php" class="card" style="position: relative;">
+                <span class="card-new-badge">NEW</span>
+                <div class="card-icon" style="background: linear-gradient(135deg, #B5835A, #E85D4A);">
+                    <svg viewBox="0 0 64 64">
+                        <rect x="8" y="10" width="48" height="6" fill="#E85D4A" rx="1"/>
+                        <rect x="8" y="10" width="48" height="6" fill="#FFF8F0" rx="1" mask="url(#bs-mask)"/>
+                        <defs><mask id="bs-mask"><rect x="8" y="10" width="48" height="6" fill="#fff"/><rect x="14" y="10" width="6" height="6" fill="#000"/><rect x="26" y="10" width="6" height="6" fill="#000"/><rect x="38" y="10" width="6" height="6" fill="#000"/></mask></defs>
+                        <rect x="31" y="16" width="2" height="30" fill="#B5835A"/>
+                        <rect x="20" y="46" width="24" height="3" fill="#B5835A" rx="1"/>
+                        <line x1="14" y1="22" x2="32" y2="20" stroke="#B5835A" stroke-width="1.5"/>
+                        <line x1="50" y1="22" x2="32" y2="20" stroke="#B5835A" stroke-width="1.5"/>
+                        <ellipse cx="14" cy="26" rx="8" ry="2.5" fill="#B5835A"/>
+                        <ellipse cx="50" cy="26" rx="8" ry="2.5" fill="#B5835A"/>
+                        <circle cx="11" cy="24" r="3" fill="#E34A33"/>
+                        <circle cx="50" cy="24" r="3" fill="#F2B441"/>
+                        <rect x="47" y="22" width="6" height="5" fill="#9575CD" rx="1"/>
+                    </svg>
+                </div>
+                <div class="card-title">天平方程</div>
+                <div class="card-desc">拖水果配平天平，在游戏中理解等式与消元（适合4-6年级）</div>
             </a>
         </div>
     </div>
