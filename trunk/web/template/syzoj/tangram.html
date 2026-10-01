@@ -115,12 +115,15 @@ button{-webkit-tap-highlight-color:transparent;font:inherit}
 .tg-sil.wiggle{animation:tgWiggle .55s ease}
 @keyframes tgWiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-2.5deg)}50%{transform:rotate(2deg)}75%{transform:rotate(-1.5deg)}}
 /* 剪影槽位：动画只走 opacity/filter，不动 transform（inline rotate 会打架） */
-.tg-slot{position:absolute;z-index:1;pointer-events:none}
+/* transform-origin 必须显式写：镜像用负 scale-x，靠默认 center 才能绕包围盒中心翻 */
+.tg-slot{position:absolute;z-index:1;pointer-events:none;transform-origin:50% 50%}
 .tg-slot svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+/* 剪影补描边层：叠在手绘图形之上（同 z-index + 后入 DOM 即在上），描边不缩不放 */
+.tg-slot-ink svg polygon{vector-effect:non-scaling-stroke}
 .tg-slot.tg-pulse{animation:tgPulse .8s ease-in-out 3}
 @keyframes tgPulse{0%,100%{opacity:1;filter:drop-shadow(0 0 0 rgba(255,200,60,0))}50%{opacity:.7;filter:drop-shadow(0 0 14px rgba(255,190,80,.95))}}
 
-.tg-piece{position:absolute;left:0;top:0;z-index:2;cursor:grab;touch-action:none;pointer-events:auto;will-change:transform}
+.tg-piece{position:absolute;left:0;top:0;z-index:2;cursor:grab;touch-action:none;pointer-events:auto;will-change:transform;transform-origin:50% 50%}
 .tg-piece svg{width:100%;height:100%;display:block;overflow:visible;filter:drop-shadow(0 3px 4px rgba(74,55,40,.22))}
 .tg-piece:active{cursor:grabbing}
 .tg-piece.dragging{z-index:20;cursor:grabbing}
@@ -174,12 +177,26 @@ button{-webkit-tap-highlight-color:transparent;font:inherit}
 .tg-vbtn2{width:100%;min-height:44px;margin-top:.55rem;border-radius:999px;border:2px solid rgba(74,55,40,.18);background:#fff;color:var(--tg-ink);font-size:.9rem;font-weight:800;cursor:pointer;transition:transform .2s ease}
 .tg-vbtn2:hover{transform:translateY(-2px)}
 
-@media(max-width:480px),(max-height:560px){
-  .tg-stats{gap:.3rem}
-  .tg-stat{padding:.42rem .15rem .38rem}
-  .tg-stat-icon{font-size:.85rem}
-  .tg-stat-label{font-size:.55rem}
-  .tg-stat-value{font-size:.82rem}
+/* ===== 移动端（≤768px 单列）：压扁上方工具区，竖向预算让给棋盘/托盘 ===== */
+@media(max-width:768px){
+  .tg-card{gap:.28rem;padding:.62rem .72rem .58rem}
+  .tg-layout{gap:.42rem}
+  .tg-side{gap:.28rem}
+  .tg-title{gap:.38rem;font-size:clamp(1.12rem,4.2vw,1.55rem)}
+  .tg-title-icon{width:clamp(30px,7.2vw,38px);height:clamp(30px,7.2vw,38px);font-size:clamp(1.05rem,3vw,1.35rem)}
+  .tg-title-text::after{width:42px;height:3px;margin:4px auto 0}
+  .tg-sub{line-height:1.3}
+  .tg-sub-desc{display:none}
+  .tg-lvname{margin-top:0;padding:.12rem .55rem;font-size:.64rem}
+  .tg-stats{gap:.28rem}
+  .tg-side .tg-stat{display:flex;align-items:center;justify-content:center;gap:.18rem;padding:.3rem .16rem;border-top-width:2px;border-radius:10px;min-height:34px}
+  .tg-side .tg-stat-icon{display:inline-block;font-size:.78rem;margin-bottom:0}
+  .tg-side .tg-stat-label{display:inline;font-size:.55rem}
+  .tg-side .tg-stat-value{display:inline;margin-top:0;font-size:.72rem;line-height:1}
+  .tg-msg{min-height:1.55em;padding:.26rem .65rem;font-size:.72rem;border-radius:10px}
+  .tg-ctrls{gap:.32rem}
+  .tg-btn{min-height:38px;min-width:40px;padding:.36rem .55rem;font-size:.72rem;white-space:nowrap}
+  .tg-tray-label{font-size:.68rem}
 }
 @media(max-height:560px){.tg-sub{display:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
@@ -193,10 +210,10 @@ button{-webkit-tap-highlight-color:transparent;font:inherit}
 
     <div class="tg-layout">
       <div class="tg-side">
-        <div class="tg-sub">木质玩具桌 · 拖一拖、转一转，把 7 块板拼进虚线里<br><span class="tg-lvname" id="tgLvName">小猫</span></div>
+        <div class="tg-sub"><span class="tg-sub-desc">木质玩具桌 · 拖一拖、转一转，把 7 块板拼进目标图案里<br></span><span class="tg-lvname" id="tgLvName">长方形</span></div>
 
         <div class="tg-stats">
-          <div class="tg-stat"><span class="tg-stat-icon">🗺️</span><b class="tg-stat-label">关卡</b><span class="tg-stat-value" id="tgLv">1 / 8</span></div>
+          <div class="tg-stat"><span class="tg-stat-icon">🗺️</span><b class="tg-stat-label">关卡</b><span class="tg-stat-value" id="tgLv">1 / 7</span></div>
           <div class="tg-stat"><span class="tg-stat-icon">👣</span><b class="tg-stat-label">步数</b><span class="tg-stat-value" id="tgMoves">0</span></div>
           <div class="tg-stat"><span class="tg-stat-icon">⏱️</span><b class="tg-stat-label">用时</b><span class="tg-stat-value" id="tgTime">00:00</span></div>
           <div class="tg-stat"><span class="tg-stat-icon">🏆</span><b class="tg-stat-label">最佳</b><span class="tg-stat-value" id="tgBest">--</span></div>
@@ -207,6 +224,7 @@ button{-webkit-tap-highlight-color:transparent;font:inherit}
         <div class="tg-ctrls">
           <button class="tg-btn tg-btn-nav" id="tgPrev">‹ 上一关</button>
           <button class="tg-btn tg-btn-rot" id="tgRot" disabled>↻ 旋转 45°</button>
+          <button class="tg-btn tg-btn-rot" id="tgFlip" disabled>⇋ 翻转</button>
           <button class="tg-btn tg-btn-main" id="tgRestart">重新开始</button>
           <button class="tg-btn tg-btn-nav" id="tgNext">下一关 ›</button>
         </div>
@@ -244,15 +262,17 @@ button{-webkit-tap-highlight-color:transparent;font:inherit}
 (function(){
 "use strict";
 
-/* -------- 形状定义（本地坐标系，单位=格子，原点为包围盒中心） -------- */
+/* 形状定义（本地坐标系，单位=格子，原点为包围盒中心）
+   标准七巧板：两大三角直角边2、中三角√2、小三角1、正方形边长1、平行四边形边1×√2
+   面积校验：2+2+1+0.5+0.5+1+1 = 8 格（修正前 q/p 大了 √2 倍，总面积 9.71 格，永远拼不出图形） */
 var SHAPES={
   b1:[[-1,-1],[1,-1],[-1,1]],
   b2:[[-1,-1],[1,-1],[-1,1]],
   m:[[-0.7071,-0.7071],[0.7071,-0.7071],[-0.7071,0.7071]],
   s1:[[-0.5,-0.5],[0.5,-0.5],[-0.5,0.5]],
   s2:[[-0.5,-0.5],[0.5,-0.5],[-0.5,0.5]],
-  q:[[-0.7071,-0.7071],[0.7071,-0.7071],[0.7071,0.7071],[-0.7071,0.7071]],
-  p:[[-0.5,-0.7071],[0.7071,-0.7071],[0.5,0.7071],[-0.7071,0.7071]]
+  q:[[-0.5,-0.5],[0.5,-0.5],[0.5,0.5],[-0.5,0.5]],
+  p:[[-1.0607,-0.3536],[0.3536,-0.3536],[1.0607,0.3536],[-0.3536,0.3536]]
 };
 /* 木质积木：7 种木色（底色/纹理线），像一盒真木七巧板，靠木色+形状双重区分 */
 var WOODS={
@@ -266,41 +286,29 @@ var WOODS={
 };
 var PIECE_KEYS=['b1','b2','m','s1','s2','q','p'];
 
-/* -------- 关卡数据：slot={k(形状),x,y(网格中心),r(角度deg)} -------- */
-/* 4×4 网格；前3关彩色提示，后5关灰剪影 */
+/* -------- 关卡数据：slot={k(形状),x,y(块原点落点),r(角度deg),flip(是否镜像)} --------
+   全部由格点精确覆盖求解器生成：七块零重叠、零缝隙，正好拼满 8 格。
+   注意 x/y 是「积木原点（本地坐标 (0,0)）落在棋盘的哪一点」，不是包围盒中心 ——
+   所以贴边的槽位其值可以小于 1 或大于 span，拖拽夹取必须按积木自身外框算（见 clampTo）。 */
+/* 7 关取自开源七巧板（tangram-main）的经典图形，坐标经求解器换算：
+   参考库大三角直角边 70.7 ↔ 本游戏 2 格，× 2/70.7 归一后按 45° 步进拟合。
+   每关面积和 = 8.0000 格、7 类不重复。
+   flip:true 表示该块要镜像（只有平行四边形有手性，三角形/正方形的镜像等价于旋转所以不需要标）。 */
 var LEVELS=[
- {name:'小猫',hint:true,slots:[
-   {k:'b1',x:1.0,y:0.9,r:-45},{k:'b2',x:3.0,y:0.9,r:45},
-   {k:'m',x:2.0,y:1.6,r:0},{k:'s1',x:1.2,y:2.4,r:45},{k:'s2',x:2.8,y:2.4,r:-45},
-   {k:'q',x:2.0,y:3.2,r:45},{k:'p',x:2.0,y:2.4,r:90}]},
- {name:'小房子',hint:true,slots:[
-   {k:'b1',x:1.1,y:1.3,r:135},{k:'b2',x:2.9,y:1.3,r:45},
-   {k:'m',x:2.0,y:1.6,r:180},{k:'s1',x:0.9,y:2.7,r:90},{k:'s2',x:3.1,y:2.7,r:-90},
-   {k:'q',x:2.0,y:2.8,r:45},{k:'p',x:2.0,y:2.2,r:0}]},
- {name:'小鱼',hint:true,slots:[
-   {k:'b1',x:1.0,y:2.0,r:0},{k:'b2',x:3.0,y:2.0,r:180},
-   {k:'m',x:2.0,y:2.0,r:90},{k:'s1',x:1.5,y:2.9,r:135},{k:'s2',x:2.5,y:2.9,r:45},
-   {k:'q',x:2.0,y:1.4,r:45},{k:'p',x:2.0,y:2.7,r:0}]},
- {name:'小船',hint:false,slots:[
-   {k:'b1',x:1.0,y:2.0,r:0},{k:'b2',x:3.0,y:2.0,r:180},
-   {k:'m',x:2.0,y:2.0,r:90},{k:'s1',x:1.4,y:2.8,r:135},{k:'s2',x:2.6,y:2.8,r:45},
-   {k:'q',x:2.0,y:1.4,r:45},{k:'p',x:2.0,y:2.6,r:0}]},
- {name:'小兔子',hint:false,slots:[
-   {k:'b1',x:1.0,y:0.9,r:-45},{k:'b2',x:3.0,y:0.9,r:45},
-   {k:'m',x:2.0,y:1.8,r:0},{k:'s1',x:1.3,y:2.6,r:45},{k:'s2',x:2.7,y:2.6,r:-45},
-   {k:'q',x:2.0,y:3.3,r:45},{k:'p',x:2.0,y:2.4,r:90}]},
- {name:'小火箭',hint:false,slots:[
-   {k:'b1',x:1.0,y:1.0,r:-45},{k:'b2',x:3.0,y:1.0,r:45},
-   {k:'m',x:2.0,y:1.9,r:0},{k:'s1',x:1.0,y:2.8,r:0},{k:'s2',x:3.0,y:2.8,r:180},
-   {k:'q',x:2.0,y:3.3,r:45},{k:'p',x:2.0,y:3.8,r:0}]},
- {name:'小骆驼',hint:false,slots:[
-   {k:'b1',x:1.0,y:1.2,r:135},{k:'b2',x:3.0,y:1.6,r:45},
-   {k:'m',x:2.0,y:2.2,r:90},{k:'s1',x:1.2,y:2.9,r:135},{k:'s2',x:2.8,y:2.9,r:45},
-   {k:'q',x:2.0,y:3.4,r:45},{k:'p',x:2.0,y:1.4,r:0}]},
- {name:'小天鹅',hint:false,slots:[
-   {k:'b1',x:1.1,y:2.0,r:0},{k:'b2',x:3.0,y:1.6,r:90},
-   {k:'m',x:2.2,y:1.4,r:180},{k:'s1',x:3.3,y:2.4,r:90},{k:'s2',x:1.0,y:2.9,r:-90},
-   {k:'q',x:2.0,y:2.9,r:45},{k:'p',x:2.0,y:2.0,r:0}]}
+ {name:'长方形',hint:false,slots:[
+   {k:'b1',x:2.686,y:3.662,r:270},{k:'b2',x:2.6878,y:3.6741,r:90},{k:'q',x:4.169,y:4.1553,r:0},{k:'m',x:5.6376,y:3.6643,r:315},{k:'p',x:4.6448,y:3.1732,r:135},{k:'s1',x:5.1501,y:4.1553,r:270},{k:'s2',x:4.169,y:3.1723,r:0}]},
+ {name:'菱形',hint:false,slots:[
+   {k:'b1',x:3.6775,y:2.9726,r:315},{k:'b2',x:3.6587,y:2.9726,r:135},{k:'q',x:4.3484,y:4.3698,r:45},{k:'m',x:2.991,y:3.6871,r:270},{k:'p',x:3.3313,y:4.7359,r:0},{k:'s1',x:3.666,y:5.0706,r:225},{k:'s2',x:5.0589,y:3.682,r:315}]},
+ {name:'小鱼',hint:false,slots:[
+   {k:'b1',x:2.6869,y:4.6492,r:90},{k:'b2',x:2.6869,y:2.6681,r:180},{k:'q',x:4.1681,y:3.6973,r:0},{k:'m',x:5.6596,y:3.2233,r:315},{k:'p',x:5.1492,y:4.1973,r:45},{k:'s1',x:4.1681,y:2.7085,r:270},{k:'s2',x:4.1681,y:4.6802,r:0}]},
+ {name:'小牛',hint:false,slots:[
+   {k:'b1',x:4.5244,y:4.5153,r:90},{k:'b2',x:2.7667,y:4.1681,r:135},{k:'q',x:2.2856,y:3.2539,r:0},{k:'m',x:4.1753,y:5.1591,r:45},{k:'p',x:6.0055,y:4.5158,r:45},{k:'s1',x:3.2813,y:2.2539,r:180},{k:'s2',x:1.3306,y:2.2539,r:270}]},
+ {name:'帆船',hint:false,slots:[
+   {k:'b1',x:4.6513,y:4.5823,r:45},{k:'b2',x:3.2487,y:3.1681,r:135},{k:'q',x:2.7676,y:4.0823,r:0},{k:'m',x:4.2334,y:4.5634,r:225},{k:'p',x:3.2482,y:5.0634,r:135,flip:true},{k:'s1',x:1.7707,y:4.0823,r:180},{k:'s2',x:2.7676,y:3.1012,r:180}]},
+ {name:'火箭',hint:false,slots:[
+   {k:'b1',x:4.5457,y:2.8035,r:315},{k:'b2',x:4.5268,y:2.8035,r:135},{k:'q',x:3.4906,y:3.8426,r:45},{k:'m',x:5.2351,y:2.1151,r:90},{k:'p',x:2.4546,y:3.4855,r:0,flip:true},{k:'s1',x:4.1904,y:4.5385,r:315},{k:'s2',x:3.4839,y:5.2398,r:135}]},
+ {name:'天鹅',hint:false,slots:[
+   {k:'b1',x:3.8918,y:4.9127,r:270},{k:'b2',x:4.2916,y:3.9162,r:225},{k:'q',x:2.6209,y:3.5286,r:45},{k:'m',x:2.9107,y:4.9127,r:315},{k:'p',x:2.9767,y:2.4841,r:90,flip:true},{k:'s1',x:1.9171,y:4.2105,r:135},{k:'s2',x:2.1303,y:1.9261,r:180}]}
 ];
 
 /* -------- 全局状态 -------- */
@@ -349,20 +357,19 @@ function hexA(hex,a){var n=parseInt(hex.slice(1),16);return 'rgba('+((n>>16)&255
 /* 像素化一段本地形状 → 元素内坐标（pivot=包围盒中心=element中心） */
 function localPx(pts){var out=[];for(var i=0;i<pts.length;i++)out.push([pts[i][0]*CELL+CELL,pts[i][1]*CELL+CELL]);return out;}
 
-/* 关卡槽位几何总包络（跨全部关卡、含旋转）：棋盘按真实内容开框，
-   否则 45° 大三角/平行四边稿会戳出画布边框（小猫/小火箭等 5 关都超界） */
+/* 棋盘几何包络（按「当前关卡」单独算，不跨关）：棋盘按本关真实内容开框，
+   否则 45° 大三角/平行四边稿会戳出画布边框。
+   按关算而不是全局最大包络是关键：正方形关跨度 2.83 格、最长的牛关 5.68 格，
+   两者共用同一块棋盘预算时紧凑关的积木会缩到 1/2，手机上很难拖 */
 var GEO={span:4,ox:0,oy:0};
-(function(){
+function calcGeo(slots){
   var minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
-  for(var li=0;li<LEVELS.length;li++){
-    var sl=LEVELS[li].slots;
-    for(var si=0;si<sl.length;si++){
-      var s=sl[si],pts=SHAPES[s.k],a=s.r*Math.PI/180,c=Math.cos(a),sn=Math.sin(a);
-      for(var pi=0;pi<pts.length;pi++){
-        var x=pts[pi][0]*c-pts[pi][1]*sn+s.x,y=pts[pi][0]*sn+pts[pi][1]*c+s.y;
-        if(x<minX)minX=x;if(x>maxX)maxX=x;
-        if(y<minY)minY=y;if(y>maxY)maxY=y;
-      }
+  for(var si=0;si<slots.length;si++){
+    var s=slots[si],pts=SHAPES[s.k],a=s.r*Math.PI/180,c=Math.cos(a),sn=Math.sin(a);
+    for(var pi=0;pi<pts.length;pi++){
+      var x=pts[pi][0]*c-pts[pi][1]*sn+s.x,y=pts[pi][0]*sn+pts[pi][1]*c+s.y;
+      if(x<minX)minX=x;if(x>maxX)maxX=x;
+      if(y<minY)minY=y;if(y>maxY)maxY=y;
     }
   }
   var pad=0.2; /* 描边/手绘歪扭/drop-shadow 的余量（格） */
@@ -370,15 +377,15 @@ var GEO={span:4,ox:0,oy:0};
   GEO.span=Math.max(cw,ch);
   GEO.ox=pad-minX+(GEO.span-cw)/2; /* 网格 x=0 → GEO.ox*CELL（内容在棋盘内居中） */
   GEO.oy=pad-minY+(GEO.span-ch)/2;
-})();
+}
+calcGeo(LEVELS[0].slots);
 /* 网格坐标 → 舞台像素。槽位与积木共用这套映射，天然对齐 */
 function bx(gx){return (gx+GEO.ox)*CELL;}
 function by(gy){return (gy+GEO.oy)*CELL;}
 
-/* 降级用平面多边形 SVG */
-function plainSvg(pts,fill,ghost,elW){
-  var sw=Math.max(1,CELL*0.022);
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+elW+' '+elW+'"><polygon points="'+polyToStr(pts)+'" fill="'+fill+'" stroke="'+(ghost?'#a5876a':'#7a5a3a')+'" stroke-width="'+sw+'"'+(ghost?' stroke-dasharray="4,4"':'')+'/></svg>';
+/* 降级用平面多边形 SVG（stroke 由调用方给） */
+function plainSvg(pts,fill,elW,stroke,sw){
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+elW+' '+elW+'"><polygon points="'+polyToStr(pts)+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+sw+'" stroke-linejoin="round"/></svg>';
 }
 
 /* 手绘木纹：全盒积木共用同一纹路方向（像同一块木板裁下来的），clip 在形状内不外溢 */
@@ -406,6 +413,8 @@ function woodGrain(svg,pts,grain,seed){
   }
 }
 
+/* 剪影描边：深棕粗实线——小尺寸下虚线会碎成糊，实线才看得出轮廓 */
+var INK_COLOR='#5E3A1C',INK_W=2.8,CARVE_COLOR='#7a5a3a';
 /* 画一块形状进 el：rough 手绘优先，无 rough.js 退平面 SVG
    —— 必须先 appendChild 到 DOM 再调（svgInto 要量 offsetWidth） */
 function drawShape(el,pts,fill,seed,mode,grain){
@@ -415,21 +424,26 @@ function drawShape(el,pts,fill,seed,mode,grain){
     if(svg){
       var opt={
         fill:fill,fillStyle:'solid',
-        stroke:ghost?'#a5876a':'#7a5a3a',
-        strokeWidth:ghost?1.6:2,
+        stroke:ghost?INK_COLOR:CARVE_COLOR,
+        strokeWidth:ghost?INK_W:2,
         roughness:1.35,bowing:0.85,
         seed:GameSketch.seedFrom(seed)
       };
-      if(ghost)opt.strokeLineDash=[4,4];
       GameSketch.polygon(svg,pts,opt,ghost?'tg-ghost':'tg-shape');
       if(!ghost&&grain)woodGrain(svg,pts,grain,seed);
       return;
     }
   }
-  el.innerHTML=plainSvg(pts,fill,ghost,CELL*2);
+  var sw2=ghost?INK_W*1.2:Math.max(1.6,CELL*0.03);
+  el.innerHTML=plainSvg(pts,fill,CELL*2,ghost?INK_COLOR:CARVE_COLOR,sw2);
+}
+/* 关卡差异只在色：前几关用木色提示，后面统一深灰剪影 */
+function silStyle(k,hint){
+  return hint?{fill:hexA(WOODS[k].grain,.55),stroke:WOODS[k].grain}
+            :{fill:'rgba(110,92,72,.55)',stroke:INK_COLOR};
 }
 
-/* 渲染剪影（由 7 块目标拼出）：每槽一个 div，rough polygon 手绘虚线框 */
+/* 渲染剪影（由 7 块目标拼出）：每槽一个 div，rough polygon 填色 + 深棕粗实线描边 */
 function renderSil(){
   var lv=LEVELS[state.lv-1];
   silEl.innerHTML='';
@@ -443,10 +457,19 @@ function renderSil(){
     d.style.width=d.style.height=(CELL*2)+'px';
     d.style.left=(bx(sl.x)-CELL)+'px';
     d.style.top=(by(sl.y)-CELL)+'px';
-    d.style.transform='rotate('+sl.r+'deg)';
+    d.style.transform='rotate('+sl.r+'deg)'+(sl.flip?' scaleX(-1)':'');
     silEl.appendChild(d);   /* 入 DOM 后再画，否则量不出尺寸 */
-    var fill=lv.hint?hexA(WOODS[sl.k].grain,0.4):'rgba(140,120,96,0.26)';
-    drawShape(d,localPx(SHAPES[sl.k]),fill,'sil'+sl.k,'ghost');
+    var st=silStyle(sl.k,lv.hint);
+    drawShape(d,localPx(SHAPES[sl.k]),st.fill,'sil'+sl.k,'ghost');
+    /* 深色实线补描边（叠在 rough 图形之上）：小块被缩放后虚线会碎成糊，实线才出轮廓 */
+    if(!lv.hint){
+      var ov=document.createElement('div');
+      ov.className='tg-slot tg-slot-ink';
+      ov.style.cssText=d.style.cssText;
+      ov.innerHTML='<svg viewBox="0 0 '+(CELL*2)+' '+(CELL*2)+'" width="100%" height="100%">'+
+        '<polygon points="'+polyToStr(localPx(SHAPES[sl.k]))+'" fill="none" stroke="'+INK_COLOR+'" stroke-width="'+INK_W+'" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>';
+      silEl.appendChild(ov);
+    }
   }
   /* 手绘棋盘边框（叠加式，不占布局） */
   if(sketchOn())GameSketch.frame(silEl,{inset:5,color:'rgba(74,55,40,.38)',strokeWidth:2,roughness:1.5,bowing:1,seed:11});
@@ -455,7 +478,7 @@ function renderSil(){
 /* 建 7 块积木：preserve=保留已落位状态（resize 用），shuffle=托盘洗牌（开局用） */
 function buildPieces(preserve,shuffle){
   var index={};
-  if(preserve)for(var i=0;i<pieces.length;i++)index[pieces[i].k]={rot:pieces[i].rot,placed:pieces[i].placed};
+  if(preserve)for(var i=0;i<pieces.length;i++)index[pieces[i].k]={rot:pieces[i].rot,flip:pieces[i].flip,placed:pieces[i].placed};
   pieces.forEach(function(p){p.el.remove();});
   pieces=[];
   var lv=LEVELS[state.lv-1];
@@ -473,7 +496,7 @@ function buildPieces(preserve,shuffle){
     stage.appendChild(el);   /* 入 DOM 后再画 */
     drawShape(el,localPx(SHAPES[k]),WOODS[k].base,'pc'+k,'solid',WOODS[k].grain);
     var was=(preserve&&index[k])?index[k]:{rot:slot.r-90,placed:false};
-    var p={k:k,el:el,rot:was.rot,cx:0,cy:0,placed:was.placed,targetX:slot.x,targetY:slot.y,targetR:slot.r,tray:!was.placed,scale:1,lifted:false};
+    var p={k:k,el:el,rot:was.rot,flip:(was.flip===undefined?(!!slot.flip):was.flip),cx:0,cy:0,placed:was.placed,targetX:slot.x,targetY:slot.y,targetR:slot.r,targetFlip:!!slot.flip,tray:!was.placed,scale:1,lifted:false};
     if(p.placed){p.cx=bx(p.targetX);p.cy=by(p.targetY);el.classList.add('placed');el.style.pointerEvents='none';setPiecePos(p,p.cx,p.cy);}
     pieces.push(p);
     el.addEventListener('pointerdown',onDown);
@@ -501,10 +524,13 @@ function layoutTray(){
   }
 }
 
-/* 位置/旋转/缩放应用（几何 transform 走 style，动画只作用在内层 svg，互不打架） */
+/* 位置/旋转/缩放应用（几何 transform 走 style，动画只作用在内层 svg，互不打架）
+   翻转 = 负 scale-x：绕包围盒中心镜像，正好等于「形状点 x 取反」，
+   且不动任何落位/命中数学（本游戏各件本地坐标都以包围盒中心为原点） */
 function setPiecePos(p,x,y){
   p.cx=x;p.cy=y;
-  p.el.style.transform='translate('+(x-CELL)+'px,'+(y-CELL)+'px) rotate('+p.rot+'deg) scale('+(p.scale||1)+')';
+  var sx=(p.scale||1)*(p.flip?-1:1);
+  p.el.style.transform='translate('+(x-CELL)+'px,'+(y-CELL)+'px) rotate('+p.rot+'deg) scale('+sx+','+(p.scale||1)+')';
 }
 
 /* 拖拽 */
@@ -524,16 +550,36 @@ function onDown(e){
   state.drag=p;
   try{p.el.setPointerCapture(e.pointerId);}catch(err){}
 }
+/* 拖拽夹取边界：按「积木旋转后的实际外框」算，而不是固定留 1 格。
+   两个坑：
+   1) 固定留 1 格时，半宽 1.414 格的大三角/平行四边形够不到贴棋盘边或贴角的槽位。
+   2) 外框相对积木原点并不对称 —— 中三角转 315° 后只向 -x 伸 1 格、向 +x 伸 0。
+      若用对称半宽 max(|x|) 夹取，上限会被压到 STAGE_W-1 格，
+      贴右边的槽位（第一关最右那块 m）就永远够不到。必须用 mnx/mxx 分别算上下限。
+   留 0.02 格余量，避免外框正好压线时被浮点误差弹回。 */
+function clampTo(p,nx,ny){
+  var pts=SHAPES[p.k],a=p.rot*Math.PI/180,c=Math.cos(a),sn=Math.sin(a);
+  var mnx=1e9,mxx=-1e9,mny=1e9,mxy=-1e9;
+  for(var i=0;i<pts.length;i++){
+    var x=pts[i][0]*c-pts[i][1]*sn,y=pts[i][0]*sn+pts[i][1]*c;
+    if(x<mnx)mnx=x;if(x>mxx)mxx=x;
+    if(y<mny)mny=y;if(y>mxy)mxy=y;
+  }
+  var slack=0.02*CELL;
+  var loX=-mnx*CELL-slack,hiX=STAGE_W-mxx*CELL+slack;
+  var loY=-mny*CELL-slack,hiY=STAGE_H-mxy*CELL+slack;
+  nx=(loX>hiX)?STAGE_W/2:Math.max(loX,Math.min(hiX,nx));
+  ny=(loY>hiY)?STAGE_H/2:Math.max(loY,Math.min(hiY,ny));
+  return {x:nx,y:ny};
+}
 function onMove(e){
   if(!state.drag)return;
   e.preventDefault();
   var pt=clientToStage(e);
   var p=state.drag;
   if(!p.lifted){p.lifted=true;p.scale=1;} /* 拖起瞬间恢复原尺寸 */
-  var nx=pt.x-offX,ny=pt.y-offY;
-  nx=Math.max(CELL,Math.min(STAGE_W-CELL,nx));
-  ny=Math.max(CELL,Math.min(STAGE_H-CELL,ny));
-  setPiecePos(p,nx,ny);
+  var c=clampTo(p,pt.x-offX,pt.y-offY);
+  setPiecePos(p,c.x,c.y);
 }
 function onUp(e){
   if(!state.drag)return;
@@ -545,7 +591,8 @@ function onUp(e){
   var dist=Math.sqrt(dx*dx+dy*dy);
   var tol=CELL*0.10;
   var dr=wrapAngle(p.targetR-p.rot);
-  if(dist<=tol&&Math.abs(dr)<=10){
+  var flipOk=((!!p.flip)===p.targetFlip);   /* 翻转态必须匹配，否则平行四边形左右手反了 */
+  if(dist<=tol&&Math.abs(dr)<=10&&flipOk){
     placePiece(p);
     return;
   }
@@ -553,7 +600,7 @@ function onUp(e){
   p.tray=(p.cy>=TRAY_Y);
   p.scale=p.tray?TRAY_SCALE:1;
   setPiecePos(p,p.cx,p.cy);
-  if(dist<=CELL*0.6&&Math.abs(dr)<=25){
+  if(dist<=CELL*0.6&&Math.abs(dr)<=25&&flipOk){
     msg('差一点点，再挪挪~','warn');
     if(canAnimate()){
       var svg=p.el.querySelector('svg');
@@ -563,6 +610,7 @@ function onUp(e){
 }
 function placePiece(p){
   p.rot=p.targetR;
+  p.flip=p.targetFlip;
   p.scale=1;p.tray=false;
   setPiecePos(p,bx(p.targetX),by(p.targetY));
   p.placed=true;
@@ -591,17 +639,32 @@ function select(p){
   deselect();
   p.el.classList.add('selected');
   state.selected=p;
-  $('tgRot').disabled=false;
+  refreshDisabled();
 }
 function deselect(){
   if(state.selected)state.selected.el.classList.remove('selected');
   state.selected=null;
-  $('tgRot').disabled=true;
+  refreshDisabled();
 }
 function rotateSel(){
   if(!state.selected||state.selected.placed)return;
   var p=state.selected;
   p.rot=(p.rot+45)%360;
+  if(!p.lifted){p.tray=(p.cy>=TRAY_Y);p.scale=p.tray?TRAY_SCALE:1;}
+  setPiecePos(p,p.cx,p.cy);
+  state.moves++;
+  updateStats();bounce($('tgMoves'));
+  if(canAnimate()){
+    var svg=p.el.querySelector('svg');
+    if(svg)A.animate(svg,{scale:[1,1.13,1],ease:'out(2)',duration:300});
+  }
+}
+/* 翻转：仅平行四边形（唯一有手性的块）。负 scale-x 绕包围盒中心镜像 */
+function flipSel(){
+  if(!state.selected||state.selected.placed)return;
+  var p=state.selected;
+  if(p.k!=='p')return;   /* 三角形/正方形的镜像等价于旋转 90°，转一下就行，不需要翻转 */
+  p.flip=!p.flip;
   if(!p.lifted){p.tray=(p.cy>=TRAY_Y);p.scale=p.tray?TRAY_SCALE:1;}
   setPiecePos(p,p.cx,p.cy);
   state.moves++;
@@ -668,6 +731,8 @@ function layout(preserve){
   /* 可用量父容器宽（stage 会被钉成 GS 宽，不能用它自量） */
   var hostEl=stage.parentElement;
   var availW=Math.max(200,(hostEl?hostEl.clientWidth:document.documentElement.clientWidth)-12);
+  /* 棋盘包络按当前关卡重算（每关自适应放大）：必须在算 TRAY_SCALE/GS 之前 */
+  calcGeo(LEVELS[state.lv-1].slots);
   /* 托盘块缩放只与跨度有关（GS 在 (GS/cols)/(CELL*2.2) 里约掉）：
      托盘高 = 22+rows*2*CELL*s+8*(rows-1) = 常量+trayK*GS → 闭式解 GS */
   TRAY_SCALE=Math.min(0.85,GEO.span/(TRAY_COLS*2.2));
@@ -790,12 +855,15 @@ function loadLevel(n){
   state.timer=setInterval(tick,1000);
   $('tgVictory').classList.add('hidden');
   refreshDisabled();
-  msg('拖一块到虚线框里，拼成「'+LEVELS[n-1].name+'」~','hint');
+  msg('拖一块到阴影里，拼成「'+LEVELS[n-1].name+'」~','hint');
 }
 function refreshDisabled(){
   $('tgPrev').disabled=(state.lv<=1);
   $('tgNext').disabled=(state.lv>=LEVELS.length);
-  $('tgRot').disabled=!(state.selected&&!state.selected.placed);
+  var sel=state.selected&&!state.selected.placed?state.selected:null;
+  $('tgRot').disabled=!sel;
+  /* 翻转只对平行四边形开放（画面上才看得出区别） */
+  $('tgFlip').disabled=!(sel&&sel.k==='p');
 }
 
 /* 事件绑定（弹窗按钮走 document 委托，DOM 顺序变化也不会拖死整个 IIFE） */
@@ -811,6 +879,7 @@ stage.addEventListener('pointercancel',function(){
   state.drag=null;
 });
 $('tgRot').addEventListener('click',function(e){addRipple(e,$('tgRot'));rotateSel();});
+$('tgFlip').addEventListener('click',function(e){addRipple(e,$('tgFlip'));flipSel();});
 $('tgRestart').addEventListener('click',function(e){addRipple(e,$('tgRestart'));loadLevel(state.lv);});
 $('tgPrev').addEventListener('click',function(e){addRipple(e,$('tgPrev'));loadLevel(state.lv-1);});
 $('tgNext').addEventListener('click',function(e){addRipple(e,$('tgNext'));loadLevel(state.lv+1);});
