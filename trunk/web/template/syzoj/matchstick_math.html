@@ -319,7 +319,7 @@ function geoOf(op,sid){var g=OP_GEO[op];for(var j=0;j<g.length;j++)if(g[j].id===
 var hintOn=null;
 function loadLevel(i){
   lv=i;cells=eqCells(L[i].e);held=null;solving=false;hintOn=null;
-  hints=3;hintEl.textContent=hints;btnHint.disabled=false;
+  hintEl.textContent=hints;btnHint.disabled=(hints<=0);
   doneEl.textContent=Object.keys(doneSet).length;
   qEl.textContent=(lv+1)+'/12';
   tierEl.textContent=TIERNAME[L[i].g];
@@ -399,7 +399,6 @@ function place(ci,si){
     cells[ci].seg[si]=false;
     cells[oc].seg[os]=true;
     shake();
-    useHint();
     if(r.ok&&!r.eq)msg('等式还不对哦，再想想~','warn');
     else msg('这样拼不出正确的数呀','err');
     render();
@@ -410,6 +409,8 @@ function useHint(){
 }
 btnHint.addEventListener('click',function(e){
   addRipple(e,btnHint);
+  if(hints<=0){msg('提示次数已用完啦~','warn');return;}
+  useHint();
   var p=L[lv];hintOn=p.f;msg('看看这根火柴~','hint');
   render();
   /* 目标火柴脉冲：anime.js 注意力动画 */
