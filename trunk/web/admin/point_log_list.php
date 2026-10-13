@@ -16,7 +16,7 @@ $page     = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $per_page = 50;
 $offset   = ($page - 1) * $per_page;
 
-$valid_types = [POINT_LOG_TYPE_CARD, POINT_LOG_TYPE_COURSE, POINT_LOG_TYPE_ADMIN, POINT_LOG_TYPE_SYSTEM, POINT_LOG_TYPE_GOODS, POINT_LOG_TYPE_TIMETABLE_QRFREE, POINT_LOG_TYPE_SHARE_REWARD];
+$valid_types = [POINT_LOG_TYPE_CARD, POINT_LOG_TYPE_COURSE, POINT_LOG_TYPE_ADMIN, POINT_LOG_TYPE_SYSTEM, POINT_LOG_TYPE_PROMO, POINT_LOG_TYPE_GOODS, POINT_LOG_TYPE_TIMETABLE_QRFREE, POINT_LOG_TYPE_SHARE_REWARD, POINT_LOG_TYPE_EXPIRE];
 if (!in_array($type, $valid_types, true)) $type = 0;
 
 $where = ' WHERE 1=1';
@@ -44,9 +44,11 @@ $type_map = [
     POINT_LOG_TYPE_COURSE => '课件购买',
     POINT_LOG_TYPE_ADMIN => '管理员调整',
     POINT_LOG_TYPE_SYSTEM => '系统操作',
+    POINT_LOG_TYPE_PROMO => '推广奖励',
     POINT_LOG_TYPE_GOODS => '积分商品',
     POINT_LOG_TYPE_TIMETABLE_QRFREE => '课程表去码',
     POINT_LOG_TYPE_SHARE_REWARD => '课程分享奖励',
+    POINT_LOG_TYPE_EXPIRE => '积分过期',
 ];
 ?>
 <title>积分流水</title>

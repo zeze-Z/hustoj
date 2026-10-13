@@ -32,8 +32,14 @@ if (!in_array($view_flash_type, ['success', 'error'], true)) {
     $view_flash = '';
 }
 
+// 结算过期赠送积分（幂等；先结算再读余额，保证展示值与可花费值一致）
+point_expire_sweep($user_id);
+
 // 当前积分余额
 $view_balance = intval(point_get_balance($user_id));
+
+// 赠送积分到期提示（最近一次到期日与分数）
+$view_gift_info = point_gift_expiring_info($user_id);
 
 // 流水分页与筛选
 $type_filter = isset($_GET['type']) ? intval($_GET['type']) : 0;
@@ -46,6 +52,7 @@ $valid_types = [
     POINT_LOG_TYPE_GOODS,
     POINT_LOG_TYPE_TIMETABLE_QRFREE,
     POINT_LOG_TYPE_SHARE_REWARD,
+    POINT_LOG_TYPE_EXPIRE,
 ];
 if (!in_array($type_filter, $valid_types, true)) {
     $type_filter = 0;

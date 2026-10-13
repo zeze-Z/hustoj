@@ -1288,7 +1288,8 @@ function grant_course_license($user_id, $course_id, $license_type, $order_info =
 //   point_card   : 充值卡（固定面额 10 积分）
 //   point_log    : 积分流水
 //                  type: 1=充值卡兑换, 2=课件购买, 3=管理员调整, 4=系统操作,
-//                        5=教师推广奖励, 6=积分商品兑换, 7=课程表去码导出
+//                        5=教师推广奖励, 6=积分商品兑换, 7=课程表去码导出,
+//                        8=课程分享返佣, 9=赠送积分到期扣除
 //
 // 设计约定：
 //   - 所有交易使用 InnoDB 事务 + SELECT ... FOR UPDATE
@@ -1310,6 +1311,13 @@ if (!defined('POINT_LOG_TYPE_PROMO'))  define('POINT_LOG_TYPE_PROMO',  5); // �
 if (!defined('POINT_LOG_TYPE_GOODS'))  define('POINT_LOG_TYPE_GOODS',  6); // 积分商品兑换
 if (!defined('POINT_LOG_TYPE_TIMETABLE_QRFREE')) define('POINT_LOG_TYPE_TIMETABLE_QRFREE', 7); // 课程表去码导出（按次扣分）
 if (!defined('POINT_LOG_TYPE_SHARE_REWARD')) define('POINT_LOG_TYPE_SHARE_REWARD', 8); // 课程分享返佣
+if (!defined('POINT_LOG_TYPE_EXPIRE')) define('POINT_LOG_TYPE_EXPIRE', 9); // 赠送积分到期扣除
+
+/** 赠送积分有效期（自然月）：自发放之日起 3 个自然月后过期；充值积分永不过期。
+ *  无存量豁免：所有赠送批次一律按各自发放日回溯判定，早于上线日发放的同样过期。 */
+if (!defined('POINT_GIFT_VALID_MONTHS')) {
+    define('POINT_GIFT_VALID_MONTHS', 3);
+}
 
 /** 充值卡状态常量 */
 if (!defined('POINT_CARD_STATUS_UNUSED'))   define('POINT_CARD_STATUS_UNUSED',   0);
@@ -1370,18 +1378,238 @@ function point_get_balance($user_id) {
     return intval($rows[0]['point']);
 }
 
+// ---------------------------------------------------------------------
+// 赠送积分到期（V2.11）
+//
+// 规则：赠送积分自发放之日起 POINT_GIFT_VALID_MONTHS 个自然月后过期，过期部分
+//       从 users.point 中扣除，point_recharged 不动（充值积分永不过期）。
+// 零 DDL：过期靠 point_log 的赠送批次 + 当前赠送余额 G 推导，不新增列/表。
+// ---------------------------------------------------------------------
+
 /**
- * 在事务中对用户行加排他锁，并返回当前余额。
- * 调用方必须已经处于事务上下文（通常由 point_tx_begin 开启）。
+ * 判定一条「正数」积分流水是否计入充值钱包（point_recharged）。
+ * 必须与 point_apply_change() 正数分支的规则严格互补（my_func.inc.php 内
+ * `$type == POINT_LOG_TYPE_CARD || ($type == POINT_LOG_TYPE_ADMIN && $delta > 0)`）：
+ * 本函数返回 false 的正数流水即「赠送批次」。因此新增任何「不涨 point_recharged」
+ * 的正数流水类型会自动被过期逻辑当作赠送批次，无需同步改这里以外的任何地方。
+ *
+ * @param int $type         流水类型 POINT_LOG_TYPE_*
+ * @param int $change_point 变动值（仅正数有意义）
+ * @return bool true=计入充值钱包（非赠送）
+ */
+function point_is_recharged_type($type, $change_point) {
+    if (intval($change_point) <= 0) return false;
+    $type = intval($type);
+    return $type === POINT_LOG_TYPE_CARD || $type === POINT_LOG_TYPE_ADMIN;
+}
+
+/**
+ * 推导用户「存活的赠送批次」（FIFO：赠送侧先消耗最老批次）。
+ *
+ * 推导依据：point_log 完整记录每笔赠送发放，users.point 仅由 point_apply_change() 变更。
+ *   已消耗量 consumed = SUM(赠送批次) - G，其中 G = point - point_recharged。
+ *   账本不完整（SUM < G）时整体放弃，返回空数组，降级方向是「不扣」（见下方早退）。
  *
  * @param string $user_id
- * @return int|false 余额；用户不存在返回 false
+ * @param int    $point     当前总余额（调用方须已持有该行锁）
+ * @param int    $recharged 当前充值钱包余额
+ * @return array 存活批次，元素 ['amount'=>int,'create_time'=>string,'expire_time'=>string,'is_expired'=>bool]
+ */
+function _point_gift_alive_batches($user_id, $point, $recharged) {
+    $gift_balance = max(0, intval($point) - intval($recharged));
+    if ($gift_balance <= 0) return array();
+
+    $months = intval(POINT_GIFT_VALID_MONTHS);
+    $rows = pdo_query(
+        "SELECT `change_point`, `type`, `create_time`,
+                DATE_ADD(`create_time`, INTERVAL {$months} MONTH) AS `expire_time`,
+                CASE WHEN DATE_ADD(`create_time`, INTERVAL {$months} MONTH) <= NOW()
+                     THEN 1 ELSE 0 END AS `is_expired`
+           FROM `point_log`
+          WHERE `user_id` = ? AND `change_point` > 0
+          ORDER BY `create_time` ASC, `id` ASC",
+        $user_id
+    );
+    if (!is_array($rows) || empty($rows)) return array();
+
+    $batches  = array();
+    $gift_sum = 0;
+    foreach ($rows as $r) {
+        if (point_is_recharged_type($r['type'], $r['change_point'])) continue;
+        $amt = intval($r['change_point']);
+        if ($amt <= 0) continue;
+        $gift_sum += $amt;
+        $batches[] = array(
+            'amount'      => $amt,
+            'create_time' => $r['create_time'],
+            'expire_time' => $r['expire_time'],
+            'is_expired'  => intval($r['is_expired']) === 1,
+        );
+    }
+    if ($gift_sum <= 0) return array();
+
+    // 账本不完整降级：记录到的赠送发放量小于当前赠送余额 G，说明存在绕过写入口的手工加分
+    // （如 db/clearup_zezhang_game_orders.sh），无法判定哪些批次已被消耗。
+    // 此时返回空存活批次 → 不做过期扣减。降级方向是「不扣」，不会误扣用户积分。
+    if ($gift_sum < $gift_balance) return array();
+
+    // 自最老批次起扣减已消耗量，剩余即存活批次
+    $consumed = max(0, $gift_sum - $gift_balance);
+    $alive    = array();
+    foreach ($batches as $b) {
+        if ($consumed >= $b['amount']) {
+            $consumed -= $b['amount'];
+            continue;
+        }
+        if ($consumed > 0) {
+            $b['amount'] -= $consumed;
+            $consumed = 0;
+        }
+        $alive[] = $b;
+    }
+    return $alive;
+}
+
+/**
+ * 计算用户当前应被扣除的过期赠送积分。
+ * 存活批次里 is_expired 的部分求和；结果恒 ≤ G（存活批次之和恰为 G），钳位仅作安全网。
+ *
+ * @return int 应扣分数（0 = 无过期）
+ */
+function _point_gift_expired_amount($user_id, $point, $recharged) {
+    $alive = _point_gift_alive_batches($user_id, $point, $recharged);
+    if (empty($alive)) return 0;
+
+    $expired = 0;
+    foreach ($alive as $b) {
+        if (!empty($b['is_expired'])) $expired += intval($b['amount']);
+    }
+    $gift_balance = max(0, intval($point) - intval($recharged));
+    if ($expired > $gift_balance) $expired = $gift_balance;
+    return $expired;
+}
+
+/**
+ * 在已持有用户行锁的前提下执行过期结算（内联，不接管事务）。
+ *
+ * 三条实现约束：
+ *   1. 不嵌套事务：只做 UPDATE + 直接写流水，不调 point_tx_begin/commit
+ *      （point_tx_begin 的 inTransaction() 守卫只防重复 begin，不防提前提交外层事务）。
+ *   2. 不递归：写流水直接调 point_add_log()，不回调 point_apply_change()。
+ *   3. 锁序：UPDATE users 发生在调用方的 SELECT ... FOR UPDATE 之后。
+ *
+ * @param string $user_id
+ * @param int    $point     加锁读到的总余额
+ * @param int    $recharged 加锁读到的充值钱包余额
+ * @return int 结算后的余额
+ */
+function _point_expire_apply_locked($user_id, $point, $recharged) {
+    $expired = _point_gift_expired_amount($user_id, $point, $recharged);
+    if ($expired <= 0) return intval($point);
+
+    $point = intval($point) - $expired;
+    pdo_query("UPDATE `users` SET `point` = ? WHERE user_id = ?", $point, $user_id);
+    point_add_log($user_id, -$expired, $point, POINT_LOG_TYPE_EXPIRE, null, '赠送积分到期扣除');
+    return $point;
+}
+
+/**
+ * 结算过期赠送积分（用户端只读展示页调用；消费路径由 point_lock_user() 内联结算）。
+ * 自带事务；若已在事务中（被消费路径间接调用）则不接管事务，避免提前提交外层。
+ *
+ * @param string $user_id
+ * @return int 本次扣除的过期积分（0 = 无过期）
+ */
+function point_expire_sweep($user_id) {
+    if ($user_id === null || $user_id === '') return 0;
+    $dbh    = _point_ensure_dbh();
+    $own_tx = !($dbh && $dbh->inTransaction());
+    if ($own_tx) point_tx_begin();
+    try {
+        $rows = pdo_query(
+            "SELECT `point`, `point_recharged` FROM `users` WHERE user_id = ? FOR UPDATE",
+            $user_id
+        );
+        if (empty($rows)) {
+            if ($own_tx) point_tx_commit();
+            return 0;
+        }
+        $point     = intval($rows[0]['point']);
+        $recharged = max(0, intval($rows[0]['point_recharged']));
+        $new_point = _point_expire_apply_locked($user_id, $point, $recharged);
+        if ($own_tx) point_tx_commit();
+        return $point - $new_point;
+    } catch (Exception $e) {
+        if ($own_tx) point_tx_rollback();
+        error_log("point_expire_sweep failed for {$user_id}: " . $e->getMessage());
+        return 0;
+    }
+}
+
+/**
+ * 取用户「最近一次即将到期的赠送积分」信息（用户端余额处提示用）。
+ * 已过期的部分由结算扣掉，此处只报尚未到期的最早一批。
+ *
+ * @param string $user_id
+ * @return array|null ['amount'=>int,'expire_date'=>'YYYY-MM-DD']；无赠送余额或无可展示批次返回 null
+ */
+function point_gift_expiring_info($user_id) {
+    if ($user_id === null || $user_id === '') return null;
+    $rows = pdo_query(
+        "SELECT `point`, `point_recharged` FROM `users` WHERE user_id = ?",
+        $user_id
+    );
+    if (empty($rows)) return null;
+
+    $alive = _point_gift_alive_batches(
+        $user_id,
+        intval($rows[0]['point']),
+        max(0, intval($rows[0]['point_recharged']))
+    );
+    if (empty($alive)) return null;
+
+    $nearest = null;
+    $amount  = 0;
+    foreach ($alive as $b) {
+        if (!empty($b['is_expired'])) continue;
+        if ($nearest === null || $b['expire_time'] < $nearest) {
+            $nearest = $b['expire_time'];
+            $amount  = intval($b['amount']);
+        } elseif ($b['expire_time'] === $nearest) {
+            $amount += intval($b['amount']);
+        }
+    }
+    if ($nearest === null) return null;
+    return array('amount' => $amount, 'expire_date' => substr($nearest, 0, 10));
+}
+
+/**
+ * 在事务中对用户行加排他锁，结算过期赠送积分，并返回可花费余额。
+ * 调用方必须已经处于事务上下文（通常由 point_tx_begin 开启）。
+ *
+ * 结算放在本函数（而非各消费入口）的原因：
+ *   - 本函数是 4 条消费路径（课件购买 / 积分商品兑换 / 课程表去码 / 管理员负调整）
+ *     唯一的公共加锁点，且全部调用点都在 point_tx_begin() 之后；
+ *   - 结算发生在 FOR UPDATE 之后、调用方余额预检之前，预检拿到的是真实可花费余额，
+ *     不会出现「订单号已生成才报积分不足」；
+ *   - 幂等：扣减使赠送余额 G 下降，重算过期额为 0，无需状态位；并发请求阻塞在
+ *     FOR UPDATE，获锁后读到已扣减的 point，同样得到 0。
+ *
+ * @param string $user_id
+ * @return int|false 结算后的可花费余额；用户不存在返回 false
  */
 function point_lock_user($user_id) {
     _point_ensure_dbh();
-    $rows = pdo_query("SELECT `point` FROM `users` WHERE user_id = ? FOR UPDATE", $user_id);
+    $rows = pdo_query(
+        "SELECT `point`, `point_recharged` FROM `users` WHERE user_id = ? FOR UPDATE",
+        $user_id
+    );
     if (empty($rows)) return false;
-    return intval($rows[0]['point']);
+    return _point_expire_apply_locked(
+        $user_id,
+        intval($rows[0]['point']),
+        max(0, intval($rows[0]['point_recharged']))
+    );
 }
 
 /**

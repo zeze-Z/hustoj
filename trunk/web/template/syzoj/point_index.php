@@ -47,6 +47,13 @@
             <?php echo intval($view_balance); ?>
           </div>
           <div style="color:#999;font-size:12px;margin-top:4px;">当前可用积分</div>
+          <?php if (!empty($view_gift_info)): ?>
+          <div style="color:#fa8c16;font-size:12px;margin-top:8px;line-height:1.6;">
+            <i class="clock outline icon"></i>
+            赠送积分 <?php echo intval($view_gift_info['amount']); ?> 分将于
+            <?php echo htmlentities($view_gift_info['expire_date'], ENT_QUOTES, 'UTF-8'); ?> 到期
+          </div>
+          <?php endif; ?>
         </div>
       </div>
     </div>
@@ -95,6 +102,7 @@
         <option value="<?php echo POINT_LOG_TYPE_GOODS; ?>" <?php if ($view_type_filter == POINT_LOG_TYPE_GOODS) echo 'selected'; ?>>积分商品</option>
         <option value="<?php echo POINT_LOG_TYPE_TIMETABLE_QRFREE; ?>" <?php if ($view_type_filter == POINT_LOG_TYPE_TIMETABLE_QRFREE) echo 'selected'; ?>>课程表去码</option>
         <option value="<?php echo POINT_LOG_TYPE_SHARE_REWARD; ?>" <?php if ($view_type_filter == POINT_LOG_TYPE_SHARE_REWARD) echo 'selected'; ?>>课程分享奖励</option>
+        <option value="<?php echo POINT_LOG_TYPE_EXPIRE; ?>" <?php if ($view_type_filter == POINT_LOG_TYPE_EXPIRE) echo 'selected'; ?>>积分过期</option>
       </select>
     </div>
     <table class="ui small table">
@@ -120,6 +128,7 @@
             POINT_LOG_TYPE_GOODS => '积分商品',
             POINT_LOG_TYPE_TIMETABLE_QRFREE => '课程表去码',
             POINT_LOG_TYPE_SHARE_REWARD => '课程分享奖励',
+            POINT_LOG_TYPE_EXPIRE => '积分过期',
           ];
           $license_map = [1 => '完整预览版', 2 => '原文件版'];
           foreach ($view_logs as $log):

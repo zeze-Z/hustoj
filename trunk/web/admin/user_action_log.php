@@ -79,6 +79,11 @@ $point_type_map = [
     POINT_LOG_TYPE_COURSE => '课件购买',
     POINT_LOG_TYPE_ADMIN  => '管理员调整',
     POINT_LOG_TYPE_SYSTEM => '系统操作',
+    POINT_LOG_TYPE_PROMO  => '推广奖励',
+    POINT_LOG_TYPE_GOODS  => '积分商品',
+    POINT_LOG_TYPE_TIMETABLE_QRFREE => '课程表去码',
+    POINT_LOG_TYPE_SHARE_REWARD => '课程分享奖励',
+    POINT_LOG_TYPE_EXPIRE => '积分过期',
 ];
 $license_map = [1 => '完整预览版', 2 => '原文件版', 3 => '完整版'];
 $channel_map = ['free' => '免费', 'point' => '积分支付'];

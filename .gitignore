@@ -15,3 +15,6 @@ docs/竞赛真题/GESP_2026_03_Cpp/*
 **/private_key.pem
 **/license.dat
 trunk/web/offline-games/dist/
+docs/竞赛真题/*.xml
+docs/竞赛真题/*.csv
+docs/竞赛真题/.workbuddy/

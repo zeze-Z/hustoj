@@ -186,6 +186,9 @@ if ($course_id <= 0) {
         $required_points = intval(ceil(floatval($amount)));
         $is_paid = $required_points > 0;
 
+        // 结算过期赠送积分（幂等；保证「买完剩多少」用的是结算后可花费余额）
+        point_expire_sweep($user_id);
+
         // 查询用户积分余额
         $user_balance = intval(point_get_balance($user_id));
         $balance_after = $user_balance - $required_points;
