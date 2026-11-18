@@ -2,7 +2,8 @@
 # deploy_test_env.sh —— 上传指定文件到 web-2204 测试虚机并刷新 PHP 缓存
 # 跨平台: Windows Git Bash / macOS 通用; 仓库根自动探测(脚本放仓库根目录)
 # 用法: bash deploy_test_env.sh [-f] <trunk/web/下的文件...>   (可多个, 支持绝对路径)
-#       -f = 追加重启 php8.1-fpm, 模板/页面内容改动清 APCu 缓存时用
+#       -f = 追加重启 php-fpm, 模板/页面内容改动清 APCu 缓存时用
+#            (服务名自动探测虚机上实际运行的 phpX.Y-fpm, 无需随 OS 升级手改)
 # 环境变量可覆盖默认值: REPO VM SUDOPW WEBROOT FPM
 # 示例: bash deploy_test_env.sh -f trunk/web/news.php trunk/web/admin/news_list.php
 
@@ -10,7 +11,7 @@ REPO="${REPO:-$(cd "$(dirname "$BASH_SOURCE")" && pwd)}"   # 仓库根 = 脚本�
 VM="${VM:-web-2204}"
 SUDOPW="${SUDOPW:-judge}"
 WEBROOT="${WEBROOT:-/home/judge/src/web}"
-FPM="${FPM:-php8.1-fpm}"
+FPM="${FPM:-}"   # 留空=运行时探测虚机上 active 的 phpX.Y-fpm（当前虚机 26.04 为 php8.5-fpm）
 
 # Windows Git Bash 下必须禁用 MSYS 参数路径转换(macOS 下无害):
 # 1) exec 的 /tmp/... /home/... 会被转成 C:/Users/..., VM 内 mv/stat 找不到文件
@@ -57,9 +58,15 @@ echo ">> opcache_reset"
 multipass exec "$VM" -- sudo -S php -r 'opcache_reset();' <<< "$SUDOPW"
 
 if [[ "$RESTART_FPM" == 1 ]]; then
-  echo ">> 重启 $FPM (清 APCu)"
-  multipass exec "$VM" -- sudo -S systemctl restart "$FPM" <<< "$SUDOPW" \
-    || echo "!! fpm 重启失败(检查服务名, 可用 FPM=xxx 环境变量覆盖)"
+  svc="$FPM"
+  # 未显式指定时探测：取虚机上 active 的 phpX.Y-fpm.service（虚机已从 22.04/php8.1 升到 26.04/php8.5）
+  if [[ -z "$svc" ]]; then
+    svc=$(multipass exec "$VM" -- sudo -S systemctl list-units --type=service --state=active --no-legend 'php*-fpm.service' 2>/dev/null <<< "$SUDOPW" | awk 'NR==1{print $1}')
+  fi
+  svc="${svc:-php8.5-fpm}"
+  echo ">> 重启 $svc (清 APCu)"
+  multipass exec "$VM" -- sudo -S systemctl restart "$svc" <<< "$SUDOPW" \
+    || echo "!! fpm 重启失败(服务名探测可能不准, 可用 FPM=phpX.Y-fpm 环境变量指定)"
 fi
 
 exit $fail

@@ -141,6 +141,8 @@ echo "[3/4] 复制文件并混淆JS..."
 cp -r "$SCRIPT_DIR/index.html" "$PACKAGE_DIR/"
 cp -r "$SCRIPT_DIR/js" "$PACKAGE_DIR/"
 cp -r "$SCRIPT_DIR/games" "$PACKAGE_DIR/"
+# 新游戏（七巧板/火柴棒/坐标寻宝/天平方程）依赖的 zcool-kuaile 字体
+[ -d "$SCRIPT_DIR/fonts" ] && cp -r "$SCRIPT_DIR/fonts" "$PACKAGE_DIR/"
 
 # 授权模式的 license.dat（包根）与 js/license.js 已在 [2/4] 直接生成
 # 通用模式：不生成授权文件，用户在 games/activate.html 激活后自行下载 license.js 放入 js 目录

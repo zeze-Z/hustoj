@@ -24,6 +24,10 @@ declare -A GAMES=(
     ["frog_typing.html"]="frog_typing.html"
     ["coding_game.html"]="coding_game.html"
     ["ai_drawing_game.html"]="ai_drawing_game.html"
+    ["tangram.html"]="tangram.html"
+    ["matchstick_math.html"]="matchstick_math.html"
+    ["coordinate_quest.html"]="coordinate_quest.html"
+    ["balance_scale.html"]="balance_scale.html"
 )
 
 # 获取游戏中文名
@@ -67,16 +71,24 @@ for src_name in "${!GAMES[@]}"; do
 
     # 提取游戏内容（去掉PHP标签行）
     # 1. 去掉前2行（PHP show_title 和 header include）
-    # 2. 去掉最后1行（PHP footer include）
+    # 2. 删除 footer include 行（旧游戏末尾有 <?php require("footer.php"); ?>，新游戏没有，按模式删除兼容两者）
     # 3. 替换CDN引用
     # 4. 替换game_confetti路径
     # 5. 包装成完整HTML
 
-    # 提取中间内容（跳过PHP行）
-    content=$(sed '1,2d' "$src_file" | sed '$d')
+    # 提取中间内容（跳过PHP头两行，删除footer引用行）
+    content=$(sed '1,2d' "$src_file" | sed '/require("footer\.php")/d')
 
     # 替换CDN引用为本地路径
     content=$(echo "$content" | sed 's|https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js|../js/confetti.min.js|g')
+
+    # 替换模板内资源路径为本地相对路径（js/libs、字体、公共脚本）
+    content=$(echo "$content" | sed 's|template/<?php echo $OJ_TEMPLATE?>/js/|../js/|g')
+    content=$(echo "$content" | sed 's|template/<?php echo $OJ_TEMPLATE?>/fonts/|../fonts/|g')
+    content=$(echo "$content" | sed 's|template/<?php echo $OJ_TEMPLATE?>/game_sketch.js|../js/game_sketch.js|g')
+
+    # 去掉资源版本号查询串（file:// 离线环境无意义）
+    content=$(echo "$content" | sed 's|?v=[0-9.]*||g')
 
     # 替换game_confetti.js路径
     content=$(echo "$content" | sed "s|template/<?php echo \$OJ_TEMPLATE?>/game_confetti.js|../js/game_confetti.js|g")

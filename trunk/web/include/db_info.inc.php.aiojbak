@@ -5,12 +5,14 @@
 //for people using hustoj out of China , try using translator program with the comments
 // 本文件是系统配置文件，全局包含，修改时请慎重保存，千万不要少分号，少引号，出现语法错误可导致全站无法打开。
 // 若遇到此种情况，可以备份后删除本文件，用/home/judge/src/install/fixing.sh脚本修复生成。
-// $DB_PASS="bFT8jtzylfRCLJ7X"; 里面放的密码是安装是随机生成的，请不要泄露，最好也不要随意修改为低强度的其他密码，您在linux命令行可以用sudo mysql直接以root身份登录mysql。
+// $DB_PASS="IolkWQP9zw8vZiOyswstF1dF9DOAUr"; 里面放的密码是安装是随机生成的，请不要泄露，最好也不要随意修改为低强度的其他密码，您在linux命令行可以用sudo mysql直接以root身份登录mysql。
 // connect db 
 static 	$DB_HOST="localhost";  //数据库服务器ip或域名
 static 	$DB_NAME="jol";   //数据库名
-static 	$DB_USER="debian-sys-maint";  //数据库账户
-static 	$DB_PASS="bFT8jtzylfRCLJ7X";  //数据库密码
+static 	$DB_USER="hustoj";  //数据库账户
+static  $DB_RO_USER="hustoj_ro";  //数据库只读账户
+static  $DB_RO_PASS="S9Ro97EKO7utaYK2GeyyK8nQBghR0R";  //数据库只读密码
+static 	$DB_PASS="IolkWQP9zw8vZiOyswstF1dF9DOAUr";  //数据库密码
 static 	$OJ_NAME="AI-OJ";  //左上角显示的系统名称, 尽量简洁，避免用中文和空格，如需中文、长字符串、图片，可以直接修改template/syzoj/header.php
 static 	$OJ_HOME="./";    //主页目录
 static 	$OJ_ADMIN="aioj.top@qq.com";  //管理员email,若启用,建议对SMTP_SERVER等参数进行配置，设好可以接收系统邮件。
@@ -90,6 +92,7 @@ static  $OJ_FRIENDLY_LEVEL=1; //系统友好级别，暂定0-9级，级别越高
 static  $OJ_FREE_PRACTICE=false; //自由练习，不受比赛作业用题限制
 static  $OJ_SUBMIT_COOLDOWN_TIME=10; //提交冷却时间，连续两次提交的最小间隔，单位秒。
 static  $OJ_POISON_BOT_COUNT=10; //给机器人账号投毒的起始AC数。例如设为10，则认为一个账号对某个题提交了10次正确之后还在提交，就是机器人行为，开始给出随机答复。
+static  $OJ_NICK_IMMUTABLE=false; //改为true,则非管理员不能修改自己的昵称，管理员可以在后台用户列表双击修改昵称。
 static  $OJ_MARKDOWN="marked.js"; // marked.js/markdown-it 二选一，开启后在后台编辑题目时默认为源码模式，用[md] # Markdown [/md] 格式插入markdown代码, 如果需要用到[]也可以用<div class='md'> </div>。
 static  $OJ_INDEX_NEWS_TITLE='HelloWorld!';   // 在syzoj的首页显示哪一篇标题的文章（可以有多个相同标题）
 static  $OJ_DIV_FILTER=false;   // 过滤题面中的div，修复显示异常，特别是来自其他OJ系统的题面。
@@ -103,7 +106,8 @@ static  $OJ_PUBLIC_STATUS=true; //是否公开所有人的判题结果,设为fal
 static  $OJ_FANCY_RESULT=false; //是否在AC时显示fancy.php里的动画
 static  $OJ_FANCY_MP3='http://cdn.hustoj.com/mp3.php'; // 答案正确时的音效
 static  $OJ_AI_API_URL="aiapi/demo.php" ; //  aiapi/qwen.php 或 aiapi/hy.php 并修改相关文件中的api-key设置
-
+static  $OJ_AI_API_PRICE=1; //每次AI答疑的价格
+static  $OJ_BBCODE_IN_PROBLEM=false;
 //static  $OJ_EXAM_CONTEST_ID=1000; // 启用考试状态，填写考试比赛ID，比赛开始前可以随便坐，机器有问题及时更换座位，比赛开始后IP锁定，只能从最后一次登录的位置登录。更换机器需要管理员后台手工指定IP。
 //static  $OJ_ON_SITE_CONTEST_ID=1000; //启用现场赛状态，填写现场赛比赛ID，全系统其他功能禁用，自动跳转指定编号的比赛。
 

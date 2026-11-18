@@ -10,6 +10,8 @@
 #   3. 临时文件 + mv 原子替换，兼容 sites-enabled/default 为软链接的原厂布局（不穿透软链）
 #   4. nginx -t 失败 / reload 失败 / error.log 出现 emerg / 探活失败 均自动回滚并恢复服务
 #   5. 已运行时优先 reload（零停机），仅 nginx 未运行时 start
+#   6. nginx.conf 缺 limit_conn_zone 时自动备份并注入 http 块；nginx >= 1.25.1（如
+#      Ubuntu 26.04）时自动将废弃的 listen ... http2 改写为 http2 on;
 #
 # POSIX sh 兼容，可通过 sh / bash 执行
 
@@ -158,6 +160,27 @@ if [ "$ACTUAL_SOCK" != "php7.4-fpm.sock" ]; then
     ok "已将占位符 php7.4-fpm.sock 替换为 $ACTUAL_SOCK"
 fi
 
+# 新版 nginx（>=1.25.1，如 Ubuntu 26.04 自带）废弃 "listen ... http2" 写法，
+# 部署时按实际版本改写为 server 级 http2 on;（仓库模板保留旧写法以兼容 Ubuntu22.04 自带 1.18）
+NGINX_VER=$(nginx -v 2>&1 | sed 's|.*nginx/||; s|[^0-9.].*||')
+if [ -n "$NGINX_VER" ] \
+   && [ "$(printf '%s\n1.25.1\n' "$NGINX_VER" | sort -V | head -n 1)" = "1.25.1" ] \
+   && grep -q 'listen[[:space:]].*[[:space:]]http2' "$TMP_CONF"; then
+    sed 's| http2 | |g; s| http2;|;|g' "$TMP_CONF" > "$TMP_SED" || die "http2 写法改写失败"
+    awk '
+        /^[[:space:]]*server[[:space:]]*\{/ { added=0 }
+        {
+            print
+            if (!added && $0 ~ /^[[:space:]]*listen[[:space:]].*443[[:space:]]+ssl/) {
+                print "        http2 on;"
+                added=1
+            }
+        }
+    ' "$TMP_SED" > "$TMP_CONF" || die "http2 on; 注入失败"
+    rm -f "$TMP_SED"
+    ok "已将 listen ... http2 改写为 http2 on;（nginx $NGINX_VER）"
+fi
+
 # 部署后断言：最终配置里的 fastcgi socket 必须真实可连，否则中止（此时线上配置尚未改动）
 DEPLOY_SOCK=$(sed -n 's/.*fastcgi_pass[[:space:]]*unix:\([^;]*\);.*/\1/p' "$TMP_CONF" | head -n 1)
 [ -S "$DEPLOY_SOCK" ] || die "待部署配置引用的 PHP-FPM socket 不存在：$DEPLOY_SOCK
@@ -167,12 +190,34 @@ DEPLOY_SOCK=$(sed -n 's/.*fastcgi_pass[[:space:]]*unix:\([^;]*\);.*/\1/p' "$TMP_
 mv -f "$TMP_CONF" "$CONF_DST" || die "配置替换失败：$CONF_DST"
 ok "nginx配置已写入"
 
-# ---------- 6. limit_conn 依赖提醒（只统计非注释行，避免注释里出现关键字而误判） ----------
-if ! grep -v '^[[:space:]]*#' /etc/nginx/nginx.conf 2>/dev/null | grep -q 'limit_conn_zone'; then
-    warn "警告：/etc/nginx/nginx.conf 未定义 limit_conn_zone，nginx -t 将报 unknown zone"
-    warn "请参考本目录 nginx.conf 的 http 块补充："
-    warn "  limit_conn_zone \$binary_remote_addr zone=perip:10m;"
-    warn "  limit_conn_zone \$server_name zone=perserver:10m;"
+# ---------- 6. limit_conn_zone 自动补齐（只统计非注释行，避免注释里出现关键字而误判） ----------
+# sites 配置引用 perip/perserver 两个 zone，nginx.conf 缺定义时 nginx -t 必报
+# zero size shared memory zone。此处幂等注入 http 块（先备份原文件）。
+# 注意：注入后即使后续步骤失败回滚，nginx.conf 中的 zone 定义也会保留——无害且为 HUSTOJ 必需
+NGINX_MAIN_CONF="/etc/nginx/nginx.conf"
+if grep -v '^[[:space:]]*#' "$NGINX_MAIN_CONF" 2>/dev/null | grep -q 'limit_conn_zone'; then
+    :
+else
+    info "$NGINX_MAIN_CONF 缺少 limit_conn_zone，向 http 块注入..."
+    mkdir -p "$BACKUP_DIR" || die "无法创建备份目录：$BACKUP_DIR"
+    NGINX_MAIN_BK="$BACKUP_DIR/nginx.conf.$(date +%Y%m%d-%H%M%S).$$"
+    cp -f "$NGINX_MAIN_CONF" "$NGINX_MAIN_BK" || die "备份 $NGINX_MAIN_CONF 失败，中止部署"
+    if awk '
+        /^[[:space:]]*http[[:space:]]*\{/ && !done {
+            print
+            print "        limit_conn_zone $binary_remote_addr zone=perip:10m;"
+            print "        limit_conn_zone $server_name zone=perserver:10m;"
+            done=1
+            next
+        }
+        { print }
+    ' "$NGINX_MAIN_CONF" > "$NGINX_MAIN_CONF.deploy.$$"; then
+        mv -f "$NGINX_MAIN_CONF.deploy.$$" "$NGINX_MAIN_CONF" || die "注入 limit_conn_zone 落盘失败"
+        ok "已注入 limit_conn_zone（原文件备份：$NGINX_MAIN_BK）"
+    else
+        rm -f "$NGINX_MAIN_CONF.deploy.$$"
+        die "注入 limit_conn_zone 失败"
+    fi
 fi
 
 # ---------- 回滚函数：恢复最近备份，并用旧配置尽力恢复在线服务 ----------
