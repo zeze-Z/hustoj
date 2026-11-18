@@ -6,9 +6,8 @@
 
 SET NAMES utf8mb4;
 
--- 1. 创建学校表
-DROP TABLE IF EXISTS `school`;
-CREATE TABLE `school` (
+-- 1. 创建学校表（幂等：已存在则跳过，避免重跑时丢失数据）
+CREATE TABLE IF NOT EXISTS `school` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL COMMENT '学校名称',
   `code` varchar(50) NOT NULL COMMENT '学校代码',

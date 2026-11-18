@@ -146,7 +146,18 @@ function execute_sql_file($pdo, $file_path) {
         
         foreach ($statements as $stmt) {
             $stmt = trim($stmt);
-            if ($stmt !== '') {
+            if ($stmt === '') {
+                continue;
+            }
+            // 只有可能返回结果集的语句才用 query 并读取/释放结果集；
+            // exec 不会消费结果集，对 SELECT 类语句执行后会残留未缓冲查询，导致 error 2014
+            if (preg_match('/^(SELECT|SHOW|DESCRIBE|DESC|EXPLAIN|CHECK|ANALYZE|OPTIMIZE|REPAIR|CALL|WITH|EXECUTE)\b/i', $stmt)) {
+                $result = $pdo->query($stmt);
+                if ($result instanceof PDOStatement) {
+                    $result->fetchAll();
+                    $result->closeCursor();
+                }
+            } else {
                 $pdo->exec($stmt);
             }
         }
